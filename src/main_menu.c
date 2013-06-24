@@ -1,4 +1,4 @@
-#include <LCUI_Build.h>
+ï»¿#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_CURSOR_H
 #include LC_WIDGET_H
@@ -51,14 +51,14 @@ static void DrawSelectBox( LCUI_Graph *buff )
 	Graph_FillColor( buff, RGB(210,10,10) );
 	Graph_FillAlpha( buff, 255 );
 
-	/* ½øĞĞ´Ó×óÖÁÓÒµÄ½¥±äÍ¸Ã÷´¦Àí */
+	/* è¿›è¡Œä»å·¦è‡³å³çš„æ¸å˜é€æ˜å¤„ç† */
 	for(y=0; y<h; ++y) {
 		for(x=0; x<38; ++x) {
 			bound_img.rgba[3][y*38+x] = x*255/38;
 		}
 	}
 	Graph_Replace( buff, &bound_img, Pos(0,0) );
-	/* ½øĞĞ´Ó×óÖÁÓÒµÄ½¥±äÍ¸Ã÷´¦Àí */
+	/* è¿›è¡Œä»å·¦è‡³å³çš„æ¸å˜é€æ˜å¤„ç† */
 	for(y=0; y<h; ++y) {
 		for(x=37; x>=0; --x) {
 			bound_img.rgba[3][y*38+x] = (37-x)*255/38;
@@ -94,7 +94,7 @@ static void BlinkSelectBox(void)
 	Widget_SetAlpha( select_box, alpha );
 }
 
-/* ¸üĞÂÑ¡Ôñ¿òµÄ×ø±ê */
+/* æ›´æ–°é€‰æ‹©æ¡†çš„åæ ‡ */
 static void UpdateSelectBoxPos( void *arg )
 {
 	int new_y, n;
@@ -105,7 +105,7 @@ static void UpdateSelectBoxPos( void *arg )
 		new_y = widget->pos.y;
 		n = select_box_des_y - widget->pos.y;
 		if( n < 0 ) {
-			/* ÏòÉÏÒÆ¶¯ */
+			/* å‘ä¸Šç§»åŠ¨ */
 			if( n < -MOVE_SPEED ) {
 				new_y -= MOVE_SPEED;
 				Widget_Move( widget, Pos(0,new_y) );
@@ -113,7 +113,7 @@ static void UpdateSelectBoxPos( void *arg )
 				Widget_Move( widget, Pos(0,select_box_des_y) );
 			}
 		} else if( n > 0 ) {
-			/* ÏòÏÂÒÆ¶¯ */
+			/* å‘ä¸‹ç§»åŠ¨ */
 			if( n > MOVE_SPEED ) {
 				new_y += MOVE_SPEED;
 				Widget_Move( widget, Pos(0,new_y) );
@@ -239,7 +239,7 @@ void Game_MainMenu( void )
 	Widget_Show( box );
 	Widget_Show( select_box );
 	
-	/* ÒÔµ­ÈëµÄĞ§¹ûÏÔÊ¾LOGO */
+	/* ä»¥æ·¡å…¥çš„æ•ˆæœæ˜¾ç¤ºLOGO */
 	for( alpha=0; alpha<240; alpha+=20 ) {
 		Widget_SetAlpha( box, alpha );
 		LCUI_MSleep(25);
