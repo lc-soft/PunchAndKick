@@ -1,4 +1,4 @@
-﻿//#define SKIP_BOOT_SCREEN
+﻿#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -8,10 +8,11 @@
 
 #include "game.h"
 
-#define IMG_PATH_GAME_LOGO	"drawable/lcsoft-logo.png"
+#define IMG_PATH_GAME_LOGO	"drawable/lcui-logo.png"
 #define IMG_PATH_BG		"drawable/bg.png"
 #define IMG_PATH_RING		"drawable/ring.png"
 #define IMG_PATH_LC_LOGO	"drawable/logo.png"
+#define TEXT_COPYRIGHT		L"<size=18px>Powered by <color=#ff0000>LCUI</color></size>"
 
 static LCUI_Graph img_game_logo, img_bg, img_ring, img_lc_logo;
 
@@ -30,34 +31,53 @@ static void GraphRes_Load(void)
 static void Game_ShowBootScreen(void)
 {
 	uchar_t alpha;
-	LCUI_Widget *wdg_img_logo;
-	
+	LCUI_Widget *wdg_img_logo, *wdg_text;
+
 	wdg_img_logo = Widget_New(NULL);
+	wdg_text = Widget_New("label");
+	
+	Label_TextW( wdg_text, TEXT_COPYRIGHT );
 	Widget_Resize( wdg_img_logo, Graph_GetSize(&img_game_logo) );
+	Widget_SetAlign( wdg_text, ALIGN_BOTTOM_CENTER, Pos(0,-20) );
 	Widget_SetAlign( wdg_img_logo, ALIGN_MIDDLE_CENTER, Pos(0,0) );
 	Widget_SetBackgroundImage( wdg_img_logo, &img_game_logo );
 	Widget_SetBackgroundLayout( wdg_img_logo, LAYOUT_CENTER );
 	Widget_SetAlpha( wdg_img_logo, 0 );
+	Widget_SetAlpha( wdg_text, 0 );
 	Widget_Show( wdg_img_logo );
+	Widget_Show( wdg_text );
 #ifndef SKIP_BOOT_SCREEN
 	/* 以淡入淡出的效果显示LOGO */
 	for( alpha=0; alpha<250; alpha+=10 ) {
 		Widget_SetAlpha( wdg_img_logo, alpha );
+		Widget_SetAlpha( wdg_text, alpha );
 		LCUI_MSleep(25);
 	}
 	Widget_SetAlpha( wdg_img_logo, 255 );
-	LCUI_Sleep(1);
+	Widget_SetAlpha( wdg_text, 255 );
+	LCUI_Sleep(2);
 	for( alpha=255; alpha>5; alpha-=10 ) {
 		Widget_SetAlpha( wdg_img_logo, alpha );
+		Widget_SetAlpha( wdg_text, alpha );
 		LCUI_MSleep(25);
 	}
 #endif
 	Widget_SetAlpha( wdg_img_logo, 0 );
+	Widget_SetAlpha( wdg_text, 0 );
 	Widget_Hide( wdg_img_logo );
+	Widget_Hide( wdg_text );
 	Widget_Destroy( wdg_img_logo );
+	Widget_Destroy( wdg_text );
 }
 
 static LCUI_BOOL res_load_state = 0;
+
+int Game_LoadMenuRes( void )
+{
+	int ret;
+	ret = Game_LoadMainMenuRes();
+	return ret;
+}
 
 /* 载入游戏数据 */
 static void Game_LoadData( void *arg )
@@ -191,7 +211,9 @@ static void Game_MainThread( void *arg )
 	LCUICursor_Show();		/* 显示鼠标游标 */
 	ret = Game_ShowLoadingScreen();	/* 显示载入画面 */
 	if( ret == 0 ) {
-		Game_MainMenu();	/* 进入游戏主菜单 */
+		//Game_InitLANBattle();
+		//Game_InitMainMenu();	/* 初始化游戏主菜单 */
+		//Game_ShowMainMenu();	/* 显示游戏主菜单 */
 	}
 	LCUIThread_Exit(NULL);
 }
@@ -221,7 +243,7 @@ int main( int argc, char **argv )
 	LCUI_Widget *widget;
 	
 #ifdef LCUI_BUILD_IN_WIN32
-	//InitConsoleWindow();
+	InitConsoleWindow();
 #endif
 	LCUI_Init(640,480,0);
 	/* 预先载入图像资源 */
@@ -231,6 +253,8 @@ int main( int argc, char **argv )
 	Widget_SetBackgroundImage( widget, &img_bg );
 	Widget_SetBackgroundLayout( widget, LAYOUT_TILE );
 	/* 创建一个线程，用于进行游戏的初始化 */
-	LCUIThread_Create( &t, Game_MainThread, NULL );
+	//LCUIThread_Create( &t, Game_MainThread, NULL );
+	Game_Init();
+	Game_Start();
 	return LCUI_Main();
 }
