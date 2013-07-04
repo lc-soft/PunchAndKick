@@ -2,13 +2,6 @@
 #include LC_LCUI_H
 #include LC_WIDGET_H
 
-typedef struct GamePlayer_ {
-	int state;		/**< 玩家当前状态 */
-	int x, y;		/**< 玩家角色的中心坐标 */
-	int hp, mp;		/**< 生命值和法力值 */
-	LCUI_Widget *frame;	/**< 当前帧的角色图像 */
-} GamePlayer;
-
 enum GameMsgID {
 	GAMEMSG_MOTION,
 	GAMEMSG_STATE,
@@ -47,22 +40,26 @@ static LCUI_BOOL enable_lan_battle = FALSE;	/**< 是否启用局域网对战 */
 static GamePlayerComputer second_computer;	/**< 对方玩家计算机信息 */
 
 /* 向对方主机发送消息 */
-static int Game_SendMsg( GameMsg *msg  )
+static int Game_SendMsg( GameMsg *msg )
 {
 	/* 若启用局域网对战 */
 	if( enable_lan_battle ) {
 		//...
 	}
-}
-
-/* 向消息队列中投递消息 */
-int Game_PostMsg( GameMsg *msg )
-{
 	return 0;
 }
 
 /* 接收对方主机发送过来的消息 */
-int Game_RecvMsg( void )
+static int Game_RecvMsg( void )
+{
+	if( enable_lan_battle ) {
+		//...
+	}
+	return 0;
+}
+
+/* 向消息队列中投递消息 */
+int Game_PostMsg( GameMsg *msg )
 {
 	return 0;
 }
