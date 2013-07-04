@@ -12,11 +12,14 @@
 #define MOVE_SPEED	(10)
 
 static LCUI_Graph menu_imte_img[5];
+static LCUI_Graph select_box_bg;
+
 static LCUI_Widget *menu_item[5];
-static LCUI_Widget *select_box;
-static int timer_id = -1;
-static int select_item_pos = 0;
-static int select_box_des_y = 0;
+static LCUI_Widget *main_menu_box, *select_box;
+
+static int blink_effect_timer = -1;
+static int selected_item_pos = 0;
+static int selectbox_target_y = 0;
 
 static char img_path[5][256]={
 	"drawable/human-vs-computer.png",
@@ -26,7 +29,7 @@ static char img_path[5][256]={
 	"drawable/exit-game.png"
 };
 
-int Game_LoadMenuRes(void)
+int Game_LoadMainMenuRes(void)
 {
 	int i, ret;
 	for(i=0; i<5; ++i) {
@@ -35,7 +38,7 @@ int Game_LoadMenuRes(void)
 	return ret;
 }
 
-static void DrawSelectBox( LCUI_Graph *buff )
+void DrawSelectBox( LCUI_Graph *buff )
 {
 	LCUI_Graph bound_img;
 	int x, y, w, h;
@@ -103,14 +106,14 @@ static void UpdateSelectBoxPos( void *arg )
 	widget = (LCUI_Widget*)arg;
 	while(1) {
 		new_y = widget->pos.y;
-		n = select_box_des_y - widget->pos.y;
+		n = selectbox_target_y - widget->pos.y;
 		if( n < 0 ) {
 			/* 向上移动 */
 			if( n < -MOVE_SPEED ) {
 				new_y -= MOVE_SPEED;
 				Widget_Move( widget, Pos(0,new_y) );
 			} else {
-				Widget_Move( widget, Pos(0,select_box_des_y) );
+				Widget_Move( widget, Pos(0,selectbox_target_y) );
 			}
 		} else if( n > 0 ) {
 			/* 向下移动 */
@@ -118,10 +121,10 @@ static void UpdateSelectBoxPos( void *arg )
 				new_y += MOVE_SPEED;
 				Widget_Move( widget, Pos(0,new_y) );
 			} else {
-				Widget_Move( widget, Pos(0,select_box_des_y) );
+				Widget_Move( widget, Pos(0,selectbox_target_y) );
 			}
 		}
-		select_item_pos = select_box_des_y/35;
+		selected_item_pos = selectbox_target_y/35;
 		LCUI_MSleep(10);
 	}
 }
@@ -133,7 +136,7 @@ static void PorcMouseMovtion( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 	if( wdg_item == NULL ) {
 		return;
 	}
-	select_box_des_y = wdg_item->pos.y;
+	selectbox_target_y = wdg_item->pos.y;
 }
 
 static void Game_ShowAbout(void)
@@ -153,7 +156,15 @@ static void Item0_ProcClicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 
 static void Item1_ProcClicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
+	int ret;
+	ret = LCUI_MessageBoxW(	MB_ICON_NONE, 
+				L"是否需要使用局域网与对方进行对战？",
+				L"对战方式", MB_BTN_YESNO );
+	if( ret == MB_BTN_IS_YES ) {
 
+	} else {
+
+	}
 }
 
 static void Item2_ProcClicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
@@ -178,14 +189,14 @@ static void MainMenu_ProcInput( LCUI_KeyboardEvent *event, void *arg )
 	switch( event->key_code ) {
 	case LCUIKEY_W:
 	case LCUIKEY_UP:
-		if( select_item_pos > 0 ) {
-			--select_item_pos;
+		if( selected_item_pos > 0 ) {
+			--selected_item_pos;
 		}
 		break;
 	case LCUIKEY_S:
 	case LCUIKEY_DOWN:
-		if( select_item_pos < 4 ) {
-			++select_item_pos;
+		if( selected_item_pos < 4 ) {
+			++selected_item_pos;
 		}
 		break;
 	case LCUIKEY_J:
@@ -193,29 +204,27 @@ static void MainMenu_ProcInput( LCUI_KeyboardEvent *event, void *arg )
 		wdg_event.type = EVENT_CLICKED;
 		wdg_event.clicked.rel_pos.x = 0;
 		wdg_event.clicked.rel_pos.y = 0;
-		Widget_DispatchEvent( menu_item[select_item_pos], &wdg_event );
+		Widget_DispatchEvent( menu_item[selected_item_pos], &wdg_event );
 	default:
 		break;
 	}
-	select_box_des_y = select_item_pos*35;
+	selectbox_target_y = selected_item_pos*35;
 }
 
-void Game_MainMenu( void )
+void Game_InitMainMenu(void)
 {
 	int i, y=0;
-	uchar_t alpha;
 	LCUI_Thread t;
-	LCUI_Graph select_box_bg;
-	LCUI_Widget *box;
+
 	void (*func[5])(LCUI_Widget*,LCUI_WidgetEvent*)={
 		Item0_ProcClicked, Item1_ProcClicked,
 		Item2_ProcClicked, Item3_ProcClicked,
 		Item4_ProcClicked
 	};
-	box = Widget_New(NULL);
+	main_menu_box = Widget_New(NULL);
 	select_box = Widget_New(NULL);
-	Widget_Container_Add( box, select_box );
-	Widget_Resize( box, ITEM_BOX_SIZE );
+	Widget_Container_Add( main_menu_box, select_box );
+	Widget_Resize( main_menu_box, ITEM_BOX_SIZE );
 	Widget_Resize( select_box, ITEM_SIZE );
 
 	Graph_Init( &select_box_bg );
@@ -224,7 +233,7 @@ void Game_MainMenu( void )
 
 	for(i=0; i<5; ++i) {
 		menu_item[i] = Widget_New(NULL);
-		Widget_Container_Add( box, menu_item[i] );
+		Widget_Container_Add( main_menu_box, menu_item[i] );
 		Widget_Resize( menu_item[i], ITEM_SIZE );
 		Widget_SetBackgroundImage( menu_item[i], &menu_imte_img[i] );
 		Widget_SetBackgroundLayout( menu_item[i], LAYOUT_CENTER );
@@ -234,20 +243,39 @@ void Game_MainMenu( void )
 		Widget_Show( menu_item[i] );
 		y += 35;
 	}
-	Widget_SetAlign( box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
-	Widget_SetAlpha( box, 0 );
-	Widget_Show( box );
+	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	Widget_SetAlpha( main_menu_box, 0 );
+	Widget_Show( main_menu_box );
 	Widget_Show( select_box );
-	
-	/* 以淡入的效果显示LOGO */
+	LCUIThread_Create( &t, UpdateSelectBoxPos, (void*)select_box );
+	blink_effect_timer = LCUITimer_Set( 10, BlinkSelectBox, TRUE );
+}
+
+void Game_ShowMainMenu(void)
+{
+	uchar_t alpha;
+
+	Widget_Show( main_menu_box );
+	/* 以淡入的效果显示菜单 */
 	for( alpha=0; alpha<240; alpha+=20 ) {
-		Widget_SetAlpha( box, alpha );
+		Widget_SetAlpha( main_menu_box, alpha );
 		LCUI_MSleep(25);
 	}
-	Widget_SetAlpha( box, 255 );
-
-	Widget_Event_Connect( box, EVENT_MOUSEMOTION, PorcMouseMovtion );
+	Widget_SetAlpha( main_menu_box, 255 );
+	Widget_Event_Connect( main_menu_box, EVENT_MOUSEMOTION, PorcMouseMovtion );
 	LCUI_KeyboardEvent_Connect( MainMenu_ProcInput, NULL );
-	LCUIThread_Create( &t, UpdateSelectBoxPos, (void*)select_box );
-	timer_id = LCUITimer_Set( 10, BlinkSelectBox, TRUE );
+	LCUITimer_Continue( blink_effect_timer );
+}
+
+void Game_HideMainMenu(void)
+{
+	uchar_t alpha;
+	/* 以淡出的效果显示菜单 */
+	for( alpha=240; alpha>0; alpha-=20 ) {
+		Widget_SetAlpha( main_menu_box, alpha );
+		LCUI_MSleep(25);
+	}
+	Widget_SetAlpha( main_menu_box, 0 );
+	Widget_Hide( main_menu_box );
+	LCUITimer_Pause( blink_effect_timer );
 }
