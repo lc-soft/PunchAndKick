@@ -12,7 +12,7 @@
 #define IMG_PATH_BG		"drawable/bg.png"
 #define IMG_PATH_RING		"drawable/ring.png"
 #define IMG_PATH_LC_LOGO	"drawable/logo.png"
-#define TEXT_COPYRIGHT		L"<size=18px>Powered by <color=#ff0000>LCUI</color></size>"
+#define TEXT_COPYRIGHT		L"Powered by <color=#ff0000>LCUI</color>"
 
 static LCUI_Graph img_game_logo, img_bg, img_ring, img_lc_logo;
 
