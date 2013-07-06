@@ -1,64 +1,64 @@
-#ifndef __GAME_OBJECT_H__
+﻿#ifndef __GAME_OBJECT_H__
 #define __GAME_OBJECT_H__
 
 /*
-  ��ǰ֡�����ĵ��Y��ƽ����
+  当前帧的中心点的Y轴平行线
          |
   _______|______
-  |   O        |         ���ο������ǰ֡�ķ�Χ
+  |   O        |         矩形框代表当前帧的范围
   |  /|\       |
-  |__/_\_______|________ ���ߵ�X��ƽ����
+  |__/_\_______|________ 底线的X轴平行线
       |
       |
-  ������е��Y��ƽ����
+  对象的中点的Y轴平行线
 */
 
-/** һ֡��������Ϣ */
+/** 一帧动作的信息 */
 typedef struct ActionFrameData_ {
-	LCUI_Pos offset;	/**< ��ǰ��������е�����ڸ�֡ͼ������е��ƫ���� */
-	LCUI_Graph graph;	/**< ��ǰ֡��ͼ�� */
-	long int sleep_time;	/**< ��֡��ʾ��ʱ������λ�����룩 */
-	long int current_time;	/**< ��ǰʣ�µĵȴ�ʱ�� */
+	LCUI_Pos offset;	/**< 当前对象底线中点相对于该帧图像底线中点的偏移量 */
+	LCUI_Graph graph;	/**< 当前帧的图像 */
+	long int sleep_time;	/**< 该帧显示的时长（单位：毫秒） */
+	long int current_time;	/**< 当前剩下的等待时间 */
 } ActionFrameData;
 
-/** ����������Ϣ */
+/** 动作集的信息 */
 typedef struct ActionData_ {
-	LCUI_Queue frame;	/**< ���ڼ�¼�ö�����������֡���� */
+	LCUI_Queue frame;	/**< 用于记录该动作集的所有帧动作 */
 } ActionData;
 
 /**
- * ����һ��������
- * �����Ķ���������¼����������
+ * 创建一个动作集
+ * 创建的动作集将记录至动作库中
  * @returns
- *	�����򷵻�ָ�������еĸö�������ָ�룬ʧ���򷵻�NULL
+ *	正常则返回指向动作库中的该动作集的指针，失败则返回NULL
  */
 LCUI_API ActionData* Action_Create( void );
 
 /**
- * ɾ��һ������
- * �Ӷ�������ɾ��ָ���Ķ���
+ * 删除一个动画
+ * 从动画库中删除指定的动画
  * @param action
- *	��ɾ���Ķ���
+ *	需删除的动画
  * @returns
- *	�����򷵻�0��ʧ���򷵻�-1
+ *	正常则返回0，失败则返回-1
  */
 LCUI_API int Action_Delete( ActionData* action );
 
 /**
- * Ϊ���������ص�����
- * �����ص������󣬶���ÿ����һ֡������øú���
+ * 为动作关联回调函数
+ * 关联回调函数后，动画每更新一帧都会调用该函数
  * @param action
- *	Ŀ�궯��
+ *	目标动画
  * @param obj_id
- *	ʹ�øö����Ķ����ID
+ *	使用该动作的对象的ID
  * @param func
- *	ָ��ص������ĺ���ָ��
+ *	指向回调函数的函数指针
  * @param arg
- *	�贫�ݸ��ص������ĵڶ�������
+ *	需传递给回调函数的第二个参数
  * @returns
- *	�����򷵻�0��ʧ���򷵻�-1
+ *	正常则返回0，失败则返回-1
  * @warning
- *	�����ڶ�������һ�β��ź���ô˺������������Ҳ����ö����Ĳ���ʵ�������¹���ʧ��
+ *	必须在动画被第一次播放后调用此函数，否则将因找不到该动画的播放实例而导致关联失败
  * */
 LCUI_API int Action_Connect(	ActionData *action,
 				int obj_id,
@@ -66,43 +66,43 @@ LCUI_API int Action_Connect(	ActionData *action,
 				void *arg );
 
 /**
-/* ����ָ��ʵ�������еĶ���
+/* 播放指定实例对象中的动作
  * @param action
- *	Ҫ���ŵĶ���
+ *	要播放的动画
  * @param obj_id
- *	����ʵ����Ӧ�ı�ʶ�ţ���������0�����Ϊ�ö�������һ���µĶ���ʵ��
+ *	对象实例对应的标识号，若不大于0，则会为该动作创建一个新的对象实例
  * @returns
- *	�����򷵻ظö����Ĳ��ű�ʶ�ţ�ʧ���򷵻�-1
+ *	正常则返回该动画的播放标识号，失败则返回-1
  */
 LCUI_API int Action_Play( ActionData *action, int obj_id );
 
 /**
- * ��ָͣ��ʵ�������еĶ���
+ * 暂停指定实例兑现中的动作
  * @param action
- *	Ҫ��ͣ�Ķ���
+ *	要暂停的动画
  * @param obj_id
- *	��ö����Ĳ���ʵ����Ӧ�ı�ʶ��
+ *	与该动画的播放实例对应的标识号
  * @returns
- *	�����򷵻ظö����Ĳ��ű�ʶ�ţ�ʧ���򷵻�-1
+ *	正常则返回该动画的播放标识号，失败则返回-1
  */
 LCUI_API int Action_Pause( ActionData *action, int obj_id );
 
 /**
- * �л�����Ķ���
+ * 切换对象的动作
  * @param widget
- *	Ŀ��ActiveBox����
- * @param action
- *	�л������¶���
+ *	目标ActiveBox部件
+ * @param action_id
+ *	切换至的动画的标识号
  * @return
- *	�л��ɹ��򷵻�0��δ�ҵ�ָ��ID�Ķ�����¼���򷵻�-1
+ *	切换成功则返回0，未找到指定ID的动画记录，则返回-1
  */
 LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
-					ActionData *action );
+					int action_id );
 
-/** ���Ŷ���Ķ��� */
+/** 播放对象的动作 */
 LCUI_API int GameObject_PlayAction( LCUI_Widget *widget );
 
-/** ��ͣ����Ķ��� */
+/** 暂停对象的动作 */
 LCUI_API int GameObject_PauseAction( LCUI_Widget *widget );
 
 LCUI_API int Action_AddFrame(	ActionData* action,
@@ -111,11 +111,16 @@ LCUI_API int Action_AddFrame(	ActionData* action,
 				LCUI_Graph *graph,
 				long int sleep_time );
 
-/** Ϊ��������һ������ */
-LCUI_API int GameObject_AddAction( LCUI_Widget *widget, ActionData *action );
+/** 为对象添加一个动作 */
+LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
+					ActionData *action,
+					int id );
 
-/** �ƶ���Ϸ�����λ�� */
+/** 移动游戏对象的位置 */
 LCUI_API void GameObject_Move( LCUI_Widget *widget, int x, int y );
+
+/** 获取游戏对象的位置 */
+LCUI_API void GameObject_GetPos( LCUI_Widget *widget, int *x, int *y );
 
 LCUI_API LCUI_Widget* GameObject_New(void);
 

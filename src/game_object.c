@@ -1,4 +1,4 @@
-#include <LCUI_Build.h>
+ï»¿#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
 #include "game_object.h"
@@ -8,30 +8,31 @@
 #define PAUSE	0
 #define PLAY	1
 
-/** ¶¯×÷¼ÇÂ¼ */
+/** åŠ¨ä½œè®°å½• */
 typedef struct ActionRec_ {
-	int obj_id;		/**< ¶ÔÏóµÄ±êÊ¶ºÅ */
-	ActionData *action;	/**< ¶ÔÓ¦µÄ¶¯×÷¼¯ */
+	int id;			/**< åŠ¨ç”»çš„æ ‡è¯†å· */
+	int obj_id;		/**< å¯¹è±¡çš„æ ‡è¯†å· */
+	ActionData *action;	/**< å¯¹åº”çš„åŠ¨ä½œé›† */
 } ActionRec;
 
-/** ¶¯×÷µÄ×´Ì¬ */
+/** åŠ¨ä½œçš„çŠ¶æ€ */
 typedef struct ActionStatus_ {
-	int obj_id;		/**< ¶ÔÏó±êÊ¶ºÅ */
-	int state;		/**< ×´Ì¬£¬Ö¸Ê¾²¥·Å»¹ÊÇÔÝÍ£ */
-	int current;		/**< ¼ÇÂ¼µ±Ç°Ö¡¶¯×÷µÄÐòºÅ£¬Ö¡ÐòºÅ´Ó1¿ªÊ¼ */
-	ActionData *action;	/**< ¶ÔÓ¦µÄ¶¯×÷¼¯ */
-	LCUI_Func func;		/**< ±»¹ØÁªµÄ»Øµ÷º¯Êý */
+	int obj_id;		/**< å¯¹è±¡æ ‡è¯†å· */
+	int state;		/**< çŠ¶æ€ï¼ŒæŒ‡ç¤ºæ’­æ”¾è¿˜æ˜¯æš‚åœ */
+	int current;		/**< è®°å½•å½“å‰å¸§åŠ¨ä½œçš„åºå·ï¼Œå¸§åºå·ä»Ž1å¼€å§‹ */
+	ActionData *action;	/**< å¯¹åº”çš„åŠ¨ä½œé›† */
+	LCUI_Func func;		/**< è¢«å…³è”çš„å›žè°ƒå‡½æ•° */
 } ActionStatus;
 
 typedef struct GameObject_ {
-	int state;			/**< µ±Ç°×´Ì¬ */
-	int x, y;			/**< µ×ÏßÖÐµã×ø±ê */
-	int w, h;			/**< ¶¯×÷ÈÝÆ÷µÄ³ß´ç */
-	int global_bottom_line_y;	/**< µ×ÏßµÄYÖá×ø±ê */
-	int global_center_x;		/**< ÖÐÐÄµãµÄXÖá×ø±ê */
-	LCUI_BOOL data_valid;		/**< µ±Ç°Ê¹ÓÃµÄÊý¾ÝÊÇ·ñÓÐÐ§ */
-	ActionRec *current;		/**< µ±Ç°¶¯×÷¶¯»­ */
-	LCUI_Queue action_list;		/**< ¶¯×÷ÁÐ±í */
+	int state;			/**< å½“å‰çŠ¶æ€ */
+	int x, y;			/**< åº•çº¿ä¸­ç‚¹åæ ‡ */
+	int w, h;			/**< åŠ¨ä½œå®¹å™¨çš„å°ºå¯¸ */
+	int global_bottom_line_y;	/**< åº•çº¿çš„Yè½´åæ ‡ */
+	int global_center_x;		/**< ä¸­å¿ƒç‚¹çš„Xè½´åæ ‡ */
+	LCUI_BOOL data_valid;		/**< å½“å‰ä½¿ç”¨çš„æ•°æ®æ˜¯å¦æœ‰æ•ˆ */
+	ActionRec *current;		/**< å½“å‰åŠ¨ä½œåŠ¨ç”» */
+	LCUI_Queue action_list;		/**< åŠ¨ä½œåˆ—è¡¨ */
 } GameObject;
 
 static LCUI_Queue action_database;
@@ -91,10 +92,10 @@ static ActionStatus* Action_GetStatus( ActionData *action, int obj_id )
 }
 
 /**
- * ´´½¨Ò»¸ö¶¯×÷¼¯
- * ´´½¨µÄ¶¯×÷¼¯½«¼ÇÂ¼ÖÁ¶¯×÷¿âÖÐ
+ * åˆ›å»ºä¸€ä¸ªåŠ¨ä½œé›†
+ * åˆ›å»ºçš„åŠ¨ä½œé›†å°†è®°å½•è‡³åŠ¨ä½œåº“ä¸­
  * @returns
- *	Õý³£Ôò·µ»ØÖ¸Ïò¶¯×÷¿âÖÐµÄ¸Ã¶¯×÷¼¯µÄÖ¸Õë£¬Ê§°ÜÔò·µ»ØNULL
+ *	æ­£å¸¸åˆ™è¿”å›žæŒ‡å‘åŠ¨ä½œåº“ä¸­çš„è¯¥åŠ¨ä½œé›†çš„æŒ‡é’ˆï¼Œå¤±è´¥åˆ™è¿”å›žNULL
  */
 LCUI_API ActionData* Action_Create( void )
 {
@@ -110,7 +111,7 @@ LCUI_API ActionData* Action_Create( void )
 		database_init = TRUE;
 	}
 	Queue_Lock( &action_database );
-	/* ¼ÇÂ¼¸Ã¶¯»­ÖÁ¿âÖÐ */
+	/* è®°å½•è¯¥åŠ¨ç”»è‡³åº“ä¸­ */
 	pos = Queue_Add( &action_database, &action );
 	p = (ActionData*)Queue_Get( &action_database, pos );
 	Queue_Unlock( &action_database );
@@ -140,12 +141,12 @@ static int ActionStream_Delete( ActionData *action )
 }
 
 /**
- * É¾³ýÒ»¸ö¶¯»­
- * ´Ó¶¯»­¿âÖÐÉ¾³ýÖ¸¶¨µÄ¶¯»­
+ * åˆ é™¤ä¸€ä¸ªåŠ¨ç”»
+ * ä»ŽåŠ¨ç”»åº“ä¸­åˆ é™¤æŒ‡å®šçš„åŠ¨ç”»
  * @param action
- *	ÐèÉ¾³ýµÄ¶¯»­
+ *	éœ€åˆ é™¤çš„åŠ¨ç”»
  * @returns
- *	Õý³£Ôò·µ»Ø0£¬Ê§°ÜÔò·µ»Ø-1
+ *	æ­£å¸¸åˆ™è¿”å›ž0ï¼Œå¤±è´¥åˆ™è¿”å›ž-1
  */
 LCUI_API int Action_Delete( ActionData* action )
 {
@@ -171,20 +172,20 @@ LCUI_API int Action_Delete( ActionData* action )
 }
 
 /**
- * Îª¶¯×÷¹ØÁª»Øµ÷º¯Êý
- * ¹ØÁª»Øµ÷º¯Êýºó£¬¶¯»­Ã¿¸üÐÂÒ»Ö¡¶¼»áµ÷ÓÃ¸Ãº¯Êý
+ * ä¸ºåŠ¨ä½œå…³è”å›žè°ƒå‡½æ•°
+ * å…³è”å›žè°ƒå‡½æ•°åŽï¼ŒåŠ¨ç”»æ¯æ›´æ–°ä¸€å¸§éƒ½ä¼šè°ƒç”¨è¯¥å‡½æ•°
  * @param action
- *	Ä¿±ê¶¯»­
+ *	ç›®æ ‡åŠ¨ç”»
  * @param obj_id
- *	Ê¹ÓÃ¸Ã¶¯×÷µÄ¶ÔÏóµÄID
+ *	ä½¿ç”¨è¯¥åŠ¨ä½œçš„å¯¹è±¡çš„ID
  * @param func
- *	Ö¸Ïò»Øµ÷º¯ÊýµÄº¯ÊýÖ¸Õë
+ *	æŒ‡å‘å›žè°ƒå‡½æ•°çš„å‡½æ•°æŒ‡é’ˆ
  * @param arg
- *	Ðè´«µÝ¸ø»Øµ÷º¯ÊýµÄµÚ¶þ¸ö²ÎÊý
+ *	éœ€ä¼ é€’ç»™å›žè°ƒå‡½æ•°çš„ç¬¬äºŒä¸ªå‚æ•°
  * @returns
- *	Õý³£Ôò·µ»Ø0£¬Ê§°ÜÔò·µ»Ø-1
+ *	æ­£å¸¸åˆ™è¿”å›ž0ï¼Œå¤±è´¥åˆ™è¿”å›ž-1
  * @warning
- *	±ØÐëÔÚ¶¯»­±»µÚÒ»´Î²¥·Åºóµ÷ÓÃ´Ëº¯Êý£¬·ñÔò½«ÒòÕÒ²»µ½¸Ã¶¯»­µÄ²¥·ÅÊµÀý¶øµ¼ÖÂ¹ØÁªÊ§°Ü
+ *	å¿…é¡»åœ¨åŠ¨ç”»è¢«ç¬¬ä¸€æ¬¡æ’­æ”¾åŽè°ƒç”¨æ­¤å‡½æ•°ï¼Œå¦åˆ™å°†å› æ‰¾ä¸åˆ°è¯¥åŠ¨ç”»çš„æ’­æ”¾å®žä¾‹è€Œå¯¼è‡´å…³è”å¤±è´¥
  * */
 LCUI_API int Action_Connect(	ActionData *action,
 				int obj_id,
@@ -286,7 +287,7 @@ static void ActionStream_TimeSub( int time )
 	Queue_Unlock( &action_stream );
 }
 
-/** ¸üÐÂÁ÷ÖÐµÄ¶¯»­ÖÁÏÂÒ»Ö¡£¬²¢»ñÈ¡µ±Ç°¶¯»­ºÍµ±Ç°Ö¡µÄµÈ´ýÊ±¼ä */
+/** æ›´æ–°æµä¸­çš„åŠ¨ç”»è‡³ä¸‹ä¸€å¸§ï¼Œå¹¶èŽ·å–å½“å‰åŠ¨ç”»å’Œå½“å‰å¸§çš„ç­‰å¾…æ—¶é—´ */
 static ActionStatus* ActionStream_Update( int *sleep_time )
 {
 	int i, total;
@@ -306,8 +307,8 @@ static ActionStatus* ActionStream_Update( int *sleep_time )
 		return NULL;
 	}
 	/*
-	 * ÓÉÓÚÓÐÐ©¶¯»­»¹Î´¸üÐÂµÚÒ»Ö¡Í¼Ïñ£¬¶¯»­²ÛÀïµÄÍ¼ÏñÒ²Î´ÔØÈëµÚÒ»Ö¡µÄÍ¼Ïñ£¬Òò´Ë£¬
-	 * ÐèÒªÓÅÏÈ´¦ÀíÖ¡ÐòºÅÎª0µÄ¶¯»­¡£
+	 * ç”±äºŽæœ‰äº›åŠ¨ç”»è¿˜æœªæ›´æ–°ç¬¬ä¸€å¸§å›¾åƒï¼ŒåŠ¨ç”»æ§½é‡Œçš„å›¾åƒä¹Ÿæœªè½½å…¥ç¬¬ä¸€å¸§çš„å›¾åƒï¼Œå› æ­¤ï¼Œ
+	 * éœ€è¦ä¼˜å…ˆå¤„ç†å¸§åºå·ä¸º0çš„åŠ¨ç”»ã€‚
 	 * */
 	for(i=0; i<total; ++i){
 		temp = (ActionStatus*)Queue_Get( &action_stream, i );
@@ -368,13 +369,13 @@ static void Process_Frames( void )
 }
 
 /**
-/* ²¥·ÅÖ¸¶¨ÊµÀý¶ÔÏóÖÐµÄ¶¯×÷
+/* æ’­æ”¾æŒ‡å®šå®žä¾‹å¯¹è±¡ä¸­çš„åŠ¨ä½œ
  * @param action
- *	Òª²¥·ÅµÄ¶¯»­
+ *	è¦æ’­æ”¾çš„åŠ¨ç”»
  * @param obj_id
- *	¶ÔÏóÊµÀý¶ÔÓ¦µÄ±êÊ¶ºÅ£¬Èô²»´óÓÚ0£¬Ôò»áÎª¸Ã¶¯×÷´´½¨Ò»¸öÐÂµÄ¶ÔÏóÊµÀý
+ *	å¯¹è±¡å®žä¾‹å¯¹åº”çš„æ ‡è¯†å·ï¼Œè‹¥ä¸å¤§äºŽ0ï¼Œåˆ™ä¼šä¸ºè¯¥åŠ¨ä½œåˆ›å»ºä¸€ä¸ªæ–°çš„å¯¹è±¡å®žä¾‹
  * @returns
- *	Õý³£Ôò·µ»Ø¸Ã¶¯»­µÄ²¥·Å±êÊ¶ºÅ£¬Ê§°ÜÔò·µ»Ø-1
+ *	æ­£å¸¸åˆ™è¿”å›žè¯¥åŠ¨ç”»çš„æ’­æ”¾æ ‡è¯†å·ï¼Œå¤±è´¥åˆ™è¿”å›ž-1
  */
 LCUI_API int Action_Play( ActionData *action, int obj_id )
 {
@@ -409,13 +410,13 @@ LCUI_API int Action_Play( ActionData *action, int obj_id )
 }
 
 /**
- * ÔÝÍ£Ö¸¶¨ÊµÀý¶ÒÏÖÖÐµÄ¶¯×÷
+ * æš‚åœæŒ‡å®šå®žä¾‹å…‘çŽ°ä¸­çš„åŠ¨ä½œ
  * @param action
- *	ÒªÔÝÍ£µÄ¶¯»­
+ *	è¦æš‚åœçš„åŠ¨ç”»
  * @param obj_id
- *	Óë¸Ã¶¯»­µÄ²¥·ÅÊµÀý¶ÔÓ¦µÄ±êÊ¶ºÅ
+ *	ä¸Žè¯¥åŠ¨ç”»çš„æ’­æ”¾å®žä¾‹å¯¹åº”çš„æ ‡è¯†å·
  * @returns
- *	Õý³£Ôò·µ»Ø¸Ã¶¯»­µÄ²¥·Å±êÊ¶ºÅ£¬Ê§°ÜÔò·µ»Ø-1
+ *	æ­£å¸¸åˆ™è¿”å›žè¯¥åŠ¨ç”»çš„æ’­æ”¾æ ‡è¯†å·ï¼Œå¤±è´¥åˆ™è¿”å›ž-1
  */
 LCUI_API int Action_Pause( ActionData *action, int obj_id )
 {
@@ -439,6 +440,29 @@ LCUI_API int Action_Pause( ActionData *action, int obj_id )
 	return 0;
 }
 
+/** é‡ç½®åŠ¨ä½œåŠ¨ç”» */
+LCUI_API int Action_Reset( ActionData *action, int obj_id )
+{
+	static int new_play_id = 1;
+	ActionStatus *p_status;
+
+	if( !action ) {
+		return -1;
+	}
+	if( frame_proc_timer == -1 ) {
+		return -1;
+	}
+	if( obj_id <= 0 ) {
+		return -1;
+	}
+	p_status = Action_GetStatus( action, obj_id );
+	if( p_status == NULL ) {
+		return -1;
+	}
+	p_status->current = 1;
+	return 0;
+}
+
 static void GameObject_RefreshFrame( void *arg )
 {
 	LCUI_Widget *widget = (LCUI_Widget*)arg;
@@ -446,62 +470,81 @@ static void GameObject_RefreshFrame( void *arg )
 	Widget_Draw( widget );
 }
 
+
+static int __GameObject_PlayAction(	LCUI_Widget *widget,
+					ActionRec *action_rec )
+{
+	int ret;
+	ret = Action_Play(	action_rec->action,
+				action_rec->obj_id );
+	if( ret <= 0 ) {
+		return -1;
+	}
+	/* ä¿å­˜æ’­æ”¾æ ‡è¯†å· */
+	action_rec->obj_id = ret;
+	/* å…³è”å›žè°ƒå‡½æ•° */
+	Action_Connect(
+		action_rec->action,
+		action_rec->obj_id,
+		GameObject_RefreshFrame,
+		(void*)widget
+	);
+	return 0;
+}
+
 /**
- * ÇÐ»»¶ÔÏóµÄ¶¯×÷
+ * åˆ‡æ¢å¯¹è±¡çš„åŠ¨ä½œ
  * @param widget
- *	Ä¿±êActiveBox²¿¼þ
- * @param action
- *	ÇÐ»»ÖÁµÄÐÂ¶¯»­
+ *	ç›®æ ‡ActiveBoxéƒ¨ä»¶
+ * @param action_id
+ *	åˆ‡æ¢è‡³çš„åŠ¨ç”»çš„æ ‡è¯†å·
  * @return
- *	ÇÐ»»³É¹¦Ôò·µ»Ø0£¬Î´ÕÒµ½Ö¸¶¨IDµÄ¶¯»­¼ÇÂ¼£¬Ôò·µ»Ø-1
+ *	åˆ‡æ¢æˆåŠŸåˆ™è¿”å›ž0ï¼Œæœªæ‰¾åˆ°æŒ‡å®šIDçš„åŠ¨ç”»è®°å½•ï¼Œåˆ™è¿”å›ž-1
  */
 LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
-					ActionData *action )
+					int action_id )
 {
 	int i, n;
 	ActionRec *p_rec;
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
+	if( obj->current && obj->current->id == action_id ) {
+		return 0;
+	}
 	n = Queue_GetTotal( &obj->action_list );
 	for(i=0; i<n; ++i) {
 		p_rec = (ActionRec*)
 			Queue_Get( &obj->action_list, i );
 
-		if( !p_rec || p_rec->action != action ) {
+		if( !p_rec || p_rec->id != action_id ) {
 			continue;
 		}
 		if( obj->current ) {
-			Action_Pause(
-				obj->current->action,
-				obj->current->obj_id
-			);
+			Action_Pause(	obj->current->action,
+					obj->current->obj_id );
+			Action_Reset(	obj->current->action,
+					obj->current->obj_id );
 		}
 		if( obj->state == PLAY ) {
-			Action_Play(
-				p_rec->action,
-				p_rec->obj_id
-			);
+			__GameObject_PlayAction( widget, p_rec );
 		} else {
-			Action_Pause(
-				p_rec->action,
-				p_rec->obj_id
-			);
+			Action_Pause( p_rec->action, p_rec->obj_id );
+			Action_Reset( p_rec->action, p_rec->obj_id );
 		}
 		obj->current = p_rec;
+		/* æ ‡è®°æ•°æ®ä¸ºæ— æ•ˆï¼Œä»¥æ ¹æ®å½“å‰åŠ¨ä½œåŠ¨ç”»æ¥æ›´æ–°æ•°æ® */
+		obj->data_valid = FALSE;
 		return 0;
 	}
 	return -1;
 }
 
-/** ²¥·Å¶ÔÏóµÄ¶¯×÷ */
-LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
+LCUI_API int GameObject_ResetAction( LCUI_Widget *widget )
 {
-	int ret;
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData(widget);
-	obj->state = PLAY;
 	if( obj->current == NULL ) {
 		obj->current = (ActionRec*)Queue_Get(
 					&obj->action_list, 0 );
@@ -509,24 +552,27 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
 			return -1;
 		}
 	}
-	ret = Action_Play(	obj->current->action,
-				obj->current->obj_id );
-	if( ret > 0 ) {
-		/* ±£´æ²¥·Å±êÊ¶ºÅ */
-		obj->current->obj_id = ret;
-		/* ¹ØÁª»Øµ÷º¯Êý */
-		Action_Connect(
-			obj->current->action,
-			obj->current->obj_id,
-			GameObject_RefreshFrame,
-			(void*)widget
-		);
-		return 0;
-	}
-	return -1;
+	return Action_Reset( obj->current->action, obj->current->obj_id );
 }
 
-/** ÔÝÍ£¶ÔÏóµÄ¶¯×÷ */
+/** æ’­æ”¾å¯¹è±¡çš„åŠ¨ä½œ */
+LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData(widget);
+	if( obj->current == NULL ) {
+		obj->current = (ActionRec*)Queue_Get(
+					&obj->action_list, 0 );
+		if( obj->current == NULL ) {
+			return -1;
+		}
+	}
+	obj->state = PLAY;
+	return __GameObject_PlayAction( widget, obj->current );
+}
+
+/** æš‚åœå¯¹è±¡çš„åŠ¨ä½œ */
 LCUI_API int GameObject_PauseAction( LCUI_Widget *widget )
 {
 	GameObject *obj;
@@ -581,7 +627,7 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->h = 0;
 }
 
-/** »ñÈ¡µ±Ç°¶¯×÷ÐÅÏ¢ */
+/** èŽ·å–å½“å‰åŠ¨ä½œä¿¡æ¯ */
 static int GameObject_UpdateData( LCUI_Widget *widget )
 {
 	int i, n;
@@ -603,30 +649,30 @@ static int GameObject_UpdateData( LCUI_Widget *widget )
 			continue;
 		}
 		/*
-		 * frame->graphÊÇµ±Ç°Ö¡¶¯×÷µÄÈÝÆ÷
-		 * frame->graph.w ºÍ frame->graph.h ÔòÊÇ¸ÃÈÝÆ÷µÄ³ß´ç
-		 * box_w ºÍ box_h ÊÇ¸Ã¶¯×÷¼¯µÄÈÝÆ÷³ß´ç
-		 * frame_bottom_y ÊÇ¶ÔÏóµ×ÏßÔÚµ±Ç°Ö¡µÄÈÝÆ÷ÖÐµÄYÖá×ø±ê
-		 * frame_center_x ÊÇ¶ÔÏóÖÐµãÔÚµ±Ç°Ö¡µÄÈÝÆ÷ÖÐµÄXÖá×ø±ê
-		 * point_y ºÍ point_x ÓëÉÏÃæÁ½¸öÀàËÆ£¬µ«×ø±êÊÇÏà¶Ô¶¯×÷¼¯µÄÈÝÆ÷
+		 * frame->graphæ˜¯å½“å‰å¸§åŠ¨ä½œçš„å®¹å™¨
+		 * frame->graph.w å’Œ frame->graph.h åˆ™æ˜¯è¯¥å®¹å™¨çš„å°ºå¯¸
+		 * box_w å’Œ box_h æ˜¯è¯¥åŠ¨ä½œé›†çš„å®¹å™¨å°ºå¯¸
+		 * frame_bottom_y æ˜¯å¯¹è±¡åº•çº¿åœ¨å½“å‰å¸§çš„å®¹å™¨ä¸­çš„Yè½´åæ ‡
+		 * frame_center_x æ˜¯å¯¹è±¡ä¸­ç‚¹åœ¨å½“å‰å¸§çš„å®¹å™¨ä¸­çš„Xè½´åæ ‡
+		 * point_y å’Œ point_x ä¸Žä¸Šé¢ä¸¤ä¸ªç±»ä¼¼ï¼Œä½†åæ ‡æ˜¯ç›¸å¯¹åŠ¨ä½œé›†çš„å®¹å™¨
 		 */
 		frame_bottom_y = frame->graph.h + frame->offset.y;
 		frame_center_x = frame->graph.w/2 + frame->offset.x;
-		/* ¶Ô±ÈÈÝÆ÷¶¥¶Ëµ½µ×ÏßµÄ¾àÀë */
+		/* å¯¹æ¯”å®¹å™¨é¡¶ç«¯åˆ°åº•çº¿çš„è·ç¦» */
 		if( frame_bottom_y > point_y ) {
 			box_h = (box_h - point_y) + frame_bottom_y;
 			point_y = frame_bottom_y;
 		}
-		/* ¶Ô±Èµ×Ïßµ½ÈÝÆ÷µ×¶ËµÄ¾àÀë */
+		/* å¯¹æ¯”åº•çº¿åˆ°å®¹å™¨åº•ç«¯çš„è·ç¦» */
 		if( frame->graph.h - frame_bottom_y > box_h - point_y  ) {
 			box_h = point_y + (frame->graph.h - frame_bottom_y);
 		}
-		/* ¶Ô±ÈÈÝÆ÷×ó¶Ëµ½ÖÐÐÄµãµÄ¾àÀë */
+		/* å¯¹æ¯”å®¹å™¨å·¦ç«¯åˆ°ä¸­å¿ƒç‚¹çš„è·ç¦» */
 		if( frame_center_x > point_x ) {
 			box_w = (box_w - point_x) + frame_center_x;
 			point_x = frame_center_x;
 		}
-		/* ¶Ô±ÈÖÐÐÄµãµ½ÈÝÆ÷ÓÒ¶ËµÄ¾àÀë */
+		/* å¯¹æ¯”ä¸­å¿ƒç‚¹åˆ°å®¹å™¨å³ç«¯çš„è·ç¦» */
 		if( frame->graph.w - frame_center_x > box_w - point_x ) {
 			box_w = point_x + (frame->graph.w - frame_center_x);
 		}
@@ -638,8 +684,10 @@ static int GameObject_UpdateData( LCUI_Widget *widget )
 	return 0;
 }
 
-/** Îª¶ÔÏóÌí¼ÓÒ»¸ö¶¯×÷ */
-LCUI_API int GameObject_AddAction( LCUI_Widget *widget, ActionData *action )
+/** ä¸ºå¯¹è±¡æ·»åŠ ä¸€ä¸ªåŠ¨ä½œ */
+LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
+					ActionData *action,
+					int id )
 {
 	int ret;
 	ActionRec rec;
@@ -647,8 +695,9 @@ LCUI_API int GameObject_AddAction( LCUI_Widget *widget, ActionData *action )
 
 	rec.action = action;
 	rec.obj_id = 0;
+	rec.id = id;
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	/* Ìí¼ÓÖÁ¶¯×÷ÁÐ±íÖÐ */
+	/* æ·»åŠ è‡³åŠ¨ä½œåˆ—è¡¨ä¸­ */
 	ret = Queue_Add( &obj->action_list, &rec );
 	if( ret < 0 ) {
 		return -1;
@@ -663,23 +712,23 @@ static void GameObject_ExecUpdate( LCUI_Widget *widget )
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	if( obj->current == NULL ) {
 		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
-		/* ¼ÈÈ»Ã»ÓÐ¶¯×÷¶¯»­£¬ÄÇ¾Í²»½øÐÐ¸üÐÂ */
+		/* æ—¢ç„¶æ²¡æœ‰åŠ¨ä½œåŠ¨ç”»ï¼Œé‚£å°±ä¸è¿›è¡Œæ›´æ–° */
 		if( obj->current == NULL ) {
 			return;
 		}
 	}
-	/* Èç¹ûÊý¾Ý»¹ÓÐÐ§ */
+	/* å¦‚æžœæ•°æ®è¿˜æœ‰æ•ˆ */
 	if( obj->data_valid ) {
 		return;
 	}
-	/* Èç¹ûÊý¾Ý¸üÐÂ³É¹¦ */
+	/* å¦‚æžœæ•°æ®æ›´æ–°æˆåŠŸ */
 	if( GameObject_UpdateData( widget ) == 0 ) {
-		/* ¼ÆËã²¿¼þµÄ×ø±ê */
+		/* è®¡ç®—éƒ¨ä»¶çš„åæ ‡ */
 		pos.x = obj->x - obj->global_center_x;
 		pos.y = obj->y - obj->global_bottom_line_y;
-		/* ÒÆ¶¯²¿¼þµÄÎ»ÖÃ */
+		/* ç§»åŠ¨éƒ¨ä»¶çš„ä½ç½® */
 		Widget_Move( widget, pos );
-		/* ²¢µ÷Õû²¿¼þµÄ³ß´ç£¬ÒÔÕý³£ÏÔÊ¾¶ÔÏóµÄ¶¯»­ */
+		/* å¹¶è°ƒæ•´éƒ¨ä»¶çš„å°ºå¯¸ï¼Œä»¥æ­£å¸¸æ˜¾ç¤ºå¯¹è±¡çš„åŠ¨ç”» */
 		Widget_Resize( widget, Size(obj->w, obj->h) );
 		obj->data_valid = TRUE;
 	}
@@ -696,7 +745,7 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	if( obj->current == NULL ) {
 		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
-		/* ¼ÈÈ»Ã»ÓÐ¶¯×÷¶¯»­£¬ÄÇ¾Í²»½øÐÐ¸üÐÂ */
+		/* æ—¢ç„¶æ²¡æœ‰åŠ¨ä½œåŠ¨ç”»ï¼Œé‚£å°±ä¸è¿›è¡Œæ›´æ–° */
 		if( obj->current == NULL ) {
 			return;
 		}
@@ -705,7 +754,7 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 			obj->current->action,
 			obj->current->obj_id
 	);
-	/* »ñÈ¡µ±Ç°Ö¡¶¯×÷Í¼Ïñ */
+	/* èŽ·å–å½“å‰å¸§åŠ¨ä½œå›¾åƒ */
 	frame = (ActionFrameData*)Queue_Get(
 			&p_status->action->frame,
 			p_status->current-1 
@@ -713,18 +762,18 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 	if( frame == NULL ) {
 		return;
 	}
-	/* ¼ÆËãµ±Ç°Ö¡Ïà¶ÔÓÚ²¿¼þµÄ×ø±ê */
+	/* è®¡ç®—å½“å‰å¸§ç›¸å¯¹äºŽéƒ¨ä»¶çš„åæ ‡ */
 	pos.y = frame->graph.h + frame->offset.y;
 	pos.y = obj->global_bottom_line_y - pos.y;
 	pos.x = frame->graph.w/2 + frame->offset.x;
 	pos.x = obj->global_center_x - pos.x;
-	/* »ñÈ¡²¿¼þ×ÔÉíÍ¼²ãµÄÍ¼Ïñ */
+	/* èŽ·å–éƒ¨ä»¶è‡ªèº«å›¾å±‚çš„å›¾åƒ */
 	graph = Widget_GetSelfGraph( widget );
-	/* È»ºóÌùÉÏÈ¥ */
+	/* ç„¶åŽè´´ä¸ŠåŽ» */
 	Graph_Replace( graph, &frame->graph, pos );
 }
 
-/** ÒÆ¶¯ÓÎÏ·¶ÔÏóµÄÎ»ÖÃ */
+/** ç§»åŠ¨æ¸¸æˆå¯¹è±¡çš„ä½ç½® */
 LCUI_API void GameObject_Move( LCUI_Widget *widget, int x, int y )
 {
 	GameObject *obj;
@@ -735,6 +784,16 @@ LCUI_API void GameObject_Move( LCUI_Widget *widget, int x, int y )
 	x = obj->x - obj->global_center_x;
 	y = obj->y - obj->global_bottom_line_y;
 	Widget_Move( widget, Pos(x,y) );
+}
+
+/** èŽ·å–æ¸¸æˆå¯¹è±¡çš„ä½ç½® */
+LCUI_API void GameObject_GetPos( LCUI_Widget *widget, int *x, int *y )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	*x = obj->x;
+	*y = obj->y;
 }
 
 LCUI_API LCUI_Widget* GameObject_New(void)
