@@ -1,0 +1,68 @@
+﻿#ifndef __PHYSICS_SYSTEM_H__
+#define __PHYSICS_SYSTEM_H__
+
+/**
+
+坐标系如下：
+
+       Z |
+         |
+         |
+         |
+         |_____________ X
+        /
+       /
+      /  Y
+
+ACC: acceleration 加速度
+**/
+
+/** 每次坐标更新时的时间间隔(毫秒) */
+#define SYNC_INTERVAL_TIME 10
+
+typedef struct PhysicsObject_ {
+	int x,y,z;			/**< 对象在空间中的坐标 */
+	unsigned int x_width;		/**< 在X轴上的宽度 */
+	unsigned int y_width;		/**< 在Y轴上的宽度 */
+	unsigned int z_width;		/**< 在Z轴上的宽度 */
+	int x_speed;			/**< 在X轴上的移动速度 */
+	int y_speed;			/**< 在Y轴上的移动速度 */
+	int z_speed;			/**< 在Z轴上的移动速度 */
+	int x_acc;			/**< 在X轴上的加速度 */
+	int y_acc;			/**< 在Y轴上的加速度 */
+	int z_acc;			/**< 在Z轴上的加速度 */
+} PhysicsObject;
+
+
+/** 让物理系统开始运作 */
+int PhysicsSystem_Start(void);
+
+/** 让物理系统暂停运作 */
+void PhysicsSystem_Pause(void);
+
+/** 让物理系统继续运作 */
+void PhysicsSystem_Continue(void);
+
+/** 让物理系统停止运作 */
+int PhysicsSystem_Stop(void);
+
+/**
+创建一个新的物理对象
+@param x
+	对象所在的X轴的坐标
+@param y
+	对象所在的Y轴的坐标
+@param z
+	对象所在的Z轴的坐标
+@param x_width
+	对象在X轴上的宽度
+@param y_width
+	对象在Y轴上的宽度
+@param z_width
+	对象在Z轴上的宽度
+@return
+	创建成功则返回该对象，失败则返回NULL
+*/
+PhysicsObject* PhysicsObject_New( int x, int y, int z, int x_width, int y_width, int z_width );
+
+#endif
