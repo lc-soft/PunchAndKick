@@ -243,7 +243,7 @@ int main( int argc, char **argv )
 	LCUI_Widget *widget;
 	
 #ifdef LCUI_BUILD_IN_WIN32
-	InitConsoleWindow();
+	//InitConsoleWindow();
 #endif
 	LCUI_Init(640,480,0);
 	/* 预先载入图像资源 */
