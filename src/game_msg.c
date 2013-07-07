@@ -71,7 +71,7 @@ int Game_ProcMsg( GameMsg *p_msg )
 	}
 	switch( p_msg->msg.msg_id ) {
 	case GAMEMSG_STATE:
-		GameObject_SwitchAction( target->object, p_msg->msg.state.state );
+		GameObject_SwitchAction( target->game_object, p_msg->msg.state.state );
 	default:
 		break;
 	}
@@ -117,12 +117,12 @@ static void GameKeyboardProcKeyDown( int key_code )
 	target = GamePlayer_GetPlayerByControlKey( key_code );
 	switch(key_code) {
 	case LCUIKEY_D:
-		target->right_direction = TRUE;
-		GamePlayer_ChangeState( target, STATE_WALK );
+		//target->right_direction = TRUE;
+		//GamePlayer_ChangeState( target, STATE_WALK );
 		break;
 	case LCUIKEY_A:
-		target->right_direction = FALSE;
-		GamePlayer_ChangeState( target, STATE_WALK );
+		//target->right_direction = FALSE;
+		//GamePlayer_ChangeState( target, STATE_WALK );
 		break;
 	default:
 		break;
@@ -140,7 +140,6 @@ static void GameKeyboardProcKeyUp( int key_code )
 	default:
 		break;
 	}
-	GamePlayer_ChangeState( target, STATE_STANCE );
 }
 
 void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
