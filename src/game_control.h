@@ -9,14 +9,14 @@ enum GamePlayerState {
 
 typedef struct GamePlayer_ {
 	int id;				/**< 玩家ID */
+	int state;			/**< 状态 */
 	LCUI_BOOL right_direction;	/**< 角色是否朝着右方 */
 	LCUI_BOOL human_control;	/**< 是否由人类控制 */
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
-	int state;			/**< 玩家当前状态 */
-	int hp, mp;			/**< 生命值和法力值 */
 	int walk_speed;			/**< 步行的速度 */
 	int run_speed;			/**< 奔跑的速度 */
-	LCUI_Widget *object;		/**< 游戏对象 */
+	LCUI_Widget *game_object;	/**< 游戏对象 */
+	PhysicsObject *phys_object;	/**< 物理对象 */
 } GamePlayer;
 
 extern int Game_Init(void);

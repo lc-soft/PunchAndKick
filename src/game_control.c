@@ -2,10 +2,11 @@
 #include LC_LCUI_H
 #include LC_WIDGET_H
 #include LC_ACTIVEBOX_H
+#include LC_INPUT_H
 
 #include "game.h"
 
-GamePlayer player_data[4];
+static GamePlayer player_data[4];
 
 /** 载入角色的移动动作动画资源 */
 static ActionData* ActionRes_LoadWalk(void)
@@ -53,73 +54,115 @@ ActionData* LoadGamePlayerRes( int action_type )
 	return NULL;
 }
 
-int GamePlayer_InitAction( GamePlayer *player )
+static int GamePlayer_InitAction( GamePlayer *player )
 {
 	ActionData* action;
 
 	player->state = STATE_STANCE;
 	/* 创建GameObject部件 */
-	player->object = GameObject_New();
+	player->game_object = GameObject_New();
 	/* 载入游戏角色资源 */
 	action = LoadGamePlayerRes( STATE_STANCE );
 	/* 将动作集添加至游戏对象 */
-	GameObject_AddAction( player->object, action, STATE_STANCE );
+	GameObject_AddAction( player->game_object, action, STATE_STANCE );
 	
 	action = LoadGamePlayerRes( STATE_WALK );
-	GameObject_AddAction( player->object, action, STATE_WALK );
+	GameObject_AddAction( player->game_object, action, STATE_WALK );
 
-	/* 移动游戏角色的位置 */
-	GameObject_Move( player->object, 300, 300 );
-	//Widget_SetBorder( player->object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
-	Widget_Show( player->object );
+	//Widget_SetBorder( player->game_object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
+	Widget_Show( player->game_object );
 	return 0;
 }
+
+static int GamePlayer_Init( GamePlayer *player )
+{
+	int ret;
+	PhysicsObject *obj;
+	/* 设置基本属性 */
+	player->walk_speed = 100;
+	player->run_speed = 100;
+	player->human_control = TRUE;
+	player->local_control = TRUE;
+	player->right_direction = TRUE;
+	/* 初始化角色动作动画 */
+	ret = GamePlayer_InitAction( player );
+	if( ret != 0 ) {
+		return -1;
+	}
+	/* 创建一个对应的物理对象 */
+	obj = PhysicsObject_New( 0,0,0,0,0,0 );
+	if( obj == NULL ) {
+		return -2;
+	}
+	player->phys_object = obj;
+	return 0;
+}
+
 
 int Game_Init(void)
 {
 	int ret;
 	/* 注册GameObject部件 */
 	GameObject_Register();
+	/* 启动物理系统 */
+	PhysicsSystem_Start();
 	/* 记录玩家ID */
 	player_data[0].id = 1;
 	player_data[1].id = 2;
 	player_data[2].id = 3;
 	player_data[3].id = 4;
-	/* 设置基本属性 */
-	player_data[0].walk_speed = 100;
-	player_data[0].run_speed = 100;
-	player_data[0].human_control = TRUE;
-	player_data[0].local_control = TRUE;
-	player_data[0].right_direction = TRUE;
-	/* 初始化角色动作动画 */
-	ret = GamePlayer_InitAction( &player_data[0] );
-	//Game_InitPlayerAction( &player_data[1] );
-	//Game_InitPlayerAction( &player_data[2] );
-	//Game_InitPlayerAction( &player_data[3] );
+	ret = GamePlayer_Init( &player_data[0] );
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
 	return ret;
 }
 
+static void GamePlayer_SetPos( GamePlayer *player, int x, int y )
+{
+	player->phys_object->x = x;
+	player->phys_object->y = y;
+	GameObject_Move( player->game_object, x, y );
+}
+
+static void GamePlayer_SyncData( GamePlayer *player )
+{
+	if( LCUIKey_IsHit(LCUIKEY_A) ) {
+		player->phys_object->x_speed = -2*player->walk_speed/100;
+	} else if( LCUIKey_IsHit(LCUIKEY_D) ) {
+		player->phys_object->x_speed = 2*player->walk_speed/100;
+	} else {
+		player->phys_object->x_speed = 0;
+	}
+	if( LCUIKey_IsHit(LCUIKEY_W) ) {
+		player->phys_object->y_speed = -2*player->walk_speed/100;
+	} else if( LCUIKey_IsHit(LCUIKEY_S) ) {
+		player->phys_object->y_speed = 2*player->walk_speed/100;
+	} else {
+		player->phys_object->y_speed = 0;
+	}
+	GameObject_Move(
+		player->game_object,
+		player->phys_object->x,
+		player->phys_object->y
+	);
+}
+
 static void GamePlayer_ProcState( GamePlayer *player, int state )
 {
-	double n;
-	int x, y;
-
-	switch( state ) {
-	case STATE_WALK:
-		n = 1.0 * player->walk_speed;
-		n = n*2 / 100;
-		GameObject_GetPos( player->object, &x, &y );
-		if( player->right_direction ) {
-			x += (int)n;
-		} else {
-			x -= (int)n;
-		}
-		GameObject_Move( player->object, x, y );
-	default:
-		break;
+	if( LCUIKey_IsHit(LCUIKEY_A) ) {
+		player->right_direction = FALSE;
+	}
+	if( LCUIKey_IsHit(LCUIKEY_D) ) {
+		player->right_direction = TRUE;
+	}
+	if( LCUIKey_IsHit(LCUIKEY_A)
+	 || LCUIKey_IsHit(LCUIKEY_D)
+	 || LCUIKey_IsHit(LCUIKEY_W)
+	 || LCUIKey_IsHit(LCUIKEY_S) ) {
+		 GamePlayer_ChangeState( player, STATE_WALK );
+	} else {
+		 GamePlayer_ChangeState( player, STATE_STANCE );
 	}
 }
 
@@ -133,6 +176,7 @@ static void GamePlayer_Control( void *arg )
 				continue;
 			}
 			GamePlayer_ProcState( &player_data[i], player_data[i].state );
+			GamePlayer_SyncData( &player_data[i] );
 		}
 		LCUI_MSleep( 10 );
 	}
@@ -142,7 +186,9 @@ int Game_Start(void)
 {
 	LCUI_Thread t;
 	LCUIThread_Create( &t, GamePlayer_Control, NULL );
-	GameObject_PlayAction( player_data[0].object );
+	GameObject_PlayAction( player_data[0].game_object );
+	/* 移动游戏角色的位置 */
+	GamePlayer_SetPos( &player_data[0], 300, 300 );
 	//GameObject_PlayAction( player_data[1].object );
 	//GameObject_PlayAction( player_data[2].object );
 	//GameObject_PlayAction( player_data[3].object );
