@@ -1,4 +1,4 @@
-#include <LCUI_Build.h>
+ï»¿#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
 #include LC_ACTIVEBOX_H
@@ -8,7 +8,7 @@
 
 static GamePlayer player_data[4];
 
-/** ÔØÈë½ÇÉ«µÄÒÆ¶¯¶¯×÷¶¯»­×ÊÔ´ */
+/** è½½å…¥è§’è‰²çš„ç§»åŠ¨åŠ¨ä½œåŠ¨ç”»èµ„æº */
 static ActionData* ActionRes_LoadWalk(void)
 {
 	int i;
@@ -21,12 +21,12 @@ static ActionData* ActionRes_LoadWalk(void)
 		Graph_Init( &img_move[i] );
 		sprintf( path, "drawable/walk-%02d.png", i+1 );
 		Graph_LoadImage( path, &img_move[i] );
-		Action_AddFrame( action, -6,0, &img_move[i], 100 );
+		Action_AddFrame( action, -6,0, &img_move[i], 5 );
 	}
 	return action;
 }
 
-/** ÔØÈë½ÇÉ«µÄÕ¾Á¢¶¯×÷¶¯»­×ÊÔ´ */
+/** è½½å…¥è§’è‰²çš„ç«™ç«‹åŠ¨ä½œåŠ¨ç”»èµ„æº */
 static ActionData* ActionRes_LoadStance(void)
 {
 	int i;
@@ -39,12 +39,12 @@ static ActionData* ActionRes_LoadStance(void)
 		Graph_Init( &img_stance[i] );
 		sprintf( path, "drawable/stance-%02d.png", i+1 );
 		Graph_LoadImage( path, &img_stance[i] );
-		Action_AddFrame( action, -5,0, &img_stance[i], 100 );
+		Action_AddFrame( action, -5,0, &img_stance[i], 5 );
 	}
 	return action;
 }
 
-/** ÔØÈë½ÇÉ«µÄ¶¯×÷¶¯»­×ÊÔ´ */
+/** è½½å…¥è§’è‰²çš„åŠ¨ä½œåŠ¨ç”»èµ„æº */
 ActionData* LoadGamePlayerRes( int action_type )
 {
 	switch( action_type ) {
@@ -59,42 +59,35 @@ static int GamePlayer_InitAction( GamePlayer *player )
 	ActionData* action;
 
 	player->state = STATE_STANCE;
-	/* ´´½¨GameObject²¿¼ş */
-	player->game_object = GameObject_New();
-	/* ÔØÈëÓÎÏ·½ÇÉ«×ÊÔ´ */
+	/* åˆ›å»ºGameObjectéƒ¨ä»¶ */
+	player->object = GameObject_New();
+	/* è½½å…¥æ¸¸æˆè§’è‰²èµ„æº */
 	action = LoadGamePlayerRes( STATE_STANCE );
-	/* ½«¶¯×÷¼¯Ìí¼ÓÖÁÓÎÏ·¶ÔÏó */
-	GameObject_AddAction( player->game_object, action, STATE_STANCE );
+	/* å°†åŠ¨ä½œé›†æ·»åŠ è‡³æ¸¸æˆå¯¹è±¡ */
+	GameObject_AddAction( player->object, action, STATE_STANCE );
 	
 	action = LoadGamePlayerRes( STATE_WALK );
-	GameObject_AddAction( player->game_object, action, STATE_WALK );
+	GameObject_AddAction( player->object, action, STATE_WALK );
 
 	//Widget_SetBorder( player->game_object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
-	Widget_Show( player->game_object );
+	Widget_Show( player->object );
 	return 0;
 }
 
 static int GamePlayer_Init( GamePlayer *player )
 {
 	int ret;
-	PhysicsObject *obj;
-	/* ÉèÖÃ»ù±¾ÊôĞÔ */
+	/* è®¾ç½®åŸºæœ¬å±æ€§ */
 	player->walk_speed = 100;
 	player->run_speed = 100;
 	player->human_control = TRUE;
 	player->local_control = TRUE;
 	player->right_direction = TRUE;
-	/* ³õÊ¼»¯½ÇÉ«¶¯×÷¶¯»­ */
+	/* åˆå§‹åŒ–è§’è‰²åŠ¨ä½œåŠ¨ç”» */
 	ret = GamePlayer_InitAction( player );
 	if( ret != 0 ) {
 		return -1;
 	}
-	/* ´´½¨Ò»¸ö¶ÔÓ¦µÄÎïÀí¶ÔÏó */
-	obj = PhysicsObject_New( 0,0,0,0,0,0 );
-	if( obj == NULL ) {
-		return -2;
-	}
-	player->phys_object = obj;
 	return 0;
 }
 
@@ -102,50 +95,37 @@ static int GamePlayer_Init( GamePlayer *player )
 int Game_Init(void)
 {
 	int ret;
-	/* ×¢²áGameObject²¿¼ş */
+	/* æ³¨å†ŒGameObjectéƒ¨ä»¶ */
 	GameObject_Register();
-	/* Æô¶¯ÎïÀíÏµÍ³ */
-	PhysicsSystem_Start();
-	/* ¼ÇÂ¼Íæ¼ÒID */
+	/* è®°å½•ç©å®¶ID */
 	player_data[0].id = 1;
 	player_data[1].id = 2;
 	player_data[2].id = 3;
 	player_data[3].id = 4;
 	ret = GamePlayer_Init( &player_data[0] );
-	/* ÏìÓ¦°´¼üÊäÈë */
+	/* å“åº”æŒ‰é”®è¾“å…¥ */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
 	return ret;
 }
 
-static void GamePlayer_SetPos( GamePlayer *player, int x, int y )
-{
-	player->phys_object->x = x;
-	player->phys_object->y = y;
-	GameObject_Move( player->game_object, x, y );
-}
-
 static void GamePlayer_SyncData( GamePlayer *player )
 {
 	if( LCUIKey_IsHit(LCUIKEY_A) ) {
-		player->phys_object->x_speed = -2*player->walk_speed/100;
+		GameObject_SetXSpeed( player->object, -4*player->walk_speed/100 );
 	} else if( LCUIKey_IsHit(LCUIKEY_D) ) {
-		player->phys_object->x_speed = 2*player->walk_speed/100;
+		GameObject_SetXSpeed( player->object, 4*player->walk_speed/100 );
 	} else {
-		player->phys_object->x_speed = 0;
+		GameObject_SetXSpeed( player->object, 0 );
 	}
 	if( LCUIKey_IsHit(LCUIKEY_W) ) {
-		player->phys_object->y_speed = -2*player->walk_speed/100;
+		GameObject_SetYSpeed( player->object, -4*player->walk_speed/100 );
 	} else if( LCUIKey_IsHit(LCUIKEY_S) ) {
-		player->phys_object->y_speed = 2*player->walk_speed/100;
+		GameObject_SetYSpeed( player->object, 4*player->walk_speed/100 );
 	} else {
-		player->phys_object->y_speed = 0;
+		GameObject_SetYSpeed( player->object, 0 );
 	}
-	GameObject_Move(
-		player->game_object,
-		player->phys_object->x,
-		player->phys_object->y
-	);
+	Widget_Update( player->object );
 }
 
 static void GamePlayer_ProcState( GamePlayer *player, int state )
@@ -170,7 +150,7 @@ static void GamePlayer_Control( void *arg )
 {
 	int i;
 	while(1) {
-		/* ×ÜÍæ¼ÒÊıÎª4¸ö£¬ÓÉÓÚ»¹´¦ÓÚ¿ª·¢½×¶Î£¬ÏÈÉèÎª1 */
+		/* æ€»ç©å®¶æ•°ä¸º4ä¸ªï¼Œç”±äºè¿˜å¤„äºå¼€å‘é˜¶æ®µï¼Œå…ˆè®¾ä¸º1 */
 		for(i=0; i<1; ++i) {
 			if( !player_data[i].local_control ) {
 				continue;
@@ -186,12 +166,9 @@ int Game_Start(void)
 {
 	LCUI_Thread t;
 	LCUIThread_Create( &t, GamePlayer_Control, NULL );
-	GameObject_PlayAction( player_data[0].game_object );
-	/* ÒÆ¶¯ÓÎÏ·½ÇÉ«µÄÎ»ÖÃ */
-	GamePlayer_SetPos( &player_data[0], 300, 300 );
-	//GameObject_PlayAction( player_data[1].object );
-	//GameObject_PlayAction( player_data[2].object );
-	//GameObject_PlayAction( player_data[3].object );
+	GameObject_PlayAction( player_data[0].object );
+	/* ç§»åŠ¨æ¸¸æˆè§’è‰²çš„ä½ç½® */
+	GameObject_SetPos( player_data[0].object, 300, 300 );
 	return 0;
 }
 
@@ -200,13 +177,13 @@ int Game_Pause(void)
 	return 0;
 }
 
-/** Í¨¹ı¿ØÖÆ¼ü»ñÈ¡¸Ã¼ü¿ØÖÆµÄ½ÇÉ« */
+/** é€šè¿‡æ§åˆ¶é”®è·å–è¯¥é”®æ§åˆ¶çš„è§’è‰² */
 GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code )
 {
 	return &player_data[0];
 }
 
-/** Í¨¹ı½ÇÉ«IDÀ´»ñÈ¡½ÇÉ« */
+/** é€šè¿‡è§’è‰²IDæ¥è·å–è§’è‰² */
 GamePlayer *GamePlayer_GetByID( int player_id )
 {
 	if( player_id > 4 ) {
@@ -215,7 +192,7 @@ GamePlayer *GamePlayer_GetByID( int player_id )
 	return &player_data[player_id-1];
 }
 
-/** ¸Ä±ä½ÇÉ«µÄ×´Ì¬  */
+/** æ”¹å˜è§’è‰²çš„çŠ¶æ€  */
 void GamePlayer_ChangeState( GamePlayer *player, int state )
 {
 	GameMsg msg;
@@ -226,7 +203,7 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	default:
 		break;
 	}
-	/* Èô×´Ì¬²»Ò»ÖÂ */
+	/* è‹¥çŠ¶æ€ä¸ä¸€è‡´ */
 	if( player->state != state ) {
 		msg.player_id = player->id;
 		msg.msg.msg_id = GAMEMSG_STATE;
