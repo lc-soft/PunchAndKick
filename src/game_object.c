@@ -335,7 +335,7 @@ static ActionStatus* ActionStream_UpdateTime( int sleep_time )
 		}
 		DEBUG_MSG("current time: %ld\n", frame->current_time);
 		/* 若当前帧的停留时间小于或等于0 */
-		if(frame->current_time < REFRESH_INTERVAL_TIME) {
+		if(frame->current_time <= 0) {
 			frame->current_time = frame->sleep_time;
 			++action_status->current;
 			found = TRUE;
@@ -349,11 +349,8 @@ static ActionStatus* ActionStream_UpdateTime( int sleep_time )
 		action_status->current = 1;
 		found = TRUE;
 	}
-	DEBUG_MSG("tip\n");
 	/* 重新对流中的动作动画进行排序 */
 	ActionStream_Sort();
-	DEBUG_MSG("current frame: %d\n", action_status->current);
-	DEBUG_MSG("end\n");
 	if( found ) {
 		return action_status;
 	}
@@ -362,12 +359,16 @@ static ActionStatus* ActionStream_UpdateTime( int sleep_time )
 
 static void ActionStream_Proc( void )
 {
+	int lost_time;
+	static clock_t current_time = 0;
 	ActionStatus *action_status;
 
 	while(!LCUI_Active()) {
 		LCUI_MSleep(10);
 	}
-	action_status = ActionStream_UpdateTime( REFRESH_INTERVAL_TIME-5 );
+	lost_time = clock() - current_time;
+	current_time = clock();
+	action_status = ActionStream_UpdateTime( lost_time );
 	if( action_status ) {
 		Action_CallFunc( action_status );
 	}
@@ -545,6 +546,7 @@ LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 		obj->current = p_rec;
 		/* 标记数据为无效，以根据当前动作动画来更新数据 */
 		obj->data_valid = FALSE;
+		Widget_Draw(widget);
 		return 0;
 	}
 	return -1;
@@ -720,6 +722,7 @@ static void GameObject_ExecUpdate( LCUI_Widget *widget )
 {
 	GameObject *obj;
 	LCUI_Pos pos;
+
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	if( obj->current == NULL ) {
 		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
@@ -757,7 +760,7 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 	ActionStatus *p_status;
 	ActionFrameData *frame;
 	LCUI_Graph *graph;
-
+	
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	if( obj->current == NULL ) {
 		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
