@@ -15,8 +15,7 @@ typedef struct GamePlayer_ {
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
 	int walk_speed;			/**< 步行的速度 */
 	int run_speed;			/**< 奔跑的速度 */
-	LCUI_Widget *game_object;	/**< 游戏对象 */
-	PhysicsObject *phys_object;	/**< 物理对象 */
+	LCUI_Widget *object;		/**< 游戏对象 */
 } GamePlayer;
 
 extern int Game_Init(void);
