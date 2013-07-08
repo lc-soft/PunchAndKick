@@ -1,12 +1,17 @@
 ﻿#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
+
 #include "game_object.h"
+#include "physics_system.h"
 
 #include <time.h>
 
 #define PAUSE	0
 #define PLAY	1
+
+/** 每次数据刷新时的时间间隔(毫秒) */
+#define REFRESH_INTERVAL_TIME 20
 
 /** 动作记录 */
 typedef struct ActionRec_ {
@@ -33,6 +38,7 @@ typedef struct GameObject_ {
 	LCUI_BOOL data_valid;		/**< 当前使用的数据是否有效 */
 	ActionRec *current;		/**< 当前动作动画 */
 	LCUI_Queue action_list;		/**< 动作列表 */
+	PhysicsObject *phys_obj;	/**< 对应的物理对象 */
 } GameObject;
 
 static LCUI_Queue action_database;
@@ -287,13 +293,15 @@ static void ActionStream_TimeSub( int time )
 	Queue_Unlock( &action_stream );
 }
 
-/** 更新流中的动画至下一帧，并获取当前动画和当前帧的等待时间 */
-static ActionStatus* ActionStream_Update( int *sleep_time )
+/** 更新流中的动画当前帧的停留时间 */
+static ActionStatus* ActionStream_UpdateTime( int sleep_time )
 {
 	int i, total;
+	LCUI_BOOL found = FALSE;
 	ActionStatus *action_status, *temp = NULL;
 	ActionFrameData *frame = NULL;
-
+	
+	ActionStream_TimeSub( sleep_time );
 	DEBUG_MSG("start\n");
 	total = Queue_GetTotal(&action_stream);
 	for(i=0; i<total; ++i){
@@ -317,7 +325,8 @@ static ActionStatus* ActionStream_Update( int *sleep_time )
 			break;
 		}
 	}
-	if( action_status && action_status->current > 0 ) {
+	DEBUG_MSG("action_status->current: %d\n", action_status->current);
+	if( action_status->current > 0 ) {
 		frame = (ActionFrameData*)
 			Queue_Get(	&action_status->action->frame,
 					action_status->current-1 );
@@ -325,47 +334,44 @@ static ActionStatus* ActionStream_Update( int *sleep_time )
 			return NULL;
 		}
 		DEBUG_MSG("current time: %ld\n", frame->current_time);
-		if(frame->current_time > 0) {
-			*sleep_time = frame->current_time;
-			ActionStream_TimeSub( frame->current_time );
+		/* 若当前帧的停留时间小于或等于0 */
+		if(frame->current_time < REFRESH_INTERVAL_TIME) {
+			frame->current_time = frame->sleep_time;
+			++action_status->current;
+			found = TRUE;
 		}
 
-		frame->current_time = frame->sleep_time;
-		++action_status->current;
 		total = Queue_GetTotal( &action_status->action->frame );
 		if( action_status->current > total ) {
 			action_status->current = 1;
 		}
-		frame = (ActionFrameData*)
-			Queue_Get(	&action_status->action->frame,
-					action_status->current-1 );
-		if( !frame ) {
-			return NULL;
-		}
 	} else {
 		action_status->current = 1;
-		frame = (ActionFrameData*)
-			Queue_Get( &action_status->action->frame, 0 );
+		found = TRUE;
 	}
+	DEBUG_MSG("tip\n");
+	/* 重新对流中的动作动画进行排序 */
 	ActionStream_Sort();
 	DEBUG_MSG("current frame: %d\n", action_status->current);
 	DEBUG_MSG("end\n");
-	return action_status;
+	if( found ) {
+		return action_status;
+	}
+	return NULL;
 }
 
-static void Process_Frames( void )
+static void ActionStream_Proc( void )
 {
-	int sleep_time = 10;
 	ActionStatus *action_status;
 
 	while(!LCUI_Active()) {
 		LCUI_MSleep(10);
 	}
-	action_status = ActionStream_Update( &sleep_time );
-	LCUITimer_Reset( frame_proc_timer, sleep_time );
+	action_status = ActionStream_UpdateTime( REFRESH_INTERVAL_TIME-5 );
 	if( action_status ) {
 		Action_CallFunc( action_status );
 	}
+	PhysicsSystem_Step();
 }
 
 /**
@@ -391,7 +397,11 @@ LCUI_API int Action_Play( ActionData *action, int obj_id )
 			sizeof(ActionStatus),
 			ActionStatus_Destroy
 		);
-		frame_proc_timer = LCUITimer_Set( 50, Process_Frames, TRUE );
+		frame_proc_timer = LCUITimer_Set( 
+			REFRESH_INTERVAL_TIME,
+			ActionStream_Proc,
+			TRUE
+		);
 	}
 	if( obj_id <= 0 ) {
 		ActionStatus_Init( &new_status );
@@ -598,8 +608,8 @@ LCUI_API int Action_AddFrame(	ActionData* action,
 {
 	ActionFrameData frame;
 	
-	frame.current_time = sleep_time;
-	frame.sleep_time = sleep_time;
+	frame.sleep_time = sleep_time*REFRESH_INTERVAL_TIME;
+	frame.current_time = frame.sleep_time;
 	frame.offset.x = offset_x;
 	frame.offset.y = offset_y;
 	frame.graph = *graph;
@@ -625,6 +635,7 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->y = 0;
 	obj->w = 0;
 	obj->h = 0;
+	obj->phys_obj = PhysicsObject_New(0,0,0,0,0,0 );
 }
 
 /** 获取当前动作信息 */
@@ -717,16 +728,21 @@ static void GameObject_ExecUpdate( LCUI_Widget *widget )
 			return;
 		}
 	}
+	obj->x = obj->phys_obj->x;
+	obj->y = obj->phys_obj->y+obj->phys_obj->z;
+	/* 计算部件的坐标 */
+	pos.x = obj->x - obj->global_center_x;
+	pos.y = obj->y - obj->global_bottom_line_y;
+	/* 移动部件的位置 */
+	Widget_Move( widget, pos );
 	/* 如果数据还有效 */
 	if( obj->data_valid ) {
 		return;
 	}
 	/* 如果数据更新成功 */
 	if( GameObject_UpdateData( widget ) == 0 ) {
-		/* 计算部件的坐标 */
 		pos.x = obj->x - obj->global_center_x;
 		pos.y = obj->y - obj->global_bottom_line_y;
-		/* 移动部件的位置 */
 		Widget_Move( widget, pos );
 		/* 并调整部件的尺寸，以正常显示对象的动画 */
 		Widget_Resize( widget, Size(obj->w, obj->h) );
@@ -757,7 +773,7 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 	/* 获取当前帧动作图像 */
 	frame = (ActionFrameData*)Queue_Get(
 			&p_status->action->frame,
-			p_status->current-1 
+			p_status->current>0?p_status->current-1:0
 	);
 	if( frame == NULL ) {
 		return;
@@ -773,17 +789,45 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 	Graph_Replace( graph, &frame->graph, pos );
 }
 
-/** 移动游戏对象的位置 */
-LCUI_API void GameObject_Move( LCUI_Widget *widget, int x, int y )
+/** 设置游戏对象在X轴的移动速度 */
+LCUI_API void GameObject_SetXSpeed( LCUI_Widget *widget, int x_speed )
 {
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	obj->x = x;
-	obj->y = y;
-	x = obj->x - obj->global_center_x;
-	y = obj->y - obj->global_bottom_line_y;
-	Widget_Move( widget, Pos(x,y) );
+	obj->phys_obj->x_speed = x_speed;
+	Widget_Update( widget );
+}
+
+/** 设置游戏对象在Y轴的移动速度 */
+LCUI_API void GameObject_SetYSpeed( LCUI_Widget *widget, int y_speed )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->y_speed = y_speed;
+	Widget_Update( widget );
+}
+
+/** 设置游戏对象在Z轴的移动速度 */
+LCUI_API void GameObject_SetZSpeed( LCUI_Widget *widget, int z_speed )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->z_speed = z_speed;
+	Widget_Update( widget );
+}
+
+/** 移动游戏对象的位置 */
+LCUI_API void GameObject_SetPos( LCUI_Widget *widget, int x, int y )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->x = x;
+	obj->phys_obj->y = x;
+	Widget_Update( widget );
 }
 
 /** 获取游戏对象的位置 */
