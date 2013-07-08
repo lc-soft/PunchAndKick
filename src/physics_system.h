@@ -17,9 +17,6 @@
 ACC: acceleration 加速度
 **/
 
-/** 每次坐标更新时的时间间隔(毫秒) */
-#define SYNC_INTERVAL_TIME 10
-
 typedef struct PhysicsObject_ {
 	int x,y,z;			/**< 对象在空间中的坐标 */
 	unsigned int x_width;		/**< 在X轴上的宽度 */
@@ -34,17 +31,8 @@ typedef struct PhysicsObject_ {
 } PhysicsObject;
 
 
-/** 让物理系统开始运作 */
-int PhysicsSystem_Start(void);
-
-/** 让物理系统暂停运作 */
-void PhysicsSystem_Pause(void);
-
-/** 让物理系统继续运作 */
-void PhysicsSystem_Continue(void);
-
-/** 让物理系统停止运作 */
-int PhysicsSystem_Stop(void);
+/** 处理物理对象的数据 */
+extern void PhysicsSystem_Step( void );
 
 /**
 创建一个新的物理对象
@@ -63,6 +51,6 @@ int PhysicsSystem_Stop(void);
 @return
 	创建成功则返回该对象，失败则返回NULL
 */
-PhysicsObject* PhysicsObject_New( int x, int y, int z, int x_width, int y_width, int z_width );
+extern PhysicsObject* PhysicsObject_New( int x, int y, int z, int x_width, int y_width, int z_width );
 
 #endif
