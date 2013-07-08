@@ -71,7 +71,7 @@ int Game_ProcMsg( GameMsg *p_msg )
 	}
 	switch( p_msg->msg.msg_id ) {
 	case GAMEMSG_STATE:
-		GameObject_SwitchAction( target->game_object, p_msg->msg.state.state );
+		GameObject_SwitchAction( target->object, p_msg->msg.state.state );
 	default:
 		break;
 	}
