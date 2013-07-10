@@ -18,7 +18,6 @@ typedef struct ActionFrameData_ {
 	LCUI_Pos offset;	/**< 当前对象底线中点相对于该帧图像底线中点的偏移量 */
 	LCUI_Graph graph;	/**< 当前帧的图像 */
 	long int sleep_time;	/**< 该帧显示的时长（单位：毫秒） */
-	long int current_time;	/**< 当前剩下的等待时间 */
 } ActionFrameData;
 
 /** 动作集的信息 */
@@ -98,6 +97,9 @@ LCUI_API int Action_Pause( ActionData *action, int obj_id );
  */
 LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 					int action_id );
+
+/** 获取当前动作动画的ID */
+LCUI_API int GameObject_GetCurrentActionID( LCUI_Widget *widget );
 
 /** 播放对象的动作 */
 LCUI_API int GameObject_PlayAction( LCUI_Widget *widget );

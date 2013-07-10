@@ -24,7 +24,8 @@ typedef struct ActionRec_ {
 typedef struct ActionStatus_ {
 	int obj_id;		/**< 对象标识号 */
 	int state;		/**< 状态，指示播放还是暂停 */
-	int current;		/**< 记录当前帧动作的序号，帧序号从1开始 */
+	int n_frame;		/**< 记录当前帧动作的序号，帧序号从1开始 */
+	long int remain_time;	/**< 当前帧剩下的停留时间 */
 	ActionData *action;	/**< 对应的动作集 */
 	LCUI_Func func;		/**< 被关联的回调函数 */
 } ActionStatus;
@@ -56,7 +57,7 @@ static void ActionStatus_Init( ActionStatus *p_status )
 {
 	p_status->obj_id = 0;
 	p_status->action = NULL;
-	p_status->current = 0;
+	p_status->n_frame = 0;
 	p_status->state = PAUSE;
 	p_status->func.func = NULL;
 }
@@ -218,42 +219,25 @@ LCUI_API int Action_Connect(	ActionData *action,
 
 static void ActionStream_Sort(void)
 {
-	int i, j, pos, total;
-	ActionStatus *p_status;
-	ActionFrameData *p, *q;
+	int i, j, total;
+	ActionStatus *tmp, *p1, *p2;
 
 	Queue_Lock( &action_stream );
 	total = Queue_GetTotal( &action_stream );
 	for(i=0; i<total; ++i) {
-		p_status = (ActionStatus*)Queue_Get( &action_stream, i );
-		if( !p_status ) {
+		p1 = (ActionStatus*)Queue_Get( &action_stream, i );
+		if( !p1 ) {
 			continue;
 		}
-		if(p_status->current > 0) {
-			pos = p_status->current-1;
-		} else {
-			pos = 0;
-		}
-		p = (ActionFrameData*)Queue_Get( &p_status->action->frame, pos );
-		if( !p ) {
-			continue;
-		}
-
 		for(j=i+1; j<total; ++j) {
-			p_status = (ActionStatus*)Queue_Get( &action_stream, j );
-			if( !p_status ) {
+			p2 = (ActionStatus*)Queue_Get( &action_stream, j );
+			if( !p2 ) {
 				continue;
 			}
-			if(p_status->current > 0) {
-				pos = p_status->current-1;
-			} else {
-				pos = 0;
-			}
-			q = (ActionFrameData*)Queue_Get( &p_status->action->frame, pos );
-			if( !q ) {
-				continue;
-			}
-			if( q->current_time < p->current_time ) {
+			if( p1->remain_time < p2->remain_time ) {
+				tmp = p1;
+				p1 = p2;
+				p2 = tmp;
 				Queue_Swap( &action_stream, j, i );
 			}
 		}
@@ -263,9 +247,8 @@ static void ActionStream_Sort(void)
 
 static void ActionStream_TimeSub( int time )
 {
-	ActionFrameData *frame;
+	int i, total;
 	ActionStatus *p_status;
-	int i, total, pos;
 
 	Queue_Lock( &action_stream );
 	total = Queue_GetTotal(&action_stream);
@@ -275,22 +258,22 @@ static void ActionStream_TimeSub( int time )
 		if( !p_status || p_status->state == PAUSE ) {
 			continue;
 		}
-		if( p_status->current > 0 ) {
-			pos = p_status->current-1;
-		} else {
-			pos = 0;
-		}
-		frame = (ActionFrameData*)
-			Queue_Get( &p_status->action->frame, pos );
-		if( !frame ) {
-			continue;
-		}
-		frame->current_time -= time;
-		DEBUG_MSG("action: %p, current: %d, time:%ld, sub:%d\n",
-			p_status->action, pos, frame->current_time, time);
+		p_status->remain_time -= time;
+		DEBUG_MSG("action: %p, n_frame: %d, time:%ld, sub:%d\n",
+			p_status->action, pos, p_status->remain_time, time);
 	}
 	DEBUG_MSG("end\n");
 	Queue_Unlock( &action_stream );
+}
+
+static long int Action_GetFrameSleepTime( ActionData *action, int n_frame )
+{
+	ActionFrameData *frame;
+	frame = (ActionFrameData*)Queue_Get( &action->frame, n_frame-1 );
+	if( frame ) {
+		return frame->sleep_time;
+	}
+	return REFRESH_INTERVAL_TIME;
 }
 
 /** 更新流中的动画当前帧的停留时间 */
@@ -320,33 +303,32 @@ static ActionStatus* ActionStream_UpdateTime( int sleep_time )
 	 * */
 	for(i=0; i<total; ++i){
 		temp = (ActionStatus*)Queue_Get( &action_stream, i );
-		if( action_status->state == PLAY && temp->current == 0 ) {
+		if( action_status->state == PLAY && temp->n_frame == 0 ) {
 			action_status = temp;
 			break;
 		}
 	}
-	DEBUG_MSG("action_status->current: %d\n", action_status->current);
-	if( action_status->current > 0 ) {
-		frame = (ActionFrameData*)
-			Queue_Get(	&action_status->action->frame,
-					action_status->current-1 );
-		if( !frame ) {
-			return NULL;
-		}
-		DEBUG_MSG("current time: %ld\n", frame->current_time);
+	DEBUG_MSG("action_status->n_frame: %d\n", action_status->n_frame);
+	if( action_status->n_frame > 0 ) {
+		DEBUG_MSG("n_frame time: %ld\n", frame->current_time);
 		/* 若当前帧的停留时间小于或等于0 */
-		if(frame->current_time <= 0) {
-			frame->current_time = frame->sleep_time;
-			++action_status->current;
+		if(action_status->remain_time <= 0) {
 			found = TRUE;
+			++action_status->n_frame;
+			action_status->remain_time = Action_GetFrameSleepTime(
+							action_status->action,
+							action_status->n_frame );
 		}
 
 		total = Queue_GetTotal( &action_status->action->frame );
-		if( action_status->current > total ) {
-			action_status->current = 1;
+		if( action_status->n_frame > total ) {
+			action_status->n_frame = 1;
+			action_status->remain_time = Action_GetFrameSleepTime(
+							action_status->action,
+							action_status->n_frame );
 		}
 	} else {
-		action_status->current = 1;
+		action_status->n_frame = 1;
 		found = TRUE;
 	}
 	/* 重新对流中的动作动画进行排序 */
@@ -409,6 +391,7 @@ LCUI_API int Action_Play( ActionData *action, int obj_id )
 		new_status.obj_id = new_obj_id++;
 		new_status.action = action;
 		new_status.state = PLAY;
+		new_status.remain_time = Action_GetFrameSleepTime( action, 0 );
 		Queue_Add( &action_stream, &new_status );
 		return new_status.obj_id;
 	}
@@ -470,7 +453,7 @@ LCUI_API int Action_Reset( ActionData *action, int obj_id )
 	if( p_status == NULL ) {
 		return -1;
 	}
-	p_status->current = 1;
+	p_status->n_frame = 1;
 	return 0;
 }
 
@@ -552,6 +535,18 @@ LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 	return -1;
 }
 
+/** 获取当前动作动画的ID */
+LCUI_API int GameObject_GetCurrentActionID( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	if( obj->current ) {
+		return obj->current->id;
+	}
+	return 0;
+}
+
 LCUI_API int GameObject_ResetAction( LCUI_Widget *widget )
 {
 	GameObject *obj;
@@ -611,7 +606,6 @@ LCUI_API int Action_AddFrame(	ActionData* action,
 	ActionFrameData frame;
 	
 	frame.sleep_time = sleep_time*REFRESH_INTERVAL_TIME;
-	frame.current_time = frame.sleep_time;
 	frame.offset.x = offset_x;
 	frame.offset.y = offset_y;
 	frame.graph = *graph;
@@ -776,7 +770,7 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 	/* 获取当前帧动作图像 */
 	frame = (ActionFrameData*)Queue_Get(
 			&p_status->action->frame,
-			p_status->current>0?p_status->current-1:0
+			p_status->n_frame>0?p_status->n_frame-1:0
 	);
 	if( frame == NULL ) {
 		return;
