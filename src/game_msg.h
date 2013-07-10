@@ -1,7 +1,7 @@
 ﻿
 enum GameMsgID {
 	GAMEMSG_MOTION,
-	GAMEMSG_STATE,
+	GAMEMSG_ACTION,
 	GAMEMSG_HP
 };
 
@@ -10,9 +10,9 @@ typedef struct GameMotionMsg_ {
 	int x, y;	/**< 角色坐标 */
 } GameMotionMsg;
 
-typedef struct GameStateMsg_ {
+typedef struct GameActionMsg_ {
 	int msg_id;
-	int state;	/**< 角色状态 */
+	int action_id;	/**< 角色动作ID */
 } GameStateMsg;
 
 typedef struct GameHPMsg_ {
@@ -23,7 +23,7 @@ typedef struct GameHPMsg_ {
 typedef union GameMsgBuff_ {
 	int msg_id;		/**< 消息ID */
 	GameMotionMsg motion;	/**< 角色移动消息 */
-	GameStateMsg state;	/**< 角色状态消息 */
+	GameStateMsg action;	/**< 角色动作消息 */
 	GameHPMsg hp;		/**< 角色生命值消息 */
 } GameMsgBuff;
 
