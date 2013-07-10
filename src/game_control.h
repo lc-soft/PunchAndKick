@@ -1,10 +1,27 @@
 ﻿
+typedef struct ControlKey_ {
+	int up, down, left, right, a_attack, b_attack, jump;
+} ControlKey;
+
 enum GamePlayerState {
 	STATE_STANCE,	/**< 站立 */
 	STATE_WALK,	/**< 步行 */
-	STATE_RUN,	/**< 奔跑 */
+	STATE_LEFTRUN,	/**< 向左奔跑 */
+	STATE_RIGHTRUN,	/**< 向右奔跑 */
+	STATE_A_ATTACK,
+	STATE_B_ATTACK,
 	STATE_HIT,	/**< 被命中 */
 	STATE_REST	/**< 歇息 */
+};
+
+enum ActionType {
+	ACTION_STANCE,
+	ACTION_WALK,
+	ACTION_RUN,
+	ACTION_A_ATTACK,
+	ACTION_B_ATTACK,
+	ACTION_HIT,
+	ACTION_REST
 };
 
 typedef struct GamePlayer_ {
@@ -16,13 +33,15 @@ typedef struct GamePlayer_ {
 	int walk_speed;			/**< 步行的速度 */
 	int run_speed;			/**< 奔跑的速度 */
 	LCUI_Widget *object;		/**< 游戏对象 */
+	ControlKey ctrlkey;		/**< 该角色的控制键 */
 } GamePlayer;
 
 extern int Game_Init(void);
 extern int Game_Start(void);
 extern int Game_Pause(void);
 
-extern void GamePlayer_ChangeState( GamePlayer *player, int state );
+/** 改变角色的动作动画  */
+extern void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
 
 /** 通过控制键获取该键控制的角色 */
 extern GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code );
