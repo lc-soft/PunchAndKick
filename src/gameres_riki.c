@@ -75,7 +75,7 @@ static ActionData* ActionRes_LoadAAttack(void)
 		Graph_Init( &img_attack[i] );
 		sprintf( path, "drawable/A-attack-%02d.png", i+1 );
 		Graph_LoadImage( path, &img_attack[i] );
-		Action_AddFrame( action, 0,0, &img_attack[i], 5 );
+		Action_AddFrame( action, -5,0, &img_attack[i], 5 );
 	}
 	return action;
 }
