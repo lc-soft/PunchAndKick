@@ -118,8 +118,17 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 					ActionData *action,
 					int id );
 
+/** 设置加速度 */
+LCUI_API void GameObject_SetXAcc( LCUI_Widget *widget, int acc );
+
+/** 获取加速度 */
+LCUI_API int GameObject_GetXAcc( LCUI_Widget *widget );
+
 /** 设置游戏对象在X轴的移动速度 */
 LCUI_API void GameObject_SetXSpeed( LCUI_Widget *widget, int x_speed );
+
+/** 获取游戏对象在X轴的移动速度 */
+LCUI_API int GameObject_GetXSpeed( LCUI_Widget *widget );
 
 /** 设置游戏对象在Y轴的移动速度 */
 LCUI_API void GameObject_SetYSpeed( LCUI_Widget *widget, int y_speed );

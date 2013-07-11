@@ -13,6 +13,7 @@
 /** 每次数据刷新时的时间间隔(毫秒) */
 #define REFRESH_INTERVAL_TIME 20
 
+
 /** 动作记录 */
 typedef struct ActionRec_ {
 	int id;			/**< 动画的标识号 */
@@ -339,7 +340,7 @@ static ActionStatus* ActionStream_UpdateTime( int sleep_time )
 	return NULL;
 }
 
-static void ActionStream_Proc( void )
+static void ActionStream_Proc( void* arg )
 {
 	int lost_time;
 	static clock_t current_time = 0;
@@ -383,7 +384,7 @@ LCUI_API int Action_Play( ActionData *action, int obj_id )
 		frame_proc_timer = LCUITimer_Set( 
 			REFRESH_INTERVAL_TIME,
 			ActionStream_Proc,
-			TRUE
+			NULL, TRUE
 		);
 	}
 	if( obj_id <= 0 ) {
@@ -786,6 +787,24 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 	Graph_Replace( graph, &frame->graph, pos );
 }
 
+/** 设置加速度 */
+LCUI_API void GameObject_SetXAcc( LCUI_Widget *widget, int acc )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->x_acc = acc;
+}
+
+/** 获取加速度 */
+LCUI_API int GameObject_GetXAcc( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->x_acc;
+}
+
 /** 设置游戏对象在X轴的移动速度 */
 LCUI_API void GameObject_SetXSpeed( LCUI_Widget *widget, int x_speed )
 {
@@ -794,6 +813,15 @@ LCUI_API void GameObject_SetXSpeed( LCUI_Widget *widget, int x_speed )
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	obj->phys_obj->x_speed = x_speed;
 	Widget_Update( widget );
+}
+
+/** 获取游戏对象在X轴的移动速度 */
+LCUI_API int GameObject_GetXSpeed( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->x_speed;
 }
 
 /** 设置游戏对象在Y轴的移动速度 */
