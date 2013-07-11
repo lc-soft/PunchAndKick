@@ -24,17 +24,27 @@ enum ActionType {
 	ACTION_REST
 };
 
-typedef struct GamePlayer_ {
+/* 回调函数的用途 */
+enum CallBackFuncUse {
+	AT_LAST_FRAME=0,
+	AT_XSPEED_TO_ZERO
+};
+
+typedef struct GamePlayer_ GamePlayer;
+struct GamePlayer_{
 	int id;				/**< 玩家ID */
 	int state;			/**< 状态 */
 	LCUI_BOOL right_direction;	/**< 角色是否朝着右方 */
 	LCUI_BOOL human_control;	/**< 是否由人类控制 */
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
+	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
+	LCUI_BOOL lock_move;		/**< 是否锁定移动 */
 	int walk_speed;			/**< 步行的速度 */
 	int run_speed;			/**< 奔跑的速度 */
 	LCUI_Widget *object;		/**< 游戏对象 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
-} GamePlayer;
+	void (*func[2])(GamePlayer*);	/**< 回调函数 */
+};
 
 extern int Game_Init(void);
 extern int Game_Start(void);
