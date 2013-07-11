@@ -4,6 +4,7 @@ typedef struct ControlKey_ {
 } ControlKey;
 
 enum GamePlayerState {
+	STATE_READY,
 	STATE_STANCE,	/**< 站立 */
 	STATE_WALK,	/**< 步行 */
 	STATE_LEFTRUN,	/**< 向左奔跑 */
@@ -15,6 +16,7 @@ enum GamePlayerState {
 };
 
 enum ActionType {
+	ACTION_READY,
 	ACTION_STANCE,
 	ACTION_WALK,
 	ACTION_RUN,
