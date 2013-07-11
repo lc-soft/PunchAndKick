@@ -133,6 +133,9 @@ int GamePlayer_InitAction( GamePlayer *player, int id )
 
 	action = ActionRes_Load( id, ACTION_A_ATTACK );
 	GameObject_AddAction( player->object, action, ACTION_A_ATTACK );
+
+	action = ActionRes_Load( id, ACTION_B_ATTACK );
+	GameObject_AddAction( player->object, action, ACTION_B_ATTACK );
 	//Widget_SetBorder( player->game_object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
 	Widget_Show( player->object );
 	return 0;
@@ -317,7 +320,7 @@ void GamePlayer_StopYMotion( GamePlayer *player )
 	GameObject_SetYSpeed( player->object, 0 );
 }
 
-static void GamePlayer_AtAAttackDone( LCUI_Widget *widget )
+static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
@@ -328,12 +331,28 @@ static void GamePlayer_AtAAttackDone( LCUI_Widget *widget )
 
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
+	if( player->lock_action ) {
+		return;
+	}
 	GamePlayer_ChangeState( player, STATE_A_ATTACK );
 	GamePlayer_StopXWalk( player );
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
 	GamePlayer_LockAction( player );
-	GameObject_AtActionDone( player->object, GamePlayer_AtAAttackDone );
+	GameObject_AtActionDone( player->object, GamePlayer_AtAttackDone );
+}
+
+void GamePlayer_StartBAttack( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return;
+	}
+	GamePlayer_ChangeState( player, STATE_B_ATTACK );
+	GamePlayer_StopXWalk( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player );
+	GameObject_AtActionDone( player->object, GamePlayer_AtAttackDone );
 }
 
 void GamePlayer_SetUpMotion( GamePlayer *player )
@@ -386,6 +405,9 @@ static void GameKeyboardProcKeyDown( int key_code )
 	
 	if( key_code == target->ctrlkey.a_attack ) {
 		GamePlayer_StartAAttack( target );
+	}
+	else if( key_code == target->ctrlkey.b_attack ) {
+		GamePlayer_StartBAttack( target );
 	}
 	
 	Widget_Update( target->object );

@@ -91,11 +91,11 @@ static ActionData* ActionRes_LoadAAttack(void)
 	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
 	Action_AddFrame( action, -5,0, &img_attack[0], 3 );
 	
-	Graph_Init( &img_attack[0] );
+	Graph_Init( &img_attack[1] );
 	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
 	Action_AddFrame( action, -5,0, &img_attack[1], 3 );
 
-	Graph_Init( &img_attack[0] );
+	Graph_Init( &img_attack[2] );
 	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
 	Action_AddFrame( action, -5,0, &img_attack[2], 3 );
 
@@ -107,20 +107,22 @@ static ActionData* ActionRes_LoadAAttack(void)
 /** 载入角色的B攻击动作的动画资源 */
 static ActionData* ActionRes_LoadBAttack(void)
 {
-	int i;
 	ActionData *action;
-	LCUI_Graph img_attack[2];
-	char path[512];
+	LCUI_Graph img_attack[3];
 	
 	action = Action_Create();
-	for(i=0; i<2; ++i) {
-		Graph_Init( &img_attack[i] );
-		sprintf( path, "drawable/B-attack-%02d.png", i+1 );
-		Graph_LoadImage( path, &img_attack[i] );
-		Action_AddFrame( action, 0,0, &img_attack[i], 5 );
-	}
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/B-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
+	
+	Graph_Init( &img_attack[1] );
+	Graph_LoadImage( "drawable/B-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, -11,0, &img_attack[1], 10 );
+
 	return action;
 }
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
