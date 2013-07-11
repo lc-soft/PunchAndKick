@@ -21,12 +21,48 @@
     <ClCompile Include="src\main_menu.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\msg.c">
+    <ClCompile Include="src\lan_battle.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_object.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_msg.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_control.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\physics_system.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gameres_riki.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_resource.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_object.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_control.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_msg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\main_menu.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\physics_system.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

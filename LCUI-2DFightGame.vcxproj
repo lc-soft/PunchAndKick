@@ -19,8 +19,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v110_xp</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -82,12 +82,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\gameres_riki.c" />
+    <ClCompile Include="src\game_control.c" />
+    <ClCompile Include="src\game_object.c" />
+    <ClCompile Include="src\game_resource.c" />
+    <ClCompile Include="src\lan_battle.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\main_menu.c" />
-    <ClCompile Include="src\msg.c" />
+    <ClCompile Include="src\game_msg.c" />
+    <ClCompile Include="src\physics_system.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h" />
+    <ClInclude Include="src\game_control.h" />
+    <ClInclude Include="src\game_msg.h" />
+    <ClInclude Include="src\game_object.h" />
+    <ClInclude Include="src\game_resource.h" />
+    <ClInclude Include="src\main_menu.h" />
+    <ClInclude Include="src\physics_system.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
