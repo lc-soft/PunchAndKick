@@ -10,26 +10,19 @@
 #define PAUSE	0
 #define PLAY	1
 
-/** 每次数据刷新时的时间间隔(毫秒) */
-#define REFRESH_INTERVAL_TIME 20
-
+enum FuncUse {
+	FUNC_USE_AT_END,
+	FUNC_USE_AT_UPDATE
+};
 
 /** 动作记录 */
 typedef struct ActionRec_ {
 	int id;			/**< 动画的标识号 */
-	int obj_id;		/**< 对象的标识号 */
 	ActionData *action;	/**< 对应的动作集 */
 } ActionRec;
 
-/** 动作的状态 */
-typedef struct ActionStatus_ {
-	int obj_id;		/**< 对象标识号 */
-	int state;		/**< 状态，指示播放还是暂停 */
-	int n_frame;		/**< 记录当前帧动作的序号，帧序号从1开始 */
-	long int remain_time;	/**< 当前帧剩下的停留时间 */
-	ActionData *action;	/**< 对应的动作集 */
-	LCUI_Func func;		/**< 被关联的回调函数 */
-} ActionStatus;
+/** 每次数据刷新时的时间间隔(毫秒) */
+#define REFRESH_INTERVAL_TIME 20
 
 typedef struct GameObject_ {
 	int state;			/**< 当前状态 */
@@ -38,34 +31,25 @@ typedef struct GameObject_ {
 	int global_bottom_line_y;	/**< 底线的Y轴坐标 */
 	int global_center_x;		/**< 中心点的X轴坐标 */
 	LCUI_BOOL data_valid;		/**< 当前使用的数据是否有效 */
-	ActionRec *current;		/**< 当前动作动画 */
+	ActionRec *current;		/**< 当前动作动画记录 */
 	LCUI_Queue action_list;		/**< 动作列表 */
+	int n_frame;			/**< 记录当前帧动作的序号，帧序号从0开始 */
+	long int remain_time;		/**< 当前帧剩下的停留时间 */
+	LCUI_Func func[2];		/**< 被关联的回调函数 */
 	PhysicsObject *phys_obj;	/**< 对应的物理对象 */
 } GameObject;
 
 static LCUI_Queue action_database;
-static LCUI_Queue action_stream;
+static LCUI_Queue gameobject_stream;
 
 static int database_init = FALSE;
 static int frame_proc_timer = -1;
 
-static void ActionStatus_Destroy( void *arg )
+static void GameObject_CallFunc( LCUI_Widget *widget, int func_use )
 {
-
-}
-
-static void ActionStatus_Init( ActionStatus *p_status )
-{
-	p_status->obj_id = 0;
-	p_status->action = NULL;
-	p_status->n_frame = 0;
-	p_status->state = PAUSE;
-	p_status->func.func = NULL;
-}
-
-static void Action_CallFunc( ActionStatus *p_status )
-{
-	AppTasks_CustomAdd( ADD_MODE_REPLACE | AND_ARG_S, &p_status->func );
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	AppTasks_CustomAdd( ADD_MODE_REPLACE | AND_ARG_S, &obj->func[func_use] );
 }
 
 static void ActionData_Destroy( void *arg )
@@ -75,29 +59,6 @@ static void ActionData_Destroy( void *arg )
 	Queue_Destroy( &action->frame );
 }
 
-static ActionStatus* Action_GetStatus( ActionData *action, int obj_id )
-{
-	int i, n;
-	ActionStatus *p_status;
-
-	if( action == NULL ) {
-		return NULL;
-	}
-	Queue_Lock( &action_stream );
-	n = Queue_GetTotal( &action_stream );
-	for( i=0; i<n; ++i ) {
-		p_status = (ActionStatus*)Queue_Get( &action_stream, i );
-		if( !p_status || p_status->action != action ) {
-			continue;
-		}
-		if( obj_id == p_status->obj_id ) {
-			Queue_Unlock( &action_stream );
-			return p_status;
-		}
-	}
-	Queue_Unlock( &action_stream );
-	return NULL;
-}
 
 /**
  * 创建一个动作集
@@ -127,27 +88,6 @@ LCUI_API ActionData* Action_Create( void )
 	return p;
 }
 
-static int ActionStream_Delete( ActionData *action )
-{
-	int n;
-	ActionData* tmp;
-
-	Queue_Lock( &action_stream );
-	n = Queue_GetTotal( &action_stream );
-	for(n; n>=0; --n) {
-		tmp = (ActionData*)Queue_Get( &action_stream, n );
-		if( tmp == action ) {
-			Queue_Delete( &action_stream, n );
-			break;
-		}
-	}
-	Queue_Unlock( &action_stream );
-	if( n < 0 ) {
-		return -1;
-	}
-	return 0;
-}
-
 /**
  * 删除一个动画
  * 从动画库中删除指定的动画
@@ -160,8 +100,6 @@ LCUI_API int Action_Delete( ActionData* action )
 {
 	int n;
 	ActionData* tmp;
-
-	ActionStream_Delete( action );
 
 	Queue_Lock( &action_database );
 	n = Queue_GetTotal( &action_database );
@@ -179,59 +117,45 @@ LCUI_API int Action_Delete( ActionData* action )
 	return 0;
 }
 
-/**
- * 为动作关联回调函数
- * 关联回调函数后，动画每更新一帧都会调用该函数
- * @param action
- *	目标动画
- * @param obj_id
- *	使用该动作的对象的ID
- * @param func
- *	指向回调函数的函数指针
- * @param arg
- *	需传递给回调函数的第二个参数
- * @returns
- *	正常则返回0，失败则返回-1
- * @warning
- *	必须在动画被第一次播放后调用此函数，否则将因找不到该动画的播放实例而导致关联失败
- * */
-LCUI_API int Action_Connect(	ActionData *action,
-				int obj_id,
-				void (*func)(void*),
-				void *arg )
+static int GameObject_Connect(	LCUI_Widget *widget,
+				int func_use,
+				void (*func)(LCUI_Widget*) )
 {
-	ActionStatus *p_status;
-
-	if( !action ) {
-		return -1;
-	}
-	p_status = Action_GetStatus( action, obj_id );
-	if( p_status == NULL ) {
-		return -1;
-	}
-	p_status->func.func = (CallBackFunc)func;
-	p_status->func.id = LCUIApp_GetSelfID();
-	p_status->func.arg[0] = arg;
-	p_status->func.arg[1] = NULL;
-	p_status->func.destroy_arg[0] = FALSE;
-	p_status->func.destroy_arg[1] = FALSE;
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->func[func_use].func = (CallBackFunc)func;
+	obj->func[func_use].id = LCUIApp_GetSelfID();
+	obj->func[func_use].arg[0] = widget;
+	obj->func[func_use].arg[1] = NULL;
+	obj->func[func_use].destroy_arg[0] = FALSE;
+	obj->func[func_use].destroy_arg[1] = FALSE;
 	return 0;
 }
 
-static void ActionStream_Sort(void)
+
+LCUI_API void GameObject_AtActionDone(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*) )
+{
+	GameObject_Connect( widget, FUNC_USE_AT_END, func );
+}
+
+static void GameObjectStream_Sort(void)
 {
 	int i, j, total;
-	ActionStatus *tmp, *p1, *p2;
+	LCUI_Widget *widget;
+	GameObject *tmp, *p1, *p2;
 
-	Queue_Lock( &action_stream );
-	total = Queue_GetTotal( &action_stream );
+	Queue_Lock( &gameobject_stream );
+	total = Queue_GetTotal( &gameobject_stream );
 	for(i=0; i<total; ++i) {
-		p1 = (ActionStatus*)Queue_Get( &action_stream, i );
+		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		p1 = (GameObject*)Widget_GetPrivData( widget );
 		if( !p1 ) {
 			continue;
 		}
 		for(j=i+1; j<total; ++j) {
-			p2 = (ActionStatus*)Queue_Get( &action_stream, j );
+			widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, j );
+			p2 = (GameObject*)Widget_GetPrivData( widget );
 			if( !p2 ) {
 				continue;
 			}
@@ -239,38 +163,37 @@ static void ActionStream_Sort(void)
 				tmp = p1;
 				p1 = p2;
 				p2 = tmp;
-				Queue_Swap( &action_stream, j, i );
+				Queue_Swap( &gameobject_stream, j, i );
 			}
 		}
 	}
-	Queue_Unlock( &action_stream );
+	Queue_Unlock( &gameobject_stream );
 }
 
-static void ActionStream_TimeSub( int time )
+static void GameObjectStream_TimeSub( int time )
 {
 	int i, total;
-	ActionStatus *p_status;
+	LCUI_Widget *widget;
+	GameObject *obj;
 
-	Queue_Lock( &action_stream );
-	total = Queue_GetTotal(&action_stream);
+	Queue_Lock( &gameobject_stream );
+	total = Queue_GetTotal(&gameobject_stream);
 	DEBUG_MSG("start\n");
 	for(i=0; i<total; ++i) {
-		p_status = (ActionStatus*)Queue_Get( &action_stream, i );
-		if( !p_status || p_status->state == PAUSE ) {
+		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		obj = (GameObject*)Widget_GetPrivData( widget );
+		if( !obj || obj->state == PAUSE ) {
 			continue;
 		}
-		p_status->remain_time -= time;
-		DEBUG_MSG("action: %p, n_frame: %d, time:%ld, sub:%d\n",
-			p_status->action, pos, p_status->remain_time, time);
+		obj->remain_time -= time;
 	}
-	DEBUG_MSG("end\n");
-	Queue_Unlock( &action_stream );
+	Queue_Unlock( &gameobject_stream );
 }
 
 static long int Action_GetFrameSleepTime( ActionData *action, int n_frame )
 {
 	ActionFrameData *frame;
-	frame = (ActionFrameData*)Queue_Get( &action->frame, n_frame-1 );
+	frame = (ActionFrameData*)Queue_Get( &action->frame, n_frame );
 	if( frame ) {
 		return frame->sleep_time;
 	}
@@ -278,213 +201,67 @@ static long int Action_GetFrameSleepTime( ActionData *action, int n_frame )
 }
 
 /** 更新流中的动画当前帧的停留时间 */
-static ActionStatus* ActionStream_UpdateTime( int sleep_time )
+static void GameObjectStream_UpdateTime( int sleep_time )
 {
 	int i, total;
-	LCUI_BOOL found = FALSE;
-	ActionStatus *action_status, *temp = NULL;
+	LCUI_BOOL need_draw=FALSE;
+	LCUI_Widget *widget;
+	GameObject *obj;
 	ActionFrameData *frame = NULL;
 	
-	ActionStream_TimeSub( sleep_time );
-	DEBUG_MSG("start\n");
-	total = Queue_GetTotal(&action_stream);
+	GameObjectStream_TimeSub( sleep_time );
+	total = Queue_GetTotal(&gameobject_stream);
 	for(i=0; i<total; ++i){
-		action_status = (ActionStatus*)
-				Queue_Get( &action_stream, i );
-		if(action_status->state == PLAY) {
+		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		obj = (GameObject*)Widget_GetPrivData( widget );
+		if( obj && obj->state == PLAY) {
 			break;
 		}
 	}
-	if(i >= total || !action_status ) {
-		return NULL;
+	if(i >= total || !widget || !obj ) {
+		return;
 	}
-	/*
-	 * 由于有些动画还未更新第一帧图像，动画槽里的图像也未载入第一帧的图像，因此，
-	 * 需要优先处理帧序号为0的动画。
-	 * */
-	for(i=0; i<total; ++i){
-		temp = (ActionStatus*)Queue_Get( &action_stream, i );
-		if( action_status->state == PLAY && temp->n_frame == 0 ) {
-			action_status = temp;
-			break;
-		}
+	if( obj->current == NULL ) {
+		GameObjectStream_Sort();
+		return;
 	}
-	DEBUG_MSG("action_status->n_frame: %d\n", action_status->n_frame);
-	if( action_status->n_frame > 0 ) {
-		DEBUG_MSG("n_frame time: %ld\n", frame->current_time);
-		/* 若当前帧的停留时间小于或等于0 */
-		if(action_status->remain_time <= 0) {
-			found = TRUE;
-			++action_status->n_frame;
-			action_status->remain_time = Action_GetFrameSleepTime(
-							action_status->action,
-							action_status->n_frame );
-		}
-
-		total = Queue_GetTotal( &action_status->action->frame );
-		if( action_status->n_frame > total ) {
-			action_status->n_frame = 1;
-			action_status->remain_time = Action_GetFrameSleepTime(
-							action_status->action,
-							action_status->n_frame );
-		}
-	} else {
-		action_status->n_frame = 1;
-		found = TRUE;
+	/* 若当前帧的停留时间小于或等于0 */
+	if(obj->remain_time <= 0) {
+		++obj->n_frame;
+		obj->remain_time = Action_GetFrameSleepTime(
+					obj->current->action,
+					obj->n_frame
+		);
+		GameObject_CallFunc( widget, FUNC_USE_AT_UPDATE );
+		need_draw = TRUE;
 	}
-	/* 重新对流中的动作动画进行排序 */
-	ActionStream_Sort();
-	if( found ) {
-		return action_status;
+	total = Queue_GetTotal( &obj->current->action->frame );
+	if( obj->n_frame >= total ) {
+		obj->n_frame = 0;
+		obj->remain_time = Action_GetFrameSleepTime(
+					obj->current->action,
+					obj->n_frame
+		);
+		GameObject_CallFunc( widget, FUNC_USE_AT_END );
 	}
-	return NULL;
+	if( need_draw ) {
+		Widget_Draw( widget );
+	}
+	GameObjectStream_Sort();
 }
 
-static void ActionStream_Proc( void* arg )
+static void GameObjectStream_Proc( void* arg )
 {
 	int lost_time;
 	static clock_t current_time = 0;
-	ActionStatus *action_status;
 
 	while(!LCUI_Active()) {
 		LCUI_MSleep(10);
 	}
 	lost_time = clock() - current_time;
 	current_time = clock();
-	action_status = ActionStream_UpdateTime( lost_time );
-	if( action_status ) {
-		Action_CallFunc( action_status );
-	}
+	GameObjectStream_UpdateTime( lost_time );
 	PhysicsSystem_Step();
-}
-
-/**
-/* 播放指定实例对象中的动作
- * @param action
- *	要播放的动画
- * @param obj_id
- *	对象实例对应的标识号，若不大于0，则会为该动作创建一个新的对象实例
- * @returns
- *	正常则返回该动画的播放标识号，失败则返回-1
- */
-LCUI_API int Action_Play( ActionData *action, int obj_id )
-{
-	static int new_obj_id = 1;
-	ActionStatus new_status, *p_status;
-
-	if( !action ) {
-		return -1;
-	}
-	if( frame_proc_timer == -1 ) {
-		Queue_Init(
-			&action_stream,
-			sizeof(ActionStatus),
-			ActionStatus_Destroy
-		);
-		frame_proc_timer = LCUITimer_Set( 
-			REFRESH_INTERVAL_TIME,
-			ActionStream_Proc,
-			NULL, TRUE
-		);
-	}
-	if( obj_id <= 0 ) {
-		ActionStatus_Init( &new_status );
-		new_status.obj_id = new_obj_id++;
-		new_status.action = action;
-		new_status.state = PLAY;
-		new_status.remain_time = Action_GetFrameSleepTime( action, 0 );
-		Queue_Add( &action_stream, &new_status );
-		return new_status.obj_id;
-	}
-	p_status = Action_GetStatus( action, obj_id );
-	if( p_status == NULL ) {
-		return -1;
-	}
-	p_status->state = PLAY;
-	return obj_id;
-}
-
-/**
- * 暂停指定实例兑现中的动作
- * @param action
- *	要暂停的动画
- * @param obj_id
- *	与该动画的播放实例对应的标识号
- * @returns
- *	正常则返回该动画的播放标识号，失败则返回-1
- */
-LCUI_API int Action_Pause( ActionData *action, int obj_id )
-{
-	static int new_play_id = 1;
-	ActionStatus *p_status;
-
-	if( !action ) {
-		return -1;
-	}
-	if( frame_proc_timer == -1 ) {
-		return -1;
-	}
-	if( obj_id <= 0 ) {
-		return -1;
-	}
-	p_status = Action_GetStatus( action, obj_id );
-	if( p_status == NULL ) {
-		return -1;
-	}
-	p_status->state = PAUSE;
-	return 0;
-}
-
-/** 重置动作动画 */
-LCUI_API int Action_Reset( ActionData *action, int obj_id )
-{
-	static int new_play_id = 1;
-	ActionStatus *p_status;
-
-	if( !action ) {
-		return -1;
-	}
-	if( frame_proc_timer == -1 ) {
-		return -1;
-	}
-	if( obj_id <= 0 ) {
-		return -1;
-	}
-	p_status = Action_GetStatus( action, obj_id );
-	if( p_status == NULL ) {
-		return -1;
-	}
-	p_status->n_frame = 1;
-	return 0;
-}
-
-static void GameObject_RefreshFrame( void *arg )
-{
-	LCUI_Widget *widget = (LCUI_Widget*)arg;
-	DEBUG_MSG("refresh\n");
-	Widget_Draw( widget );
-}
-
-
-static int __GameObject_PlayAction(	LCUI_Widget *widget,
-					ActionRec *action_rec )
-{
-	int ret;
-	ret = Action_Play(	action_rec->action,
-				action_rec->obj_id );
-	if( ret <= 0 ) {
-		return -1;
-	}
-	/* 保存播放标识号 */
-	action_rec->obj_id = ret;
-	/* 关联回调函数 */
-	Action_Connect(
-		action_rec->action,
-		action_rec->obj_id,
-		GameObject_RefreshFrame,
-		(void*)widget
-	);
-	return 0;
 }
 
 /**
@@ -504,30 +281,15 @@ LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	if( obj->current && obj->current->id == action_id ) {
-		return 0;
-	}
 	n = Queue_GetTotal( &obj->action_list );
 	for(i=0; i<n; ++i) {
-		p_rec = (ActionRec*)
-			Queue_Get( &obj->action_list, i );
-
+		p_rec = (ActionRec*)Queue_Get( &obj->action_list, i );
 		if( !p_rec || p_rec->id != action_id ) {
 			continue;
 		}
-		if( obj->current ) {
-			Action_Pause(	obj->current->action,
-					obj->current->obj_id );
-			Action_Reset(	obj->current->action,
-					obj->current->obj_id );
-		}
-		if( obj->state == PLAY ) {
-			__GameObject_PlayAction( widget, p_rec );
-		} else {
-			Action_Pause( p_rec->action, p_rec->obj_id );
-			Action_Reset( p_rec->action, p_rec->obj_id );
-		}
 		obj->current = p_rec;
+		obj->n_frame = 0;
+		obj->remain_time = Action_GetFrameSleepTime( p_rec->action, 0 );
 		/* 标记数据为无效，以根据当前动作动画来更新数据 */
 		obj->data_valid = FALSE;
 		Widget_Draw(widget);
@@ -542,10 +304,13 @@ LCUI_API int GameObject_GetCurrentActionID( LCUI_Widget *widget )
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	if( obj->current ) {
-		return obj->current->id;
+	if( obj->current == NULL ) {
+		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
+		if( obj->current == NULL ) {
+			return -1;
+		}
 	}
-	return 0;
+	return obj->current->id;
 }
 
 LCUI_API int GameObject_ResetAction( LCUI_Widget *widget )
@@ -554,13 +319,15 @@ LCUI_API int GameObject_ResetAction( LCUI_Widget *widget )
 
 	obj = (GameObject*)Widget_GetPrivData(widget);
 	if( obj->current == NULL ) {
-		obj->current = (ActionRec*)Queue_Get(
-					&obj->action_list, 0 );
+		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
 		if( obj->current == NULL ) {
 			return -1;
 		}
 	}
-	return Action_Reset( obj->current->action, obj->current->obj_id );
+	obj->n_frame = 0;
+	obj->remain_time = Action_GetFrameSleepTime( obj->current->action, 0 );
+	Widget_Draw( widget );
+	return 0;
 }
 
 /** 播放对象的动作 */
@@ -570,14 +337,16 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
 
 	obj = (GameObject*)Widget_GetPrivData(widget);
 	if( obj->current == NULL ) {
-		obj->current = (ActionRec*)Queue_Get(
-					&obj->action_list, 0 );
+		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
 		if( obj->current == NULL ) {
 			return -1;
 		}
 	}
 	obj->state = PLAY;
-	return __GameObject_PlayAction( widget, obj->current );
+	obj->n_frame = 0;
+	obj->remain_time = Action_GetFrameSleepTime( obj->current->action, 0 );
+	Widget_Draw( widget );
+	return 0;
 }
 
 /** 暂停对象的动作 */
@@ -586,16 +355,11 @@ LCUI_API int GameObject_PauseAction( LCUI_Widget *widget )
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData(widget);
-	obj->state = PAUSE;
 	if( obj->current == NULL ) {
-		obj->current = (ActionRec*)Queue_Get(
-					&obj->action_list, 0 );
-		if( obj->current == NULL ) {
-			return -1;
-		}
+		return -1;
 	}
-	return Action_Pause(	obj->current->action,
-				obj->current->obj_id );
+	obj->state = PAUSE;
+	return 0;
 }
 
 LCUI_API int Action_AddFrame(	ActionData* action,
@@ -622,8 +386,6 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_NewPrivData( widget, sizeof(GameObject) );
-	Queue_Init( &obj->action_list, sizeof(ActionRec), NULL );
-	obj->current = NULL;
 	obj->global_bottom_line_y = 0;
 	obj->global_center_x = 0;
 	obj->data_valid = FALSE;
@@ -633,6 +395,21 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->w = 0;
 	obj->h = 0;
 	obj->phys_obj = PhysicsObject_New(0,0,0,0,0,0 );
+	obj->current = NULL;
+	obj->n_frame = 0;
+	obj->remain_time = 0;
+	obj->state = PAUSE;
+	Queue_Init( &obj->action_list, sizeof(ActionRec), NULL );
+	if( frame_proc_timer == -1 ) {
+		Queue_Init( &gameobject_stream, sizeof(LCUI_Widget*), NULL );
+		Queue_UsingPointer( &gameobject_stream );
+		frame_proc_timer = LCUITimer_Set( 
+			REFRESH_INTERVAL_TIME,
+			GameObjectStream_Proc,
+			NULL, TRUE
+		);
+	}
+	Queue_AddPointer( &gameobject_stream, widget );
 }
 
 /** 获取当前动作信息 */
@@ -649,6 +426,10 @@ static int GameObject_UpdateData( LCUI_Widget *widget )
 	if( obj->current == NULL ) {
 		return -1;
 	}
+	if( obj->current->action == NULL ) {
+		return -1;
+	}
+
 	frame_list = &obj->current->action->frame;
 	n = Queue_GetTotal( &obj->current->action->frame );
 	for( i=0; i<n; ++i ) {
@@ -702,7 +483,6 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 	GameObject *obj;
 
 	rec.action = action;
-	rec.obj_id = 0;
 	rec.id = id;
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	/* 添加至动作列表中 */
@@ -752,26 +532,20 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 {
 	GameObject *obj;
 	LCUI_Pos pos;
-	ActionStatus *p_status;
 	ActionFrameData *frame;
 	LCUI_Graph *graph;
 	
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	if( obj->current == NULL ) {
 		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
-		/* 既然没有动作动画，那就不进行更新 */
 		if( obj->current == NULL ) {
 			return;
 		}
 	}
-	p_status = Action_GetStatus(
-			obj->current->action,
-			obj->current->obj_id
-	);
 	/* 获取当前帧动作图像 */
 	frame = (ActionFrameData*)Queue_Get(
-			&p_status->action->frame,
-			p_status->n_frame>0?p_status->n_frame-1:0
+			&obj->current->action->frame,
+			obj->n_frame
 	);
 	if( frame == NULL ) {
 		return;

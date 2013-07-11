@@ -43,48 +43,9 @@ LCUI_API ActionData* Action_Create( void );
  */
 LCUI_API int Action_Delete( ActionData* action );
 
-/**
- * 为动作关联回调函数
- * 关联回调函数后，动画每更新一帧都会调用该函数
- * @param action
- *	目标动画
- * @param obj_id
- *	使用该动作的对象的ID
- * @param func
- *	指向回调函数的函数指针
- * @param arg
- *	需传递给回调函数的第二个参数
- * @returns
- *	正常则返回0，失败则返回-1
- * @warning
- *	必须在动画被第一次播放后调用此函数，否则将因找不到该动画的播放实例而导致关联失败
- * */
-LCUI_API int Action_Connect(	ActionData *action,
-				int obj_id,
-				void (*func)(void*),
-				void *arg );
+LCUI_API void GameObject_AtActionDone(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*) );
 
-/**
-/* 播放指定实例对象中的动作
- * @param action
- *	要播放的动画
- * @param obj_id
- *	对象实例对应的标识号，若不大于0，则会为该动作创建一个新的对象实例
- * @returns
- *	正常则返回该动画的播放标识号，失败则返回-1
- */
-LCUI_API int Action_Play( ActionData *action, int obj_id );
-
-/**
- * 暂停指定实例兑现中的动作
- * @param action
- *	要暂停的动画
- * @param obj_id
- *	与该动画的播放实例对应的标识号
- * @returns
- *	正常则返回该动画的播放标识号，失败则返回-1
- */
-LCUI_API int Action_Pause( ActionData *action, int obj_id );
 
 /**
  * 切换对象的动作
