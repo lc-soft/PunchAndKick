@@ -95,6 +95,16 @@ void GamePlayer_UnlockAction( GamePlayer *player )
 	player->lock_action = FALSE;
 }
 
+void GamePlayer_LockMotion( GamePlayer *player )
+{
+	player->lock_motion = TRUE;
+}
+
+void GamePlayer_UnlockMotion( GamePlayer *player )
+{
+	player->lock_motion = FALSE;
+}
+
 void GamePlayer_SetXSpeedToZero(	GamePlayer *player,
 					int acc,
 					void(*func)(GamePlayer*) )
@@ -138,7 +148,7 @@ static int GamePlayer_Init( GamePlayer *player )
 	player->local_control = TRUE;
 	player->right_direction = TRUE;
 	player->lock_action = FALSE;
-	player->lock_move = FALSE;
+	player->lock_motion = FALSE;
 	ControlKey_Init( &player->ctrlkey );
 	player->func[0] = NULL;
 	player->func[1] = NULL;
@@ -153,6 +163,9 @@ static int GamePlayer_Init( GamePlayer *player )
 static void GamePlayer_SetLeftWalk( GamePlayer *player )
 {
 	int speed;
+	if( player->lock_motion ) {
+		return;
+	}
 	speed = -3 * player->walk_speed / 100;
 	GameObject_SetXSpeed( player->object, speed );
 	GamePlayer_ChangeState( player, STATE_WALK );
@@ -161,24 +174,40 @@ static void GamePlayer_SetLeftWalk( GamePlayer *player )
 static void GamePlayer_SetRightWalk( GamePlayer *player )
 {
 	int speed;
+	if( player->lock_motion ) {
+		return;
+	}
 	speed = 3 * player->walk_speed / 100;
 	GameObject_SetXSpeed( player->object, speed );
 	GamePlayer_ChangeState( player, STATE_WALK );
 }
 
+void GamePlayer_SetLeftRun( GamePlayer *player )
+{
+	int speed;
+	if( player->lock_motion ) {
+		return;
+	}
+	speed = -10 * player->walk_speed / 100;
+	GameObject_SetXSpeed( player->object, speed );
+	GamePlayer_ChangeState( player, STATE_LEFTRUN );
+}
+
+void GamePlayer_SetRightRun( GamePlayer *player )
+{
+	int speed;
+	if( player->lock_motion ) {
+		return;
+	}
+	speed = 10 * player->walk_speed / 100;
+	GameObject_SetXSpeed( player->object, speed );
+	GamePlayer_ChangeState( player, STATE_RIGHTRUN );
+}
+
 static void GamePlayer_AtRunEnd( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
-	if( LCUIKey_IsHit(player->ctrlkey.up)
-	 || LCUIKey_IsHit(player->ctrlkey.down) ) {
-		 GamePlayer_ChangeState( player, STATE_WALK );
-	}
-	else if( LCUIKey_IsHit(player->ctrlkey.left) ) {
-		 GamePlayer_SetLeftWalk( player );
-	}
-	else if( LCUIKey_IsHit(player->ctrlkey.right) ) {
-		 GamePlayer_SetRightWalk( player );
-	}
+	GamePlayer_UnlockMotion( player );
 }
 
 /** 停止奔跑 */
@@ -192,19 +221,17 @@ void GamePlayer_StopRun( GamePlayer *player )
 	}
 	GamePlayer_ChangeState( player, STATE_STANCE );
 	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
 	GamePlayer_SetXSpeedToZero( player, acc, GamePlayer_AtRunEnd );
 }
 
-static void GamePlayer_ProcLeftKeyDown( GamePlayer *player )
+static void GamePlayer_ProcLeftKey( GamePlayer *player )
 {
-	int speed;
 	switch(player->state) {
 	case STATE_STANCE:
 	case STATE_WALK:
 		if( LCUIKey_IsDoubleHit(player->ctrlkey.left,250) ) {
-			speed = -10 * player->walk_speed / 100;
-			GameObject_SetXSpeed( player->object, speed );
-			GamePlayer_ChangeState( player, STATE_LEFTRUN );
+			 GamePlayer_SetLeftRun( player );
 		} else {
 			 GamePlayer_SetLeftWalk( player );
 		}
@@ -217,16 +244,13 @@ static void GamePlayer_ProcLeftKeyDown( GamePlayer *player )
 	}
 }
 
-static void GamePlayer_ProcRightKeyDown( GamePlayer *player )
+static void GamePlayer_ProcRightKey( GamePlayer *player )
 {
-	int speed;
 	switch(player->state) {
 	case STATE_STANCE:
 	case STATE_WALK:
 		if( LCUIKey_IsDoubleHit(player->ctrlkey.right,250) ) {
-			speed = 10 * player->walk_speed / 100;
-			GameObject_SetXSpeed( player->object, speed );
-			GamePlayer_ChangeState( player, STATE_RIGHTRUN );
+			 GamePlayer_SetRightRun( player );
 		} else {
 			 GamePlayer_SetRightWalk( player );
 		}
@@ -239,13 +263,42 @@ static void GamePlayer_ProcRightKeyDown( GamePlayer *player )
 	}
 }
 
-static void GamePlayer_ProcUpKeyDown( GamePlayer *player )
+void GamePlayer_StopXWalk( GamePlayer *player )
+{
+	if( player->lock_motion ) {
+		return;
+	}
+	if( player->state == STATE_LEFTRUN
+	|| player->state == STATE_RIGHTRUN ) {
+		return;
+	}
+	GameObject_SetXSpeed( player->object, 0 );
+	GamePlayer_ChangeState( player, STATE_STANCE );
+}
+
+void GamePlayer_StopYMotion( GamePlayer *player )
+{
+	if( player->lock_motion ) {
+		return;
+	}
+	GameObject_SetYSpeed( player->object, 0 );
+}
+
+void GamePlayer_StartAAttack( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_A_ATTACK );
+	GamePlayer_LockAction( player );
+}
+
+void GamePlayer_SetUpMotion( GamePlayer *player )
 {
 	int speed;
-
+	if( player->lock_motion ) {
+		return;
+	}
 	switch(player->state) {
 	case STATE_STANCE:
-		GamePlayer_ChangeAction( player, ACTION_WALK );
+		GamePlayer_ChangeState( player, STATE_WALK );
 	case STATE_WALK:
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
@@ -255,44 +308,13 @@ static void GamePlayer_ProcUpKeyDown( GamePlayer *player )
 	default:break;
 	}
 }
-static void GamePlayer_StopWalk( GamePlayer *player )
-{
-	if( player->state != STATE_WALK ) {
-		return;
-	}
-	if( LCUIKey_IsHit(player->ctrlkey.right)
-	|| LCUIKey_IsHit(player->ctrlkey.left)
-	|| LCUIKey_IsHit(player->ctrlkey.up)
-	|| LCUIKey_IsHit(player->ctrlkey.down) ) {
-		return;
-	}
-	GameObject_SetXSpeed( player->object, 0 );
-	GamePlayer_ChangeAction( player, ACTION_STANCE );
-}
 
-static void GamePlayer_StopYMove( GamePlayer *player )
-{
-	GameObject_SetYSpeed( player->object, 0 );
-	if( LCUIKey_IsHit(player->ctrlkey.left)
-	 || LCUIKey_IsHit(player->ctrlkey.right) ) {
-		if( player->state != STATE_LEFTRUN
-		 && player->state != STATE_RIGHTRUN ) {
-			GamePlayer_ChangeState( player, STATE_WALK );
-		}
-	} else {
-		 GamePlayer_ChangeState( player, STATE_STANCE );
-	}
-}
-
-static void GamePlayer_StartAAttack( GamePlayer *player )
-{
-	GamePlayer_ChangeState( player, STATE_A_ATTACK );
-	GamePlayer_LockAction( player );
-}
-
-static void GamePlayer_ProcDownKeyDown( GamePlayer *player )
+void GamePlayer_SetDownMotion( GamePlayer *player )
 {
 	int speed;
+	if( player->lock_motion ) {
+		return;
+	}
 	switch(player->state) {
 	case STATE_STANCE:
 		GamePlayer_ChangeAction( player, ACTION_WALK );
@@ -313,19 +335,19 @@ static void GameKeyboardProcKeyDown( int key_code )
 	target = GamePlayer_GetPlayerByControlKey( key_code );
 	
 	if( key_code == target->ctrlkey.left ) {
-		GamePlayer_ProcLeftKeyDown( target );
+		GamePlayer_ProcLeftKey( target );
 	}
 	else if( key_code == target->ctrlkey.right ) {
-		GamePlayer_ProcRightKeyDown( target );
+		GamePlayer_ProcRightKey( target );
 	}
 	else if( key_code == target->ctrlkey.up ) {
-		GamePlayer_ProcUpKeyDown( target );
+		GamePlayer_SetUpMotion( target );
 	}
 	else if( key_code == target->ctrlkey.down ) {
-		GamePlayer_ProcDownKeyDown( target );
+		GamePlayer_SetDownMotion( target );
 	}
 	else if( key_code == target->ctrlkey.a_attack ) {
-		//GamePlayer_StartAAttack( target );
+		GamePlayer_StartAAttack( target );
 	}
 	
 	Widget_Update( target->object );
@@ -339,11 +361,11 @@ static void GameKeyboardProcKeyUp( int key_code )
 	
 	if( key_code == target->ctrlkey.left
 	 || key_code == target->ctrlkey.right ) {
-		GamePlayer_StopWalk( target );
+		GamePlayer_StopXWalk( target );
 	}
 	else if( key_code == target->ctrlkey.up
 	 || key_code == target->ctrlkey.down ) {
-		GamePlayer_StopYMove( target );
+		GamePlayer_StopYMotion( target );
 	}
 	
 	Widget_Update( target->object );
@@ -352,9 +374,9 @@ static void GameKeyboardProcKeyUp( int key_code )
 static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
 {
 	if( event->type == LCUI_KEYDOWN ) {
-		GameKeyboardProcKeyDown( event->key_code );
+		//GameKeyboardProcKeyDown( event->key_code );
 	} else {
-		GameKeyboardProcKeyUp( event->key_code );
+		//GameKeyboardProcKeyUp( event->key_code );
 	}
 }
 
@@ -399,29 +421,34 @@ static void GamePlayer_SyncData( GamePlayer *player )
 			player->func[AT_XSPEED_TO_ZERO]( player );
 		}
 	}
-}
-
-static void GamePlayer_ProcState( GamePlayer *player )
-{
 	if( LCUIKey_IsHit(player->ctrlkey.left) ) {
 		player->right_direction = FALSE;
 	}
 	if( LCUIKey_IsHit(player->ctrlkey.right) ) {
 		player->right_direction = TRUE;
 	}
-	switch( player->state ) {
-	case STATE_STANCE:
-		GamePlayer_ChangeAction( player, ACTION_STANCE );
-		break;
-	case STATE_WALK:
-		GamePlayer_ChangeAction( player, ACTION_WALK );
-		break;
-	case STATE_LEFTRUN:
-	case STATE_RIGHTRUN:
-		GamePlayer_ChangeAction( player, ACTION_RUN );
-	default:
-		break;
+	if( LCUIKey_IsHit(player->ctrlkey.left) ) {
+		GamePlayer_ProcLeftKey( player );
 	}
+	else if( LCUIKey_IsHit(player->ctrlkey.right) ) {
+		GamePlayer_ProcRightKey( player );
+	}
+	else {
+		GamePlayer_StopXWalk( player );
+	}
+	if( LCUIKey_IsHit(player->ctrlkey.up) ) {
+		GamePlayer_SetUpMotion( player );
+	}
+	else if( LCUIKey_IsHit(player->ctrlkey.down) ) {
+		GamePlayer_SetDownMotion( player );
+	}
+	else {
+		GamePlayer_StopYMotion( player );
+	}
+	if( LCUIKey_IsHit(player->ctrlkey.a_attack) ) {
+		GamePlayer_StartAAttack( player );
+	}
+	
 }
 
 static void GamePlayer_Control( void *arg )
@@ -434,7 +461,6 @@ static void GamePlayer_Control( void *arg )
 				continue;
 			}
 			GamePlayer_SyncData( &player_data[i] );
-			//GamePlayer_ProcState( &player_data[i] );
 			Widget_Update( player_data[i].object );
 		}
 		LCUI_MSleep( 10 );

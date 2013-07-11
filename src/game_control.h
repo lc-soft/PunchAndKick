@@ -38,7 +38,7 @@ struct GamePlayer_{
 	LCUI_BOOL human_control;	/**< 是否由人类控制 */
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
 	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
-	LCUI_BOOL lock_move;		/**< 是否锁定移动 */
+	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
 	int walk_speed;			/**< 步行的速度 */
 	int run_speed;			/**< 奔跑的速度 */
 	LCUI_Widget *object;		/**< 游戏对象 */
@@ -54,7 +54,41 @@ extern int Game_Pause(void);
 extern void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
 
 /** 通过控制键获取该键控制的角色 */
-extern GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code );
+GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code );
 
 /** 通过角色ID来获取角色 */
-extern GamePlayer *GamePlayer_GetByID( int player_id );
+GamePlayer *GamePlayer_GetByID( int player_id );
+
+/** 改变角色的动作动画  */
+void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
+
+void GamePlayer_ChangeState( GamePlayer *player, int state );
+
+void GamePlayer_LockAction( GamePlayer *player );
+
+void GamePlayer_UnlockAction( GamePlayer *player );
+
+void GamePlayer_LockMotion( GamePlayer *player );
+
+void GamePlayer_UnlockMotion( GamePlayer *player );
+
+void GamePlayer_SetLeftWalk( GamePlayer *player );
+
+void GamePlayer_SetRightWalk( GamePlayer *player );
+
+void GamePlayer_SetLeftRun( GamePlayer *player );
+
+void GamePlayer_SetRightRun( GamePlayer *player );
+
+/** 停止奔跑 */
+void GamePlayer_StopRun( GamePlayer *player );
+
+void GamePlayer_StopXWalk( GamePlayer *player );
+
+void GamePlayer_StopYMotion( GamePlayer *player );
+
+void GamePlayer_StartAAttack( GamePlayer *player );
+
+void GamePlayer_SetUpMotion( GamePlayer *player );
+
+void GamePlayer_SetDownMotion( GamePlayer *player );
