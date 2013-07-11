@@ -21,9 +21,12 @@ void PhysicsSystem_Step( void )
 			continue;
 		}
 		/* 更新对象的空间坐标 */
-		obj->x += ( obj->x_speed + obj->x_acc );
-		obj->y += ( obj->y_speed + obj->y_acc );
-		obj->z += ( obj->z_speed + obj->z_acc );
+		obj->x_speed += obj->x_acc;
+		obj->y_speed += obj->y_acc;
+		obj->z_speed += obj->z_acc;
+		obj->x += obj->x_speed;
+		obj->y += obj->y_speed;
+		obj->z += obj->z_speed;
 	}
 	Queue_Unlock( &physics_object_list );
 }
