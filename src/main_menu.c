@@ -75,7 +75,7 @@ void DrawSelectBox( LCUI_Graph *buff )
 }
 
 
-static void BlinkSelectBox(void)
+static void BlinkSelectBox(void* arg)
 {
 	static LCUI_BOOL show = TRUE;
 	static uchar_t alpha = 255;
@@ -248,7 +248,7 @@ void Game_InitMainMenu(void)
 	Widget_Show( main_menu_box );
 	Widget_Show( select_box );
 	LCUIThread_Create( &t, UpdateSelectBoxPos, (void*)select_box );
-	blink_effect_timer = LCUITimer_Set( 10, BlinkSelectBox, TRUE );
+	blink_effect_timer = LCUITimer_Set( 10, BlinkSelectBox, NULL, TRUE );
 }
 
 void Game_ShowMainMenu(void)
