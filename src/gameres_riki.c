@@ -65,18 +65,25 @@ static ActionData* ActionRes_LoadRun(void)
 /** 载入角色的A攻击动作的动画资源 */
 static ActionData* ActionRes_LoadAAttack(void)
 {
-	int i;
 	ActionData *action;
 	LCUI_Graph img_attack[3];
-	char path[512];
 	
 	action = Action_Create();
-	for(i=0; i<3; ++i) {
-		Graph_Init( &img_attack[i] );
-		sprintf( path, "drawable/A-attack-%02d.png", i+1 );
-		Graph_LoadImage( path, &img_attack[i] );
-		Action_AddFrame( action, -5,0, &img_attack[i], 5 );
-	}
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, -5,0, &img_attack[0], 5 );
+	
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, -5,0, &img_attack[1], 5 );
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
+	Action_AddFrame( action, -5,0, &img_attack[2], 5 );
+
+	Action_AddFrame( action, -5,0, &img_attack[1], 5 );
+
 	return action;
 }
 
