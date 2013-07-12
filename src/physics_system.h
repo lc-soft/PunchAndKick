@@ -18,16 +18,16 @@ ACC: acceleration 加速度
 **/
 
 typedef struct PhysicsObject_ {
-	int x,y,z;			/**< 对象在空间中的坐标 */
+	double x,y,z;			/**< 对象在空间中的坐标 */
 	unsigned int x_width;		/**< 在X轴上的宽度 */
 	unsigned int y_width;		/**< 在Y轴上的宽度 */
 	unsigned int z_width;		/**< 在Z轴上的宽度 */
-	int x_speed;			/**< 在X轴上的移动速度 */
-	int y_speed;			/**< 在Y轴上的移动速度 */
-	int z_speed;			/**< 在Z轴上的移动速度 */
-	int x_acc;			/**< 在X轴上的加速度 */
-	int y_acc;			/**< 在Y轴上的加速度 */
-	int z_acc;			/**< 在Z轴上的加速度 */
+	double x_speed;			/**< 在X轴上的移动速度 */
+	double y_speed;			/**< 在Y轴上的移动速度 */
+	double z_speed;			/**< 在Z轴上的移动速度 */
+	double x_acc;			/**< 在X轴上的加速度 */
+	double y_acc;			/**< 在Y轴上的加速度 */
+	double z_acc;			/**< 在Z轴上的加速度 */
 } PhysicsObject;
 
 
