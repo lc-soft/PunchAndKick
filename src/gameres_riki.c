@@ -95,7 +95,7 @@ static ActionData* ActionRes_LoadAAttack(void)
 	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
 	Action_AddFrame( action, -5,0, &img_attack[1], 3 );
 
-	Graph_Init( &img_attack[2] );
+	Graph_Init( &img_attack[2] ); 
 	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
 	Action_AddFrame( action, -5,0, &img_attack[2], 3 );
 
@@ -118,8 +118,8 @@ static ActionData* ActionRes_LoadBAttack(void)
 	
 	Graph_Init( &img_attack[1] );
 	Graph_LoadImage( "drawable/B-attack-02.png", &img_attack[1] );
-	Action_AddFrame( action, -11,0, &img_attack[1], 10 );
-
+	Action_AddFrame( action, -11,0, &img_attack[1], 5 );
+	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
 	return action;
 }
 
