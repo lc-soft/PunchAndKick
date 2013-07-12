@@ -57,7 +57,7 @@ static ActionData* ActionRes_LoadReady(void)
 		Graph_Init( &img_ready[i] );
 		sprintf( path, "drawable/ready-%02d.png", i+1 );
 		Graph_LoadImage( path, &img_ready[i] );
-		Action_AddFrame( action, -5,0, &img_ready[i], 50 );
+		Action_AddFrame( action, -6,0, &img_ready[i], 50 );
 	}
 	return action;
 }
@@ -89,17 +89,17 @@ static ActionData* ActionRes_LoadAAttack(void)
 
 	Graph_Init( &img_attack[0] );
 	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
-	Action_AddFrame( action, -5,0, &img_attack[0], 3 );
+	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
 	
 	Graph_Init( &img_attack[1] );
 	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
-	Action_AddFrame( action, -5,0, &img_attack[1], 3 );
+	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
 
 	Graph_Init( &img_attack[2] ); 
 	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
-	Action_AddFrame( action, -5,0, &img_attack[2], 3 );
+	Action_AddFrame( action, -14,0, &img_attack[2], 3 );
 
-	Action_AddFrame( action, -5,0, &img_attack[1], 3 );
+	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
 
 	return action;
 }
@@ -123,6 +123,41 @@ static ActionData* ActionRes_LoadBAttack(void)
 	return action;
 }
 
+static ActionData* ActionRes_LoadASprintAttack(void)
+{
+	ActionData *action;
+	LCUI_Graph img_attack[2];
+	
+	action = Action_Create();
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/A-sprint-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, 0,0, &img_attack[0], 5 );
+	
+	Graph_Init( &img_attack[1] );
+	Graph_LoadImage( "drawable/A-sprint-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
+	return action;
+}
+
+static ActionData* ActionRes_LoadBSprintAttack(void)
+{
+	ActionData *action;
+	LCUI_Graph img_attack[2];
+	
+	action = Action_Create();
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/B-sprint-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, 0,0, &img_attack[0], 5 );
+	
+	Graph_Init( &img_attack[1] );
+	Graph_LoadImage( "drawable/B-sprint-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
+	return action;
+}
+
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -133,6 +168,8 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_A_ATTACK: return ActionRes_LoadAAttack();
 	case ACTION_B_ATTACK: return ActionRes_LoadBAttack();
 	case ACTION_READY: return ActionRes_LoadReady();
+	case ACTION_AS_ATTACK: return ActionRes_LoadASprintAttack();
+	case ACTION_BS_ATTACK: return ActionRes_LoadBSprintAttack();
 	default:break;
 	}
 	return NULL;
