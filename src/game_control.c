@@ -257,6 +257,9 @@ void GamePlayer_StopRun( GamePlayer *player )
 
 static void GamePlayer_ProcLeftKey( GamePlayer *player )
 {
+	if( player->lock_motion ) {
+		return;
+	}
 	switch(player->state) {
 	case STATE_READY:
 		GameObject_AtActionDone( player->object, NULL );
@@ -278,6 +281,9 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 
 static void GamePlayer_ProcRightKey( GamePlayer *player )
 {
+	if( player->lock_motion ) {
+		return;
+	}
 	switch(player->state) {
 	case STATE_READY:
 		GameObject_AtActionDone( player->object, NULL );
