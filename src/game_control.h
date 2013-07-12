@@ -11,6 +11,8 @@ enum GamePlayerState {
 	STATE_RIGHTRUN,	/**< 向右奔跑 */
 	STATE_A_ATTACK,
 	STATE_B_ATTACK,
+	STATE_AS_STTACK,
+	STATE_BS_STTACK,
 	STATE_HIT,	/**< 被命中 */
 	STATE_REST	/**< 歇息 */
 };
@@ -22,14 +24,10 @@ enum ActionType {
 	ACTION_RUN,
 	ACTION_A_ATTACK,
 	ACTION_B_ATTACK,
+	ACTION_AS_ATTACK,
+	ACTION_BS_ATTACK,
 	ACTION_HIT,
 	ACTION_REST
-};
-
-/* 回调函数的用途 */
-enum CallBackFuncUse {
-	AT_LAST_FRAME=0,
-	AT_XSPEED_TO_ZERO
 };
 
 typedef struct GamePlayer_ GamePlayer;
@@ -45,7 +43,6 @@ struct GamePlayer_{
 	int run_speed;			/**< 奔跑的速度 */
 	LCUI_Widget *object;		/**< 游戏对象 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
-	void (*func[2])(GamePlayer*);	/**< 回调函数 */
 };
 
 extern int Game_Init(void);
