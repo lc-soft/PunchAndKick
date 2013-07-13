@@ -13,7 +13,8 @@
 enum FuncUse {
 	AT_ACTION_DONE = 0,
 	AT_FRAME_UPDATE,
-	AT_XSPEED_TO_ZERO
+	AT_XSPEED_TO_ZERO,
+	AT_LANDING
 };
 
 /** 动作记录 */
@@ -37,8 +38,9 @@ typedef struct GameObject_ {
 	LCUI_Queue action_list;		/**< 动作列表 */
 	int n_frame;			/**< 记录当前帧动作的序号，帧序号从0开始 */
 	long int remain_time;		/**< 当前帧剩下的停留时间 */
-	LCUI_Func func[3];		/**< 被关联的回调函数 */
+	LCUI_Func func[4];		/**< 被关联的回调函数 */
 	PhysicsObject *phys_obj;	/**< 对应的物理对象 */
+	LCUI_Widget *shadow;		/**< 对象的阴影 */
 } GameObject;
 
 static LCUI_Queue action_database;
@@ -147,6 +149,17 @@ LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 {
 	GameObject_SetXAcc( widget, acc );
 	GameObject_Connect( widget, AT_XSPEED_TO_ZERO, func );
+}
+
+/** 设置在对象着地时进行响应 */
+LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
+					double z_speed,
+					double z_acc,
+					void (*func)(LCUI_Widget*) )
+{
+	GameObject_SetZSpeed( widget, z_speed );
+	GameObject_SetZAcc( widget, z_acc );
+	GameObject_Connect( widget, AT_LANDING, func );
 }
 
 static void GameObjectStream_Sort(void)
@@ -294,6 +307,20 @@ static void GameObjectStream_Proc( void* arg )
 			Widget_Update( widget );
 			GameObject_CallFunc( widget, AT_XSPEED_TO_ZERO );
 		}
+		/**
+		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
+		暂不考虑其他对象对当前对象的着陆点的影响。
+		**/
+		if( (obj->phys_obj->z_acc > 0
+		 && obj->phys_obj->z > 0 )
+		|| (obj->phys_obj->z_acc < 0
+		 && obj->phys_obj->z < 0 ) ) {
+			 obj->phys_obj->z = 0;
+			obj->phys_obj->z_acc = 0;
+			obj->phys_obj->z_speed = 0;
+			Widget_Update( widget );
+			GameObject_CallFunc( widget, AT_LANDING );
+		}
 	}
 }
 
@@ -434,7 +461,7 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->remain_time = 0;
 	obj->state = PAUSE;
 	obj->horiz_flip = FALSE;
-
+	obj->shadow = Widget_New(NULL);
 	Queue_Init( &obj->action_list, sizeof(ActionRec), NULL );
 	if( frame_proc_timer == -1 ) {
 		Queue_Init( &gameobject_stream, sizeof(LCUI_Widget*), NULL );
@@ -448,7 +475,29 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	Queue_AddPointer( &gameobject_stream, widget );
 	obj->func[0].func = NULL;
 	obj->func[1].func = NULL;
-	obj->func[1].func = NULL;
+	obj->func[2].func = NULL;
+	obj->func[3].func = NULL;
+}
+
+static void GameObject_ExecHide( LCUI_Widget *widget )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	Widget_Hide( obj->shadow );
+}
+
+static void GameObject_ExecShow( LCUI_Widget *widget )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	Widget_Show( obj->shadow );
+}
+
+static void GameObject_ExecDestroy( LCUI_Widget *widget )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	Widget_Destroy( obj->shadow );
 }
 
 /** 获取当前动作信息 */
@@ -535,7 +584,7 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 static void GameObject_ExecUpdate( LCUI_Widget *widget )
 {
 	GameObject *obj;
-	LCUI_Pos pos;
+	LCUI_Pos object_pos, shadow_pos;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	if( obj->current == NULL ) {
@@ -546,16 +595,23 @@ static void GameObject_ExecUpdate( LCUI_Widget *widget )
 		}
 	}
 	obj->x = (int)obj->phys_obj->x;
-	obj->y = (int)(obj->phys_obj->y+obj->phys_obj->z);
+	obj->y = (int)(obj->phys_obj->y-obj->phys_obj->z);
 	/* 计算部件的坐标 */
 	if( obj->horiz_flip ) {
-		pos.x = obj->x - (obj->w - obj->global_center_x);
+		object_pos.x = obj->x - (obj->w - obj->global_center_x);
 	} else {
-		pos.x = obj->x - obj->global_center_x;
+		object_pos.x = obj->x - obj->global_center_x;
 	}
-	pos.y = obj->y - obj->global_bottom_line_y;
+	object_pos.y = obj->y - obj->global_bottom_line_y;
+	/* 计算阴影的坐标 */
+	shadow_pos.x = (int)(obj->x - obj->shadow->size.w/2);
+	shadow_pos.y = (int)(obj->phys_obj->y - obj->shadow->size.h/2)-1;
+	/* 调整堆叠顺序 */
+	Widget_SetZIndex( widget, (int)obj->phys_obj->y );
+	Widget_SetZIndex( obj->shadow, -1000 - (int)obj->phys_obj->y );
 	/* 移动部件的位置 */
-	Widget_Move( widget, pos );
+	Widget_Move( widget, object_pos );
+	Widget_Move( obj->shadow, shadow_pos );
 	/* 如果数据还有效 */
 	if( obj->data_valid ) {
 		return;
@@ -565,12 +621,18 @@ static void GameObject_ExecUpdate( LCUI_Widget *widget )
 		return;
 	}
 	if( obj->horiz_flip ) {
-		pos.x = obj->x - (obj->w - obj->global_center_x);
+		object_pos.x = obj->x - (obj->w - obj->global_center_x);
 	} else {
-		pos.x = obj->x - obj->global_center_x;
+		object_pos.x = obj->x - obj->global_center_x;
 	}
-	pos.y = obj->y - obj->global_bottom_line_y;
-	Widget_Move( widget, pos );
+	object_pos.y = obj->y - obj->global_bottom_line_y;
+	shadow_pos.x = (int)(obj->x - obj->shadow->size.w/2);
+	shadow_pos.y = (int)(obj->phys_obj->y - obj->shadow->size.h/2)-1;
+	
+	Widget_SetZIndex( widget, (int)obj->phys_obj->y );
+	Widget_SetZIndex( obj->shadow, -1000 - (int)obj->phys_obj->y );
+	Widget_Move( widget, object_pos );
+	Widget_Move( obj->shadow, shadow_pos );
 	/* 并调整部件的尺寸，以正常显示对象的动画 */
 	Widget_Resize( widget, Size(obj->w, obj->h) );
 	obj->data_valid = TRUE;
@@ -632,7 +694,7 @@ LCUI_API void GameObject_SetHorizFlip( LCUI_Widget *widget, LCUI_BOOL flag )
 	}
 }
 
-/** 设置加速度 */
+/** 设置相对于X轴的加速度 */
 LCUI_API void GameObject_SetXAcc( LCUI_Widget *widget, double acc )
 {
 	GameObject *obj;
@@ -641,13 +703,49 @@ LCUI_API void GameObject_SetXAcc( LCUI_Widget *widget, double acc )
 	obj->phys_obj->x_acc = acc;
 }
 
-/** 获取加速度 */
+/** 获取相对于X轴的加速度 */
 LCUI_API double GameObject_GetXAcc( LCUI_Widget *widget )
 {
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	return obj->phys_obj->x_acc;
+}
+
+/** 设置相对于Y轴的加速度 */
+LCUI_API void GameObject_SetYAcc( LCUI_Widget *widget, double acc )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->y_acc = acc;
+}
+
+/** 获取相对于Y轴的加速度 */
+LCUI_API double GameObject_GetYAcc( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->y_acc;
+}
+
+/** 设置相对于Y轴的加速度 */
+LCUI_API void GameObject_SetZAcc( LCUI_Widget *widget, double acc )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->z_acc = acc;
+}
+
+/** 获取相对于Z轴的加速度 */
+LCUI_API double GameObject_GetZAcc( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->z_acc;
 }
 
 /** 设置游戏对象在X轴的移动速度 */
@@ -679,6 +777,15 @@ LCUI_API void GameObject_SetYSpeed( LCUI_Widget *widget, double y_speed )
 	Widget_Update( widget );
 }
 
+/** 获取游戏对象在Y轴的移动速度 */
+LCUI_API double GameObject_GetYSpeed( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->y_speed;
+}
+
 /** 设置游戏对象在Z轴的移动速度 */
 LCUI_API void GameObject_SetZSpeed( LCUI_Widget *widget, double z_speed )
 {
@@ -687,6 +794,15 @@ LCUI_API void GameObject_SetZSpeed( LCUI_Widget *widget, double z_speed )
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	obj->phys_obj->z_speed = z_speed;
 	Widget_Update( widget );
+}
+
+/** 获取游戏对象在Z轴的移动速度 */
+LCUI_API double GameObject_GetZSpeed( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->z_speed;
 }
 
 /** 移动游戏对象的位置 */
@@ -710,6 +826,16 @@ LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y )
 	*y = obj->y;
 }
 
+/** 设置游戏对象的阴影图像 */
+LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	Widget_Resize( obj->shadow, Graph_GetSize(&img_shadow) );
+	Widget_SetBackgroundImage( obj->shadow, &img_shadow );
+}
+
 LCUI_API LCUI_Widget* GameObject_New(void)
 {
 	return Widget_New("GameObject");
@@ -722,4 +848,7 @@ LCUI_API void GameObject_Register(void)
 	WidgetFunc_Add("GameObject", GameObject_ExecInit, FUNC_TYPE_INIT );
 	WidgetFunc_Add("GameObject", GameObject_ExecDraw, FUNC_TYPE_DRAW );
 	WidgetFunc_Add("GameObject", GameObject_ExecUpdate, FUNC_TYPE_UPDATE );
+	WidgetFunc_Add("GameObject", GameObject_ExecHide, FUNC_TYPE_HIDE );
+	WidgetFunc_Add("GameObject", GameObject_ExecShow, FUNC_TYPE_SHOW );
+	WidgetFunc_Add("GameObject", GameObject_ExecDestroy, FUNC_TYPE_DESTROY );
 }

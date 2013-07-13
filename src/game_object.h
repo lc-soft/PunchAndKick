@@ -25,6 +25,7 @@ typedef struct ActionData_ {
 	LCUI_Queue frame;	/**< 用于记录该动作集的所有帧动作 */
 } ActionData;
 
+
 /**
  * 创建一个动作集
  * 创建的动作集将记录至动作库中
@@ -46,10 +47,16 @@ LCUI_API int Action_Delete( ActionData* action );
 LCUI_API void GameObject_AtActionDone(	LCUI_Widget *widget,
 					void (*func)(LCUI_Widget*) );
 
-
 LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 						double acc,
 						void (*func)(LCUI_Widget*) );
+
+/** 设置在对象着地时进行响应 */
+LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
+					double z_speed,
+					double z_acc,
+					void (*func)(LCUI_Widget*) );
+
 /**
  * 切换对象的动作
  * @param widget
@@ -64,6 +71,8 @@ LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 
 /** 获取当前动作动画的ID */
 LCUI_API int GameObject_GetCurrentActionID( LCUI_Widget *widget );
+
+LCUI_API int GameObject_ResetAction( LCUI_Widget *widget );
 
 /** 播放对象的动作 */
 LCUI_API int GameObject_PlayAction( LCUI_Widget *widget );
@@ -85,11 +94,23 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 /** 设置对象是否进行水平翻转 */
 LCUI_API void GameObject_SetHorizFlip( LCUI_Widget *widget, LCUI_BOOL flag );
 
-/** 设置加速度 */
+/** 设置相对于X轴的加速度 */
 LCUI_API void GameObject_SetXAcc( LCUI_Widget *widget, double acc );
 
-/** 获取加速度 */
+/** 获取相对于X轴的加速度 */
 LCUI_API double GameObject_GetXAcc( LCUI_Widget *widget );
+
+/** 设置相对于Y轴的加速度 */
+LCUI_API void GameObject_SetYAcc( LCUI_Widget *widget, double acc );
+
+/** 获取相对于Y轴的加速度 */
+LCUI_API double GameObject_GetYAcc( LCUI_Widget *widget );
+
+/** 设置相对于Y轴的加速度 */
+LCUI_API void GameObject_SetZAcc( LCUI_Widget *widget, double acc );
+
+/** 获取相对于Z轴的加速度 */
+LCUI_API double GameObject_GetZAcc( LCUI_Widget *widget );
 
 /** 设置游戏对象在X轴的移动速度 */
 LCUI_API void GameObject_SetXSpeed( LCUI_Widget *widget, double x_speed );
@@ -100,8 +121,14 @@ LCUI_API double GameObject_GetXSpeed( LCUI_Widget *widget );
 /** 设置游戏对象在Y轴的移动速度 */
 LCUI_API void GameObject_SetYSpeed( LCUI_Widget *widget, double y_speed );
 
+/** 获取游戏对象在Y轴的移动速度 */
+LCUI_API double GameObject_GetYSpeed( LCUI_Widget *widget );
+
 /** 设置游戏对象在Z轴的移动速度 */
 LCUI_API void GameObject_SetZSpeed( LCUI_Widget *widget, double z_speed );
+
+/** 获取游戏对象在Z轴的移动速度 */
+LCUI_API double GameObject_GetZSpeed( LCUI_Widget *widget );
 
 /** 移动游戏对象的位置 */
 LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y );
@@ -109,7 +136,11 @@ LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y );
 /** 获取游戏对象的位置 */
 LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y );
 
+/** 设置游戏对象的阴影图像 */
+LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow );
+
 LCUI_API LCUI_Widget* GameObject_New(void);
+
 
 LCUI_API void GameObject_Register(void);
 
