@@ -157,6 +157,114 @@ static ActionData* ActionRes_LoadBSprintAttack(void)
 	return action;
 }
 
+/** 载入角色的冲刺+跳跃+A攻击动作的动画资源 */
+static ActionData* ActionRes_LoadASprintJumpAttack(void)
+{
+	ActionData *action;
+	LCUI_Graph img_attack[3];
+	
+	action = Action_Create();
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
+	
+	Graph_Init( &img_attack[1] );
+	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
+
+	Graph_Init( &img_attack[2] ); 
+	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
+	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
+
+	return action;
+}
+
+/** 载入角色的冲刺+跳跃+B攻击动作的动画资源 */
+static ActionData* ActionRes_LoadBSprintJumpAttack(void)
+{
+	ActionData *action;
+	LCUI_Graph img_attack[3];
+	
+	action = Action_Create();
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/B-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
+	
+	Graph_Init( &img_attack[1] );
+	Graph_LoadImage( "drawable/B-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, -11,0, &img_attack[1], 1000 );
+	return action;
+}
+
+/** 载入角色的跳跃+A攻击动作的动画资源 */
+static ActionData* ActionRes_LoadAJumpAttack(void)
+{
+	ActionData *action;
+	LCUI_Graph img_attack[3];
+	
+	action = Action_Create();
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
+	
+	Graph_Init( &img_attack[1] );
+	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
+
+	Graph_Init( &img_attack[2] ); 
+	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
+	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
+
+	return action;
+}
+
+/** 载入角色的跳跃+B攻击动作的动画资源 */
+static ActionData* ActionRes_LoadBJumpAttack(void)
+{
+	ActionData *action;
+	LCUI_Graph img_attack[3];
+	
+	action = Action_Create();
+
+	Graph_Init( &img_attack[0] );
+	Graph_LoadImage( "drawable/B-attack-01.png", &img_attack[0] );
+	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
+	
+	Graph_Init( &img_attack[1] );
+	Graph_LoadImage( "drawable/B-attack-02.png", &img_attack[1] );
+	Action_AddFrame( action, -11,0, &img_attack[1], 1000 );
+	return action;
+}
+
+static ActionData* ActionRes_LoadJump(void)
+{
+	ActionData *action;
+	LCUI_Graph img_jump;
+	
+	action = Action_Create();
+	Graph_Init( &img_jump );
+	Graph_LoadImage( "drawable/jump.png", &img_jump );
+	/* 让该帧停留20秒，应该够了，现阶段不会遇到从起跳到着陆需要20秒的情况 */
+	Action_AddFrame( action, 0,0, &img_jump, 1000 );
+	
+	return action;
+}
+
+static ActionData* ActionRes_LoadSquat(void)
+{
+	ActionData *action;
+	LCUI_Graph img_squat;
+	
+	action = Action_Create();
+	Graph_Init( &img_squat );
+	Graph_LoadImage( "drawable/squat.png", &img_squat );
+	Action_AddFrame( action, 0,0, &img_squat, 5 );
+	
+	return action;
+}
 
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
@@ -170,6 +278,12 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_READY: return ActionRes_LoadReady();
 	case ACTION_AS_ATTACK: return ActionRes_LoadASprintAttack();
 	case ACTION_BS_ATTACK: return ActionRes_LoadBSprintAttack();
+	case ACTION_ASJ_ATTACK: return ActionRes_LoadAJumpAttack();
+	case ACTION_BSJ_ATTACK: return ActionRes_LoadBJumpAttack();
+	case ACTION_AJ_ATTACK: return ActionRes_LoadASprintJumpAttack();
+	case ACTION_BJ_ATTACK: return ActionRes_LoadBSprintJumpAttack();
+	case ACTION_JUMP: return ActionRes_LoadJump();
+	case ACTION_SQUAT: return ActionRes_LoadSquat();
 	default:break;
 	}
 	return NULL;
