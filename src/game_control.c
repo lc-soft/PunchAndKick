@@ -5,6 +5,7 @@
 
 #include "game.h"
 
+static LCUI_Graph img_shadow;
 static GamePlayer player_data[4];
 
 static GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
@@ -87,11 +88,29 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_B_ATTACK:
 		action_type = ACTION_B_ATTACK;
 		break;
-	case STATE_AS_STTACK:
+	case STATE_AS_ATTACK:
 		action_type = ACTION_AS_ATTACK;
 		break;
-	case STATE_BS_STTACK:
+	case STATE_BS_ATTACK:
 		action_type = ACTION_BS_ATTACK;
+		break;
+	case STATE_ASJ_ATTACK:
+		action_type = ACTION_AS_ATTACK;
+		break;
+	case STATE_BSJ_ATTACK:
+		action_type = ACTION_BS_ATTACK;
+		break;
+	case STATE_AJ_ATTACK:
+		action_type = ACTION_AJ_ATTACK;
+		break;
+	case STATE_BJ_ATTACK:
+		action_type = ACTION_BJ_ATTACK;
+		break;
+	case STATE_SQUAT:
+		action_type = ACTION_SQUAT;
+		break;
+	case STATE_JUMP:
+		action_type = ACTION_JUMP;
 		break;
 	default:return;
 	}
@@ -151,6 +170,24 @@ int GamePlayer_InitAction( GamePlayer *player, int id )
 
 	action = ActionRes_Load( id, ACTION_BS_ATTACK );
 	GameObject_AddAction( player->object, action, ACTION_BS_ATTACK );
+	
+	action = ActionRes_Load( id, ACTION_SQUAT );
+	GameObject_AddAction( player->object, action, ACTION_SQUAT );
+	
+	action = ActionRes_Load( id, ACTION_JUMP );
+	GameObject_AddAction( player->object, action, ACTION_JUMP );
+	
+	action = ActionRes_Load( id, ACTION_AJ_ATTACK );
+	GameObject_AddAction( player->object, action, ACTION_AJ_ATTACK );
+	
+	action = ActionRes_Load( id, ACTION_BJ_ATTACK );
+	GameObject_AddAction( player->object, action, ACTION_BJ_ATTACK );
+	
+	action = ActionRes_Load( id, ACTION_ASJ_ATTACK );
+	GameObject_AddAction( player->object, action, ACTION_ASJ_ATTACK );
+	
+	action = ActionRes_Load( id, ACTION_BSJ_ATTACK );
+	GameObject_AddAction( player->object, action, ACTION_BSJ_ATTACK );
 	//Widget_SetBorder( player->object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
 	Widget_Show( player->object );
 	return 0;
@@ -173,6 +210,7 @@ static int GamePlayer_Init( GamePlayer *player )
 	if( ret != 0 ) {
 		return -1;
 	}
+	GameObject_SetShadow( player->object, img_shadow );
 	return 0;
 }
 
@@ -342,6 +380,68 @@ static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 	GamePlayer_SetReady( player );
 }
 
+/** 在跳跃结束时 */
+static void GamePlayer_AtJumpDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
+	GamePlayer_SetReady( player );
+}
+
+/** 在着陆完成时 */
+static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_LockAction( player );
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_AtActionDone( player->object, GamePlayer_AtJumpDone );
+}
+
+/** 在起跳时 */
+static void GamePlayer_AtSquatDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	double z_speed, z_acc;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	z_acc = -1.0;
+	z_speed = 15.0;
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_JUMP );
+	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtLandingDone );
+	/* 撤销响应，以避免本函数被重复调用 */
+	GameObject_AtActionDone( widget, NULL );
+}
+
+void GamePlayer_StartJump( GamePlayer *player )
+{
+	if( player->state == STATE_JUMP ) {
+		return;
+	}
+	switch(player->state) {
+	case STATE_JUMP:return;
+	case STATE_AS_ATTACK:
+	case STATE_BS_ATTACK:break;
+	default:
+		if( player->lock_action ) {
+			return;
+		}
+		break;
+	}
+	GamePlayer_UnlockAction( player );
+	/* 跳跃后，重置X轴上的加速度为0 */
+	GameObject_SetXAcc( player->object, 0 );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_AtActionDone( player->object, GamePlayer_AtSquatDone );
+}
+
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
 	double acc;
@@ -349,10 +449,10 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		return;
 	}
 	if( player->state == STATE_LEFTRUN ) {
-		acc = 0.7 * player->walk_speed / 100;
+		acc = 0.5 * player->walk_speed / 100;
 	}
 	else if( player->state == STATE_RIGHTRUN ) {
-		acc = -0.7 * player->walk_speed / 100;
+		acc = -0.5 * player->walk_speed / 100;
 	} else {
 		acc = 0.0;
 	}
@@ -360,10 +460,14 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	switch(player->state) {
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		GamePlayer_ChangeState( player, STATE_AS_STTACK );
+		GamePlayer_ChangeState( player, STATE_AS_ATTACK );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtAttackDone );
+		break;
+	case STATE_JUMP:
+		GamePlayer_ChangeState( player, STATE_AJ_ATTACK );
+		GamePlayer_LockAction( player );
 		break;
 	default:
 		GamePlayer_ChangeState( player, STATE_A_ATTACK );
@@ -383,10 +487,10 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 		return;
 	}
 	if( player->state == STATE_LEFTRUN ) {
-		acc = 0.7 * player->walk_speed / 100;
+		acc = 0.5 * player->walk_speed / 100;
 	}
 	else if( player->state == STATE_RIGHTRUN ) {
-		acc = -0.7 * player->walk_speed / 100;
+		acc = -0.5 * player->walk_speed / 100;
 	} else {
 		acc = 0.0;
 	}
@@ -394,10 +498,14 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	switch(player->state) {
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		GamePlayer_ChangeState( player, STATE_BS_STTACK );
+		GamePlayer_ChangeState( player, STATE_BS_ATTACK );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtAttackDone );
+		break;
+	case STATE_JUMP:
+		GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
+		GamePlayer_LockAction( player );
 		break;
 	default:
 		GamePlayer_ChangeState( player, STATE_B_ATTACK );
@@ -412,7 +520,7 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 
 void GamePlayer_SetUpMotion( GamePlayer *player )
 {
-	int speed;
+	double speed;
 	if( player->lock_motion ) {
 		return;
 	}
@@ -424,7 +532,7 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 	case STATE_WALK:
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		speed = -3 * player->walk_speed / 100;
+		speed = -2.0 * player->walk_speed / 100;
 		GameObject_SetYSpeed( player->object, speed );
 		break;
 	default:break;
@@ -433,7 +541,7 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 
 void GamePlayer_SetDownMotion( GamePlayer *player )
 {
-	int speed;
+	double speed;
 	if( player->lock_motion ) {
 		return;
 	}
@@ -445,7 +553,7 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 	case STATE_WALK:
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		speed = 3 * player->walk_speed / 100;
+		speed = 2.0 * player->walk_speed / 100;
 		GameObject_SetYSpeed( player->object, speed );
 		break;
 	default:break;
@@ -463,7 +571,9 @@ static void GameKeyboardProcKeyDown( int key_code )
 	else if( key_code == target->ctrlkey.b_attack ) {
 		GamePlayer_StartBAttack( target );
 	}
-	
+	else if( key_code == target->ctrlkey.jump ) {
+		GamePlayer_StartJump( target );
+	}
 	Widget_Update( target->object );
 }
 
@@ -505,7 +615,9 @@ int Game_Init(void)
 	player_data[1].id = 2;
 	player_data[2].id = 3;
 	player_data[3].id = 4;
-	ret = GamePlayer_Init( &player_data[0] );
+	Graph_Init( &img_shadow );
+	ret = Graph_LoadImage("drawable/shadow.png", &img_shadow );
+	ret |= GamePlayer_Init( &player_data[0] );
 	/* 设置该角色的控制键 */
 	player_data[0].ctrlkey.up = LCUIKEY_W;
 	player_data[0].ctrlkey.down = LCUIKEY_S;
