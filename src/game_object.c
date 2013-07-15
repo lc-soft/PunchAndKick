@@ -226,49 +226,52 @@ static long int Action_GetFrameSleepTime( ActionData *action, int n_frame )
 /** 更新流中的动画当前帧的停留时间 */
 static void GameObjectStream_UpdateTime( int sleep_time )
 {
-	int i, total;
+	int i, n, total;
 	LCUI_BOOL need_draw=FALSE;
 	LCUI_Widget *widget;
 	GameObject *obj;
 	ActionFrameData *frame = NULL;
-	
+	/* 减少所有GameObject当前帧的剩余等待时间 */
 	GameObjectStream_TimeSub( sleep_time );
 	total = Queue_GetTotal(&gameobject_stream);
 	for(i=0; i<total; ++i){
 		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
 		obj = (GameObject*)Widget_GetPrivData( widget );
-		if( obj && obj->state == PLAY) {
-			break;
+		/* 忽略无效或者未处于播放状态的对象 */
+		if( !obj || obj->state != PLAY) {
+			continue;;
 		}
-	}
-	if(i >= total || !widget || !obj ) {
-		return;
-	}
-	if( obj->current == NULL ) {
-		GameObjectStream_Sort();
-		return;
-	}
-	/* 若当前帧的停留时间小于或等于0 */
-	if(obj->remain_time <= 0) {
-		++obj->n_frame;
-		obj->remain_time = Action_GetFrameSleepTime(
-					obj->current->action,
-					obj->n_frame
-		);
-		GameObject_CallFunc( widget, AT_FRAME_UPDATE );
-		need_draw = TRUE;
-	}
-	total = Queue_GetTotal( &obj->current->action->frame );
-	if( obj->n_frame >= total ) {
-		obj->n_frame = 0;
-		obj->remain_time = Action_GetFrameSleepTime(
-					obj->current->action,
-					obj->n_frame
-		);
-		GameObject_CallFunc( widget, AT_ACTION_DONE );
-	}
-	if( need_draw ) {
-		Widget_Draw( widget );
+		/* 忽略没有动作动画的对象 */
+		if( obj->current == NULL ) {
+			continue;
+		}
+		/* 若当前帧的停留时间小于或等于0 */
+		if(obj->remain_time <= 0) {
+			++obj->n_frame;
+			/* 记录新一帧动作的总停留时间 */
+			obj->remain_time = Action_GetFrameSleepTime(
+						obj->current->action,
+						obj->n_frame
+			);
+			GameObject_CallFunc( widget, AT_FRAME_UPDATE );
+			/* 标记这个对象需要重绘 */
+			need_draw = TRUE;
+		}
+		n = Queue_GetTotal( &obj->current->action->frame );
+		/* 若当前帧号超出总帧数 */
+		if( obj->n_frame >= n ) {
+			obj->n_frame = 0;
+			obj->remain_time = Action_GetFrameSleepTime(
+						obj->current->action,
+						obj->n_frame
+			);
+			/* 当前动作动画已完成一遍播放，调用回调函数来
+			 * 响应AT_ACTION_DONE信号 */
+			GameObject_CallFunc( widget, AT_ACTION_DONE );
+		}
+		if( need_draw ) {
+			Widget_Draw( widget );
+		}
 	}
 	GameObjectStream_Sort();
 }
@@ -280,14 +283,13 @@ static void GameObjectStream_Proc( void* arg )
 	int i, n, lost_time;
 	static clock_t current_time = 0;
 
-
 	while(!LCUI_Active()) {
 		LCUI_MSleep(10);
 	}
 	lost_time = clock() - current_time;
+	//_DEBUG_MSG("%d\n", lost_time);
 	current_time = clock();
 	GameObjectStream_UpdateTime( lost_time );
-
 	PhysicsSystem_Step();
 	n = Queue_GetTotal( &gameobject_stream );
 	for(i=0; i<n; ++i){
@@ -566,17 +568,40 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 					ActionData *action,
 					int id )
 {
-	int ret;
-	ActionRec rec;
+	int ret, i, n;
+	ActionRec rec, *p_rec;
 	GameObject *obj;
 
+	if( !action ) {
+		return -1;
+	}
+	obj = (GameObject*)Widget_GetPrivData( widget );
+
+	Queue_Lock( &obj->action_list );
+	n = Queue_GetTotal( &obj->action_list );
+	/* 先寻找是否有相同ID的动作动画 */
+	for(i=0; i<n; ++i) {
+		p_rec = (ActionRec*)Queue_Get( &obj->action_list, i );
+		if( !p_rec ) {
+			continue;
+		}
+		/* 有则覆盖 */
+		if( p_rec->id == id ) {
+			p_rec->action = action;
+			break;
+		}
+	}
+	if( i < n ) {
+		Queue_Unlock( &obj->action_list );
+		return 0;
+	}
 	rec.action = action;
 	rec.id = id;
-	obj = (GameObject*)Widget_GetPrivData( widget );
 	/* 添加至动作列表中 */
 	ret = Queue_Add( &obj->action_list, &rec );
+	Queue_Unlock( &obj->action_list );
 	if( ret < 0 ) {
-		return -1;
+		return -2;
 	}
 	return 0;
 }
@@ -812,7 +837,7 @@ LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y )
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	obj->phys_obj->x = x;
-	obj->phys_obj->y = x;
+	obj->phys_obj->y = y;
 	Widget_Update( widget );
 }
 
