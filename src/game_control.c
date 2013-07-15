@@ -138,7 +138,7 @@ void GamePlayer_UnlockMotion( GamePlayer *player )
 	player->lock_motion = FALSE;
 }
 
-int GamePlayer_InitAction( GamePlayer *player, int id )
+static int GamePlayer_InitAction( GamePlayer *player, int id )
 {
 	ActionData* action;
 
@@ -189,71 +189,49 @@ int GamePlayer_InitAction( GamePlayer *player, int id )
 	action = ActionRes_Load( id, ACTION_BSJ_ATTACK );
 	GameObject_AddAction( player->object, action, ACTION_BSJ_ATTACK );
 	//Widget_SetBorder( player->object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
-	Widget_Show( player->object );
-	return 0;
-}
-
-static int GamePlayer_Init( GamePlayer *player )
-{
-	int ret;
-	/* 设置基本属性 */
-	player->walk_speed = 100;
-	player->run_speed = 100;
-	player->human_control = TRUE;
-	player->local_control = TRUE;
-	player->right_direction = TRUE;
-	player->lock_action = FALSE;
-	player->lock_motion = FALSE;
-	ControlKey_Init( &player->ctrlkey );
-	/* 初始化角色动作动画 */
-	ret = GamePlayer_InitAction( player, ROLE_RIKI );
-	if( ret != 0 ) {
-		return -1;
-	}
-	GameObject_SetShadow( player->object, img_shadow );
 	return 0;
 }
 
 static void GamePlayer_SetLeftWalk( GamePlayer *player )
 {
-	int speed;
+	double speed;
 	if( player->lock_motion ) {
 		return;
 	}
-	speed = -3 * player->walk_speed / 100;
+	speed = -4.0 * player->walk_speed / 100;
 	GameObject_SetXSpeed( player->object, speed );
 	GamePlayer_ChangeState( player, STATE_WALK );
 }
 
 static void GamePlayer_SetRightWalk( GamePlayer *player )
 {
-	int speed;
+	double speed;
 	if( player->lock_motion ) {
 		return;
 	}
-	speed = 3 * player->walk_speed / 100;
+	speed = 4.0 * player->walk_speed / 100;
 	GameObject_SetXSpeed( player->object, speed );
 	GamePlayer_ChangeState( player, STATE_WALK );
 }
 
 void GamePlayer_SetLeftRun( GamePlayer *player )
 {
-	int speed;
+	double speed;
 	if( player->lock_motion ) {
 		return;
 	}
-	speed = -10 * player->walk_speed / 100;
+	speed = -12.0 * player->walk_speed / 100;
 	GameObject_SetXSpeed( player->object, speed );
 	GamePlayer_ChangeState( player, STATE_LEFTRUN );
 }
 
 void GamePlayer_SetRightRun( GamePlayer *player )
 {
-	int speed;
+	double speed;
 	if( player->lock_motion ) {
 		return;
 	}
-	speed = 10 * player->walk_speed / 100;
+	speed = 12.0 * player->walk_speed / 100;
 	GameObject_SetXSpeed( player->object, speed );
 	GamePlayer_ChangeState( player, STATE_RIGHTRUN );
 }
@@ -301,6 +279,10 @@ void GamePlayer_StopRun( GamePlayer *player )
 static void GamePlayer_ProcLeftKey( GamePlayer *player )
 {
 	if( player->lock_motion ) {
+		if( player->state == STATE_JUMP
+		 || player->state == STATE_SQUAT ) {
+			GameObject_SetHorizFlip( player->object, TRUE );
+		}
 		return;
 	}
 	switch(player->state) {
@@ -326,6 +308,10 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 static void GamePlayer_ProcRightKey( GamePlayer *player )
 {
 	if( player->lock_motion ) {
+		if( player->state == STATE_JUMP
+		 || player->state == STATE_SQUAT ) {
+			GameObject_SetHorizFlip( player->object, FALSE );
+		}
 		return;
 	}
 	switch(player->state) {
@@ -409,8 +395,8 @@ static void GamePlayer_AtSquatDone( LCUI_Widget *widget )
 	GamePlayer *player;
 	double z_speed, z_acc;
 	player = GamePlayer_GetPlayerByWidget( widget );
-	z_acc = -1.0;
-	z_speed = 15.0;
+	z_acc = -2.5;
+	z_speed = 24.0;
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP );
 	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtLandingDone );
@@ -604,10 +590,52 @@ static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
 	}
 }
 
+/** 设置游戏角色的控制键 */
+int GamePlayer_SetControlKey( int player_id, ControlKey *key )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetByID( player_id );
+	if( player == NULL ){
+		return -1;
+	}
+	player->ctrlkey = *key;
+	return 0;
+}
+
+/** 设置游戏角色的角色ID */
+int GamePlayer_SetRole( int player_id, int role_id )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetByID( player_id );
+	if( player == NULL ){
+		return -1;
+	}
+	player->role_id = role_id;
+	player->run_speed = 100;
+	player->walk_speed = 100;
+	/* 初始化角色动作动画 */
+	GamePlayer_InitAction( player, role_id );
+	GameObject_SetShadow( player->object, img_shadow );
+	return 0;
+}
+
+/** 设置游戏角色是否由人类控制 */
+int GamePlayer_ControlByHuman( int player_id, LCUI_BOOL flag )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetByID( player_id );
+	if( player == NULL ){
+		return -1;
+	}
+	player->human_control = flag;
+	return 0;
+}
 
 int Game_Init(void)
 {
 	int ret;
+	ControlKey ctrlkey;
+
 	/* 注册GameObject部件 */
 	GameObject_Register();
 	/* 记录玩家ID */
@@ -615,17 +643,48 @@ int Game_Init(void)
 	player_data[1].id = 2;
 	player_data[2].id = 3;
 	player_data[3].id = 4;
+	player_data[0].enable = TRUE;
+	player_data[1].enable = TRUE;
+	player_data[2].enable = FALSE;
+	player_data[3].enable = FALSE;
+	player_data[0].local_control = TRUE;
+	player_data[1].local_control = TRUE;
+	player_data[2].local_control = FALSE;
+	player_data[3].local_control = FALSE;
+
 	Graph_Init( &img_shadow );
 	ret = Graph_LoadImage("drawable/shadow.png", &img_shadow );
-	ret |= GamePlayer_Init( &player_data[0] );
-	/* 设置该角色的控制键 */
-	player_data[0].ctrlkey.up = LCUIKEY_W;
-	player_data[0].ctrlkey.down = LCUIKEY_S;
-	player_data[0].ctrlkey.left = LCUIKEY_A;
-	player_data[0].ctrlkey.right = LCUIKEY_D;
-	player_data[0].ctrlkey.jump = LCUIKEY_SPACE;
-	player_data[0].ctrlkey.a_attack = LCUIKEY_J;
-	player_data[0].ctrlkey.b_attack = LCUIKEY_K;
+
+	/* 记录1号角色的控制键 */
+	ctrlkey.up = LCUIKEY_W;
+	ctrlkey.down = LCUIKEY_S;
+	ctrlkey.left = LCUIKEY_A;
+	ctrlkey.right = LCUIKEY_D;
+	ctrlkey.jump = LCUIKEY_SPACE;
+	ctrlkey.a_attack = LCUIKEY_J;
+	ctrlkey.b_attack = LCUIKEY_K;
+	/* 设置1号玩家的控制键 */
+	GamePlayer_SetControlKey( 1, &ctrlkey );
+	/* 设置1号玩家的角色 */
+	GamePlayer_SetRole( 1, ROLE_RIKI );
+	/* 设置1号玩家由人来控制 */
+	GamePlayer_ControlByHuman( 1, TRUE );
+	
+	/* 记录2号角色的控制键 */
+	ctrlkey.up = LCUIKEY_UP;
+	ctrlkey.down = LCUIKEY_DOWN;
+	ctrlkey.left = LCUIKEY_LEFT;
+	ctrlkey.right = LCUIKEY_RIGHT;
+	ctrlkey.jump = 0;
+	ctrlkey.a_attack = 0;
+	ctrlkey.b_attack = 0;
+	/* 设置2号玩家的控制键 */
+	GamePlayer_SetControlKey( 2, &ctrlkey );
+	/* 设置2号玩家的角色 */
+	GamePlayer_SetRole( 2, ROLE_RIKI );
+	/* 设置2号玩家由人来控制 */
+	GamePlayer_ControlByHuman( 2, TRUE );
+
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
@@ -667,9 +726,9 @@ static void GamePlayer_Control( void *arg )
 {
 	int i;
 	while(1) {
-		/* 总玩家数为4个，由于还处于开发阶段，先设为1 */
-		for(i=0; i<1; ++i) {
-			if( !player_data[i].local_control ) {
+		for(i=0; i<4; ++i) {
+			if( !player_data[i].enable
+			 || !player_data[i].local_control ) {
 				continue;
 			}
 			GamePlayer_SyncData( &player_data[i] );
@@ -681,11 +740,21 @@ static void GamePlayer_Control( void *arg )
 
 int Game_Start(void)
 {
+	int i;
 	LCUI_Thread t;
 	LCUIThread_Create( &t, GamePlayer_Control, NULL );
-	GameObject_PlayAction( player_data[0].object );
 	/* 移动游戏角色的位置 */
-	GameObject_SetPos( player_data[0].object, 300, 300 );
+	GameObject_SetPos( player_data[0].object, 200, 300 );
+	GameObject_SetPos( player_data[1].object, 400, 300 );
+	GameObject_SetHorizFlip( player_data[0].object, FALSE );
+	GameObject_SetHorizFlip( player_data[1].object, TRUE );
+	for(i=0; i<4; ++i) {
+		if( !player_data[i].enable ) {
+			continue;
+		}
+		GameObject_PlayAction( player_data[i].object );
+		Widget_Show( player_data[i].object );
+	}
 	return 0;
 }
 

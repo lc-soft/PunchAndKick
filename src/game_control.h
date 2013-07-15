@@ -45,7 +45,9 @@ enum ActionType {
 typedef struct GamePlayer_ GamePlayer;
 struct GamePlayer_{
 	int id;				/**< 玩家ID */
+	int role_id;			/**< 角色ID */
 	int state;			/**< 状态 */
+	LCUI_BOOL enable;		/**< 是否启用该角色 */
 	LCUI_BOOL right_direction;	/**< 角色是否朝着右方 */
 	LCUI_BOOL human_control;	/**< 是否由人类控制 */
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
