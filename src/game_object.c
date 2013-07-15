@@ -162,11 +162,12 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 	GameObject_Connect( widget, AT_LANDING, func );
 }
 
+/** 对流中的GameObject按照剩余时间从小到大的顺序排序  */
 static void GameObjectStream_Sort(void)
 {
 	int i, j, total;
 	LCUI_Widget *widget;
-	GameObject *tmp, *p1, *p2;
+	GameObject *p1, *p2;
 
 	Queue_Lock( &gameobject_stream );
 	total = Queue_GetTotal( &gameobject_stream );
@@ -182,10 +183,8 @@ static void GameObjectStream_Sort(void)
 			if( !p2 ) {
 				continue;
 			}
-			if( p1->remain_time < p2->remain_time ) {
-				tmp = p1;
+			if( p1->remain_time > p2->remain_time ) {
 				p1 = p2;
-				p2 = tmp;
 				Queue_Swap( &gameobject_stream, j, i );
 			}
 		}
