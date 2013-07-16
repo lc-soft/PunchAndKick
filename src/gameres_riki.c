@@ -4,6 +4,8 @@
 
 #include "game.h"
 
+#define GLOBAL_Y_WIDTH	12
+
 /** 载入角色的移动动作动画资源 */
 static ActionData* ActionRes_LoadWalk(void)
 {
@@ -29,18 +31,22 @@ static ActionData* ActionRes_LoadWalk(void)
 /** 载入角色的站立动作动画资源 */
 static ActionData* ActionRes_LoadStance(void)
 {
-	int i;
+	RangeBox range;
 	ActionData *action;
-	LCUI_Graph img_stance[1];
-	char path[512];
+	LCUI_Graph img_stance;
 	
 	action = Action_Create();
-	for(i=0; i<1; ++i) {
-		Graph_Init( &img_stance[i] );
-		sprintf( path, "drawable/stance-%02d.png", i+1 );
-		Graph_LoadImage( path, &img_stance[i] );
-		Action_AddFrame( action, 0,0, &img_stance[i], 100 );
-	}
+	range.x = -16;
+	range.x_width = 32;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 64;
+
+	Graph_Init( &img_stance );
+	Graph_LoadImage( "drawable/stance-01.png", &img_stance );
+	Action_AddFrame( action, 0,0, &img_stance, 100 );
+	Action_SetHitRange( action, 0, range );
 	return action;
 }
 
@@ -83,23 +89,43 @@ static ActionData* ActionRes_LoadRun(void)
 static ActionData* ActionRes_LoadAAttack(void)
 {
 	ActionData *action;
+	RangeBox hit_range, attack_range;
 	LCUI_Graph img_attack[3];
 	
 	action = Action_Create();
+	
+	attack_range.x = 20;
+	attack_range.x_width = 26;
+	attack_range.y = -GLOBAL_Y_WIDTH/2;
+	attack_range.y_width = GLOBAL_Y_WIDTH;
+	attack_range.z = 31;
+	attack_range.z_width = 18;
+
+	hit_range.x = -18;
+	hit_range.x_width = 38;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 62;
 
 	Graph_Init( &img_attack[0] );
 	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
 	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
-	
+	Action_SetHitRange( action, 0, hit_range );
+
 	Graph_Init( &img_attack[1] );
 	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
 	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
+	Action_SetHitRange( action, 1, hit_range );
 
 	Graph_Init( &img_attack[2] ); 
 	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
 	Action_AddFrame( action, -14,0, &img_attack[2], 3 );
+	Action_SetAttackRange( action, 2, attack_range );
+	Action_SetHitRange( action, 2, hit_range );
 
 	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
+	Action_SetHitRange( action, 3, hit_range );
 
 	return action;
 }
