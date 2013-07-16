@@ -462,6 +462,8 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GamePlayer_LockMotion( player );
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, GamePlayer_AtAttackDone );
+		/* 清除攻击记录 */
+		GameObject_ClearAttack( player->object );
 		break;
 	}
 }
@@ -631,6 +633,30 @@ int GamePlayer_ControlByHuman( int player_id, LCUI_BOOL flag )
 	return 0;
 }
 
+/** 响应游戏角色受到的攻击 */
+static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	AttackerInfo *p_info;
+	LCUI_Queue *attacker_info;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( player == NULL ){
+		return;
+	}
+
+	attacker_info = GameObject_GetAttackerInfo( widget );
+	while(1) {
+		p_info = (AttackerInfo*)Queue_Get( attacker_info, 0 );
+		if( p_info == NULL ) {
+			break;
+		}
+		_DEBUG_MSG("attacker: %p, action id: %d\n", p_info->attacker, p_info->attacker_action );
+		/* 删除攻击者记录 */
+		Queue_Delete( attacker_info, 0 );
+	}
+}
+
 int Game_Init(void)
 {
 	int ret;
@@ -651,7 +677,7 @@ int Game_Init(void)
 	player_data[1].local_control = TRUE;
 	player_data[2].local_control = FALSE;
 	player_data[3].local_control = FALSE;
-
+	
 	Graph_Init( &img_shadow );
 	ret = Graph_LoadImage("drawable/shadow.png", &img_shadow );
 
@@ -684,6 +710,9 @@ int Game_Init(void)
 	GamePlayer_SetRole( 2, ROLE_RIKI );
 	/* 设置2号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 2, TRUE );
+	/* 设置响应游戏角色的受攻击信号 */
+	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
+	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
 
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
