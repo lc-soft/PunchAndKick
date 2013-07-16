@@ -1,6 +1,12 @@
 ﻿#ifndef __GAME_OBJECT_H__
 #define __GAME_OBJECT_H__
 
+/** 范围框 */
+typedef struct RangeBox_ {
+	int x, y, z;
+	int x_width, y_width, z_width;
+} RangeBox;
+
 /*
   当前帧的中心点的Y轴平行线
          |
@@ -18,6 +24,8 @@ typedef struct ActionFrameData_ {
 	LCUI_Pos offset;	/**< 当前对象底线中点相对于该帧图像底线中点的偏移量 */
 	LCUI_Graph graph;	/**< 当前帧的图像 */
 	long int sleep_time;	/**< 该帧显示的时长（单位：毫秒） */
+	RangeBox hitbox;	/**< 受攻击框 */
+	RangeBox atkbox;	/**< 攻击框 */
 } ActionFrameData;
 
 /** 动作集的信息 */
@@ -43,6 +51,35 @@ LCUI_API ActionData* Action_Create( void );
  *	正常则返回0，失败则返回-1
  */
 LCUI_API int Action_Delete( ActionData* action );
+
+/**
+ * 为动作添加一帧动作图
+ * @param action
+ *	目标动作
+ * @param offset_x
+ *	人物底线中点相对于动作图低边中点的X轴的偏移量
+ * @param offset_y
+ *	人物底线中点相对于动作图低边中点的Y轴的偏移量
+ * @param graph
+ *	动作图
+ * @param sleep_time
+ *	动作图的停留时间，单位时间为20毫秒，即当它的值为50时，该帧动作图停留1秒
+ * @return
+ *	正常则返回该帧动作图的序号，失败返回-1
+ */
+LCUI_API int Action_AddFrame(	ActionData* action,
+				int offset_x,
+				int offset_y,
+				LCUI_Graph *graph,
+				int sleep_time );
+
+LCUI_API int Action_SetAttackRange(	ActionData* action,
+					int n_frame,
+					RangeBox attack_range );
+
+LCUI_API int Action_SetHitRange(	ActionData* action,
+					int n_frame,
+					RangeBox hit_range );
 
 LCUI_API void GameObject_AtActionDone(	LCUI_Widget *widget,
 					void (*func)(LCUI_Widget*) );
@@ -79,12 +116,6 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget );
 
 /** 暂停对象的动作 */
 LCUI_API int GameObject_PauseAction( LCUI_Widget *widget );
-
-LCUI_API int Action_AddFrame(	ActionData* action,
-				int offset_x,
-				int offset_y,
-				LCUI_Graph *graph,
-				long int sleep_time );
 
 /** 为对象添加一个动作 */
 LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,

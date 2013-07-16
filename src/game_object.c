@@ -275,9 +275,134 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 	GameObjectStream_Sort();
 }
 
+/** 获取对象的受攻击范围 */
+static int GameObject_GetHitRange( GameObject *obj, RangeBox *range )
+{
+	ActionFrameData *frame;
+	if( obj->current == NULL ) {
+		return -1;
+	}
+	frame = (ActionFrameData*)Queue_Get(
+			&obj->current->action->frame,
+			obj->n_frame
+	);
+	if( frame == NULL ) {
+		return -2;
+	}
+	if( frame->hitbox.x_width <= 0
+	 || frame->hitbox.y_width <= 0
+	 || frame->hitbox.z_width <= 0) {
+		 return -3;
+	}
+	/* 动作图是否水平翻转，只影响范围框的X轴坐标 */
+	if( obj->horiz_flip ) {
+		range->x = (int)obj->phys_obj->x - frame->hitbox.x;
+		range->x -= frame->hitbox.x_width;
+	} else {
+		range->x = (int)obj->phys_obj->x + frame->hitbox.x;
+	}
+	range->x_width = frame->hitbox.x_width;
+	range->y = (int)obj->phys_obj->y + frame->hitbox.y;
+	range->y_width = frame->hitbox.y_width;
+	range->z = (int)obj->phys_obj->z + frame->hitbox.z;
+	range->z_width = frame->hitbox.z_width;
+	return 0;
+}
+
+/** 获取对象的攻击范围 */
+static int GameObject_GetAttackRange( GameObject *obj, RangeBox *range )
+{
+	ActionFrameData *frame;
+	if( obj->current == NULL ) {
+		return -1;
+	}
+	frame = (ActionFrameData*)Queue_Get(
+			&obj->current->action->frame,
+			obj->n_frame
+	);
+	if( frame == NULL ) {
+		return -2;
+	}
+	if( frame->atkbox.x_width <= 0
+	 || frame->atkbox.y_width <= 0
+	 || frame->atkbox.z_width <= 0) {
+		 return -3;
+	}
+	/* 动作图是否水平翻转，只影响范围框的X轴坐标 */
+	if( obj->horiz_flip ) {
+		range->x = (int)obj->phys_obj->x - frame->atkbox.x;
+		range->x -= frame->atkbox.x_width;
+	} else {
+		range->x = (int)obj->phys_obj->x + frame->atkbox.x;
+	}
+	range->x_width = frame->atkbox.x_width;
+	range->y = (int)obj->phys_obj->y + frame->atkbox.y;
+	range->y_width = frame->atkbox.y_width;
+	range->z = (int)obj->phys_obj->z + frame->atkbox.z;
+	range->z_width = frame->atkbox.z_width;
+	return 0;
+}
+
+/** 判断两个范围是否相交 */
+static LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 )
+{
+	/* 先判断在X轴上是否有相交 */
+	if( range1->x + range1->x_width <= range2->x ) {
+		return FALSE;
+	}
+	if( range2->x + range2->x_width <= range1->x ) {
+		return FALSE;
+	}
+	/* 然后判断在X轴上是否有相交 */
+	if( range1->y + range1->y_width <= range2->y ) {
+		return FALSE;
+	}
+	if( range2->y + range2->y_width <= range1->y ) {
+		return FALSE;
+	}
+	/* 最后判断在Z轴上是否有相交 */
+	if( range1->z + range1->z_width <= range2->z ) {
+		return FALSE;
+	}
+	if( range2->z + range2->z_width <= range1->z ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/** 获取攻击该对象的攻击者 */
+static GameObject *GameObject_GetAttacker( GameObject *obj )
+{
+	int i, n;
+	GameObject *attacker_obj;
+	LCUI_Widget *widget;
+	RangeBox hit_range, attack_range;
+	/* 获取该对象的受攻击范围，若获取失败，则返回NULL */
+	if( 0 > GameObject_GetHitRange( obj, &hit_range ) ) {
+		return NULL;
+	}
+	n = Queue_GetTotal( &gameobject_stream );
+	for(i=0; i<n; ++i) {
+		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		attacker_obj = (GameObject*)Widget_GetPrivData( widget );
+		if( !attacker_obj || attacker_obj == obj ) {
+			continue;
+		}
+		/* 获取对象的攻击范围，若获取失败，则继续判断下个对象 */
+		if( 0 > GameObject_GetAttackRange( attacker_obj, &attack_range ) ) {
+			continue;
+		}
+		/* 若两个范围相交 */
+		if( RangeBox_IsIntersect(&hit_range, &attack_range) ) {
+			return attacker_obj;
+		}
+	}
+	return NULL;
+}
+
 static void GameObjectStream_Proc( void* arg )
 {
-	GameObject *obj;
+	GameObject *obj, *attacker;
 	LCUI_Widget *widget;
 	int i, n, lost_time;
 	static clock_t current_time = 0;
@@ -291,13 +416,17 @@ static void GameObjectStream_Proc( void* arg )
 	GameObjectStream_UpdateTime( lost_time );
 	PhysicsSystem_Step();
 	n = Queue_GetTotal( &gameobject_stream );
-	for(i=0; i<n; ++i){
+	for(i=0; i<n; ++i) {
 		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
 		obj = (GameObject*)Widget_GetPrivData( widget );
-		if( !obj || obj->state != PLAY) {
+		if( !obj || obj->state != PLAY ) {
 			continue;
 		}
-
+		/* 获取命中当前对象的攻击者 */
+		attacker = GameObject_GetAttacker( obj );
+		if( attacker ) {
+			_DEBUG_MSG("victim: %p, attacker: %p\n", obj, attacker);
+		}
 		/* 若速度接近0 */
 		if( (obj->phys_obj->x_acc > 0
 		 && obj->phys_obj->x_speed >= 0 )
@@ -423,11 +552,27 @@ LCUI_API int GameObject_PauseAction( LCUI_Widget *widget )
 	return 0;
 }
 
+
+/**
+ * 为动作添加一帧动作图
+ * @param action
+ *	目标动作
+ * @param offset_x
+ *	人物底线中点相对于动作图低边中点的X轴的偏移量
+ * @param offset_y
+ *	人物底线中点相对于动作图低边中点的Y轴的偏移量
+ * @param graph
+ *	动作图
+ * @param sleep_time
+ *	动作图的停留时间，单位时间为20毫秒，即当它的值为50时，该帧动作图停留1秒
+ * @return
+ *	正常则返回该帧动作图的序号，失败返回-1
+ */
 LCUI_API int Action_AddFrame(	ActionData* action,
 				int offset_x,
 				int offset_y,
 				LCUI_Graph *graph,
-				long int sleep_time )
+				int sleep_time )
 {
 	ActionFrameData frame;
 	
@@ -435,11 +580,40 @@ LCUI_API int Action_AddFrame(	ActionData* action,
 	frame.offset.x = offset_x;
 	frame.offset.y = offset_y;
 	frame.graph = *graph;
+	frame.atkbox.x = frame.hitbox.x = 0;
+	frame.atkbox.y = frame.hitbox.y = 0;
+	frame.atkbox.z = frame.hitbox.z = 0;
+	frame.atkbox.x_width = frame.hitbox.x_width = 0;
+	frame.atkbox.y_width = frame.hitbox.y_width = 0;
+	frame.atkbox.z_width = frame.hitbox.z_width = 0;
 
-	if( 0 <= Queue_Add( &action->frame, &frame ) ) {
-		return 0;
+	return Queue_Add( &action->frame, &frame );
+}
+
+LCUI_API int Action_SetAttackRange(	ActionData* action,
+					int n_frame,
+					RangeBox attack_range )
+{
+	ActionFrameData* p_frame;
+	if( n_frame < 0 ) {
+		return -1;
 	}
-	return -1;
+	p_frame = (ActionFrameData*)Queue_Get( &action->frame, n_frame );
+	p_frame->atkbox = attack_range;
+	return 0;
+}
+
+LCUI_API int Action_SetHitRange(	ActionData* action,
+					int n_frame,
+					RangeBox hit_range )
+{
+	ActionFrameData* p_frame;
+	if( n_frame < 0 ) {
+		return -1;
+	}
+	p_frame = (ActionFrameData*)Queue_Get( &action->frame, n_frame );
+	p_frame->hitbox = hit_range;
+	return 0;
 }
 
 static void GameObject_ExecInit( LCUI_Widget *widget )
@@ -447,22 +621,22 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_NewPrivData( widget, sizeof(GameObject) );
-
-	obj->global_bottom_line_y = 0;
-	obj->global_center_x = 0;
-	obj->data_valid = FALSE;
-	obj->state = 0;
+	
 	obj->x = 0;
 	obj->y = 0;
 	obj->w = 0;
 	obj->h = 0;
-	obj->phys_obj = PhysicsObject_New(0,0,0,0,0,0 );
-	obj->current = NULL;
+	obj->state = PAUSE;
 	obj->n_frame = 0;
 	obj->remain_time = 0;
-	obj->state = PAUSE;
+	obj->current = NULL;
+	obj->data_valid = FALSE;
+	obj->global_center_x = 0;
+	obj->global_bottom_line_y = 0;
 	obj->horiz_flip = FALSE;
+	obj->phys_obj = PhysicsObject_New(0,0,0,0,0,0 );
 	obj->shadow = Widget_New(NULL);
+
 	Queue_Init( &obj->action_list, sizeof(ActionRec), NULL );
 	if( frame_proc_timer == -1 ) {
 		Queue_Init( &gameobject_stream, sizeof(LCUI_Widget*), NULL );
