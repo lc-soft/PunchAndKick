@@ -14,7 +14,8 @@ enum FuncUse {
 	AT_ACTION_DONE = 0,
 	AT_FRAME_UPDATE,
 	AT_XSPEED_TO_ZERO,
-	AT_LANDING
+	AT_LANDING,
+	AT_UNDER_ATTACK
 };
 
 /** 动作记录 */
@@ -32,15 +33,21 @@ typedef struct GameObject_ {
 	int w, h;			/**< 动作容器的尺寸 */
 	int global_bottom_line_y;	/**< 底线的Y轴坐标 */
 	int global_center_x;		/**< 中心点的X轴坐标 */
+	
 	LCUI_BOOL data_valid;		/**< 当前使用的数据是否有效 */
 	LCUI_BOOL horiz_flip;		/**< 是否水平翻转 */
+	
 	ActionRec *current;		/**< 当前动作动画记录 */
 	LCUI_Queue action_list;		/**< 动作列表 */
 	int n_frame;			/**< 记录当前帧动作的序号，帧序号从0开始 */
 	long int remain_time;		/**< 当前帧剩下的停留时间 */
-	LCUI_Func func[4];		/**< 被关联的回调函数 */
+
+	LCUI_Func func[5];		/**< 被关联的回调函数 */
 	PhysicsObject *phys_obj;	/**< 对应的物理对象 */
 	LCUI_Widget *shadow;		/**< 对象的阴影 */
+
+	LCUI_Queue victim;		/**< 当前攻击的受害者 */
+	LCUI_Queue attacker_info;	/**< 攻击者信息 */
 } GameObject;
 
 static LCUI_Queue action_database;
@@ -161,6 +168,22 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 	GameObject_SetZAcc( widget, z_acc );
 	GameObject_Connect( widget, AT_LANDING, func );
 }
+
+/** 设置在被攻击时进行响应 */
+LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*) )
+{
+	GameObject_Connect( widget, AT_UNDER_ATTACK, func );
+}
+
+/** 获取攻击者信息 */
+LCUI_API LCUI_Queue* GameObject_GetAttackerInfo( LCUI_Widget* widget )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return &obj->attacker_info;
+}
+
 
 /** 对流中的GameObject按照剩余时间从小到大的顺序排序  */
 static void GameObjectStream_Sort(void)
@@ -371,7 +394,7 @@ static LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 )
 }
 
 /** 获取攻击该对象的攻击者 */
-static GameObject *GameObject_GetAttacker( GameObject *obj )
+static LCUI_Widget *GameObject_GetAttacker( GameObject *obj )
 {
 	int i, n;
 	GameObject *attacker_obj;
@@ -394,16 +417,40 @@ static GameObject *GameObject_GetAttacker( GameObject *obj )
 		}
 		/* 若两个范围相交 */
 		if( RangeBox_IsIntersect(&hit_range, &attack_range) ) {
-			return attacker_obj;
+			return widget;
 		}
 	}
 	return NULL;
 }
 
+static int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
+{
+	int i, n;
+	AttackerInfo info;
+	LCUI_Widget *tmp;
+	GameObject *atk_obj, *hit_obj;
+
+	atk_obj = (GameObject*)Widget_GetPrivData( attacker );
+	hit_obj = (GameObject*)Widget_GetPrivData( victim );
+	n = Queue_GetTotal( &atk_obj->victim );
+	for(i=0; i<n; ++i) {
+		tmp = (LCUI_Widget*)Queue_Get( &atk_obj->victim, i );
+		if( tmp == victim ) {
+			return -1;
+		}
+	}
+	info.attacker = attacker;
+	info.attacker_action = GameObject_GetCurrentActionID( attacker );
+	Queue_AddPointer( &atk_obj->victim, victim );
+	Queue_Add( &hit_obj->attacker_info, &info );
+	GameObject_CallFunc( victim, AT_UNDER_ATTACK );
+	return 0;
+}
+
 static void GameObjectStream_Proc( void* arg )
 {
-	GameObject *obj, *attacker;
-	LCUI_Widget *widget;
+	GameObject *obj;
+	LCUI_Widget *widget, *attacker;
 	int i, n, lost_time;
 	static clock_t current_time = 0;
 
@@ -415,6 +462,7 @@ static void GameObjectStream_Proc( void* arg )
 	current_time = clock();
 	GameObjectStream_UpdateTime( lost_time );
 	PhysicsSystem_Step();
+
 	n = Queue_GetTotal( &gameobject_stream );
 	for(i=0; i<n; ++i) {
 		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
@@ -425,7 +473,7 @@ static void GameObjectStream_Proc( void* arg )
 		/* 获取命中当前对象的攻击者 */
 		attacker = GameObject_GetAttacker( obj );
 		if( attacker ) {
-			_DEBUG_MSG("victim: %p, attacker: %p\n", obj, attacker);
+			GameObject_AddVictim( attacker, widget );
 		}
 		/* 若速度接近0 */
 		if( (obj->phys_obj->x_acc > 0
@@ -638,6 +686,10 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->shadow = Widget_New(NULL);
 
 	Queue_Init( &obj->action_list, sizeof(ActionRec), NULL );
+	Queue_Init( &obj->victim, sizeof(LCUI_Widget*), NULL );
+	Queue_Init( &obj->attacker_info, sizeof(AttackerInfo), NULL );
+	Queue_UsingPointer( &obj->victim );
+
 	if( frame_proc_timer == -1 ) {
 		Queue_Init( &gameobject_stream, sizeof(LCUI_Widget*), NULL );
 		Queue_UsingPointer( &gameobject_stream );
@@ -652,6 +704,7 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->func[1].func = NULL;
 	obj->func[2].func = NULL;
 	obj->func[3].func = NULL;
+	obj->func[4].func = NULL;
 }
 
 static void GameObject_ExecHide( LCUI_Widget *widget )
@@ -1032,6 +1085,15 @@ LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow )
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	Widget_Resize( obj->shadow, Graph_GetSize(&img_shadow) );
 	Widget_SetBackgroundImage( obj->shadow, &img_shadow );
+}
+
+/** 清空攻击记录 */
+LCUI_API void GameObject_ClearAttack( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	while( Queue_Delete( &obj->victim, 0 ) );
 }
 
 LCUI_API LCUI_Widget* GameObject_New(void)

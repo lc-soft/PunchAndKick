@@ -7,6 +7,11 @@ typedef struct RangeBox_ {
 	int x_width, y_width, z_width;
 } RangeBox;
 
+typedef struct AttackerInfo_ {
+	LCUI_Widget *attacker;	/** 攻击者 */
+	int attacker_action;	/** 攻击者在攻击时的动作ID */
+} AttackerInfo;
+
 /*
   当前帧的中心点的Y轴平行线
          |
@@ -94,6 +99,13 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 					double z_acc,
 					void (*func)(LCUI_Widget*) );
 
+/** 设置在被攻击时进行响应 */
+LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*) );
+
+/** 获取攻击者信息 */
+LCUI_API LCUI_Queue* GameObject_GetAttackerInfo( LCUI_Widget* widget );
+
 /**
  * 切换对象的动作
  * @param widget
@@ -169,6 +181,9 @@ LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y );
 
 /** 设置游戏对象的阴影图像 */
 LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow );
+
+/** 清空攻击记录 */
+LCUI_API void GameObject_ClearAttack( LCUI_Widget *widget );
 
 LCUI_API LCUI_Widget* GameObject_New(void);
 
