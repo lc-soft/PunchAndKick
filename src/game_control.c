@@ -95,10 +95,10 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		action_type = ACTION_BS_ATTACK;
 		break;
 	case STATE_ASJ_ATTACK:
-		action_type = ACTION_AS_ATTACK;
+		action_type = ACTION_ASJ_ATTACK;
 		break;
 	case STATE_BSJ_ATTACK:
-		action_type = ACTION_BS_ATTACK;
+		action_type = ACTION_BSJ_ATTACK;
 		break;
 	case STATE_AJ_ATTACK:
 		action_type = ACTION_AJ_ATTACK;
@@ -106,11 +106,22 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_BJ_ATTACK:
 		action_type = ACTION_BJ_ATTACK;
 		break;
+	case STATE_FINAL_BLOW:
+		action_type = ACTION_FINAL_BLOW;
+		break;
+	case STATE_SSQUAT:
 	case STATE_SQUAT:
 		action_type = ACTION_SQUAT;
 		break;
 	case STATE_JUMP:
+	case STATE_SJUMP:
 		action_type = ACTION_JUMP;
+		break;
+	case STATE_HIT:
+		action_type = ACTION_HIT;
+		break;
+	case STATE_REST:
+		action_type = ACTION_REST;
 		break;
 	default:return;
 	}
@@ -176,7 +187,7 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 	
 	action = ActionRes_Load( id, ACTION_JUMP );
 	GameObject_AddAction( player->object, action, ACTION_JUMP );
-	
+
 	action = ActionRes_Load( id, ACTION_AJ_ATTACK );
 	GameObject_AddAction( player->object, action, ACTION_AJ_ATTACK );
 	
@@ -188,6 +199,15 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 	
 	action = ActionRes_Load( id, ACTION_BSJ_ATTACK );
 	GameObject_AddAction( player->object, action, ACTION_BSJ_ATTACK );
+
+	action = ActionRes_Load( id, ACTION_HIT );
+	GameObject_AddAction( player->object, action, ACTION_HIT );
+
+	action = ActionRes_Load( id, ACTION_REST );
+	GameObject_AddAction( player->object, action, ACTION_REST );
+
+	action = ActionRes_Load( id, ACTION_FINAL_BLOW );
+	GameObject_AddAction( player->object, action, ACTION_FINAL_BLOW );
 	//Widget_SetBorder( player->object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
 	return 0;
 }
@@ -258,6 +278,45 @@ void GamePlayer_SetReady( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_READY );
 	/* 设置响应动作结束信号 */
 	GameObject_AtActionDone( player->object, GamePlayer_AtReadyDone );
+}
+
+/** 在歇息状态结束后 */
+static void GamePlayer_AtRestDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	player->n_attack = 0;
+	GamePlayer_UnlockAction( player );
+	GamePlayer_SetReady( player );
+}
+
+/** 设置为歇息状态 */
+void GamePlayer_SetRest( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_REST );
+	GamePlayer_LockAction( player );
+	GameObject_AtActionDone( player->object, GamePlayer_AtRestDone );
+}
+
+static void GamePlayer_AtHitDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	if( player->n_attack >= 3 ) {
+		GamePlayer_SetRest( player );
+		GameObject_AtActionDone( widget, GamePlayer_AtRestDone );
+	} else {;
+		GamePlayer_SetReady( player );
+	}
+}
+
+void GamePlayer_SetHit( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_HIT );
+	GamePlayer_LockAction( player );
+	GameObject_AtActionDone( player->object, GamePlayer_AtHitDone );
 }
 
 /** 停止奔跑 */
@@ -389,7 +448,7 @@ static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 	GameObject_AtActionDone( player->object, GamePlayer_AtJumpDone );
 }
 
-/** 在起跳时 */
+/** 在起跳动作结束时 */
 static void GamePlayer_AtSquatDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -404,21 +463,8 @@ static void GamePlayer_AtSquatDone( LCUI_Widget *widget )
 	GameObject_AtActionDone( widget, NULL );
 }
 
-void GamePlayer_StartJump( GamePlayer *player )
+static void GamePlayer_SetSquat( GamePlayer *player )
 {
-	if( player->state == STATE_JUMP ) {
-		return;
-	}
-	switch(player->state) {
-	case STATE_JUMP:return;
-	case STATE_AS_ATTACK:
-	case STATE_BS_ATTACK:break;
-	default:
-		if( player->lock_action ) {
-			return;
-		}
-		break;
-	}
 	GamePlayer_UnlockAction( player );
 	/* 跳跃后，重置X轴上的加速度为0 */
 	GameObject_SetXAcc( player->object, 0 );
@@ -426,6 +472,54 @@ void GamePlayer_StartJump( GamePlayer *player )
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_AtActionDone( player->object, GamePlayer_AtSquatDone );
+}
+
+/** 在冲刺后的起跳动作结束时 */
+static void GamePlayer_AtSprintSquatDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	double z_speed, z_acc;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	z_acc = -2.5;
+	z_speed = 24.0;
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SJUMP );
+	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtLandingDone );
+	GameObject_AtActionDone( widget, NULL );
+}
+
+/** 冲刺+下蹲 */
+static void GamePlayer_SetSprintSquat( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GameObject_SetXAcc( player->object, 0 );
+	GamePlayer_ChangeState( player, STATE_SSQUAT );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_AtActionDone( player->object, GamePlayer_AtSprintSquatDone );
+}
+
+void GamePlayer_StartJump( GamePlayer *player )
+{
+	switch(player->state) {
+	case STATE_SJUMP:
+	case STATE_JUMP:
+		return;
+	case STATE_LEFTRUN:
+	case STATE_RIGHTRUN:
+		GamePlayer_SetSprintSquat( player );
+		break;
+	case STATE_AS_ATTACK:
+	case STATE_BS_ATTACK:
+		GamePlayer_SetSquat( player );
+		break;
+	default:
+		if( player->lock_action ) {
+			return;
+		}
+		GamePlayer_SetSquat( player );
+		break;
+	}
 }
 
 void GamePlayer_StartAAttack( GamePlayer *player )
@@ -455,6 +549,10 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_AJ_ATTACK );
 		GamePlayer_LockAction( player );
 		break;
+	case STATE_SJUMP:
+		GamePlayer_ChangeState( player, STATE_ASJ_ATTACK );
+		GamePlayer_LockAction( player );
+		break;
 	default:
 		GamePlayer_ChangeState( player, STATE_A_ATTACK );
 		GamePlayer_StopXWalk( player );
@@ -462,10 +560,10 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GamePlayer_LockMotion( player );
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, GamePlayer_AtAttackDone );
-		/* 清除攻击记录 */
-		GameObject_ClearAttack( player->object );
 		break;
 	}
+	/* 清除攻击记录 */
+	GameObject_ClearAttack( player->object );
 }
 
 void GamePlayer_StartBAttack( GamePlayer *player )
@@ -495,6 +593,10 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
 		GamePlayer_LockAction( player );
 		break;
+	case STATE_SJUMP:
+		GamePlayer_ChangeState( player, STATE_BSJ_ATTACK );
+		GamePlayer_LockAction( player );
+		break;
 	default:
 		GamePlayer_ChangeState( player, STATE_B_ATTACK );
 		GamePlayer_StopXWalk( player );
@@ -504,6 +606,8 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 		GameObject_AtActionDone( player->object, GamePlayer_AtAttackDone );
 		break;
 	}
+	/* 清除攻击记录 */
+	GameObject_ClearAttack( player->object );
 }
 
 void GamePlayer_SetUpMotion( GamePlayer *player )
@@ -633,6 +737,13 @@ int GamePlayer_ControlByHuman( int player_id, LCUI_BOOL flag )
 	return 0;
 }
 
+/** 重置角色的受攻击次数 */
+void GamePlayer_ResetCountAttack( void *arg )
+{
+	GamePlayer *player = (GamePlayer*)arg;
+	player->n_attack = 0;
+}
+
 /** 响应游戏角色受到的攻击 */
 static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 {
@@ -649,6 +760,22 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 	while(1) {
 		p_info = (AttackerInfo*)Queue_Get( attacker_info, 0 );
 		if( p_info == NULL ) {
+			break;
+		}
+		switch(p_info->attacker_action) {
+		case ACTION_A_ATTACK:
+		case ACTION_B_ATTACK:
+		case ACTION_AJ_ATTACK:
+		case ACTION_BJ_ATTACK:
+		case ACTION_AS_ATTACK:
+		case ACTION_BS_ATTACK:
+		case ACTION_ASJ_ATTACK:
+		case ACTION_BSJ_ATTACK:
+			/* 累计该角色受到的攻击的次数 */
+			++player->n_attack;
+			GamePlayer_SetHit( player );
+			LCUITimer_Reset( player->timer, 2000 );
+		default:
 			break;
 		}
 		_DEBUG_MSG("attacker: %p, action id: %d\n", p_info->attacker, p_info->attacker_action );
@@ -677,6 +804,11 @@ int Game_Init(void)
 	player_data[1].local_control = TRUE;
 	player_data[2].local_control = FALSE;
 	player_data[3].local_control = FALSE;
+
+	player_data[0].n_attack = 0;
+	player_data[1].n_attack = 0;
+	player_data[0].timer = LCUITimer_Set( 2000, GamePlayer_ResetCountAttack, &player_data[0], TRUE );
+	player_data[1].timer = LCUITimer_Set( 2000, GamePlayer_ResetCountAttack, &player_data[1], TRUE );
 	
 	Graph_Init( &img_shadow );
 	ret = Graph_LoadImage("drawable/shadow.png", &img_shadow );
