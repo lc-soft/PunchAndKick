@@ -223,7 +223,6 @@ static void GameObjectStream_TimeSub( int time )
 
 	Queue_Lock( &gameobject_stream );
 	total = Queue_GetTotal(&gameobject_stream);
-	DEBUG_MSG("start\n");
 	for(i=0; i<total; ++i) {
 		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
 		obj = (GameObject*)Widget_GetPrivData( widget );
@@ -261,7 +260,7 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 		obj = (GameObject*)Widget_GetPrivData( widget );
 		/* 忽略无效或者未处于播放状态的对象 */
 		if( !obj || obj->state != PLAY) {
-			continue;;
+			continue;
 		}
 		/* 忽略没有动作动画的对象 */
 		if( obj->current == NULL ) {
@@ -415,6 +414,10 @@ static LCUI_Widget *GameObject_GetAttacker( GameObject *obj )
 		if( 0 > GameObject_GetAttackRange( attacker_obj, &attack_range ) ) {
 			continue;
 		}
+		DEBUG_MSG("hit range, x: %d, x_width: %d, y: %d, y_width: %d, z: %d, z_width: %d\n",
+			hit_range.x, hit_range.x_width, hit_range.y, hit_range.y_width, hit_range.z, hit_range. z_width);
+		DEBUG_MSG("attack range, x: %d, x_width: %d, y: %d, y_width: %d, z: %d, z_width: %d\n",
+			attack_range.x, attack_range.x_width, attack_range.y, attack_range.y_width, attack_range.z, attack_range. z_width);
 		/* 若两个范围相交 */
 		if( RangeBox_IsIntersect(&hit_range, &attack_range) ) {
 			return widget;
@@ -433,8 +436,10 @@ static int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
 	atk_obj = (GameObject*)Widget_GetPrivData( attacker );
 	hit_obj = (GameObject*)Widget_GetPrivData( victim );
 	n = Queue_GetTotal( &atk_obj->victim );
+	/* 在攻击者的受害者记录中查找 */
 	for(i=0; i<n; ++i) {
 		tmp = (LCUI_Widget*)Queue_Get( &atk_obj->victim, i );
+		/* 若当前受害者已经在记录中 */
 		if( tmp == victim ) {
 			return -1;
 		}
@@ -493,7 +498,7 @@ static void GameObjectStream_Proc( void* arg )
 		 && obj->phys_obj->z > 0 )
 		|| (obj->phys_obj->z_acc < 0
 		 && obj->phys_obj->z < 0 ) ) {
-			 obj->phys_obj->z = 0;
+			obj->phys_obj->z = 0;
 			obj->phys_obj->z_acc = 0;
 			obj->phys_obj->z_speed = 0;
 			Widget_Update( widget );
@@ -802,7 +807,6 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 		return -1;
 	}
 	obj = (GameObject*)Widget_GetPrivData( widget );
-
 	Queue_Lock( &obj->action_list );
 	n = Queue_GetTotal( &obj->action_list );
 	/* 先寻找是否有相同ID的动作动画 */
