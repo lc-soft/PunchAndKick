@@ -9,7 +9,6 @@
 #include "game.h"
 
 #define IMG_PATH_GAME_LOGO	"drawable/lcui-logo.png"
-#define IMG_PATH_BG		"drawable/bg.png"
 #define IMG_PATH_RING		"drawable/ring.png"
 #define IMG_PATH_LC_LOGO	"drawable/logo.png"
 #define TEXT_COPYRIGHT		L"Powered by <color=#ff0000>LCUI</color>"
@@ -19,12 +18,10 @@ static LCUI_Graph img_game_logo, img_bg, img_ring, img_lc_logo;
 static void GraphRes_Load(void)
 {
 	Graph_Init( &img_game_logo );
-	Graph_Init( &img_bg );
 	Graph_Init( &img_lc_logo );
 	Graph_Init( &img_ring );
 	Graph_LoadImage( IMG_PATH_GAME_LOGO, &img_game_logo );
 	Graph_LoadImage( IMG_PATH_LC_LOGO, &img_lc_logo );
-	Graph_LoadImage( IMG_PATH_BG, &img_bg );
 	Graph_LoadImage( IMG_PATH_RING, &img_ring );
 }
 
@@ -243,15 +240,11 @@ int main( int argc, char **argv )
 	LCUI_Widget *widget;
 	
 #ifdef LCUI_BUILD_IN_WIN32
-	//InitConsoleWindow();
+	InitConsoleWindow();
 #endif
 	LCUI_Init(640,480,0);
 	/* 预先载入图像资源 */
 	GraphRes_Load();
-	/* 修改根部件的背景图 */
-	widget = RootWidget_GetSelf();
-	Widget_SetBackgroundImage( widget, &img_bg );
-	Widget_SetBackgroundLayout( widget, LAYOUT_TILE );
 	/* 创建一个线程，用于进行游戏的初始化 */
 	//LCUIThread_Create( &t, Game_MainThread, NULL );
 	Game_Init();
