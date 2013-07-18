@@ -17,8 +17,11 @@ enum GamePlayerState {
 	STATE_BJ_ATTACK,
 	STATE_ASJ_ATTACK,
 	STATE_BSJ_ATTACK,
+	STATE_FINAL_BLOW,
 	STATE_SQUAT,
+	STATE_SSQUAT,
 	STATE_JUMP,
+	STATE_SJUMP,
 	STATE_HIT,	/**< 被命中 */
 	STATE_REST	/**< 歇息 */
 };
@@ -36,6 +39,7 @@ enum ActionType {
 	ACTION_BJ_ATTACK,
 	ACTION_ASJ_ATTACK,
 	ACTION_BSJ_ATTACK,
+	ACTION_FINAL_BLOW,
 	ACTION_HIT,
 	ACTION_REST,
 	ACTION_SQUAT,
@@ -55,6 +59,8 @@ struct GamePlayer_{
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
 	int walk_speed;			/**< 步行的速度 */
 	int run_speed;			/**< 奔跑的速度 */
+	int n_attack;			/**< 被攻击的次数 */
+	int timer;			/**< 用于重置被攻击次数的定时器 */
 	LCUI_Widget *object;		/**< 游戏对象 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
 };
