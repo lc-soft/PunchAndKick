@@ -524,6 +524,193 @@ static ActionData *ActionRes_LoadFinalBlow( void )
 	return action;
 }
 
+/** 躺着 */
+static ActionData *ActionRes_LoadLying(void)
+{
+	ActionData *action;
+	LCUI_Graph img_lying;
+	RangeBox hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -44;
+	hit_range.x_width = 64;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 26;
+
+	Graph_Init( &img_lying );
+	Graph_LoadImage( "drawable/lying.png", &img_lying );
+	Action_AddFrame( action, 12, 0, &img_lying, 50 );
+	Action_SetHitRange( action, 0, hit_range );
+
+	return action;
+}
+
+/** 躺着也被打 */
+static ActionData *ActionRes_LoadLyingHit(void)
+{
+	ActionData *action;
+	LCUI_Graph img_lying;
+	RangeBox hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -44;
+	hit_range.x_width = 64;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 26;
+
+	Graph_Init( &img_lying );
+	Graph_LoadImage( "drawable/lying-hit.png", &img_lying );
+	Action_AddFrame( action, 12, 0, &img_lying, 10 );
+	Action_SetHitRange( action, 0, hit_range );
+
+	return action;
+}
+
+/** 趴着 */
+static ActionData *ActionRes_LoadTummy(void)
+{
+	ActionData *action;
+	LCUI_Graph img_tummy;
+	RangeBox hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -20;
+	hit_range.x_width = 64;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 26;
+
+	Graph_Init( &img_tummy );
+	Graph_LoadImage( "drawable/tummy.png", &img_tummy );
+	Action_AddFrame( action, -12, 0, &img_tummy, 50 );
+	Action_SetHitRange( action, 0, hit_range );
+
+	return action;
+}
+
+/** 趴着也被打 */
+static ActionData *ActionRes_LoadTummyHit(void)
+{
+	ActionData *action;
+	LCUI_Graph img_tummy;
+	RangeBox hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -20;
+	hit_range.x_width = 64;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 26;
+
+	Graph_Init( &img_tummy );
+	Graph_LoadImage( "drawable/tummy-hit.png", &img_tummy );
+	Action_AddFrame( action, -12, 0, &img_tummy, 50 );
+	Action_SetHitRange( action, 0, hit_range );
+
+	return action;
+}
+
+/** 被终结一击从正面击飞 */
+static ActionData *ActionRes_LoadFrontalHitFly(void)
+{
+	ActionData *action;
+	LCUI_Graph img[3];
+	RangeBox hit_range;
+	
+	action = Action_Create();
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	Graph_LoadImage( "drawable/hit-fly.png", &img[0] );
+	Graph_LoadImage( "drawable/lying-hit.png", &img[1] );
+	Graph_LoadImage( "drawable/fall.png", &img[2] );
+	Action_AddFrame( action, -6, 0, &img[0], 5 );
+	Action_AddFrame( action, 0, 0, &img[1], 5 );
+	Action_AddFrame( action, 0, 0, &img[2], 1000 );
+	
+	hit_range.x = -18;
+	hit_range.x_width = 38;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 64;
+	Action_SetHitRange( action, 0, hit_range );
+	
+	hit_range.x = -44;
+	hit_range.x_width = 64;
+	hit_range.z = 0;
+	hit_range.z_width = 26;
+	Action_SetHitRange( action, 1, hit_range );
+
+	
+	hit_range.x = -18;
+	hit_range.x_width = 38;
+	hit_range.z = 0;
+	hit_range.z_width = 64;
+	Action_SetHitRange( action, 2, hit_range );
+
+	return action;
+}
+
+/** 被终结一击从背面击飞 */
+static ActionData *ActionRes_LoadBackHitFly(void)
+{
+	ActionData *action;
+	LCUI_Graph img;
+	RangeBox hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -18;
+	hit_range.x_width = 38;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 64;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/hit-fly.png", &img );
+	Action_AddFrame( action, -6, 0, &img, 1000 );
+	Action_SetHitRange( action, 0, hit_range );
+
+	return action;
+}
+
+/** 普通的击飞 */
+static ActionData *ActionRes_LoadHitFly(void)
+{
+	ActionData *action;
+	LCUI_Graph img;
+	RangeBox hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -18;
+	hit_range.x_width = 38;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 64;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/hit-fly.png", &img );
+	Action_AddFrame( action, -6, 0, &img, 1000 );
+	Action_SetHitRange( action, 0, hit_range );
+
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -545,6 +732,13 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_HIT: return ActionRes_LoadHit();
 	case ACTION_REST: return ActionRes_LoadRest();
 	case ACTION_FINAL_BLOW:return ActionRes_LoadFinalBlow();
+	case ACTION_F_HIT_FLY: return ActionRes_LoadFrontalHitFly();
+	case ACTION_B_HIT_FLY: return ActionRes_LoadBackHitFly();
+	case ACTION_HIT_FLY: return ActionRes_LoadHitFly();
+	case ACTION_LYING: return ActionRes_LoadLying();
+	case ACTION_LYING_HIT: return ActionRes_LoadLyingHit();
+	case ACTION_TUMMY: return ActionRes_LoadTummy();
+	case ACTION_TUMMY_HIT: return ActionRes_LoadTummyHit();
 	default:break;
 	}
 	return NULL;
