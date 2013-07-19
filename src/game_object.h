@@ -185,8 +185,14 @@ LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow )
 /** 清空攻击记录 */
 LCUI_API void GameObject_ClearAttack( LCUI_Widget *widget );
 
-LCUI_API LCUI_Widget* GameObject_New(void);
+/** 获取攻击范围内的游戏对象 */
+LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(
+					LCUI_Widget *widget,
+					int attack_action_id,
+					LCUI_BOOL specific_action,
+					int action_id );
 
+LCUI_API LCUI_Widget* GameObject_New(void);
 
 LCUI_API void GameObject_Register(void);
 
