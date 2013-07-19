@@ -5,10 +5,10 @@ typedef struct ControlKey_ {
 
 enum GamePlayerState {
 	STATE_READY,
-	STATE_STANCE,	/**< 站立 */
-	STATE_WALK,	/**< 步行 */
-	STATE_LEFTRUN,	/**< 向左奔跑 */
-	STATE_RIGHTRUN,	/**< 向右奔跑 */
+	STATE_STANCE,		/**< 站立 */
+	STATE_WALK,		/**< 步行 */
+	STATE_LEFTRUN,		/**< 向左奔跑 */
+	STATE_RIGHTRUN,		/**< 向右奔跑 */
 	STATE_A_ATTACK,
 	STATE_B_ATTACK,
 	STATE_AS_ATTACK,
@@ -22,8 +22,15 @@ enum GamePlayerState {
 	STATE_SSQUAT,
 	STATE_JUMP,
 	STATE_SJUMP,
-	STATE_HIT,	/**< 被命中 */
-	STATE_REST	/**< 歇息 */
+	STATE_HIT,		/**< 被命中 */
+	STATE_HIT_FLY,		/**< 被击飞 */
+	STATE_F_HIT_FLY,
+	STATE_B_HIT_FLY,
+	STATE_LYING,
+	STATE_LYING_HIT,
+	STATE_TUMMY,
+	STATE_TUMMY_HIT,
+	STATE_REST		/**< 歇息 */
 };
 
 enum ActionType {
@@ -41,6 +48,13 @@ enum ActionType {
 	ACTION_BSJ_ATTACK,
 	ACTION_FINAL_BLOW,
 	ACTION_HIT,
+	ACTION_HIT_FLY,
+	ACTION_F_HIT_FLY,
+	ACTION_B_HIT_FLY,
+	ACTION_LYING,
+	ACTION_LYING_HIT,
+	ACTION_TUMMY,
+	ACTION_TUMMY_HIT,
 	ACTION_REST,
 	ACTION_SQUAT,
 	ACTION_JUMP
