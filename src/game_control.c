@@ -525,6 +525,8 @@ void GamePlayer_StartJump( GamePlayer *player )
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
 	double acc;
+	LCUI_Widget *widget;
+
 	if( player->lock_action ) {
 		return;
 	}
@@ -553,8 +555,17 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_ASJ_ATTACK );
 		GamePlayer_LockAction( player );
 		break;
-	default:
-		GamePlayer_ChangeState( player, STATE_A_ATTACK );
+	default: 
+		widget = GameObject_GetObjectInAttackRange( 
+					player->object,
+					ACTION_FINAL_BLOW,
+					TRUE, ACTION_REST 
+		);
+		if( widget ) {
+			GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
+		} else {
+			GamePlayer_ChangeState( player, STATE_A_ATTACK );
+		}
 		GamePlayer_StopXWalk( player );
 		GamePlayer_StopYMotion( player );
 		GamePlayer_LockMotion( player );
@@ -771,6 +782,7 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 		case ACTION_BS_ATTACK:
 		case ACTION_ASJ_ATTACK:
 		case ACTION_BSJ_ATTACK:
+		case ACTION_FINAL_BLOW:
 			/* 累计该角色受到的攻击的次数 */
 			++player->n_attack;
 			GamePlayer_SetHit( player );
