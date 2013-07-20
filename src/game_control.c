@@ -237,7 +237,6 @@ void GamePlayer_SetActionTimeOut(	GamePlayer *player,
 		LCUITimer_Free( player->t_action_timeout );
 	}
 	player->t_action_timeout = LCUITimer_Set( n_ms, (void(*)(void*))func, player, FALSE );
-	_DEBUG_MSG("player: %p, timer: %d\n", player, player->t_action_timeout);
 }
 
 /** 为游戏设置休息的时限，并在超时后进行响应 */
@@ -324,7 +323,6 @@ static void GamePlayer_AtRunEnd( LCUI_Widget *widget )
 
 static void GamePlayer_AtReadyTimeOut( GamePlayer *player )
 {
-	_DEBUG_MSG("player: %p, timer: %d\n", player, player->t_action_timeout);
 	player->t_action_timeout = -1;
 	/* 撤销在动作结束时的响应 */
 	GameObject_AtActionDone( player->object, NULL );
@@ -409,6 +407,7 @@ void GamePlayer_SetRest( GamePlayer *player )
 static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
+
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	/* 撤销动作结束时的响应 */
@@ -432,20 +431,29 @@ static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 	}
 }
 
+/** 重置角色的受攻击次数 */
+static void GamePlayer_ResetCountAttack( GamePlayer *player )
+{
+	player->n_attack = 0;
+}
+
 void GamePlayer_SetHit( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	switch( player->state ) {
 	case STATE_LYING:
 	case STATE_LYING_HIT:
+		player->n_attack = 0;
 		GamePlayer_ChangeState( player, STATE_LYING_HIT );
 		break;
 	case STATE_TUMMY:
 	case STATE_TUMMY_HIT:
+player->n_attack = 0;
 		GamePlayer_ChangeState( player, STATE_TUMMY_HIT );
 		break;
 	default:
 		GamePlayer_ChangeState( player, STATE_HIT );
+		GamePlayer_SetRestTimeOut( player, 2000, GamePlayer_ResetCountAttack );
 		break;
 	}
 	GamePlayer_LockAction( player );
@@ -478,6 +486,7 @@ static void GamePlayer_StartStand( GamePlayer *player )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GamePlayer_UnlockMotion( player );
+	//GamePlayer_SetRestTimeOut( player, 100, GamePlayer_SetReady );
 	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_SetReady );
 }
 
@@ -493,6 +502,7 @@ static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LYING );
 	GamePlayer_LockAction( player );
+
 	GamePlayer_SetRestTimeOut( player, 1500, GamePlayer_StartStand );
 }
 
@@ -1044,12 +1054,6 @@ int GamePlayer_ControlByHuman( int player_id, LCUI_BOOL flag )
 	return 0;
 }
 
-/** 重置角色的受攻击次数 */
-static void GamePlayer_ResetCountAttack( GamePlayer *player )
-{
-	player->n_attack = 0;
-}
-
 /** 响应游戏角色受到的攻击 */
 static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 {
@@ -1110,7 +1114,6 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 			/* 累计该角色受到的攻击的次数 */
 			++player->n_attack;
 			GamePlayer_SetHit( player );
-			GamePlayer_SetRestTimeOut( player, 2000, GamePlayer_ResetCountAttack );
 			break;
 		case ACTION_AS_ATTACK:
 		case ACTION_BS_ATTACK:
