@@ -188,8 +188,8 @@ static ActionData* ActionRes_LoadASprintAttack(void)
 	attack_range.x_width = 36;
 	attack_range.y = -GLOBAL_Y_WIDTH/2;
 	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 22;
-	attack_range.z_width = 36;
+	attack_range.z = 31;
+	attack_range.z_width = 25;
 
 	hit_range.x = -23;
 	hit_range.x_width = 38;
@@ -477,12 +477,8 @@ static ActionData* ActionRes_LoadRest(void)
 	Graph_LoadImage( "drawable/rest-02.png", &img_rest[1] );
 	Action_AddFrame( action, -6,0, &img_rest[0], 25 );
 	Action_AddFrame( action, -6,0, &img_rest[1], 25 );
-	Action_AddFrame( action, -6,0, &img_rest[0], 25 );
-	Action_AddFrame( action, -6,0, &img_rest[1], 25 );
 	Action_SetHitRange( action, 0, hit_range );
 	Action_SetHitRange( action, 1, hit_range );
-	Action_SetHitRange( action, 2, hit_range );
-	Action_SetHitRange( action, 3, hit_range );
 
 	return action;
 }
@@ -590,7 +586,7 @@ static ActionData *ActionRes_LoadTummy(void)
 
 	Graph_Init( &img_tummy );
 	Graph_LoadImage( "drawable/tummy.png", &img_tummy );
-	Action_AddFrame( action, -12, 0, &img_tummy, 50 );
+	Action_AddFrame( action, -12, 0, &img_tummy, 10 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
@@ -711,6 +707,78 @@ static ActionData *ActionRes_LoadHitFly(void)
 	return action;
 }
 
+/** 向前方滚动 */
+static ActionData *ActionRes_LoadForwardRoll(void)
+{
+	ActionData *action;
+	LCUI_Graph img[4];
+	RangeBox hit_range;
+	
+	action = Action_Create();
+	
+	hit_range.x = -22;
+	hit_range.x_width = 44;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 44;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	Graph_Init( &img[3] );
+	Graph_LoadImage( "drawable/roll-01.png", &img[0] );
+	Graph_LoadImage( "drawable/roll-02.png", &img[1] );
+	Graph_LoadImage( "drawable/roll-03.png", &img[2] );
+	Graph_LoadImage( "drawable/roll-04.png", &img[3] );
+	Action_AddFrame( action, 0, 0, &img[0], 5 );
+	Action_AddFrame( action, 0, 0, &img[1], 5 );
+	Action_AddFrame( action, 0, 0, &img[2], 5 );
+	Action_AddFrame( action, 0, 0, &img[3], 5 );
+	Action_SetHitRange( action, 0, hit_range );
+	Action_SetHitRange( action, 1, hit_range );
+	Action_SetHitRange( action, 2, hit_range );
+	Action_SetHitRange( action, 3, hit_range );
+
+	return action;
+}
+
+/** 向后方滚动 */
+static ActionData *ActionRes_LoadBackwardRoll(void)
+{
+	ActionData *action;
+	LCUI_Graph img[4];
+	RangeBox hit_range;
+	
+	action = Action_Create();
+	
+	hit_range.x = -22;
+	hit_range.x_width = 44;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 44;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	Graph_Init( &img[3] );
+	Graph_LoadImage( "drawable/roll-04.png", &img[0] );
+	Graph_LoadImage( "drawable/roll-03.png", &img[1] );
+	Graph_LoadImage( "drawable/roll-02.png", &img[2] );
+	Graph_LoadImage( "drawable/roll-01.png", &img[3] );
+	Action_AddFrame( action, 0, 0, &img[0], 3 );
+	Action_AddFrame( action, 0, 0, &img[1], 3 );
+	Action_AddFrame( action, 0, 0, &img[2], 3 );
+	Action_AddFrame( action, 0, 0, &img[3], 3 );
+	Action_SetHitRange( action, 0, hit_range );
+	Action_SetHitRange( action, 1, hit_range );
+	Action_SetHitRange( action, 2, hit_range );
+	Action_SetHitRange( action, 3, hit_range );
+
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -739,6 +807,8 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_LYING_HIT: return ActionRes_LoadLyingHit();
 	case ACTION_TUMMY: return ActionRes_LoadTummy();
 	case ACTION_TUMMY_HIT: return ActionRes_LoadTummyHit();
+	case ACTION_F_ROLL: return ActionRes_LoadForwardRoll();
+	case ACTION_B_ROLL: return ActionRes_LoadBackwardRoll();
 	default:break;
 	}
 	return NULL;
