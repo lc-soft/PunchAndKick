@@ -78,14 +78,24 @@ static ActionData* ActionRes_LoadRun(void)
 	int i;
 	ActionData *action;
 	LCUI_Graph img_run[6];
+	RangeBox hit_range;
 	char path[512];
 	
 	action = Action_Create();
+
+	hit_range.x = -24;
+	hit_range.x_width = 48;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+
 	for(i=0; i<6; ++i) {
 		Graph_Init( &img_run[i] );
 		sprintf( path, "drawable/run-%02d.png", i+1 );
 		Graph_LoadImage( path, &img_run[i] );
 		Action_AddFrame( action, 0,0, &img_run[i], 3 );
+		Action_SetHitRange( action, i, hit_range );
 	}
 	return action;
 }
@@ -414,13 +424,23 @@ static ActionData* ActionRes_LoadJump(void)
 {
 	ActionData *action;
 	LCUI_Graph img_jump;
+	RangeBox hit_range;
 	
 	action = Action_Create();
+	
+	hit_range.x = -16;
+	hit_range.x_width = 32;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 54;
+
 	Graph_Init( &img_jump );
 	Graph_LoadImage( "drawable/jump.png", &img_jump );
 	/* 让该帧停留20秒，应该够了，现阶段不会遇到从起跳到着陆需要20秒的情况 */
 	Action_AddFrame( action, 0,0, &img_jump, 1000 );
-	
+	Action_SetHitRange( action, 0, hit_range );
+
 	return action;
 }
 
