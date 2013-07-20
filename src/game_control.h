@@ -30,7 +30,9 @@ enum GamePlayerState {
 	STATE_LYING_HIT,
 	STATE_TUMMY,
 	STATE_TUMMY_HIT,
-	STATE_REST		/**< 歇息 */
+	STATE_REST,		/**< 歇息 */
+	STATE_F_ROLL,		/**< 向前翻滚 */
+	STATE_B_ROLL		/**< 向后翻滚 */
 };
 
 enum ActionType {
@@ -57,7 +59,9 @@ enum ActionType {
 	ACTION_TUMMY_HIT,
 	ACTION_REST,
 	ACTION_SQUAT,
-	ACTION_JUMP
+	ACTION_JUMP,
+	ACTION_F_ROLL,
+	ACTION_B_ROLL
 };
 
 typedef struct GamePlayer_ GamePlayer;
@@ -74,7 +78,8 @@ struct GamePlayer_{
 	int walk_speed;			/**< 步行的速度 */
 	int run_speed;			/**< 奔跑的速度 */
 	int n_attack;			/**< 被攻击的次数 */
-	int timer;			/**< 用于重置被攻击次数的定时器 */
+	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
+	int t_action_timeout;		/**< 定时器，用于处理动作超时 */
 	LCUI_Widget *object;		/**< 游戏对象 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
 };
