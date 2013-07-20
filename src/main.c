@@ -4,8 +4,9 @@
 #include LC_LCUI_H
 #include LC_CURSOR_H
 #include LC_WIDGET_H
+#include LC_TEXTSTYLE_H
+#include LC_DISPLAY_H
 #include LC_LABEL_H
-
 #include "game.h"
 
 #define IMG_PATH_GAME_LOGO	"drawable/lcui-logo.png"
@@ -234,10 +235,19 @@ static void InitConsoleWindow(void)
 }
 #endif
 
+static void UpdateViewFPS( void *arg )
+{
+	char str[10];
+	LCUI_Widget *label = (LCUI_Widget*)arg;
+	sprintf( str, "FPS: %d", LCUIScreen_GetFPS() );
+	Label_Text( label, str );
+}
+
 int main( int argc, char **argv )
 {
 	LCUI_Thread t;
 	LCUI_Widget *widget;
+	LCUI_TextStyle style;
 	
 #ifdef LCUI_BUILD_IN_WIN32
 	InitConsoleWindow();
@@ -245,6 +255,13 @@ int main( int argc, char **argv )
 	LCUI_Init(640,480,0);
 	/* 预先载入图像资源 */
 	GraphRes_Load();
+	widget = Widget_New("label");
+	TextStyle_Init( &style );
+	TextStyle_FontSize( &style, 14 );
+	Label_TextStyle( widget, style );
+	Widget_SetAlign( widget, ALIGN_TOP_RIGHT, Pos(-20,20) );
+	LCUITimer_Set( 500, UpdateViewFPS, widget, TRUE );
+	Widget_Show( widget );
 	/* 创建一个线程，用于进行游戏的初始化 */
 	//LCUIThread_Create( &t, Game_MainThread, NULL );
 	Game_Init();
