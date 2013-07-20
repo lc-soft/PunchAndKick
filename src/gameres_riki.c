@@ -630,7 +630,7 @@ static ActionData *ActionRes_LoadTummyHit(void)
 
 	Graph_Init( &img_tummy );
 	Graph_LoadImage( "drawable/tummy-hit.png", &img_tummy );
-	Action_AddFrame( action, -12, 0, &img_tummy, 50 );
+	Action_AddFrame( action, -12, 0, &img_tummy, 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
