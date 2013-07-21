@@ -651,8 +651,8 @@ static ActionData *ActionRes_LoadFrontalHitFly(void)
 	Graph_LoadImage( "drawable/hit-fly.png", &img[0] );
 	Graph_LoadImage( "drawable/lying-hit.png", &img[1] );
 	Graph_LoadImage( "drawable/fall.png", &img[2] );
-	Action_AddFrame( action, -6, 0, &img[0], 5 );
-	Action_AddFrame( action, 0, 0, &img[1], 5 );
+	Action_AddFrame( action, -6, 0, &img[0], 8 );
+	Action_AddFrame( action, 0, 0, &img[1], 8 );
 	Action_AddFrame( action, 0, 0, &img[2], 1000 );
 	
 	hit_range.x = -18;
