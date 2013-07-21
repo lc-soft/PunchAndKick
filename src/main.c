@@ -253,6 +253,7 @@ int main( int argc, char **argv )
 	InitConsoleWindow();
 #endif
 	LCUI_Init(640,480,0);
+	
 	/* 预先载入图像资源 */
 	GraphRes_Load();
 	widget = Widget_New("label");
@@ -262,6 +263,7 @@ int main( int argc, char **argv )
 	Widget_SetAlign( widget, ALIGN_TOP_RIGHT, Pos(-20,20) );
 	LCUITimer_Set( 500, UpdateViewFPS, widget, TRUE );
 	Widget_Show( widget );
+
 	/* 创建一个线程，用于进行游戏的初始化 */
 	//LCUIThread_Create( &t, Game_MainThread, NULL );
 	Game_Init();
