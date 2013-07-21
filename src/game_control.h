@@ -1,4 +1,6 @@
-﻿
+﻿#ifndef __GAME_CONTROL_H__
+#define __GAME_CONTROL_H__
+
 typedef struct ControlKey_ {
 	int up, down, left, right, a_attack, b_attack, jump;
 } ControlKey;
@@ -64,6 +66,17 @@ enum ActionType {
 	ACTION_B_ROLL
 };
 
+typedef struct GamePlayerProperty_ {
+	int hp;
+	int fist;
+	int leg;
+	int speed;
+	int punch;
+	int throw;
+	int defense;
+	int kick;
+} GamePlayerProperty;
+
 typedef struct GamePlayer_ GamePlayer;
 struct GamePlayer_{
 	int id;				/**< 玩家ID */
@@ -75,8 +88,7 @@ struct GamePlayer_{
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
 	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
-	int walk_speed;			/**< 步行的速度 */
-	int run_speed;			/**< 奔跑的速度 */
+	GamePlayerProperty property;	/**< 角色的各项属性 */
 	int n_attack;			/**< 被攻击的次数 */
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
 	int t_action_timeout;		/**< 定时器，用于处理动作超时 */
@@ -130,3 +142,5 @@ void GamePlayer_StartAAttack( GamePlayer *player );
 void GamePlayer_SetUpMotion( GamePlayer *player );
 
 void GamePlayer_SetDownMotion( GamePlayer *player );
+
+#endif
