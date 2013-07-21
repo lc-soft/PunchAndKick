@@ -86,7 +86,8 @@ LCUI_API int Action_SetHitRange(	ActionData* action,
 					int n_frame,
 					RangeBox hit_range );
 
-LCUI_API void GameObject_AtActionDone(	LCUI_Widget *widget,
+LCUI_API int GameObject_AtActionDone(	LCUI_Widget *widget,
+					int action_id,
 					void (*func)(LCUI_Widget*) );
 
 LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,

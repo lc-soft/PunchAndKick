@@ -11,8 +11,6 @@
 #define PLAY	1
 
 enum FuncUse {
-	AT_ACTION_DONE = 0,
-	AT_FRAME_UPDATE,
 	AT_XSPEED_TO_ZERO,
 	AT_LANDING,
 	AT_UNDER_ATTACK
@@ -20,8 +18,10 @@ enum FuncUse {
 
 /** 动作记录 */
 typedef struct ActionRec_ {
-	int id;			/**< 动画的标识号 */
-	ActionData *action;	/**< 对应的动作集 */
+	int id;				/**< 动画的标识号 */
+	ActionData *action;		/**< 对应的动作集 */
+	void (*update)(LCUI_Widget*);	/**< 回调函数，在每帧更新时调用 */
+	void (*done)(LCUI_Widget*);	/**< 回调函数，在动作结束时调用 */
 } ActionRec;
 
 /** 每次数据刷新时的时间间隔(毫秒) */
@@ -54,13 +54,15 @@ static LCUI_Queue action_database;
 static LCUI_Queue gameobject_stream;
 
 static int database_init = FALSE;
-static int frame_proc_timer = -1;
+static LCUI_Thread frame_proc_thread = -1;
 
 static void GameObject_CallFunc( LCUI_Widget *widget, int func_use )
 {
 	GameObject *obj;
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	AppTasks_CustomAdd( ADD_MODE_NOT_REPEAT | AND_ARG_F, &obj->func[func_use] );
+	if(obj->func[func_use].func) {
+		obj->func[func_use].func( widget, NULL );
+	}
 }
 
 static void ActionData_Destroy( void *arg )
@@ -95,7 +97,6 @@ LCUI_API ActionData* Action_Create( void )
 	pos = Queue_Add( &action_database, &action );
 	p = (ActionData*)Queue_Get( &action_database, pos );
 	Queue_Unlock( &action_database );
-	DEBUG_MSG("create action: %p\n", p);
 	return p;
 }
 
@@ -143,11 +144,35 @@ static int GameObject_Connect(	LCUI_Widget *widget,
 	return 0;
 }
 
+static ActionRec* GameObject_FindActionRec( GameObject *obj, int action_id )
+{
+	int i, n;
+	ActionRec *p_rec;
+	n = Queue_GetTotal( &obj->action_list );
+	for(i=0; i<n; ++i) {
+		p_rec = (ActionRec*)Queue_Get( &obj->action_list, i );
+		if( !p_rec || p_rec->id != action_id ) {
+			continue;
+		}
+		return p_rec;
+	}
+	return NULL;
+}
 
-LCUI_API void GameObject_AtActionDone(	LCUI_Widget *widget,
+LCUI_API int GameObject_AtActionDone(	LCUI_Widget *widget,
+					int action_id,
 					void (*func)(LCUI_Widget*) )
 {
-	GameObject_Connect( widget, AT_ACTION_DONE, func );
+	GameObject *obj;
+	ActionRec* p_rec;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	p_rec = GameObject_FindActionRec( obj, action_id );
+	if( p_rec == NULL ) {
+		return -1;
+	}
+	p_rec->done = func;
+	return 0;
 }
 
 LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
@@ -274,7 +299,9 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 						obj->current->action,
 						obj->n_frame
 			);
-			GameObject_CallFunc( widget, AT_FRAME_UPDATE );
+			if( obj->current->update ) {
+				obj->current->update( widget );
+			}
 			/* 标记这个对象需要重绘 */
 			need_draw = TRUE;
 		}
@@ -286,9 +313,9 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 						obj->current->action,
 						obj->n_frame
 			);
-			/* 当前动作动画已完成一遍播放，调用回调函数来
-			 * 响应AT_ACTION_DONE信号 */
-			GameObject_CallFunc( widget, AT_ACTION_DONE );
+			if( obj->current->done ) {
+				obj->current->done( widget );
+			}
 		}
 		if( need_draw ) {
 			Widget_Draw( widget );
@@ -452,21 +479,11 @@ static int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
 	return 0;
 }
 
-static void GameObjectStream_Proc( void* arg )
+static void GameObjectStream_Proc( void )
 {
+	int i, n;
 	GameObject *obj;
 	LCUI_Widget *widget, *attacker;
-	int i, n, lost_time;
-	static clock_t current_time = 0;
-
-	while(!LCUI_Active()) {
-		LCUI_MSleep(10);
-	}
-	lost_time = clock() - current_time;
-	//_DEBUG_MSG("%d\n", lost_time);
-	current_time = clock();
-	GameObjectStream_UpdateTime( lost_time );
-	PhysicsSystem_Step();
 
 	n = Queue_GetTotal( &gameobject_stream );
 	for(i=0; i<n; ++i) {
@@ -507,6 +524,43 @@ static void GameObjectStream_Proc( void* arg )
 	}
 }
 
+static void GameObjectStream_Thread( void *arg )
+{
+	clock_t lost_time, diff_val, n_ms, one_frame_lost_time;
+	
+	diff_val = 0;
+
+	while(LCUI_Active()) {
+		one_frame_lost_time = clock();
+		
+		PhysicsSystem_Step();
+		GameObjectStream_UpdateTime( 10 );
+		GameObjectStream_Proc();
+
+		one_frame_lost_time = clock() - one_frame_lost_time;
+		/* 将单位转换为毫秒 */
+		one_frame_lost_time *= 1000;
+		one_frame_lost_time /= CLOCKS_PER_SEC;
+		if( diff_val > 0 ) {
+			--diff_val;
+		} 
+		else if( diff_val < 0 ) {
+			++diff_val;
+		}
+		n_ms = MSEC_PER_FRAME - one_frame_lost_time;
+		n_ms = n_ms - diff_val;
+		if( n_ms > 0 ) {
+			lost_time = clock();
+			LCUI_MSleep( n_ms );
+			lost_time = clock() - lost_time;
+			diff_val = lost_time * 1000 / CLOCKS_PER_SEC;
+			diff_val -= n_ms;
+		}
+	}
+
+	LCUIThread_Exit(NULL);
+}
+
 /**
  * 切换对象的动作
  * @param widget
@@ -519,26 +573,21 @@ static void GameObjectStream_Proc( void* arg )
 LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 					int action_id )
 {
-	int i, n;
 	ActionRec *p_rec;
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	n = Queue_GetTotal( &obj->action_list );
-	for(i=0; i<n; ++i) {
-		p_rec = (ActionRec*)Queue_Get( &obj->action_list, i );
-		if( !p_rec || p_rec->id != action_id ) {
-			continue;
-		}
-		obj->current = p_rec;
-		obj->n_frame = 0;
-		obj->remain_time = Action_GetFrameSleepTime( p_rec->action, 0 );
-		/* 标记数据为无效，以根据当前动作动画来更新数据 */
-		obj->data_valid = FALSE;
-		Widget_Draw(widget);
-		return 0;
+	p_rec = GameObject_FindActionRec( obj, action_id );
+	if( p_rec == NULL ) {
+		return -1;
 	}
-	return -1;
+	obj->current = p_rec;
+	obj->n_frame = 0;
+	obj->remain_time = Action_GetFrameSleepTime( p_rec->action, 0 );
+	/* 标记数据为无效，以根据当前动作动画来更新数据 */
+	obj->data_valid = FALSE;
+	Widget_Draw(widget);
+	return 0;
 }
 
 /** 获取当前动作动画的ID */
@@ -695,14 +744,10 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	Queue_Init( &obj->attacker_info, sizeof(AttackerInfo), NULL );
 	Queue_UsingPointer( &obj->victim );
 
-	if( frame_proc_timer == -1 ) {
+	if( frame_proc_thread == -1 ) {
 		Queue_Init( &gameobject_stream, sizeof(LCUI_Widget*), NULL );
 		Queue_UsingPointer( &gameobject_stream );
-		frame_proc_timer = LCUITimer_Set( 
-			REFRESH_INTERVAL_TIME,
-			GameObjectStream_Proc,
-			NULL, TRUE
-		);
+		LCUIThread_Create( &frame_proc_thread, GameObjectStream_Thread, NULL );
 	}
 	Queue_AddPointer( &gameobject_stream, widget );
 	obj->func[0].func = NULL;
@@ -827,6 +872,8 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 	}
 	rec.action = action;
 	rec.id = id;
+	rec.done = NULL;
+	rec.update = NULL;
 	/* 添加至动作列表中 */
 	ret = Queue_Add( &obj->action_list, &rec );
 	Queue_Unlock( &obj->action_list );
