@@ -541,12 +541,6 @@ static void GameObjectStream_Thread( void *arg )
 		/* 将单位转换为毫秒 */
 		one_frame_lost_time *= 1000;
 		one_frame_lost_time /= CLOCKS_PER_SEC;
-		if( diff_val > 0 ) {
-			--diff_val;
-		} 
-		else if( diff_val < 0 ) {
-			++diff_val;
-		}
 		n_ms = MSEC_PER_FRAME - one_frame_lost_time;
 		n_ms = n_ms - diff_val;
 		if( n_ms > 0 ) {
@@ -555,6 +549,8 @@ static void GameObjectStream_Thread( void *arg )
 			lost_time = clock() - lost_time;
 			diff_val = lost_time * 1000 / CLOCKS_PER_SEC;
 			diff_val -= n_ms;
+		} else {
+			diff_val = 0 - n_ms;
 		}
 	}
 
