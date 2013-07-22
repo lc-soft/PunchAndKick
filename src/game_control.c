@@ -48,7 +48,7 @@ static int global_action_list[]={
 #define ZACC_S_HIT_FLY		7
 #define ZSPEED_S_HIT_FLY	15
 
-#define XACC_ROLL	20
+#define XACC_ROLL	15
 
 #define XSPEED_X_HIT_FLY	70
 #define ZACC_XB_HIT_FLY		15
@@ -64,7 +64,7 @@ static int global_action_list[]={
 #define ZSPEED_HIT_FLY	100
 #define ZACC_HIT_FLY	50
 
-#define ROLL_TIMEOUT	200
+#define ROLL_TIMEOUT	330
 
 static GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
 {
