@@ -717,6 +717,7 @@ void GamePlayer_SetLeftHitFly( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
+	GameObject_SetXAcc( player->object, 0 );
 	GameObject_SetXSpeed( player->object, -XSPEED_HIT_FLY );
 	GameObject_AtLanding( 
 		player->object, 
@@ -730,6 +731,7 @@ void GamePlayer_SetRightHitFly( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
+	GameObject_SetXAcc( player->object, 0 );
 	GameObject_SetXSpeed( player->object, XSPEED_HIT_FLY );
 	GameObject_AtLanding(
 		player->object,
