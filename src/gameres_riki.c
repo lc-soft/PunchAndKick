@@ -518,7 +518,7 @@ static ActionData *ActionRes_LoadFinalBlow( void )
 	hit_range.z = 0;
 	hit_range.z_width = 60;
 	attack_range.x = -12;
-	attack_range.x_width = 50;
+	attack_range.x_width = 55;
 	attack_range.y = -GLOBAL_Y_WIDTH/2;
 	attack_range.y_width = GLOBAL_Y_WIDTH;
 	attack_range.z = 0;
