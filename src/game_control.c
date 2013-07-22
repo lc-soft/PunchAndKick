@@ -36,8 +36,9 @@ static int global_action_list[]={
 	ACTION_B_ROLL
 };
 
-#define XSPEED_RUN	50
+#define XSPEED_RUN	60
 #define XSPEED_WALK	15
+#define YSPEED_WALK	8
 #define XACC_STOPRUN	20
 #define XACC_PUNCH	10
 #define ZSPEED_JUMP	60
@@ -47,11 +48,13 @@ static int global_action_list[]={
 #define ZACC_S_HIT_FLY		7
 #define ZSPEED_S_HIT_FLY	15
 
+#define XACC_ROLL	20
+
 #define XSPEED_X_HIT_FLY	70
 #define ZACC_XB_HIT_FLY		15
 #define ZSPEED_XB_HIT_FLY	25
-#define ZACC_XF_HIT_FLY		22
-#define ZSPEED_XF_HIT_FLY	60
+#define ZACC_XF_HIT_FLY		50
+#define ZSPEED_XF_HIT_FLY	100
 
 #define XSPEED_X_HIT_FLY2	20
 #define ZACC_XF_HIT_FLY2	10
@@ -61,13 +64,14 @@ static int global_action_list[]={
 #define ZSPEED_HIT_FLY	100
 #define ZACC_HIT_FLY	50
 
+#define ROLL_TIMEOUT	200
 
 static GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
 {
 	int i;
 	for(i=0; i<4; ++i) {
 		if( widget == player_data[i].object ) {
-			return 	&player_data[i];
+			return &player_data[i];
 		}
 	}
 	return NULL;
@@ -493,14 +497,22 @@ void GamePlayer_SetHit( GamePlayer *player )
 	GamePlayer_SetRestTimeOut( player, 2000, GamePlayer_ResetCountAttack );
 	GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtHitDone );
 }
+
+static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_SetReady( player );
+}
+
 /** 开始站起 */
 static void GamePlayer_StartStand( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GamePlayer_UnlockMotion( player );
-	//GamePlayer_SetRestTimeOut( player, 100, GamePlayer_SetReady );
-	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_SetReady );
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtStandDone );
 }
 
 static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
@@ -581,7 +593,7 @@ static void GamePlayer_AtForwardRollTimeOut( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_TUMMY );
 	GamePlayer_LockAction( player );
 	GameObject_SetXSpeed( player->object, 0 );
-	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_SetXAcc( player->object, 0 );
 	GamePlayer_SetRestTimeOut( player, 2500, GamePlayer_StartStand );
 }
 
@@ -592,11 +604,11 @@ static void GamePlayer_AtBackwardRollTimeOut( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_LYING );
 	GamePlayer_LockAction( player );
 	GameObject_SetXSpeed( player->object, 0 );
-	GameObject_SetYSpeed( player->object, 0 );
-	GamePlayer_SetRestTimeOut( player, 2500, GamePlayer_StartStand );
+	GameObject_SetXAcc( player->object, 0 );
+	GamePlayer_SetRestTimeOut( player, 1500, GamePlayer_StartStand );
 }
 
-/** 开始朝左边向前翻滚 */
+/** 开始朝左边进行前翻滚 */
 static void GamePlayer_StartLeftForwardRoll( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -605,10 +617,12 @@ static void GamePlayer_StartLeftForwardRoll( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_F_ROLL );
 	GamePlayer_LockAction( player );
-	GamePlayer_SetActionTimeOut( player, 200, GamePlayer_AtForwardRollTimeOut );
+	/* 一边滚动，一边减速 */
+	GameObject_SetXAcc( player->object, XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtForwardRollTimeOut );
 }
 
-/** 开始朝右边向前翻滚 */
+/** 开始朝右边进行前翻滚 */
 static void GamePlayer_StartRightForwardRoll( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -617,17 +631,32 @@ static void GamePlayer_StartRightForwardRoll( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_F_ROLL );
 	GamePlayer_LockAction( player );
-	GamePlayer_SetActionTimeOut( player, 200, GamePlayer_AtForwardRollTimeOut );
+	GameObject_SetXAcc( player->object, -XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtForwardRollTimeOut );
 }
 
-static void GamePlayer_StartBackwardRolle( LCUI_Widget *widget )
+/** 开始朝左边进行后翻滚 */
+static void GamePlayer_StartLeftBackwardRoll( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_B_ROLL );
 	GamePlayer_LockAction( player );
-	GamePlayer_SetActionTimeOut( player, 200, GamePlayer_AtBackwardRollTimeOut );
+	GameObject_SetXAcc( player->object, XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtBackwardRollTimeOut );
+}
+
+/** 开始朝右边进行后翻滚 */
+static void GamePlayer_StartRightBackwardRoll( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_B_ROLL );
+	GamePlayer_LockAction( player );
+	GameObject_SetXAcc( player->object, -XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtBackwardRollTimeOut );
 }
 
 /** 让玩家从正面被撞飞 */
@@ -639,14 +668,19 @@ void GamePlayer_SetFrontalSHitFly( GamePlayer *player )
 	GamePlayer_LockMotion( player );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		GameObject_SetXSpeed( player->object, XSPEED_S_HIT_FLY );
+		GameObject_AtLanding(
+			player->object,
+			ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
+			GamePlayer_StartRightBackwardRoll
+		);
 	} else {
 		GameObject_SetXSpeed( player->object, -XSPEED_S_HIT_FLY );
+		GameObject_AtLanding(
+			player->object,
+			ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
+			GamePlayer_StartLeftBackwardRoll
+		);
 	}
-	GameObject_AtLanding(
-		player->object,
-		ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
-		GamePlayer_StartBackwardRolle
-	);
 }
 
 /** 让玩家从背面被撞飞 */
@@ -901,10 +935,10 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		);
 		if( widget ) {
 			GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
-			GameObject_AtActionDone( player->object,ACTION_FINAL_BLOW, GamePlayer_AtAttackDone );
+			GameObject_AtActionDone( player->object, ACTION_FINAL_BLOW, GamePlayer_AtAttackDone );
 		} else {
 			GamePlayer_ChangeState( player, STATE_A_ATTACK );
-			GameObject_AtActionDone( player->object,ACTION_A_ATTACK, GamePlayer_AtAttackDone );
+			GameObject_AtActionDone( player->object, ACTION_A_ATTACK, GamePlayer_AtAttackDone );
 		}
 		GamePlayer_StopXWalk( player );
 		GamePlayer_StopYMotion( player );
@@ -986,7 +1020,7 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 	case STATE_WALK:
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		speed = -1.0 * player->property.speed / 100;
+		speed = -YSPEED_WALK * player->property.speed / 100;
 		GameObject_SetYSpeed( player->object, speed );
 		break;
 	default:break;
@@ -1006,7 +1040,7 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 	case STATE_WALK:
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		speed = 1.0 * player->property.speed / 100;
+		speed = YSPEED_WALK * player->property.speed / 100;
 		GameObject_SetYSpeed( player->object, speed );
 		break;
 	default:break;
