@@ -33,6 +33,9 @@ typedef struct PhysicsObject_ {
 } PhysicsObject;
 
 
+/** 设置空间边界  */
+extern void PhysicsSystem_SetSpaceBound( int x, int x_width, int y, int y_width );
+
 /** 处理物理对象的数据 */
 extern void PhysicsSystem_Step( void );
 

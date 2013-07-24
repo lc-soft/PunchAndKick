@@ -5,6 +5,16 @@
 
 static LCUI_BOOL init = FALSE;
 static LCUI_Queue physics_object_list;
+static int space_x = 0, space_x_width = 600, space_y = 0, space_y_width = 600;
+
+/** 设置空间边界  */
+void PhysicsSystem_SetSpaceBound( int x, int x_width, int y, int y_width )
+{
+	space_x = x;
+	space_y = y;
+	space_x_width = x_width;
+	space_y_width = y_width;
+}
 
 /** 处理物理对象的数据 */
 void PhysicsSystem_Step( void )
@@ -27,6 +37,18 @@ void PhysicsSystem_Step( void )
 		obj->x += (obj->x_speed/MSEC_PER_FRAME);
 		obj->y += (obj->y_speed/MSEC_PER_FRAME);
 		obj->z += (obj->z_speed/MSEC_PER_FRAME);
+		if( obj->x < space_x ) {
+			obj->x = space_x;
+		}
+		if( obj->x >= space_x + space_x_width ) {
+			obj->x = space_x + space_x_width - 1;
+		}
+		if( obj->y < space_y ) {
+			obj->y = space_y;
+		}
+		if( obj->y >= space_y + space_y_width ) {
+			obj->y = space_y + space_y_width - 1;
+		}
 	}
 	Queue_Unlock( &physics_object_list );
 }
