@@ -184,6 +184,9 @@ LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y );
 /** 获取游戏对象的位置 */
 LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y );
 
+/** 获取游戏对象的X轴坐标 */
+LCUI_API double GameObject_GetX( LCUI_Widget *widget );
+
 /** 设置游戏对象的阴影图像 */
 LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow );
 

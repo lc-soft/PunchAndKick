@@ -1142,6 +1142,15 @@ LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y )
 	*y = obj->y;
 }
 
+/** 获取游戏对象的X轴坐标 */
+LCUI_API double GameObject_GetX( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->x;
+}
+
 /** 设置游戏对象的阴影图像 */
 LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow )
 {
