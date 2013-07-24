@@ -4,6 +4,7 @@
 #include LC_INPUT_H
 
 #include "game.h"
+#include "physics_system.h"
 
 static LCUI_Graph img_shadow;
 static GamePlayer player_data[4];
@@ -38,6 +39,9 @@ static int global_action_list[]={
 	ACTION_JUMP_ELBOW,
 	ACTION_JUMP_TREAD
 };
+
+#define SHORT_REST_TIMEOUT 1500
+#define LONG_REST_TIMEOUT 2500
 
 #define XSPEED_RUN	60
 #define XSPEED_WALK	15
@@ -492,6 +496,10 @@ int GamePlayer_TryHit( GamePlayer *player )
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, ACTION_TUMMY_HIT, GamePlayer_AtHitDone );
 		break;
+	case STATE_B_ROLL:
+	case STATE_F_ROLL:
+		player->n_attack = 0;
+		break;
 	default:
 		return -1;
 	}
@@ -540,7 +548,7 @@ static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
 	GamePlayer_ChangeState( player, STATE_LYING );
 	GamePlayer_LockAction( player );
 
-	GamePlayer_SetRestTimeOut( player, 1500, GamePlayer_StartStand );
+	GamePlayer_SetRestTimeOut( player, SHORT_REST_TIMEOUT, GamePlayer_StartStand );
 }
 
 void GamePlayer_AtFrontalHitFlyDone( LCUI_Widget *widget )
@@ -606,7 +614,7 @@ static void GamePlayer_AtForwardRollTimeOut( GamePlayer *player )
 	GamePlayer_LockAction( player );
 	GameObject_SetXSpeed( player->object, 0 );
 	GameObject_SetXAcc( player->object, 0 );
-	GamePlayer_SetRestTimeOut( player, 2500, GamePlayer_StartStand );
+	GamePlayer_SetRestTimeOut( player, LONG_REST_TIMEOUT, GamePlayer_StartStand );
 }
 
 /** 向后翻滚超时后 */
@@ -617,7 +625,7 @@ static void GamePlayer_AtBackwardRollTimeOut( GamePlayer *player )
 	GamePlayer_LockAction( player );
 	GameObject_SetXSpeed( player->object, 0 );
 	GameObject_SetXAcc( player->object, 0 );
-	GamePlayer_SetRestTimeOut( player, 1500, GamePlayer_StartStand );
+	GamePlayer_SetRestTimeOut( player, LONG_REST_TIMEOUT, GamePlayer_StartStand );
 }
 
 /** 开始朝左边进行前翻滚 */
@@ -988,11 +996,62 @@ void GamePlayer_SetJumpTread( GamePlayer *player )
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_JumpTreadStep1 );
 }
 
+/** 检测玩家是否能够攻击躺在地上的玩家 */
+static LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player )
+{
+	RangeBox range;
+	double x1, x2;
+	LCUI_Widget *widget;
+
+	range.x = -5;
+	range.x_width = 10;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 20;
+
+	/* 检测当前角色是否站在躺地角色的头和脚的位置上 */
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_LYING );
+	if( widget ) {
+		goto check_done;
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_TUMMY );
+	if( widget ) {
+		goto check_done;
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_LYING_HIT );
+	if( widget ) {
+		goto check_done;
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_TUMMY_HIT );
+	if( widget ) {
+		goto check_done;
+	}
+	return FALSE;
+check_done:;
+	x1 = GameObject_GetX( player->object );
+	x2 = GameObject_GetX( widget );
+	/* 游戏角色必须面向躺地的角色的中心位置 */
+	if( GamePlayer_IsLeftOriented( player ) ) {
+		if( x1 <= x2 ) {
+			return FALSE;
+		}
+	} else {
+		if( x1 > x2 ) {
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 /** 进行A攻击 */
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
 	double acc;
-	RangeBox range;
 	LCUI_Widget *widget;
 
 	if( player->lock_action ) {
@@ -1031,39 +1090,8 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		break;
 	}
 
-	range.x = -10;
-	range.x_width = 20;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 20;;
-	/* 检测当前角色是否站在躺地角色的中间部分的位置上 */
-	// ....
-
-	/* 检测当前角色是否站在躺地角色的头和脚的位置上 */
-	widget = GameObject_GetObjectInRange(	player->object, range,
-						TRUE, ACTION_LYING );
-	if( widget ) {
-		GamePlayer_SetJumpElbow( player );
-		return;
-	}
-	widget = GameObject_GetObjectInRange(	player->object, range,
-						TRUE, ACTION_TUMMY );
-	if( widget ) {
-		GamePlayer_SetJumpElbow( player );
-		return;
-	}
-	widget = GameObject_GetObjectInRange(	player->object, range,
-						TRUE, ACTION_LYING_HIT );
-	if( widget ) {
-		GamePlayer_SetJumpElbow( player );
-		return;
-	}
-	widget = GameObject_GetObjectInRange(
-				player->object, range,
-				TRUE, ACTION_TUMMY_HIT
-	);
-	if( widget ) {
+	if( GamePlayer_CanAttackGroundPlayer(player) ) {
+		GameObject_ClearAttack( player->object );
 		GamePlayer_SetJumpElbow( player );
 		return;
 	}
@@ -1098,7 +1126,6 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 void GamePlayer_StartBAttack( GamePlayer *player )
 {
 	double acc;
-	RangeBox range;
 	LCUI_Widget *widget;
 
 	if( player->lock_action ) {
@@ -1135,34 +1162,9 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	default:
 		break;
 	}
-
-	range.x = -10;
-	range.x_width = 20;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 20;;
-	/* 检测当前角色是否站在躺地角色的中间部分的位置上 */
-	// ....
-
-	/* 检测当前角色是否站在躺地角色的头和脚的位置上 */
-	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_LYING );
-	if( widget ) {
-		GamePlayer_SetJumpTread( player );
-		return;
-	}
-	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_TUMMY );
-	if( widget ) {
-		GamePlayer_SetJumpTread( player );
-		return;
-	}
-	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_LYING_HIT );
-	if( widget ) {
-		GamePlayer_SetJumpTread( player );
-		return;
-	}
-	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_TUMMY_HIT );
-	if( widget ) {
+	
+	if( GamePlayer_CanAttackGroundPlayer(player) ) {
+		GameObject_ClearAttack( player->object );
 		GamePlayer_SetJumpTread( player );
 		return;
 	}
@@ -1492,6 +1494,7 @@ int Game_Init(void)
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
+	PhysicsSystem_SetSpaceBound( 20, 600, 200, 200 );
 	return ret;
 }
 
