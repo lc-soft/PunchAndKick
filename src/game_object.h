@@ -94,6 +94,10 @@ LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 						double acc,
 						void (*func)(LCUI_Widget*) );
 
+/** 在Z轴移动速度为0时进行响应  */
+LCUI_API void GameObject_AtZeroZSpeed(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*) );
+
 /** 设置在对象着地时进行响应 */
 LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 					double z_speed,
@@ -185,6 +189,13 @@ LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow )
 
 /** 清空攻击记录 */
 LCUI_API void GameObject_ClearAttack( LCUI_Widget *widget );
+
+/** 获取指定范围内的游戏对象 */
+LCUI_API LCUI_Widget* GameObject_GetObjectInRange(
+					LCUI_Widget *widget,
+					RangeBox range,
+					LCUI_BOOL specific_action,
+					int action_id );
 
 /** 获取攻击范围内的游戏对象 */
 LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(

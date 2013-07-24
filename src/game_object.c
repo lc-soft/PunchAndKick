@@ -12,6 +12,7 @@
 
 enum FuncUse {
 	AT_XSPEED_TO_ZERO,
+	AT_ZSPEED_TO_ZERO,
 	AT_LANDING,
 	AT_UNDER_ATTACK
 };
@@ -181,6 +182,13 @@ LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 {
 	GameObject_SetXAcc( widget, acc );
 	GameObject_Connect( widget, AT_XSPEED_TO_ZERO, func );
+}
+
+/** 在Z轴移动速度为0时进行响应  */
+LCUI_API void GameObject_AtZeroZSpeed(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*) )
+{
+	GameObject_Connect( widget, AT_ZSPEED_TO_ZERO, func );
 }
 
 /** 设置在对象着地时进行响应 */
@@ -497,7 +505,7 @@ static void GameObjectStream_Proc( void )
 		if( attacker ) {
 			GameObject_AddVictim( attacker, widget );
 		}
-		/* 若速度接近0 */
+		/* 若在X轴的移动速度接近0 */
 		if( (obj->phys_obj->x_acc > 0
 		 && obj->phys_obj->x_speed >= 0 )
 		|| (obj->phys_obj->x_acc < 0
@@ -506,6 +514,16 @@ static void GameObjectStream_Proc( void )
 			obj->phys_obj->x_speed = 0;
 			Widget_Update( widget );
 			GameObject_CallFunc( widget, AT_XSPEED_TO_ZERO );
+		}
+		/* 若在Z轴的移动速度接近0 */
+		if( (obj->phys_obj->z_acc > 0
+		 && obj->phys_obj->z_speed >= -obj->phys_obj->z_acc/MSEC_PER_FRAME
+		 && obj->phys_obj->z_speed < obj->phys_obj->z_acc/MSEC_PER_FRAME)
+		|| (obj->phys_obj->z_acc < 0
+		 && obj->phys_obj->z_speed >= obj->phys_obj->z_acc/MSEC_PER_FRAME
+		 && obj->phys_obj->z_speed < -obj->phys_obj->z_acc/MSEC_PER_FRAME) ) {
+			Widget_Update( widget );
+			GameObject_CallFunc( widget, AT_ZSPEED_TO_ZERO );
 		}
 		/**
 		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
@@ -1143,6 +1161,66 @@ LCUI_API void GameObject_ClearAttack( LCUI_Widget *widget )
 	while( Queue_Delete( &obj->victim, 0 ) );
 }
 
+/** 获取指定范围内的游戏对象 */
+LCUI_API LCUI_Widget* GameObject_GetObjectInRange(
+					LCUI_Widget *widget,
+					RangeBox range,
+					LCUI_BOOL specific_action,
+					int action_id )
+{
+	int i, n;
+	LCUI_Widget *tmp_widget;
+	GameObject *obj1, *obj2;
+	RangeBox hit_range;
+
+	obj1 = (GameObject*)Widget_GetPrivData( widget );
+	
+	if( range.x_width <= 0
+	 || range.y_width <= 0
+	 || range.z_width <= 0) {
+		 return NULL;
+	}
+	/* 若需要水平翻转，则翻转攻击框 */
+	if( obj1->horiz_flip ) {
+		range.x = (int)obj1->phys_obj->x - range.x;
+		range.x -= range.x_width;
+	} else {
+		range.x = (int)obj1->phys_obj->x + range.x;
+	}
+	range.x_width = range.x_width;
+	range.y = (int)obj1->phys_obj->y + range.y;
+	range.y_width = range.y_width;
+	range.z = (int)obj1->phys_obj->z + range.z;
+	range.z_width = range.z_width;
+	
+	n = Queue_GetTotal( &gameobject_stream );
+	/* 遍历其它游戏对象 */
+	for(i=0; i<n; ++i) {
+		tmp_widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		obj2 = (GameObject*)Widget_GetPrivData( tmp_widget );
+		/* 忽略其它无效对象和当前对象 */
+		if( obj2 == NULL || tmp_widget == widget ) {
+			continue;
+		}
+		/* 判断游戏对象目前的动作是否符合要求 */
+		if( specific_action ) {
+			if( obj2->current == NULL
+			 || obj2->current->id != action_id ) {
+				 continue;
+			}
+		}
+		/* 获取该游戏对象的受攻击范围 */
+		if( 0 > GameObject_GetHitRange( obj2, &hit_range ) ) {
+			continue;
+		}
+		/* 若指定的范围与受攻击范围相交，则返回该游戏对象 */
+		if( RangeBox_IsIntersect( &range, &hit_range ) ) {
+			return tmp_widget;
+		}
+	}
+	return NULL;
+}
+
 /** 获取攻击范围内的游戏对象 */
 LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(
 					LCUI_Widget *widget,
@@ -1153,26 +1231,25 @@ LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(
 	int i, n;
 	ActionRec *p_rec;
 	ActionFrameData *frame;
-	LCUI_Widget *tmp_widget;
-	GameObject *attack_obj, *hit_obj;
-	RangeBox tmp_range, attack_range, hit_range;
+	GameObject *obj;
+	RangeBox range;
 
-	attack_obj = (GameObject*)Widget_GetPrivData( widget );
-	if( attack_obj->current == NULL ) {
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	if( obj->current == NULL ) {
 		return NULL;
 	}
 
-	tmp_range.x = 0;
-	tmp_range.x_width = 0;
-	tmp_range.y = 0;
-	tmp_range.y_width = 0;
-	tmp_range.z = 0;
-	tmp_range.z_width = 0;
+	range.x = 0;
+	range.x_width = 0;
+	range.y = 0;
+	range.y_width = 0;
+	range.z = 0;
+	range.z_width = 0;
 
-	n = Queue_GetTotal( &attack_obj->action_list );
+	n = Queue_GetTotal( &obj->action_list );
 	/* 在动作列表中查找 */
 	for(i=0; i<n; ++i) {
-		p_rec = (ActionRec*)Queue_Get( &attack_obj->action_list, i );
+		p_rec = (ActionRec*)Queue_Get( &obj->action_list, i );
 		/* 若该动作是指定的攻击动作 */
 		if( p_rec && p_rec->id == attack_action_id ) {
 			break;
@@ -1189,84 +1266,40 @@ LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(
 		if( frame == NULL ) {
 			continue;
 		}
-		if( frame->atkbox.x < tmp_range.x ) {
-			tmp_range.x_width += (tmp_range.x-frame->atkbox.x);
-			tmp_range.x = frame->atkbox.x;
+		if( frame->atkbox.x < range.x ) {
+			range.x_width += (range.x-frame->atkbox.x);
+			range.x = frame->atkbox.x;
 		}
 		if( frame->atkbox.x + frame->atkbox.x_width
-		 > tmp_range.x + tmp_range.x_width ) {
-			 tmp_range.x_width = frame->atkbox.x;
-			 tmp_range.x_width += frame->atkbox.x_width;
-			 tmp_range.x_width -= tmp_range.x;
+		 > range.x + range.x_width ) {
+			 range.x_width = frame->atkbox.x;
+			 range.x_width += frame->atkbox.x_width;
+			 range.x_width -= range.x;
 		}
 
-		if( frame->atkbox.y < tmp_range.y ) {
-			tmp_range.y_width += (tmp_range.y-frame->atkbox.y);
-			tmp_range.y = frame->atkbox.y;
+		if( frame->atkbox.y < range.y ) {
+			range.y_width += (range.y-frame->atkbox.y);
+			range.y = frame->atkbox.y;
 		}
 		if( frame->atkbox.y + frame->atkbox.y_width
-		 > tmp_range.y + tmp_range.y_width ) {
-			 tmp_range.y_width = frame->atkbox.y;
-			 tmp_range.y_width += frame->atkbox.y_width;
-			 tmp_range.y_width -= tmp_range.y;
+		 > range.y + range.y_width ) {
+			 range.y_width = frame->atkbox.y;
+			 range.y_width += frame->atkbox.y_width;
+			 range.y_width -= range.y;
 		}
 
-		if( frame->atkbox.z < tmp_range.z ) {
-			tmp_range.z_width += (tmp_range.z-frame->atkbox.z);
-			tmp_range.z = frame->atkbox.z;
+		if( frame->atkbox.z < range.z ) {
+			range.z_width += (range.z-frame->atkbox.z);
+			range.z = frame->atkbox.z;
 		}
 		if( frame->atkbox.z + frame->atkbox.z_width
-		 > tmp_range.z + tmp_range.z_width ) {
-			 tmp_range.z_width = frame->atkbox.z;
-			 tmp_range.z_width += frame->atkbox.z_width;
-			 tmp_range.z_width -= tmp_range.z;
+		 > range.z + range.z_width ) {
+			 range.z_width = frame->atkbox.z;
+			 range.z_width += frame->atkbox.z_width;
+			 range.z_width -= range.z;
 		}
 	}
-
-	if( tmp_range.x_width <= 0
-	 || tmp_range.y_width <= 0
-	 || tmp_range.z_width <= 0) {
-		 return NULL;
-	}
-	/* 若需要水平翻转，则翻转攻击框 */
-	if( attack_obj->horiz_flip ) {
-		attack_range.x = (int)attack_obj->phys_obj->x - tmp_range.x;
-		attack_range.x -= tmp_range.x_width;
-	} else {
-		attack_range.x = (int)attack_obj->phys_obj->x + tmp_range.x;
-	}
-	attack_range.x_width = tmp_range.x_width;
-	attack_range.y = (int)attack_obj->phys_obj->y + tmp_range.y;
-	attack_range.y_width = tmp_range.y_width;
-	attack_range.z = (int)attack_obj->phys_obj->z + tmp_range.z;
-	attack_range.z_width = tmp_range.z_width;
-	
-	n = Queue_GetTotal( &gameobject_stream );
-	/* 遍历其它游戏对象 */
-	for(i=0; i<n; ++i) {
-		tmp_widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
-		hit_obj = (GameObject*)Widget_GetPrivData( tmp_widget );
-		/* 忽略其它无效对象和当前对象 */
-		if( hit_obj == NULL || tmp_widget == widget ) {
-			continue;
-		}
-		/* 判断游戏对象目前的动作是否符合要求 */
-		if( specific_action ) {
-			if( hit_obj->current == NULL
-			 || hit_obj->current->id != action_id ) {
-				 continue;
-			}
-		}
-		/* 获取该游戏对象的受攻击范围 */
-		if( 0 > GameObject_GetHitRange( hit_obj, &hit_range ) ) {
-			continue;
-		}
-		/* 若攻击范围与受攻击范围相交，则返回该游戏对象 */
-		if( RangeBox_IsIntersect( &attack_range, &hit_range ) ) {
-			return tmp_widget;
-		}
-	}
-	return NULL;
+	return GameObject_GetObjectInRange( widget, range, specific_action, action_id );
 }
 
 LCUI_API LCUI_Widget* GameObject_New(void)
