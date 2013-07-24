@@ -34,7 +34,10 @@ enum GamePlayerState {
 	STATE_TUMMY_HIT,
 	STATE_REST,		/**< 歇息 */
 	STATE_F_ROLL,		/**< 向前翻滚 */
-	STATE_B_ROLL		/**< 向后翻滚 */
+	STATE_B_ROLL,		/**< 向后翻滚 */
+	STATE_ELBOW,
+	STATE_JUMP_ELBOW,
+	STATE_JUMP_TREAD
 };
 
 enum ActionType {
@@ -63,7 +66,10 @@ enum ActionType {
 	ACTION_SQUAT,
 	ACTION_JUMP,
 	ACTION_F_ROLL,
-	ACTION_B_ROLL
+	ACTION_B_ROLL,
+	ACTION_ELBOW,
+	ACTION_JUMP_ELBOW,
+	ACTION_JUMP_TREAD
 };
 
 typedef struct GamePlayerProperty_ {

@@ -33,7 +33,10 @@ static int global_action_list[]={
 	ACTION_SQUAT,
 	ACTION_JUMP,
 	ACTION_F_ROLL,
-	ACTION_B_ROLL
+	ACTION_B_ROLL,
+	ACTION_ELBOW,
+	ACTION_JUMP_ELBOW,
+	ACTION_JUMP_TREAD
 };
 
 #define XSPEED_RUN	60
@@ -226,6 +229,15 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		break;
 	case STATE_B_ROLL:
 		action_type = ACTION_B_ROLL;
+		break;
+	case STATE_ELBOW:
+		action_type = ACTION_ELBOW;
+		break;
+	case STATE_JUMP_ELBOW:
+		action_type = ACTION_JUMP_ELBOW;
+		break;
+	case STATE_JUMP_TREAD:
+		action_type = ACTION_JUMP_TREAD;
 		break;
 	default:return;
 	}
@@ -895,10 +907,92 @@ void GamePlayer_StartJump( GamePlayer *player )
 	}
 }
 
+static void GamePlayer_JumpElbowStep2( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
+	GamePlayer_LockAction( player );
+	GameObject_AtZeroZSpeed( widget, NULL );
+	GameObject_ClearAttack( player->object );
+}
+
+static void GamePlayer_JumpElbowStep1( LCUI_Widget *widget )
+{
+	double z_speed, z_acc;
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	z_acc = -ZACC_JUMP;
+	z_speed = ZSPEED_JUMP;
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_JUMP );
+	GamePlayer_LockAction( player );
+	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtLandingDone );
+	GameObject_AtZeroZSpeed( widget, GamePlayer_JumpElbowStep2 );
+}
+
+/** 进行跳跃+肘击 */
+void GamePlayer_SetJumpElbow( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GameObject_SetXAcc( player->object, 0 );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_SetZSpeed( player->object, 0 );
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_JumpElbowStep1 );
+}
+
+static void GamePlayer_JumpTreadStep2( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_JUMP_TREAD );
+	GamePlayer_LockAction( player );
+	GameObject_AtZeroZSpeed( widget, NULL );
+	GameObject_ClearAttack( player->object );
+}
+static void GamePlayer_JumpTreadStep1( LCUI_Widget *widget )
+{
+	double z_speed, z_acc;
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	z_acc = -ZACC_JUMP;
+	z_speed = ZSPEED_JUMP;
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_JUMP );
+	GamePlayer_LockAction( player );
+	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtLandingDone );
+	GameObject_AtZeroZSpeed( widget, GamePlayer_JumpTreadStep2 );
+}
+
+/** 进行跳跃+踩 */
+void GamePlayer_SetJumpTread( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GameObject_SetXAcc( player->object, 0 );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_SetZSpeed( player->object, 0 );
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_JumpTreadStep1 );
+}
+
 /** 进行A攻击 */
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
 	double acc;
+	RangeBox range;
 	LCUI_Widget *widget;
 
 	if( player->lock_action ) {
@@ -920,42 +1014,91 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtAttackDone );
-		break;
+		/* 清除攻击记录 */
+		GameObject_ClearAttack( player->object );
+		return;
 	case STATE_JUMP:
 		GamePlayer_ChangeState( player, STATE_AJ_ATTACK );
 		GamePlayer_LockAction( player );
-		break;
+		GameObject_ClearAttack( player->object );
+		return;
 	case STATE_SJUMP:
 		GamePlayer_ChangeState( player, STATE_ASJ_ATTACK );
 		GamePlayer_LockAction( player );
-		break;
+		GameObject_ClearAttack( player->object );
+		return;
 	default: 
-		widget = GameObject_GetObjectInAttackRange( 
-					player->object,
-					ACTION_FINAL_BLOW,
-					TRUE, ACTION_REST 
-		);
-		if( widget ) {
-			GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
-			GameObject_AtActionDone( player->object, ACTION_FINAL_BLOW, GamePlayer_AtAttackDone );
-		} else {
-			GamePlayer_ChangeState( player, STATE_A_ATTACK );
-			GameObject_AtActionDone( player->object, ACTION_A_ATTACK, GamePlayer_AtAttackDone );
-		}
-		GamePlayer_StopXWalk( player );
-		GamePlayer_StopYMotion( player );
-		GamePlayer_LockMotion( player );
-		GamePlayer_LockAction( player );
 		break;
 	}
-	/* 清除攻击记录 */
+
+	range.x = -10;
+	range.x_width = 20;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 20;;
+	/* 检测当前角色是否站在躺地角色的中间部分的位置上 */
+	// ....
+
+	/* 检测当前角色是否站在躺地角色的头和脚的位置上 */
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_LYING );
+	if( widget ) {
+		GamePlayer_SetJumpElbow( player );
+		return;
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_TUMMY );
+	if( widget ) {
+		GamePlayer_SetJumpElbow( player );
+		return;
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_LYING_HIT );
+	if( widget ) {
+		GamePlayer_SetJumpElbow( player );
+		return;
+	}
+	widget = GameObject_GetObjectInRange(
+				player->object, range,
+				TRUE, ACTION_TUMMY_HIT
+	);
+	if( widget ) {
+		GamePlayer_SetJumpElbow( player );
+		return;
+	}
+
+	widget = GameObject_GetObjectInAttackRange( 
+				player->object,
+				ACTION_FINAL_BLOW,
+				TRUE, ACTION_REST 
+	);
+	if( widget ) {
+		GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
+		GameObject_AtActionDone(
+			player->object,
+			ACTION_FINAL_BLOW,
+			GamePlayer_AtAttackDone );
+	} else {
+		GamePlayer_ChangeState( player, STATE_A_ATTACK );
+		GameObject_AtActionDone(
+			player->object,
+			ACTION_A_ATTACK,
+			GamePlayer_AtAttackDone );
+	}
 	GameObject_ClearAttack( player->object );
+	GamePlayer_StopXWalk( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player );
+
 }
 
 /** 进行B攻击 */
 void GamePlayer_StartBAttack( GamePlayer *player )
 {
 	double acc;
+	RangeBox range;
 	LCUI_Widget *widget;
 
 	if( player->lock_action ) {
@@ -977,36 +1120,77 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtAttackDone );
-		break;
+		GameObject_ClearAttack( player->object );
+		return;
 	case STATE_JUMP:
 		GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
 		GamePlayer_LockAction( player );
-		break;
+		GameObject_ClearAttack( player->object );
+		return;
 	case STATE_SJUMP:
 		GamePlayer_ChangeState( player, STATE_BSJ_ATTACK );
 		GamePlayer_LockAction( player );
-		break;
+		GameObject_ClearAttack( player->object );
+		return;
 	default:
-		widget = GameObject_GetObjectInAttackRange( 
-					player->object,
-					ACTION_FINAL_BLOW,
-					TRUE, ACTION_REST 
-		);
-		if( widget ) {
-			GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
-			GameObject_AtActionDone( player->object,ACTION_FINAL_BLOW, GamePlayer_AtAttackDone );
-		} else {
-			GamePlayer_ChangeState( player, STATE_B_ATTACK );
-			GameObject_AtActionDone( player->object,ACTION_B_ATTACK, GamePlayer_AtAttackDone );
-		}
-		GamePlayer_StopXWalk( player );
-		GamePlayer_StopYMotion( player );
-		GamePlayer_LockMotion( player );
-		GamePlayer_LockAction( player );
 		break;
 	}
+
+	range.x = -10;
+	range.x_width = 20;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 20;;
+	/* 检测当前角色是否站在躺地角色的中间部分的位置上 */
+	// ....
+
+	/* 检测当前角色是否站在躺地角色的头和脚的位置上 */
+	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_LYING );
+	if( widget ) {
+		GamePlayer_SetJumpTread( player );
+		return;
+	}
+	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_TUMMY );
+	if( widget ) {
+		GamePlayer_SetJumpTread( player );
+		return;
+	}
+	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_LYING_HIT );
+	if( widget ) {
+		GamePlayer_SetJumpTread( player );
+		return;
+	}
+	widget = GameObject_GetObjectInRange( player->object, range, TRUE, ACTION_TUMMY_HIT );
+	if( widget ) {
+		GamePlayer_SetJumpTread( player );
+		return;
+	}
+
 	/* 清除攻击记录 */
 	GameObject_ClearAttack( player->object );
+	widget = GameObject_GetObjectInAttackRange( 
+				player->object,
+				ACTION_FINAL_BLOW,
+				TRUE, ACTION_REST 
+	);
+	if( widget ) {
+		GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
+		GameObject_AtActionDone(
+			player->object,
+			ACTION_FINAL_BLOW,
+			GamePlayer_AtAttackDone );
+	} else {
+		GamePlayer_ChangeState( player, STATE_B_ATTACK );
+		GameObject_AtActionDone(
+			player->object,
+			ACTION_B_ATTACK,
+			GamePlayer_AtAttackDone );
+	}
+	GamePlayer_StopXWalk( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player );
 }
 
 void GamePlayer_SetUpMotion( GamePlayer *player )
@@ -1188,18 +1372,6 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				}
 				break;
 			}
-		case ACTION_A_ATTACK:
-		case ACTION_B_ATTACK:
-			/* 累计该角色受到的攻击的次数 */
-			if( player->state == STATE_HIT_FLY
-			 || player->state == STATE_B_ROLL
-			 || player->state == STATE_F_ROLL ) {
-				player->n_attack = 0;
-			} else {
-				++player->n_attack;
-				GamePlayer_SetHit( player );
-			}
-			break;
 		case ACTION_AS_ATTACK:
 		case ACTION_BS_ATTACK:
 			player->n_attack = 0;
@@ -1233,7 +1405,18 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				GamePlayer_SetRightHitFly( player );
 			}
 			break;
+		case ACTION_A_ATTACK:
+		case ACTION_B_ATTACK:
 		default:
+			/* 累计该角色受到的攻击的次数 */
+			if( player->state == STATE_HIT_FLY
+			 || player->state == STATE_B_ROLL
+			 || player->state == STATE_F_ROLL ) {
+				player->n_attack = 0;
+			} else {
+				++player->n_attack;
+				GamePlayer_SetHit( player );
+			}
 			break;
 		}
 		_DEBUG_MSG("attacker: %p, action id: %d\n", p_info->attacker, p_info->attacker_action );
