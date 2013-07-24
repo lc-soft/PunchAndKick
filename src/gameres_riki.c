@@ -4,8 +4,6 @@
 
 #include "game.h"
 
-#define GLOBAL_Y_WIDTH	12
-
 /** 载入角色的移动动作动画资源 */
 static ActionData* ActionRes_LoadWalk(void)
 {
@@ -452,7 +450,7 @@ static ActionData* ActionRes_LoadSquat(void)
 	action = Action_Create();
 	Graph_Init( &img_squat );
 	Graph_LoadImage( "drawable/squat.png", &img_squat );
-	Action_AddFrame( action, 0,0, &img_squat, 5 );
+	Action_AddFrame( action, 0,0, &img_squat, 7 );
 	
 	return action;
 }
@@ -549,7 +547,7 @@ static ActionData *ActionRes_LoadLying(void)
 	
 	action = Action_Create();
 
-	hit_range.x = -44;
+	hit_range.x = -32;
 	hit_range.x_width = 64;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
@@ -558,7 +556,7 @@ static ActionData *ActionRes_LoadLying(void)
 
 	Graph_Init( &img_lying );
 	Graph_LoadImage( "drawable/lying.png", &img_lying );
-	Action_AddFrame( action, 12, 0, &img_lying, 50 );
+	Action_AddFrame( action, 0, 0, &img_lying, 50 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
@@ -573,7 +571,7 @@ static ActionData *ActionRes_LoadLyingHit(void)
 	
 	action = Action_Create();
 
-	hit_range.x = -44;
+	hit_range.x = -32;
 	hit_range.x_width = 64;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
@@ -582,7 +580,7 @@ static ActionData *ActionRes_LoadLyingHit(void)
 
 	Graph_Init( &img_lying );
 	Graph_LoadImage( "drawable/lying-hit.png", &img_lying );
-	Action_AddFrame( action, 12, 0, &img_lying, 10 );
+	Action_AddFrame( action, 0, 0, &img_lying, 10 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
@@ -597,7 +595,7 @@ static ActionData *ActionRes_LoadTummy(void)
 	
 	action = Action_Create();
 
-	hit_range.x = -20;
+	hit_range.x = -32;
 	hit_range.x_width = 64;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
@@ -606,7 +604,7 @@ static ActionData *ActionRes_LoadTummy(void)
 
 	Graph_Init( &img_tummy );
 	Graph_LoadImage( "drawable/tummy.png", &img_tummy );
-	Action_AddFrame( action, -12, 0, &img_tummy, 10 );
+	Action_AddFrame( action, 0, 0, &img_tummy, 10 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
@@ -621,7 +619,7 @@ static ActionData *ActionRes_LoadTummyHit(void)
 	
 	action = Action_Create();
 
-	hit_range.x = -20;
+	hit_range.x = -32;
 	hit_range.x_width = 64;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
@@ -630,7 +628,7 @@ static ActionData *ActionRes_LoadTummyHit(void)
 
 	Graph_Init( &img_tummy );
 	Graph_LoadImage( "drawable/tummy-hit.png", &img_tummy );
-	Action_AddFrame( action, -12, 0, &img_tummy, 5 );
+	Action_AddFrame( action, 0, 0, &img_tummy, 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
@@ -785,6 +783,138 @@ static ActionData *ActionRes_LoadBackwardRoll(void)
 	return action;
 }
 
+/** 跳跃踩 */
+static ActionData *ActionRes_LoadJumpTread(void)
+{
+	ActionData *action;
+	LCUI_Graph img;
+	RangeBox attack_range, hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -16;
+	hit_range.x_width = 32;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+
+	attack_range.x = -16;
+	attack_range.x_width = 32;
+	attack_range.y = -GLOBAL_Y_WIDTH/2;
+	attack_range.y_width = GLOBAL_Y_WIDTH;
+	attack_range.z = 0;
+	attack_range.z_width = 16;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/jump-tread.png", &img );
+	Action_AddFrame( action, 0, 0, &img, 1000 );
+	Action_SetHitRange( action, 0, hit_range );
+	Action_SetAttackRange( action, 0, attack_range );
+
+	return action;
+}
+
+/** 跳跃肘击 */
+static ActionData *ActionRes_LoadJumpElbow(void)
+{
+	ActionData *action;
+	LCUI_Graph img;
+	RangeBox attack_range, hit_range;
+	
+	action = Action_Create();
+
+	hit_range.x = -31;
+	hit_range.x_width = 62;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 48;
+
+	attack_range.x = -11;
+	attack_range.x_width = 42;
+	attack_range.y = -GLOBAL_Y_WIDTH/2;
+	attack_range.y_width = GLOBAL_Y_WIDTH;
+	attack_range.z = -2;
+	attack_range.z_width = 20;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/jump-elbow.png", &img );
+	Action_AddFrame( action, 0, 0, &img, 1000 );
+	Action_SetHitRange( action, 0, hit_range );
+	Action_SetAttackRange( action, 0, attack_range );
+
+	return action;
+}
+
+/** 肘击压倒 */
+static ActionData *ActionRes_LoadElbow(void)
+{
+	ActionData *action;
+	LCUI_Graph img[5];
+	RangeBox hit_range;
+	
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	Graph_Init( &img[3] );
+	Graph_Init( &img[4] );
+	
+	action = Action_Create();
+
+	hit_range.x = -19;
+	hit_range.x_width = 38;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+	Graph_LoadImage( "drawable/elbow-01.png", &img[0] );
+	Action_AddFrame( action, 0, 0, &img[0], 5 );
+	Action_SetHitRange( action, 0, hit_range );
+	
+	hit_range.x = -17;
+	hit_range.x_width = 50;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+	Graph_LoadImage( "drawable/elbow-02.png", &img[1] );
+	Action_AddFrame( action, 0, 0, &img[1], 5 );
+	Action_SetHitRange( action, 1, hit_range );
+	
+	hit_range.x = -17;
+	hit_range.x_width = 54;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+	Graph_LoadImage( "drawable/elbow-03.png", &img[2] );
+	Action_AddFrame( action, 0, 0, &img[2], 5 );
+	Action_SetHitRange( action, 2, hit_range );
+	
+	hit_range.x = -15;
+	hit_range.x_width = 64;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 8;
+	hit_range.z_width = 50;
+	Graph_LoadImage( "drawable/elbow-04.png", &img[3] );
+	Action_AddFrame( action, 0, 0, &img[3], 5 );
+	Action_SetHitRange( action, 3, hit_range );
+
+	hit_range.x = -30;
+	hit_range.x_width = 64;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 50;
+	Graph_LoadImage( "drawable/elbow-05.png", &img[4] );
+	Action_AddFrame( action, 0, 0, &img[4], 5 );
+	Action_SetHitRange( action, 4, hit_range );
+
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -815,6 +945,9 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_TUMMY_HIT: return ActionRes_LoadTummyHit();
 	case ACTION_F_ROLL: return ActionRes_LoadForwardRoll();
 	case ACTION_B_ROLL: return ActionRes_LoadBackwardRoll();
+	case ACTION_ELBOW: return ActionRes_LoadElbow();
+	case ACTION_JUMP_ELBOW: return ActionRes_LoadJumpElbow();
+	case ACTION_JUMP_TREAD: return ActionRes_LoadJumpTread();
 	default:break;
 	}
 	return NULL;
