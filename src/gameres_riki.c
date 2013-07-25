@@ -915,6 +915,98 @@ static ActionData *ActionRes_LoadElbow(void)
 	return action;
 }
 
+static ActionData* ActionRes_LoadKick(void)
+{
+	ActionData *action;
+	RangeBox hit_range, attack_range;
+	LCUI_Graph img;
+	
+	action = Action_Create();
+	
+	attack_range.x = 10;
+	attack_range.x_width = 25;
+	attack_range.y = -GLOBAL_Y_WIDTH/2;
+	attack_range.y_width = GLOBAL_Y_WIDTH;
+	attack_range.z = 0;
+	attack_range.z_width = 44;
+
+	hit_range.x = -13;
+	hit_range.x_width = 34;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/B-attack-02.png", &img );
+	Action_AddFrame( action, -11,0, &img, 5 );
+	Action_SetAttackRange( action, 0, attack_range );
+	Action_SetHitRange( action, 0, hit_range );
+	return action;
+}
+
+/** 翻滚击 */
+static ActionData *ActionRes_LoadSpinHit(void)
+{
+	int i;
+	char path[256];
+	ActionData *action;
+	LCUI_Graph img[8];
+	RangeBox hit_range;
+	
+	action = Action_Create();
+	
+	hit_range.x = -22;
+	hit_range.x_width = 44;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 44;
+	
+	for( i=0; i<8; ++i ) {
+		Graph_Init( &img[i] );
+		sprintf( path, "drawable/roll-%02d.png", i+1 );
+		Graph_LoadImage( path, &img[i] );
+		Action_AddFrame( action, 0, 0, &img[i], 2 );
+		Action_SetHitRange( action, i, hit_range );
+		/* 攻击范围和受攻击范围是一样的 */
+		Action_SetAttackRange( action, i, hit_range );
+	}
+
+	return action;
+}
+
+/** 爆裂腿 */
+static ActionData* ActionRes_LoadBombKick(void)
+{
+	ActionData *action;
+	RangeBox hit_range, attack_range;
+	LCUI_Graph img;
+	
+	action = Action_Create();
+	
+	attack_range.x = -21;
+	attack_range.x_width = 42;
+	attack_range.y = -GLOBAL_Y_WIDTH/2;
+	attack_range.y_width = GLOBAL_Y_WIDTH;
+	attack_range.z = 0;
+	attack_range.z_width = 60;
+
+	hit_range.x = 0;
+	hit_range.x_width = 24;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/run-04.png", &img );
+	Action_AddFrame( action, 0,0, &img, 1000 );
+	Action_SetAttackRange( action, 0, attack_range );
+	Action_SetHitRange( action, 0, hit_range );
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -948,6 +1040,9 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_ELBOW: return ActionRes_LoadElbow();
 	case ACTION_JUMP_ELBOW: return ActionRes_LoadJumpElbow();
 	case ACTION_JUMP_TREAD: return ActionRes_LoadJumpTread();
+	case ACTION_KICK: return ActionRes_LoadKick();
+	case ACTION_SPINHIT: return ActionRes_LoadSpinHit();
+	case ACTION_BOMBKICK: return ActionRes_LoadBombKick();
 	default:break;
 	}
 	return NULL;
