@@ -37,7 +37,10 @@ enum GamePlayerState {
 	STATE_B_ROLL,		/**< 向后翻滚 */
 	STATE_ELBOW,
 	STATE_JUMP_ELBOW,
-	STATE_JUMP_TREAD
+	STATE_JUMP_TREAD,
+	STATE_KICK,
+	STATE_SPINHIT,
+	STATE_BOMBKICK
 };
 
 enum ActionType {
@@ -69,19 +72,55 @@ enum ActionType {
 	ACTION_B_ROLL,
 	ACTION_ELBOW,
 	ACTION_JUMP_ELBOW,
-	ACTION_JUMP_TREAD
+	ACTION_JUMP_TREAD,
+	ACTION_KICK,
+	ACTION_SPINHIT,
+	ACTION_BOMBKICK
+};
+
+/** 攻击类型 */
+enum AttackType {
+	ATTACK_TYPE_NONE,
+	ATTACK_TYPE_PUNCH,
+	ATTACK_TYPE_KICK,
+	ATTACK_TYPE_JUMP_ELBOW,
+	ATTACK_TYPE_JUMP_TREAD,
+	ATTACK_TYPE_JUMP_KICK,
+	ATTACK_TYPE_JUMP_PUNCH,
+	ATTACK_TYPE_S_PUNCH,
+	ATTACK_TYPE_S_KICK,
+	ATTACK_TYPE_SJUMP_KICK,
+	ATTACK_TYPE_SJUMP_PUNCH,
+	ATTACK_TYPE_TORNADO_ATTACK,
+	ATTACK_TYPE_BIG_ELBOW,
+	ATTACK_TYPE_GUILLOTINE,
+	ATTACK_TYPE_SPIN_HIT,
+	ATTACK_TYPE_BOMB_KICK,
+	ATTACK_TYPE_JUMP_SPIN_KICK,
+	ATTACK_TYPE_FINAL_BLOW
 };
 
 typedef struct GamePlayerProperty_ {
-	int hp;
-	int fist;
-	int leg;
-	int speed;
-	int punch;
-	int throw;
-	int defense;
-	int kick;
+	int hp;		/**< 生命值 */
+	int punch;	/**< 拳击的伤害 */
+	int kick;	/**< 踢的伤害 */
+	int speed;	/**< 移动速度 */
+	int throw;	/**< 投掷伤害 */
+	int defense;	/**< 防御力 */
 } GamePlayerProperty;
+
+typedef struct SpecialSkill_ {
+	LCUI_BOOL rock_defense;		/**< 磐石防御 */
+	LCUI_BOOL mach_punch;		/**< 高速拳 */
+	LCUI_BOOL mach_kick;		/**< 高速踢 */
+	LCUI_BOOL mach_stomp;		/**< 高速跺脚 */
+	LCUI_BOOL tornado_attack;	/**< 龙卷攻击 */
+	LCUI_BOOL big_elbow;		/**< 跳跃肘压 */
+	LCUI_BOOL guillotine;		/**< 断头台 */
+	LCUI_BOOL spin_hit;		/**< 翻滚击 */
+	LCUI_BOOL bomb_kick;		/**< 爆裂踢 */
+	LCUI_BOOL jump_spin_kick;	/**< 高跳旋转落踢 */
+} SpecialSkill;
 
 typedef struct GamePlayer_ GamePlayer;
 struct GamePlayer_{
@@ -94,7 +133,10 @@ struct GamePlayer_{
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
 	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
+	
 	GamePlayerProperty property;	/**< 角色的各项属性 */
+	SpecialSkill skill;		/**< 角色拥有的特殊技能 */
+	int attack_type;		/**< 当前的攻击类型 */
 	int n_attack;			/**< 被攻击的次数 */
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
 	int t_action_timeout;		/**< 定时器，用于处理动作超时 */
