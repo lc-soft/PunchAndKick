@@ -784,7 +784,7 @@ static ActionData *ActionRes_LoadBackwardRoll(void)
 }
 
 /** 跳跃踩 */
-static ActionData *ActionRes_LoadJumpTread(void)
+static ActionData *ActionRes_LoadJumpStomp(void)
 {
 	ActionData *action;
 	LCUI_Graph img;
@@ -807,7 +807,7 @@ static ActionData *ActionRes_LoadJumpTread(void)
 	attack_range.z_width = 16;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/jump-tread.png", &img );
+	Graph_LoadImage( "drawable/jump-stomp.png", &img );
 	Action_AddFrame( action, 0, 0, &img, 1000 );
 	Action_SetHitRange( action, 0, hit_range );
 	Action_SetAttackRange( action, 0, attack_range );
@@ -972,7 +972,9 @@ static ActionData *ActionRes_LoadSpinHit(void)
 		/* 攻击范围和受攻击范围是一样的 */
 		Action_SetAttackRange( action, i, hit_range );
 	}
-
+	
+	Action_SetNewAttack( action, 3, TRUE );
+	Action_SetNewAttack( action, 7, TRUE );
 	return action;
 }
 
@@ -1004,6 +1006,62 @@ static ActionData* ActionRes_LoadBombKick(void)
 	Action_AddFrame( action, 0,0, &img, 1000 );
 	Action_SetAttackRange( action, 0, attack_range );
 	Action_SetHitRange( action, 0, hit_range );
+	return action;
+}
+
+/** 高速踩踏 */
+static ActionData* ActionRes_LoadMachStomp(void)
+{
+	LCUI_Graph img[4];
+	ActionData *action;
+	RangeBox hit_range, attack_range;
+	
+	action = Action_Create();
+
+	attack_range.x = -22;
+	attack_range.x_width = 44;
+	attack_range.y = -GLOBAL_Y_WIDTH/2;
+	attack_range.y_width = GLOBAL_Y_WIDTH;
+	attack_range.z = 0;
+	attack_range.z_width = 51;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	Graph_Init( &img[3] );
+	Graph_LoadImage( "drawable/defense.png", &img[0] );
+	Graph_LoadImage( "drawable/jump-stomp.png", &img[1] );
+	Graph_LoadImage( "drawable/defense.png", &img[2] );
+	Graph_HorizFlip( &img[1], &img[3] );
+	Action_AddFrame( action, 0,0, &img[0], 3 );
+	Action_AddFrame( action, 0,0, &img[1], 3 );
+	Action_AddFrame( action, 0,0, &img[2], 3 );
+	Action_AddFrame( action, 0,0, &img[3], 3 );
+	
+	hit_range.x = -22;
+	hit_range.x_width = 44;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 51;
+
+	Action_SetHitRange( action, 0, hit_range );
+	Action_SetHitRange( action, 2, hit_range );
+	
+	hit_range.x = -16;
+	hit_range.x_width = 32;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+
+	Action_SetHitRange( action, 1, hit_range );
+	Action_SetHitRange( action, 3, hit_range );
+
+	Action_SetAttackRange( action, 1, attack_range );
+	Action_SetNewAttack( action, 1, TRUE );
+	Action_SetAttackRange( action, 3, attack_range );
+	Action_SetNewAttack( action, 3, TRUE );
 	return action;
 }
 
@@ -1039,10 +1097,11 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_B_ROLL: return ActionRes_LoadBackwardRoll();
 	case ACTION_ELBOW: return ActionRes_LoadElbow();
 	case ACTION_JUMP_ELBOW: return ActionRes_LoadJumpElbow();
-	case ACTION_JUMP_TREAD: return ActionRes_LoadJumpTread();
+	case ACTION_JUMP_STOMP: return ActionRes_LoadJumpStomp();
 	case ACTION_KICK: return ActionRes_LoadKick();
 	case ACTION_SPINHIT: return ActionRes_LoadSpinHit();
 	case ACTION_BOMBKICK: return ActionRes_LoadBombKick();
+	case ACTION_MACH_STOMP: return ActionRes_LoadMachStomp();
 	default:break;
 	}
 	return NULL;
