@@ -50,7 +50,7 @@ static int global_action_list[]={
 #define XSPEED_WALK	15
 #define YSPEED_WALK	8
 #define XACC_STOPRUN	20
-#define XACC_PUNCH	10
+#define XACC_DASH	10
 #define ZSPEED_JUMP	60
 #define ZACC_JUMP	22
 
@@ -393,6 +393,12 @@ void GamePlayer_SetReady( GamePlayer *player )
 	GamePlayer_SetActionTimeOut( player, 1000, GamePlayer_AtReadyTimeOut );
 }
 
+/** 爆裂腿 */
+static void GamePlayer_SetBombKick( GamePlayer *player );
+
+/** 自旋击（翻转击） */
+static void GamePlayer_SetSpinHit( GamePlayer *player );
+
 /** 在跳跃结束时 */
 static void GamePlayer_AtJumpDone( LCUI_Widget *widget )
 {
@@ -400,7 +406,15 @@ static void GamePlayer_AtJumpDone( LCUI_Widget *widget )
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
-	GamePlayer_SetReady( player );
+	if( LCUIKey_IsHit(player->ctrlkey.a_attack) ) {
+		GamePlayer_SetSpinHit( player );
+	}
+	else if( LCUIKey_IsHit(player->ctrlkey.b_attack) ) {
+		GamePlayer_SetBombKick( player );
+	}
+	else {
+		GamePlayer_SetReady( player );
+	}
 }
 
 /** 在着陆完成时 */
@@ -775,12 +789,12 @@ void GamePlayer_SetRightHitFly( GamePlayer *player )
 /** 停止奔跑 */
 void GamePlayer_StopRun( GamePlayer *player )
 {
-	double acc;
+	double speed, acc;
 	if( player->state == STATE_LEFTRUN ) {
-		acc = XACC_STOPRUN * player->property.speed / 100;
+		acc = XACC_STOPRUN;
 	}
 	else if( player->state == STATE_RIGHTRUN ) {
-		acc = -XACC_STOPRUN * player->property.speed / 100;
+		acc = -XACC_STOPRUN;
 	} else {
 		acc = 0.0;
 	}
@@ -788,6 +802,14 @@ void GamePlayer_StopRun( GamePlayer *player )
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtRunEnd );
+	speed = GameObject_GetYSpeed( player->object );
+	acc = YSPEED_WALK * XACC_STOPRUN / XSPEED_RUN;
+	if( speed < 0.0 ) {
+		GameObject_SetYAcc( player->object, acc );
+	}
+	else if( speed > 0.0 ) {
+		GameObject_SetYAcc( player->object, -acc );
+	}
 }
 
 static void GamePlayer_ProcLeftKey( GamePlayer *player )
@@ -1088,7 +1110,6 @@ static void GamePlayer_SetBombKick( GamePlayer *player )
 	GameObject_AtLanding( player->object, 20, -10, GamePlayer_AtLandingDone );
 }
 
-
 /** 自旋击（翻转击） */
 static void GamePlayer_SetSpinHit( GamePlayer *player )
 {
@@ -1111,34 +1132,44 @@ static void GamePlayer_SetSpinHit( GamePlayer *player )
 	} else {
 		GameObject_SetXSpeed( player->object, 100 );
 	}
-	GameObject_AtLanding( player->object, 20, -10, GamePlayer_AtLandingDone );
+	GameObject_AtLanding( player->object, 30, -10, GamePlayer_AtLandingDone );
 }
 
 /** 进行A攻击 */
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
-	double acc;
+	double acc, speed;
 	LCUI_Widget *widget;
 
 	if( player->lock_action ) {
 		return;
 	}
-	if( player->state == STATE_LEFTRUN ) {
-		acc = XACC_PUNCH * player->property.speed / 100;
-	}
-	else if( player->state == STATE_RIGHTRUN ) {
-		acc = -XACC_PUNCH * player->property.speed / 100;
-	} else {
-		acc = 0.0;
-	}
 
 	switch(player->state) {
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
+		if( player->state == STATE_RIGHTRUN ) {
+			GameObject_AtXSpeedToZero(
+				player->object, -XACC_DASH, 
+				GamePlayer_AtAttackDone 
+			);
+		} else {
+			GameObject_AtXSpeedToZero(
+				player->object, XACC_DASH, 
+				GamePlayer_AtAttackDone 
+			);
+		}
 		GamePlayer_ChangeState( player, STATE_AS_ATTACK );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
-		GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtAttackDone );
+		speed = GameObject_GetYSpeed( player->object );
+		acc = YSPEED_WALK * XACC_DASH / XSPEED_RUN;
+		if( speed < 0.0 ) {
+			GameObject_SetYAcc( player->object, acc );
+		}
+		else if( speed > 0.0 ) {
+			GameObject_SetYAcc( player->object, -acc );
+		}
 		player->attack_type = ATTACK_TYPE_S_PUNCH;
 		/* 清除攻击记录 */
 		GameObject_ClearAttack( player->object );
@@ -1195,28 +1226,37 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 /** 进行B攻击 */
 void GamePlayer_StartBAttack( GamePlayer *player )
 {
-	double acc;
+	double acc, speed;
 	LCUI_Widget *widget;
 
 	if( player->lock_action ) {
 		return;
 	}
-	if( player->state == STATE_LEFTRUN ) {
-		acc = XACC_PUNCH * player->property.speed / 100;
-	}
-	else if( player->state == STATE_RIGHTRUN ) {
-		acc = -XACC_PUNCH * player->property.speed / 100;
-	} else {
-		acc = 0.0;
-	}
-
 	switch(player->state) {
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
+		if( player->state == STATE_RIGHTRUN ) {
+			GameObject_AtXSpeedToZero(
+				player->object, -XACC_DASH, 
+				GamePlayer_AtAttackDone 
+			);
+		} else {
+			GameObject_AtXSpeedToZero(
+				player->object, XACC_DASH, 
+				GamePlayer_AtAttackDone 
+			);
+		}
 		GamePlayer_ChangeState( player, STATE_BS_ATTACK );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
-		GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtAttackDone );
+		speed = GameObject_GetYSpeed( player->object );
+		acc = YSPEED_WALK * XACC_DASH / XSPEED_RUN;
+		if( speed < 0.0 ) {
+			GameObject_SetYAcc( player->object, acc );
+		}
+		else if( speed > 0.0 ) {
+			GameObject_SetYAcc( player->object, -acc );
+		}
 		player->attack_type = ATTACK_TYPE_S_KICK;
 		GameObject_ClearAttack( player->object );
 		return;
@@ -1451,6 +1491,18 @@ int GamePlayer_ControlByHuman( int player_id, LCUI_BOOL flag )
 	return 0;
 }
 
+/** 按百分比减少移动速度，n 取值范围为 0 ~ 100 */
+static void GamePlayer_ReduceSpeed( GamePlayer *player, int n )
+{
+	double speed;
+	speed = GameObject_GetXSpeed( player->object );
+	speed = speed - (speed * n / 100.0);
+	GameObject_SetXSpeed( player->object, speed );
+	speed = GameObject_GetYSpeed( player->object );
+	speed = speed - (speed * n / 100.0);
+	GameObject_SetYSpeed( player->object, speed );
+}
+
 /** 响应游戏角色受到的攻击 */
 static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 {
@@ -1475,6 +1527,8 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 		case ATTACK_TYPE_S_PUNCH:
 		case ATTACK_TYPE_S_KICK:
 			player->n_attack = 0;
+			/* 减少攻击者百分之50的移动速度 */
+			GamePlayer_ReduceSpeed( atk_player, 50 );
 			if( GamePlayer_TryHit(player) == 0 ) {
 				break;
 			}
@@ -1505,12 +1559,14 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				GamePlayer_SetRightHitFly( player );
 			}
 			break;
+		case ATTACK_TYPE_BOMB_KICK:
+		case ATTACK_TYPE_SPIN_HIT:
+			/* 减少攻击者百分之50的移动速度 */
+			GamePlayer_ReduceSpeed( atk_player, 50 );
 		case ATTACK_TYPE_BIG_ELBOW:
 		case ATTACK_TYPE_GUILLOTINE:
-		case ATTACK_TYPE_SPIN_HIT:
-		case ATTACK_TYPE_BOMB_KICK:
-		case ATTACK_TYPE_JUMP_SPIN_KICK:
 		case ATTACK_TYPE_FINAL_BLOW:
+		case ATTACK_TYPE_JUMP_SPIN_KICK:
 			if( GamePlayer_TryHit(player) == 0 ) {
 				break;
 			}
