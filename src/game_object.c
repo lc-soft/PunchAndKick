@@ -267,6 +267,20 @@ static void GameObjectStream_TimeSub( int time )
 	Queue_Unlock( &gameobject_stream );
 }
 
+static LCUI_BOOL Action_IsNewAttack(	ActionData* action,
+					int n_frame )
+{
+	ActionFrameData* p_frame;
+	if( n_frame < 0 ) {
+		return FALSE;
+	}
+	p_frame = (ActionFrameData*)Queue_Get( &action->frame, n_frame );
+	if( !p_frame ) {
+		return FALSE;
+	}
+	return p_frame->new_attack;
+}
+
 static long int Action_GetFrameSleepTime( ActionData *action, int n_frame )
 {
 	ActionFrameData *frame;
@@ -312,6 +326,10 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 			}
 			/* 标记这个对象需要重绘 */
 			need_draw = TRUE;
+			if( Action_IsNewAttack( obj->current->action,
+						obj->n_frame ) ) {
+				GameObject_ClearAttack( widget );
+			}
 		}
 		n = Queue_GetTotal( &obj->current->action->frame );
 		/* 若当前帧号超出总帧数 */
@@ -702,8 +720,21 @@ LCUI_API int Action_AddFrame(	ActionData* action,
 	frame.atkbox.x_width = frame.hitbox.x_width = 0;
 	frame.atkbox.y_width = frame.hitbox.y_width = 0;
 	frame.atkbox.z_width = frame.hitbox.z_width = 0;
-
+	frame.new_attack = FALSE;
 	return Queue_Add( &action->frame, &frame );
+}
+
+LCUI_API int Action_SetNewAttack(	ActionData* action,
+					int n_frame,
+					LCUI_BOOL flag )
+{
+	ActionFrameData* p_frame;
+	if( n_frame < 0 ) {
+		return -1;
+	}
+	p_frame = (ActionFrameData*)Queue_Get( &action->frame, n_frame );
+	p_frame->new_attack = flag;
+	return 0;
 }
 
 LCUI_API int Action_SetAttackRange(	ActionData* action,

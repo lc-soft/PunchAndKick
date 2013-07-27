@@ -31,6 +31,7 @@ typedef struct ActionFrameData_ {
 	long int sleep_time;	/**< 该帧显示的时长（单位：毫秒） */
 	RangeBox hitbox;	/**< 受攻击框 */
 	RangeBox atkbox;	/**< 攻击框 */
+	LCUI_BOOL new_attack;	/**< 是否为新攻击 */
 } ActionFrameData;
 
 /** 动作集的信息 */
@@ -77,6 +78,10 @@ LCUI_API int Action_AddFrame(	ActionData* action,
 				int offset_y,
 				LCUI_Graph *graph,
 				int sleep_time );
+
+LCUI_API int Action_SetNewAttack( ActionData* action,
+					int n_frame,
+					LCUI_BOOL flag );
 
 LCUI_API int Action_SetAttackRange(	ActionData* action,
 					int n_frame,
