@@ -37,14 +37,15 @@ static int global_action_list[]={
 	ACTION_B_ROLL,
 	ACTION_ELBOW,
 	ACTION_JUMP_ELBOW,
-	ACTION_JUMP_TREAD,
+	ACTION_JUMP_STOMP,
 	ACTION_KICK,
 	ACTION_SPINHIT,
-	ACTION_BOMBKICK
+	ACTION_BOMBKICK,
+	ACTION_MACH_STOMP
 };
 
 #define SHORT_REST_TIMEOUT 1500
-#define LONG_REST_TIMEOUT 2500
+#define LONG_REST_TIMEOUT 2000
 
 #define XSPEED_RUN	60
 #define XSPEED_WALK	15
@@ -243,8 +244,8 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_JUMP_ELBOW:
 		action_type = ACTION_JUMP_ELBOW;
 		break;
-	case STATE_JUMP_TREAD:
-		action_type = ACTION_JUMP_TREAD;
+	case STATE_JUMP_STOMP:
+		action_type = ACTION_JUMP_STOMP;
 		break;
 	case STATE_KICK:
 		action_type = ACTION_KICK;
@@ -254,6 +255,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		break;
 	case STATE_BOMBKICK:
 		action_type = ACTION_BOMBKICK;
+		break;
+	case STATE_MACH_STOMP:
+		action_type = ACTION_MACH_STOMP;
 		break;
 	default:return;
 	}
@@ -524,6 +528,9 @@ int GamePlayer_TryHit( GamePlayer *player )
 		break;
 	case STATE_B_ROLL:
 	case STATE_F_ROLL:
+	case STATE_HIT_FLY:
+	case STATE_F_HIT_FLY:
+	case STATE_B_HIT_FLY:
 		player->n_attack = 0;
 		break;
 	default:
@@ -950,6 +957,18 @@ void GamePlayer_StartJump( GamePlayer *player )
 	}
 }
 
+static void GamePlayer_AtGroundAttackDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_LockAction( player );
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtAttackDone );
+}
+
 static void GamePlayer_JumpElbowStep2( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -974,7 +993,7 @@ static void GamePlayer_JumpElbowStep1( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP );
 	GamePlayer_LockAction( player );
-	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtLandingDone );
+	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtGroundAttackDone );
 	GameObject_AtZeroZSpeed( widget, GamePlayer_JumpElbowStep2 );
 }
 
@@ -989,6 +1008,7 @@ void GamePlayer_SetJumpElbow( GamePlayer *player )
 	GameObject_SetXSpeed( player->object, 0 );
 	GameObject_SetYSpeed( player->object, 0 );
 	GameObject_SetZSpeed( player->object, 0 );
+	GameObject_ClearAttack( player->object );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_JumpElbowStep1 );
 }
 
@@ -998,7 +1018,7 @@ static void GamePlayer_JumpTreadStep2( LCUI_Widget *widget )
 
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_JUMP_TREAD );
+	GamePlayer_ChangeState( player, STATE_JUMP_STOMP );
 	GamePlayer_LockAction( player );
 	player->attack_type = ATTACK_TYPE_JUMP_TREAD;
 	GameObject_AtZeroZSpeed( widget, NULL );
@@ -1015,7 +1035,7 @@ static void GamePlayer_JumpTreadStep1( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP );
 	GamePlayer_LockAction( player );
-	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtLandingDone );
+	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtGroundAttackDone );
 	GameObject_AtZeroZSpeed( widget, GamePlayer_JumpTreadStep2 );
 }
 
@@ -1110,6 +1130,26 @@ static void GamePlayer_SetBombKick( GamePlayer *player )
 	GameObject_AtLanding( player->object, 20, -10, GamePlayer_AtLandingDone );
 }
 
+/** 二段自旋击 */
+static void GamePlayer_SetSecondSpinHit( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SPINHIT );
+	player->attack_type = ATTACK_TYPE_SPIN_HIT;
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	player->attack_type = ATTACK_TYPE_SPIN_HIT2;
+	if( LCUIKey_IsHit(player->ctrlkey.left) ) {
+		GameObject_SetXSpeed( player->object, -40 );
+	} 
+	else if( LCUIKey_IsHit(player->ctrlkey.right) ) {
+		GameObject_SetXSpeed( player->object, 40 );
+	} else {
+		GameObject_SetXSpeed( player->object, 0 );
+	}
+	GameObject_AtLanding( player->object, 80, -20, GamePlayer_AtLandingDone );
+}
+
 /** 自旋击（翻转击） */
 static void GamePlayer_SetSpinHit( GamePlayer *player )
 {
@@ -1133,6 +1173,57 @@ static void GamePlayer_SetSpinHit( GamePlayer *player )
 		GameObject_SetXSpeed( player->object, 100 );
 	}
 	GameObject_AtLanding( player->object, 30, -10, GamePlayer_AtLandingDone );
+}
+
+static void GamePlayer_AtBigElbowStep2( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GameObject_AtZeroZSpeed( widget, NULL );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	/* 撤销再 下蹲 动作结束时的响应 */
+	GameObject_AtActionDone( widget, ACTION_SQUAT, NULL );
+	GamePlayer_LockAction( player );
+}
+
+static void GamePlayer_AtBigElbowStep1( LCUI_Widget *widget )
+{
+	GameObject_SetXSpeed( widget, 0 );
+	GameObject_AtLanding( widget, 20, -10, GamePlayer_AtAttackDone );
+	GameObject_AtZeroZSpeed( widget, GamePlayer_AtBigElbowStep2 );
+}
+
+/** 肘压 */
+static void GamePlayer_SetBigElbow( GamePlayer *player )
+{
+	double z_speed;
+	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
+	player->attack_type = ATTACK_TYPE_BIG_ELBOW;
+	GameObject_ClearAttack( player->object );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	z_speed = GameObject_GetZSpeed( player->object );
+	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtBigElbowStep1 );
+}
+
+static void GamePlayer_StopMachStomp( GamePlayer *player )
+{
+	GamePlayer_AtAttackDone( player->object );
+}
+
+/** 高速踩踏 */
+static void GamePlayer_SetMachStomp( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_MACH_STOMP );
+	player->attack_type = ATTACK_TYPE_MACH_STOMP;
+	GameObject_ClearAttack( player->object );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_AtActionDone( player->object, ACTION_MACH_STOMP, GameObject_ClearAttack );
+	GamePlayer_SetActionTimeOut( player, 1250, GamePlayer_StopMachStomp );
 }
 
 /** 进行A攻击 */
@@ -1175,6 +1266,12 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GameObject_ClearAttack( player->object );
 		return;
 	case STATE_JUMP:
+		speed = GameObject_GetZSpeed( player->object );
+		/* 如果满足使用 跳跃肘压 技能的条件 */
+		if( speed < 0 && player->skill.big_elbow ) {
+			GamePlayer_SetBigElbow( player );
+			return;
+		}
 		GamePlayer_ChangeState( player, STATE_AJ_ATTACK );
 		GamePlayer_LockAction( player );
 		player->attack_type = ATTACK_TYPE_JUMP_PUNCH;
@@ -1191,11 +1288,13 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	}
 
 	if( GamePlayer_CanAttackGroundPlayer(player) ) {
-		GameObject_ClearAttack( player->object );
-		GamePlayer_SetJumpElbow( player );
+		if( player->skill.mach_stomp ) {
+			GamePlayer_SetMachStomp( player );
+		} else {
+			GamePlayer_SetJumpElbow( player );
+		}
 		return;
 	}
-
 	widget = GameObject_GetObjectInAttackRange( 
 				player->object,
 				ACTION_FINAL_BLOW,
@@ -1491,7 +1590,7 @@ int GamePlayer_ControlByHuman( int player_id, LCUI_BOOL flag )
 	return 0;
 }
 
-/** 按百分比减少移动速度，n 取值范围为 0 ~ 100 */
+/** 按百分比变更移动速度，n 取值范围为 0 ~ 100 */
 static void GamePlayer_ReduceSpeed( GamePlayer *player, int n )
 {
 	double speed;
@@ -1548,6 +1647,12 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 			}
 			break;
 		case ATTACK_TYPE_SJUMP_KICK:
+			/* 如果有 龙卷攻击 技能，且左/右键处于按住状态 */
+			if( atk_player->skill.tornado_attack && 
+			 ( LCUIKey_IsHit( atk_player->ctrlkey.left)
+			  || LCUIKey_IsHit( atk_player->ctrlkey.right)) ) {
+				GamePlayer_SetSecondSpinHit( atk_player );
+			}
 		case ATTACK_TYPE_SJUMP_PUNCH:
 			player->n_attack = 0;
 			if( GamePlayer_TryHit(player) == 0 ) {
@@ -1559,10 +1664,16 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				GamePlayer_SetRightHitFly( player );
 			}
 			break;
-		case ATTACK_TYPE_BOMB_KICK:
 		case ATTACK_TYPE_SPIN_HIT:
-			/* 减少攻击者百分之50的移动速度 */
-			GamePlayer_ReduceSpeed( atk_player, 50 );
+			if( LCUIKey_IsHit( atk_player->ctrlkey.left)
+			 || LCUIKey_IsHit( atk_player->ctrlkey.right) ) {
+				GamePlayer_SetSecondSpinHit( atk_player );
+			} else {
+				/* 减少攻击者百分之50的移动速度 */
+				GamePlayer_ReduceSpeed( atk_player, 50 );
+			}
+		case ATTACK_TYPE_SPIN_HIT2:
+		case ATTACK_TYPE_BOMB_KICK:
 		case ATTACK_TYPE_BIG_ELBOW:
 		case ATTACK_TYPE_GUILLOTINE:
 		case ATTACK_TYPE_FINAL_BLOW:
@@ -1586,7 +1697,7 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				}
 			}
 			break;
-		case ATTACK_TYPE_TORNADO_ATTACK:
+		case ATTACK_TYPE_MACH_STOMP:
 		case ATTACK_TYPE_JUMP_KICK:
 		case ATTACK_TYPE_JUMP_PUNCH:
 			if( GamePlayer_TryHit(player) == 0 ) {
@@ -1670,7 +1781,9 @@ int Game_Init(void)
 	GamePlayer_ControlByHuman( 1, TRUE );
 	player_data[0].skill.bomb_kick = TRUE;
 	player_data[0].skill.jump_spin_kick = TRUE;
-
+	player_data[0].skill.big_elbow = TRUE;
+	player_data[0].skill.mach_stomp = TRUE;
+	player_data[0].skill.tornado_attack = TRUE;
 	/* 记录2号角色的控制键 */
 	ctrlkey.up = LCUIKEY_UP;
 	ctrlkey.down = LCUIKEY_DOWN;

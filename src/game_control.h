@@ -37,10 +37,11 @@ enum GamePlayerState {
 	STATE_B_ROLL,		/**< 向后翻滚 */
 	STATE_ELBOW,
 	STATE_JUMP_ELBOW,
-	STATE_JUMP_TREAD,
+	STATE_JUMP_STOMP,
 	STATE_KICK,
 	STATE_SPINHIT,
-	STATE_BOMBKICK
+	STATE_BOMBKICK,
+	STATE_MACH_STOMP
 };
 
 enum ActionType {
@@ -72,10 +73,11 @@ enum ActionType {
 	ACTION_B_ROLL,
 	ACTION_ELBOW,
 	ACTION_JUMP_ELBOW,
-	ACTION_JUMP_TREAD,
+	ACTION_JUMP_STOMP,
 	ACTION_KICK,
 	ACTION_SPINHIT,
-	ACTION_BOMBKICK
+	ACTION_BOMBKICK,
+	ACTION_MACH_STOMP
 };
 
 /** 攻击类型 */
@@ -83,6 +85,7 @@ enum AttackType {
 	ATTACK_TYPE_NONE,
 	ATTACK_TYPE_PUNCH,
 	ATTACK_TYPE_KICK,
+	ATTACK_TYPE_MACH_STOMP,
 	ATTACK_TYPE_JUMP_ELBOW,
 	ATTACK_TYPE_JUMP_TREAD,
 	ATTACK_TYPE_JUMP_KICK,
@@ -95,6 +98,7 @@ enum AttackType {
 	ATTACK_TYPE_BIG_ELBOW,
 	ATTACK_TYPE_GUILLOTINE,
 	ATTACK_TYPE_SPIN_HIT,
+	ATTACK_TYPE_SPIN_HIT2,
 	ATTACK_TYPE_BOMB_KICK,
 	ATTACK_TYPE_JUMP_SPIN_KICK,
 	ATTACK_TYPE_FINAL_BLOW
@@ -133,7 +137,6 @@ struct GamePlayer_{
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
 	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
-	
 	GamePlayerProperty property;	/**< 角色的各项属性 */
 	SpecialSkill skill;		/**< 角色拥有的特殊技能 */
 	int attack_type;		/**< 当前的攻击类型 */
