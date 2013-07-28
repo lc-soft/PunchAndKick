@@ -7,22 +7,35 @@
 /** 载入角色的移动动作动画资源 */
 static ActionData* ActionRes_LoadWalk(void)
 {
+	RangeBox range;
 	ActionData *action;
 	LCUI_Graph img_move[4];
 
 	action = Action_Create();
+
+	range.x = -16;
+	range.x_width = 32;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 64;
+
 	Graph_Init( &img_move[0] );
-	Graph_LoadImage( "drawable/walk-01.png", &img_move[0] );
-	Action_AddFrame( action, 0,2, &img_move[0], 5 );
 	Graph_Init( &img_move[1] );
-	Graph_LoadImage( "drawable/walk-02.png", &img_move[1] );
-	Action_AddFrame( action, 0,0, &img_move[1], 5 );
 	Graph_Init( &img_move[2] );
-	Graph_LoadImage( "drawable/walk-03.png", &img_move[2] );
-	Action_AddFrame( action, 0,2, &img_move[2], 5 );
 	Graph_Init( &img_move[3] );
+	Graph_LoadImage( "drawable/walk-01.png", &img_move[0] );
+	Graph_LoadImage( "drawable/walk-02.png", &img_move[1] );
+	Graph_LoadImage( "drawable/walk-03.png", &img_move[2] );
 	Graph_LoadImage( "drawable/walk-04.png", &img_move[3] );
+	Action_AddFrame( action, 0,2, &img_move[0], 5 );
+	Action_AddFrame( action, 0,0, &img_move[1], 5 );
+	Action_AddFrame( action, 0,2, &img_move[2], 5 );
 	Action_AddFrame( action, 0,0, &img_move[3], 5 );
+	Action_SetHitRange( action, 0, range );
+	Action_SetHitRange( action, 1, range );
+	Action_SetHitRange( action, 2, range );
+	Action_SetHitRange( action, 3, range );
 	return action;
 }
 
@@ -847,23 +860,68 @@ static ActionData *ActionRes_LoadJumpElbow(void)
 	return action;
 }
 
-/** 肘击压倒 */
-static ActionData *ActionRes_LoadElbow(void)
+/** 抓住 */
+static ActionData *ActionRes_LoadCatch(void)
 {
 	ActionData *action;
-	LCUI_Graph img[5];
+	LCUI_Graph img;
+	RangeBox hit_range;
+	
+	Graph_Init( &img );
+	action = Action_Create();
+
+	hit_range.x = -19;
+	hit_range.x_width = 38;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+	Graph_LoadImage( "drawable/catch.png", &img );
+	Action_AddFrame( action, 0, 0, &img, 5 );
+	Action_SetHitRange( action, 0, hit_range );
+	
+	return action;
+}
+
+/** 被抓住 */
+static ActionData *ActionRes_LoadBeCatch(void)
+{
+	ActionData *action;
+	LCUI_Graph img;
+	RangeBox hit_range;
+	
+	Graph_Init( &img );
+	action = Action_Create();
+	
+	hit_range.x = -16;
+	hit_range.x_width = 40;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 56;
+	Graph_LoadImage( "drawable/rest-02.png", &img );
+	Action_AddFrame( action, -6, 0, &img, 5 );
+	Action_SetHitRange( action, 0, hit_range );
+	
+	return action;
+}
+
+/** 正面压制技能（A） */
+static ActionData *ActionRes_LoadFrontCatchSkillA(void)
+{
+	ActionData *action;
+	LCUI_Graph img[4];
 	RangeBox hit_range;
 	
 	Graph_Init( &img[0] );
 	Graph_Init( &img[1] );
 	Graph_Init( &img[2] );
 	Graph_Init( &img[3] );
-	Graph_Init( &img[4] );
 	
 	action = Action_Create();
 
-	hit_range.x = -19;
-	hit_range.x_width = 38;
+	hit_range.x = -17;
+	hit_range.x_width = 50;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
@@ -873,7 +931,7 @@ static ActionData *ActionRes_LoadElbow(void)
 	Action_SetHitRange( action, 0, hit_range );
 	
 	hit_range.x = -17;
-	hit_range.x_width = 50;
+	hit_range.x_width = 54;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
@@ -882,25 +940,15 @@ static ActionData *ActionRes_LoadElbow(void)
 	Action_AddFrame( action, 0, 0, &img[1], 5 );
 	Action_SetHitRange( action, 1, hit_range );
 	
-	hit_range.x = -17;
-	hit_range.x_width = 54;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-	Graph_LoadImage( "drawable/elbow-03.png", &img[2] );
-	Action_AddFrame( action, 0, 0, &img[2], 5 );
-	Action_SetHitRange( action, 2, hit_range );
-	
 	hit_range.x = -15;
 	hit_range.x_width = 64;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 8;
 	hit_range.z_width = 50;
-	Graph_LoadImage( "drawable/elbow-04.png", &img[3] );
-	Action_AddFrame( action, 0, 0, &img[3], 5 );
-	Action_SetHitRange( action, 3, hit_range );
+	Graph_LoadImage( "drawable/elbow-03.png", &img[2] );
+	Action_AddFrame( action, 0, 0, &img[2], 5 );
+	Action_SetHitRange( action, 2, hit_range );
 
 	hit_range.x = -30;
 	hit_range.x_width = 64;
@@ -908,10 +956,32 @@ static ActionData *ActionRes_LoadElbow(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 50;
-	Graph_LoadImage( "drawable/elbow-05.png", &img[4] );
-	Action_AddFrame( action, 0, 0, &img[4], 5 );
-	Action_SetHitRange( action, 4, hit_range );
+	Graph_LoadImage( "drawable/elbow-04.png", &img[3] );
+	Action_AddFrame( action, 0, 0, &img[3], 10 );
+	Action_SetHitRange( action, 3, hit_range );
 
+	return action;
+}
+
+/** 在喘气状态下被对方的 肘压 技能压倒 */
+static ActionData* ActionRes_LoadBeElbow(void)
+{
+	LCUI_Graph img[4];
+	ActionData *action;
+
+	action = Action_Create();
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	Graph_Init( &img[3] );
+	Graph_LoadImage("drawable/hit.png", &img[0] );
+	Graph_LoadImage("drawable/hit-fly.png", &img[1] );
+	Graph_LoadImage("drawable/lying-hit.png", &img[2] );
+	Graph_LoadImage("drawable/lying.png", &img[3] );
+	Action_AddFrame( action, 0, 0, &img[0], 5 );
+	Action_AddFrame( action, 0, 0, &img[1], 5 );
+	Action_AddFrame( action, 0, 0, &img[2], 5 );
+	Action_AddFrame( action, 0, 0, &img[3], 10 );
 	return action;
 }
 
@@ -1095,13 +1165,16 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_TUMMY_HIT: return ActionRes_LoadTummyHit();
 	case ACTION_F_ROLL: return ActionRes_LoadForwardRoll();
 	case ACTION_B_ROLL: return ActionRes_LoadBackwardRoll();
-	case ACTION_ELBOW: return ActionRes_LoadElbow();
 	case ACTION_JUMP_ELBOW: return ActionRes_LoadJumpElbow();
 	case ACTION_JUMP_STOMP: return ActionRes_LoadJumpStomp();
 	case ACTION_KICK: return ActionRes_LoadKick();
 	case ACTION_SPINHIT: return ActionRes_LoadSpinHit();
 	case ACTION_BOMBKICK: return ActionRes_LoadBombKick();
 	case ACTION_MACH_STOMP: return ActionRes_LoadMachStomp();
+	case ACTION_CATCH: return ActionRes_LoadCatch();
+	case ACTION_BE_CATCH: return ActionRes_LoadBeCatch();
+	case ACTION_CATCH_SKILL_FA: return ActionRes_LoadFrontCatchSkillA();
+	case ACTION_BE_ELBOW: return ActionRes_LoadBeElbow();
 	default:break;
 	}
 	return NULL;
