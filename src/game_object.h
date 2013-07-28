@@ -95,6 +95,13 @@ LCUI_API int GameObject_AtActionDone(	LCUI_Widget *widget,
 					int action_id,
 					void (*func)(LCUI_Widget*) );
 
+LCUI_API int GameObject_AtActionUpdate(	LCUI_Widget *widget,
+					int action_id,
+					void (*func)(LCUI_Widget*) );
+
+/** 获取当前动作帧的序号 */
+LCUI_API int GameObject_GetCurrentActionFrameNumber( LCUI_Widget *widget );
+
 LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 						double acc,
 						void (*func)(LCUI_Widget*) );
@@ -115,6 +122,12 @@ LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
 
 /** 获取攻击者信息 */
 LCUI_API LCUI_Queue* GameObject_GetAttackerInfo( LCUI_Widget* widget );
+
+/** 获取对象的受攻击范围 */
+LCUI_API int GameObject_GetHitRange( LCUI_Widget *widget, RangeBox *range );
+
+/** 获取对象的攻击范围 */
+LCUI_API int GameObject_GetAttackRange( LCUI_Widget *widget, RangeBox *range );
 
 /**
  * 切换对象的动作

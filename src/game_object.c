@@ -176,6 +176,30 @@ LCUI_API int GameObject_AtActionDone(	LCUI_Widget *widget,
 	return 0;
 }
 
+LCUI_API int GameObject_AtActionUpdate(	LCUI_Widget *widget,
+					int action_id,
+					void (*func)(LCUI_Widget*) )
+{
+	GameObject *obj;
+	ActionRec* p_rec;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	p_rec = GameObject_FindActionRec( obj, action_id );
+	if( p_rec == NULL ) {
+		return -1;
+	}
+	p_rec->update = func;
+	return 0;
+}
+
+/** 获取当前动作帧的序号 */
+LCUI_API int GameObject_GetCurrentActionFrameNumber( LCUI_Widget *widget )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->n_frame;
+}
+
 LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 						double acc,
 						void (*func)(LCUI_Widget*) )
@@ -321,9 +345,6 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 						obj->current->action,
 						obj->n_frame
 			);
-			if( obj->current->update ) {
-				obj->current->update( widget );
-			}
 			/* 标记这个对象需要重绘 */
 			need_draw = TRUE;
 			if( Action_IsNewAttack( obj->current->action,
@@ -344,6 +365,9 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 			}
 		}
 		if( need_draw ) {
+			if( obj->current->update ) {
+				obj->current->update( widget );
+			}
 			Widget_Draw( widget );
 		}
 	}
@@ -351,10 +375,13 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 }
 
 /** 获取对象的受攻击范围 */
-static int GameObject_GetHitRange( GameObject *obj, RangeBox *range )
+LCUI_API int GameObject_GetHitRange( LCUI_Widget *widget, RangeBox *range )
 {
+	GameObject *obj;
 	ActionFrameData *frame;
-	if( obj->current == NULL ) {
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	if( obj == NULL || obj->current == NULL ) {
 		return -1;
 	}
 	frame = (ActionFrameData*)Queue_Get(
@@ -385,10 +412,13 @@ static int GameObject_GetHitRange( GameObject *obj, RangeBox *range )
 }
 
 /** 获取对象的攻击范围 */
-static int GameObject_GetAttackRange( GameObject *obj, RangeBox *range )
+LCUI_API int GameObject_GetAttackRange( LCUI_Widget *widget, RangeBox *range )
 {
+	GameObject *obj;
 	ActionFrameData *frame;
-	if( obj->current == NULL ) {
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	if( obj == NULL || obj->current == NULL ) {
 		return -1;
 	}
 	frame = (ActionFrameData*)Queue_Get(
@@ -446,25 +476,23 @@ static LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 )
 }
 
 /** 获取攻击该对象的攻击者 */
-static LCUI_Widget *GameObject_GetAttacker( GameObject *obj )
+static LCUI_Widget *GameObject_GetAttacker( LCUI_Widget *widget )
 {
 	int i, n;
-	GameObject *attacker_obj;
-	LCUI_Widget *widget;
+	LCUI_Widget *tmp_obj;
 	RangeBox hit_range, attack_range;
 	/* 获取该对象的受攻击范围，若获取失败，则返回NULL */
-	if( 0 > GameObject_GetHitRange( obj, &hit_range ) ) {
+	if( 0 > GameObject_GetHitRange( widget, &hit_range ) ) {
 		return NULL;
 	}
 	n = Queue_GetTotal( &gameobject_stream );
 	for(i=0; i<n; ++i) {
-		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
-		attacker_obj = (GameObject*)Widget_GetPrivData( widget );
-		if( !attacker_obj || attacker_obj == obj ) {
+		tmp_obj = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		if( !tmp_obj || widget == tmp_obj ) {
 			continue;
 		}
 		/* 获取对象的攻击范围，若获取失败，则继续判断下个对象 */
-		if( 0 > GameObject_GetAttackRange( attacker_obj, &attack_range ) ) {
+		if( 0 > GameObject_GetAttackRange( tmp_obj, &attack_range ) ) {
 			continue;
 		}
 		DEBUG_MSG("hit range, x: %d, x_width: %d, y: %d, y_width: %d, z: %d, z_width: %d\n",
@@ -473,7 +501,7 @@ static LCUI_Widget *GameObject_GetAttacker( GameObject *obj )
 			attack_range.x, attack_range.x_width, attack_range.y, attack_range.y_width, attack_range.z, attack_range. z_width);
 		/* 若两个范围相交 */
 		if( RangeBox_IsIntersect(&hit_range, &attack_range) ) {
-			return widget;
+			return tmp_obj;
 		}
 	}
 	return NULL;
@@ -519,7 +547,7 @@ static void GameObjectStream_Proc( void )
 			continue;
 		}
 		/* 获取命中当前对象的攻击者 */
-		attacker = GameObject_GetAttacker( obj );
+		attacker = GameObject_GetAttacker( widget );
 		if( attacker ) {
 			GameObject_AddVictim( attacker, widget );
 		}
@@ -670,6 +698,9 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
 	obj->n_frame = 0;
 	obj->remain_time = Action_GetFrameSleepTime( obj->current->action, 0 );
 	Widget_Draw( widget );
+	if( obj->current->update ) {
+		obj->current->update( widget );
+	}
 	return 0;
 }
 
@@ -1250,7 +1281,7 @@ LCUI_API LCUI_Widget* GameObject_GetObjectInRange(
 			}
 		}
 		/* 获取该游戏对象的受攻击范围 */
-		if( 0 > GameObject_GetHitRange( obj2, &hit_range ) ) {
+		if( 0 > GameObject_GetHitRange( tmp_widget, &hit_range ) ) {
 			continue;
 		}
 		/* 若指定的范围与受攻击范围相交，则返回该游戏对象 */
