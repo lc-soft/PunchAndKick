@@ -5,6 +5,13 @@ typedef struct ControlKey_ {
 	int up, down, left, right, a_attack, b_attack, jump;
 } ControlKey;
 
+enum GamePlayerType {
+	PLAYER_TYPE_FIGHTER,
+	PLAYER_TYPE_MARTIAL_ARTISTS,
+	PLAYER_TYPE_KUNG_FU,
+	PLAYER_TYPE_JUDO_MASTERS
+};
+
 enum GamePlayerState {
 	STATE_READY,
 	STATE_STANCE,		/**< 站立 */
@@ -41,7 +48,14 @@ enum GamePlayerState {
 	STATE_KICK,
 	STATE_SPINHIT,
 	STATE_BOMBKICK,
-	STATE_MACH_STOMP
+	STATE_MACH_STOMP,
+	STATE_CATCH,
+	STATE_BE_CATCH,
+	STATE_CATCH_SKILL_FA,
+	STATE_CATCH_SKILL_FB,
+	STATE_CATCH_SKILL_BA,
+	STATE_CATCH_SKILL_BB,
+	STATE_BE_ELBOW
 };
 
 enum ActionType {
@@ -77,7 +91,14 @@ enum ActionType {
 	ACTION_KICK,
 	ACTION_SPINHIT,
 	ACTION_BOMBKICK,
-	ACTION_MACH_STOMP
+	ACTION_MACH_STOMP,
+	ACTION_CATCH,
+	ACTION_BE_CATCH,
+	ACTION_CATCH_SKILL_FA,	/**< 正面抓握压制技能 A */
+	ACTION_CATCH_SKILL_FB,	/**< 正面抓握压制技能 B */
+	ACTION_CATCH_SKILL_BA,	/**< 背面抓握压制技能 A */
+	ACTION_CATCH_SKILL_BB,	/**< 背面抓握压制技能 B */
+	ACTION_BE_ELBOW
 };
 
 /** 攻击类型 */
@@ -130,6 +151,7 @@ typedef struct GamePlayer_ GamePlayer;
 struct GamePlayer_{
 	int id;				/**< 玩家ID */
 	int role_id;			/**< 角色ID */
+	int type;			/**< 角色类型 */
 	int state;			/**< 状态 */
 	LCUI_BOOL enable;		/**< 是否启用该角色 */
 	LCUI_BOOL right_direction;	/**< 角色是否朝着右方 */
@@ -145,6 +167,8 @@ struct GamePlayer_{
 	int t_action_timeout;		/**< 定时器，用于处理动作超时 */
 	LCUI_Widget *object;		/**< 游戏对象 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
+	GamePlayer *other;
+
 };
 
 extern int Game_Init(void);
@@ -187,6 +211,8 @@ void GamePlayer_StopRun( GamePlayer *player );
 void GamePlayer_StopXWalk( GamePlayer *player );
 
 void GamePlayer_StopYMotion( GamePlayer *player );
+
+void GamePlayer_StopXMotion( GamePlayer *player );
 
 void GamePlayer_StartAAttack( GamePlayer *player );
 
