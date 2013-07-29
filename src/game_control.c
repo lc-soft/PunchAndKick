@@ -2082,8 +2082,11 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				/* 减少攻击者百分之50的移动速度 */
 				GamePlayer_ReduceSpeed( atk_player, 50 );
 			}
-		case ATTACK_TYPE_SPIN_HIT2:
 		case ATTACK_TYPE_BOMB_KICK:
+			if( atk_player->attack_type == ATTACK_TYPE_BOMB_KICK ) {
+				GamePlayer_ReduceSpeed( atk_player, 50 );
+			}
+		case ATTACK_TYPE_SPIN_HIT2:
 		case ATTACK_TYPE_BIG_ELBOW:
 		case ATTACK_TYPE_GUILLOTINE:
 		case ATTACK_TYPE_FINAL_BLOW:
