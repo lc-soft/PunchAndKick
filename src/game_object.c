@@ -14,7 +14,8 @@ enum FuncUse {
 	AT_XSPEED_TO_ZERO,
 	AT_ZSPEED_TO_ZERO,
 	AT_LANDING,
-	AT_UNDER_ATTACK
+	AT_UNDER_ATTACK,
+	AT_TOUCH
 };
 
 /** 动作记录 */
@@ -43,12 +44,17 @@ typedef struct GameObject_ {
 	int n_frame;			/**< 记录当前帧动作的序号，帧序号从0开始 */
 	long int remain_time;		/**< 当前帧剩下的停留时间 */
 
-	LCUI_Func func[5];		/**< 被关联的回调函数 */
 	PhysicsObject *phys_obj;	/**< 对应的物理对象 */
 	LCUI_Widget *shadow;		/**< 对象的阴影 */
 
 	LCUI_Queue victim;		/**< 当前攻击的受害者 */
 	LCUI_Queue attacker_info;	/**< 攻击者信息 */
+
+	void (*at_landing)(LCUI_Widget*);
+	void (*at_touch)(LCUI_Widget*,LCUI_Widget*);
+	void (*at_under_attack)(LCUI_Widget*);
+	void (*at_xspeed_to_zero)(LCUI_Widget*);
+	void (*at_zero_zspeed)(LCUI_Widget*);
 } GameObject;
 
 static LCUI_Queue action_database;
@@ -57,22 +63,12 @@ static LCUI_Queue gameobject_stream;
 static int database_init = FALSE;
 static LCUI_Thread frame_proc_thread = -1;
 
-static void GameObject_CallFunc( LCUI_Widget *widget, int func_use )
-{
-	GameObject *obj;
-	obj = (GameObject*)Widget_GetPrivData( widget );
-	if(obj->func[func_use].func) {
-		obj->func[func_use].func( widget, NULL );
-	}
-}
-
 static void ActionData_Destroy( void *arg )
 {
 	ActionData *action;
 	action = (ActionData*)arg;
 	Queue_Destroy( &action->frame );
 }
-
 
 /**
  * 创建一个动作集
@@ -137,21 +133,6 @@ LCUI_API int Action_Delete( ActionData* action )
 	return 0;
 }
 
-static int GameObject_Connect(	LCUI_Widget *widget,
-				int func_use,
-				void (*func)(LCUI_Widget*) )
-{
-	GameObject *obj;
-	obj = (GameObject*)Widget_GetPrivData( widget );
-	obj->func[func_use].func = (CallBackFunc)func;
-	obj->func[func_use].id = LCUIApp_GetSelfID();
-	obj->func[func_use].arg[0] = widget;
-	obj->func[func_use].arg[1] = NULL;
-	obj->func[func_use].destroy_arg[0] = FALSE;
-	obj->func[func_use].destroy_arg[1] = FALSE;
-	return 0;
-}
-
 static ActionRec* GameObject_FindActionRec( GameObject *obj, int action_id )
 {
 	int i, n;
@@ -211,15 +192,20 @@ LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 						double acc,
 						void (*func)(LCUI_Widget*) )
 {
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
 	GameObject_SetXAcc( widget, acc );
-	GameObject_Connect( widget, AT_XSPEED_TO_ZERO, func );
+	obj->at_xspeed_to_zero = func;
+
 }
 
 /** 在Z轴移动速度为0时进行响应  */
 LCUI_API void GameObject_AtZeroZSpeed(	LCUI_Widget *widget,
 					void (*func)(LCUI_Widget*) )
 {
-	GameObject_Connect( widget, AT_ZSPEED_TO_ZERO, func );
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->at_zero_zspeed = func;
 }
 
 /** 设置在对象着地时进行响应 */
@@ -228,16 +214,29 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 					double z_acc,
 					void (*func)(LCUI_Widget*) )
 {
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
 	GameObject_SetZSpeed( widget, z_speed );
 	GameObject_SetZAcc( widget, z_acc );
-	GameObject_Connect( widget, AT_LANDING, func );
+	obj->at_landing = func;
 }
 
 /** 设置在被攻击时进行响应 */
 LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
 					void (*func)(LCUI_Widget*) )
 {
-	GameObject_Connect( widget, AT_UNDER_ATTACK, func );
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->at_under_attack = func;
+}
+
+/** 设置在被其它对象触碰到时进行响应 */
+LCUI_API void GameObject_AtTouch(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*,LCUI_Widget*) )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->at_touch = func;
 }
 
 /** 获取攻击者信息 */
@@ -489,15 +488,20 @@ static LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 )
 	return TRUE;
 }
 
-/** 获取攻击该对象的攻击者 */
-static LCUI_Widget *GameObject_GetAttacker( LCUI_Widget *widget )
+/** 处理与当前对象接触的对象 */
+static int GameObject_ProcTouch( LCUI_Widget *widget )
 {
 	int i, n;
 	LCUI_Widget *tmp_obj;
-	RangeBox hit_range, attack_range;
-	/* 获取该对象的受攻击范围，若获取失败，则返回NULL */
-	if( 0 > GameObject_GetHitRange( widget, &hit_range ) ) {
-		return NULL;
+	GameObject *obj;
+	RangeBox my_range, other_range;
+	
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	if( !obj->at_touch ) {
+		return -1;
+	}
+	if( 0 > GameObject_GetHitRange( widget, &my_range ) ) {
+		return -2;
 	}
 	n = Queue_GetTotal( &gameobject_stream );
 	for(i=0; i<n; ++i) {
@@ -505,20 +509,14 @@ static LCUI_Widget *GameObject_GetAttacker( LCUI_Widget *widget )
 		if( !tmp_obj || widget == tmp_obj ) {
 			continue;
 		}
-		/* 获取对象的攻击范围，若获取失败，则继续判断下个对象 */
-		if( 0 > GameObject_GetAttackRange( tmp_obj, &attack_range ) ) {
+		if( 0 > GameObject_GetHitRange( tmp_obj, &other_range ) ) {
 			continue;
 		}
-		DEBUG_MSG("hit range, x: %d, x_width: %d, y: %d, y_width: %d, z: %d, z_width: %d\n",
-			hit_range.x, hit_range.x_width, hit_range.y, hit_range.y_width, hit_range.z, hit_range. z_width);
-		DEBUG_MSG("attack range, x: %d, x_width: %d, y: %d, y_width: %d, z: %d, z_width: %d\n",
-			attack_range.x, attack_range.x_width, attack_range.y, attack_range.y_width, attack_range.z, attack_range. z_width);
-		/* 若两个范围相交 */
-		if( RangeBox_IsIntersect(&hit_range, &attack_range) ) {
-			return tmp_obj;
+		if( RangeBox_IsIntersect(&my_range, &other_range) ) {
+			obj->at_touch( widget, tmp_obj );
 		}
 	}
-	return NULL;
+	return 0;
 }
 
 static int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
@@ -543,7 +541,41 @@ static int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
 	info.attacker_action = GameObject_GetCurrentActionID( attacker );
 	Queue_AddPointer( &atk_obj->victim, victim );
 	Queue_Add( &hit_obj->attacker_info, &info );
-	GameObject_CallFunc( victim, AT_UNDER_ATTACK );
+	if( hit_obj->at_under_attack ) {
+		hit_obj->at_under_attack( victim );
+	}
+	return 0;
+}
+
+/** 处理攻击当前对象受到的攻击 */
+static int GameObject_ProcAttack( LCUI_Widget *widget )
+{
+	int i, n;
+	LCUI_Widget *tmp_obj;
+	RangeBox hit_range, attack_range;
+	/* 获取该对象的受攻击范围，若获取失败，则返回NULL */
+	if( 0 > GameObject_GetHitRange( widget, &hit_range ) ) {
+		return -1;
+	}
+	n = Queue_GetTotal( &gameobject_stream );
+	for(i=0; i<n; ++i) {
+		tmp_obj = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		if( !tmp_obj || widget == tmp_obj ) {
+			continue;
+		}
+		/* 获取对象的攻击范围，若获取失败，则继续判断下个对象 */
+		if( 0 > GameObject_GetAttackRange( tmp_obj, &attack_range ) ) {
+			continue;
+		}
+		DEBUG_MSG("hit range, x: %d, x_width: %d, y: %d, y_width: %d, z: %d, z_width: %d\n",
+			hit_range.x, hit_range.x_width, hit_range.y, hit_range.y_width, hit_range.z, hit_range. z_width);
+		DEBUG_MSG("attack range, x: %d, x_width: %d, y: %d, y_width: %d, z: %d, z_width: %d\n",
+			attack_range.x, attack_range.x_width, attack_range.y, attack_range.y_width, attack_range.z, attack_range. z_width);
+		/* 若两个范围相交 */
+		if( RangeBox_IsIntersect(&hit_range, &attack_range) ) {
+			GameObject_AddVictim( tmp_obj, widget );
+		}
+	}
 	return 0;
 }
 
@@ -551,7 +583,7 @@ static void GameObjectStream_Proc( void )
 {
 	int i, n;
 	GameObject *obj;
-	LCUI_Widget *widget, *attacker;
+	LCUI_Widget *widget;
 
 	n = Queue_GetTotal( &gameobject_stream );
 	for(i=0; i<n; ++i) {
@@ -560,11 +592,10 @@ static void GameObjectStream_Proc( void )
 		if( !obj || obj->state != PLAY ) {
 			continue;
 		}
-		/* 获取命中当前对象的攻击者 */
-		attacker = GameObject_GetAttacker( widget );
-		if( attacker ) {
-			GameObject_AddVictim( attacker, widget );
-		}
+		
+		GameObject_ProcAttack( widget );
+		GameObject_ProcTouch( widget );
+
 		/* 若在X轴的移动速度接近0 */
 		if( (obj->phys_obj->x_acc > 0
 		 && obj->phys_obj->x_speed >= 0 )
@@ -573,7 +604,9 @@ static void GameObjectStream_Proc( void )
 			obj->phys_obj->x_acc = 0;
 			obj->phys_obj->x_speed = 0;
 			Widget_Update( widget );
-			GameObject_CallFunc( widget, AT_XSPEED_TO_ZERO );
+			if( obj->at_xspeed_to_zero ) {
+				obj->at_xspeed_to_zero( widget );
+			}
 		}
 		/* 若在Z轴的移动速度接近0 */
 		if( (obj->phys_obj->z_acc > 0
@@ -583,7 +616,9 @@ static void GameObjectStream_Proc( void )
 		 && obj->phys_obj->z_speed >= obj->phys_obj->z_acc/MSEC_PER_FRAME
 		 && obj->phys_obj->z_speed < -obj->phys_obj->z_acc/MSEC_PER_FRAME) ) {
 			Widget_Update( widget );
-			GameObject_CallFunc( widget, AT_ZSPEED_TO_ZERO );
+			if( obj->at_zero_zspeed ) {
+				obj->at_zero_zspeed( widget );
+			}
 		}
 		/**
 		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
@@ -600,7 +635,9 @@ static void GameObjectStream_Proc( void )
 			obj->phys_obj->z_acc = 0;
 			obj->phys_obj->z_speed = 0;
 			Widget_Update( widget );
-			GameObject_CallFunc( widget, AT_LANDING );
+			if( obj->at_landing ) {
+				obj->at_landing( widget );
+			}
 		}
 	}
 }
@@ -843,11 +880,11 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 		LCUIThread_Create( &frame_proc_thread, GameObjectStream_Thread, NULL );
 	}
 	Queue_AddPointer( &gameobject_stream, widget );
-	obj->func[0].func = NULL;
-	obj->func[1].func = NULL;
-	obj->func[2].func = NULL;
-	obj->func[3].func = NULL;
-	obj->func[4].func = NULL;
+	obj->at_landing = NULL;
+	obj->at_touch = NULL;
+	obj->at_under_attack = NULL;
+	obj->at_xspeed_to_zero = NULL;
+	obj->at_zero_zspeed = NULL;
 }
 
 static void GameObject_ExecHide( LCUI_Widget *widget )

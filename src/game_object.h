@@ -124,6 +124,10 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
 					void (*func)(LCUI_Widget*) );
 
+/** 设置在被其它对象触碰到时进行响应 */
+LCUI_API void GameObject_AtTouch(	LCUI_Widget *widget,
+					void (*func)(LCUI_Widget*,LCUI_Widget*) );
+
 /** 获取攻击者信息 */
 LCUI_API LCUI_Queue* GameObject_GetAttackerInfo( LCUI_Widget* widget );
 
