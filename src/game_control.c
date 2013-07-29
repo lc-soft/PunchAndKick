@@ -44,7 +44,9 @@ static int global_action_list[]={
 	ACTION_MACH_STOMP,
 	ACTION_CATCH,
 	ACTION_BE_CATCH,
+	ACTION_BACK_BE_CATCH,
 	ACTION_CATCH_SKILL_FA,
+	ACTION_CATCH_SKILL_BA,
 	ACTION_BE_ELBOW
 };
 
@@ -269,14 +271,19 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_BE_CATCH:
 		action_type = ACTION_BE_CATCH;
 		break;
+	case STATE_BACK_BE_CATCH:
+		action_type = ACTION_BACK_BE_CATCH;
+		break;
 	case STATE_CATCH_SKILL_FA:
 		action_type = ACTION_CATCH_SKILL_FA;
+		break;
+	case STATE_CATCH_SKILL_BA:
+		action_type = ACTION_CATCH_SKILL_BA;
 		break;
 	case STATE_BE_ELBOW:
 		action_type = ACTION_BE_ELBOW;
 		break;
 	case STATE_CATCH_SKILL_FB:
-	case STATE_CATCH_SKILL_BA:
 	case STATE_CATCH_SKILL_BB:
 	default:return;
 	}
@@ -859,24 +866,24 @@ static void GamePlayer_SetCatch( GamePlayer *player )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
 	GameObject_GetPos( player->object, &x, &y );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		if( GamePlayer_IsLeftOriented(player->other) ) {
-
+			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
 		} else {
-
+			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
 		}
-		GameObject_SetPos( player->other->object, x-40, y );
+		GameObject_SetPos( player->other->object, x-30, y );
 	} else {
 		if( GamePlayer_IsLeftOriented(player->other) ) {
-
+			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
 		} else {
-		
+			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
 		}
-		GameObject_SetPos( player->other->object, x+40, y );
+		GameObject_SetPos( player->other->object, x+30, y );
 	}
 	GamePlayer_ChangeState( player, STATE_CATCH );
-	GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
 	GamePlayer_LockMotion( player );
@@ -1382,6 +1389,90 @@ static void GamePlayer_SetFrontCatchSkillA( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 }
 
+static void GamePlayer_BackCatchSkillAUpdate( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	static LCUI_BOOL start = FALSE;
+	
+	player = GamePlayer_GetPlayerByWidget( widget );
+	switch( GameObject_GetCurrentActionFrameNumber( player->object) ) {
+	case 0:
+		if( start ) {
+			break;
+		}
+		start = TRUE;
+		GamePlayer_SetRestTimeOut( 
+			player->other, SHORT_REST_TIMEOUT,
+			GamePlayer_StartStand 
+		);
+		break;
+	case 1:
+	case 2:
+		GamePlayer_TryHit( player->other );
+		GameObject_SetZ( player->other->object, 24 );
+		GameObject_SetZSpeed( player->other->object, 0 );
+		break;
+	case 3:
+		GameObject_SetZSpeed( player->other->object, -20 );
+		start = FALSE;
+	default:
+		break;
+	}
+}
+
+static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
+{
+	double x, y;
+	int z_index;
+
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	/* 根据攻击者的类型，让受攻击者做出相应动作 */
+	switch(player->type) {
+	case PLAYER_TYPE_FIGHTER:break;
+	case PLAYER_TYPE_MARTIAL_ARTISTS:
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetLeftOriented( player->other );
+		} else {
+			GamePlayer_SetRightOriented( player->other );
+		}
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_ChangeState( player->other, STATE_LYING );
+		GamePlayer_LockAction( player->other );
+		
+		z_index = Widget_GetZIndex( player->object );
+		/* 被攻击者需要显示在攻击者前面 */
+		Widget_SetZIndex( player->other->object, z_index+1 );
+
+		GameObject_GetPos( player->object, &x, &y );
+		GameObject_SetPos( player->other->object, x, y );
+		GameObject_SetZ( player->other->object, 56 );
+		GameObject_SetZSpeed( player->other->object, -20 );
+		
+		GamePlayer_SetRestTimeOut( 
+			player->other, SHORT_REST_TIMEOUT,
+			GamePlayer_StartStand 
+		);
+		GameObject_AtActionUpdate(
+			player->object, ACTION_CATCH_SKILL_BA, 
+			GamePlayer_BackCatchSkillAUpdate 
+		);
+		break;
+	case PLAYER_TYPE_KUNG_FU:break;
+	case PLAYER_TYPE_JUDO_MASTERS:break;
+	default:return;
+	}
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BA );
+	GameObject_AtActionDone(
+		player->object, ACTION_CATCH_SKILL_BA, 
+		GamePlayer_AtElbowDone
+	);
+	/* 重置被攻击的次数 */
+	player->other->n_attack = 0;
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+}
+
 /** 进行A攻击 */
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
@@ -1389,8 +1480,21 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	LCUI_Widget *widget;
 
 	if( player->lock_action ) {
-		if( player->state == STATE_CATCH ) {
-			GamePlayer_SetFrontCatchSkillA( player );
+		if( player->state == STATE_CATCH && player->other ) {
+			/* 根据方向，判断该使用何种技能 */
+			if( GamePlayer_IsLeftOriented(player) ) {
+				if( GamePlayer_IsLeftOriented(player->other) ) {
+					GamePlayer_SetBackCatchSkillA( player );
+				} else {
+					GamePlayer_SetFrontCatchSkillA( player );
+				}
+			} else {
+				if( GamePlayer_IsLeftOriented(player->other) ) {
+					GamePlayer_SetFrontCatchSkillA( player );
+				} else {
+					GamePlayer_SetBackCatchSkillA( player );
+				}
+			}
 		}
 		return;
 	}
