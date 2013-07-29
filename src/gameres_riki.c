@@ -1331,7 +1331,7 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_CATCH_SKILL_BA: return ActionRes_LoadBackCatchSkillA();
 	case ACTION_CATCH_SKILL_BB: return ActionRes_LoadPush();
 	case ACTION_CATCH_SKILL_FB: return ActionRes_LoadPull();
-	case ACTION_WEAK_WALK: return ActionRes_LoadWeakWalk();
+	case ACTION_WEAK_RUN: return ActionRes_LoadWeakWalk();
 	case ACTION_BE_ELBOW: return ActionRes_LoadBeElbow();
 	default:break;
 	}
