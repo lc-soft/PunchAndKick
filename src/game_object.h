@@ -36,6 +36,7 @@ typedef struct ActionFrameData_ {
 
 /** 动作集的信息 */
 typedef struct ActionData_ {
+	LCUI_BOOL replay;	/**< 标志，指示该动作是否重复播放 */
 	LCUI_Queue frame;	/**< 用于记录该动作集的所有帧动作 */
 } ActionData;
 
@@ -47,6 +48,9 @@ typedef struct ActionData_ {
  *	正常则返回指向动作库中的该动作集的指针，失败则返回NULL
  */
 LCUI_API ActionData* Action_Create( void );
+
+/** 设置动作是否重复播放 */
+LCUI_API void Action_SetReplay( ActionData *action, LCUI_BOOL replay );
 
 /**
  * 删除一个动画
@@ -195,6 +199,9 @@ LCUI_API void GameObject_SetZSpeed( LCUI_Widget *widget, double z_speed );
 
 /** 获取游戏对象在Z轴的移动速度 */
 LCUI_API double GameObject_GetZSpeed( LCUI_Widget *widget );
+
+/** 设置游戏对象在Z轴的坐标 */
+LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z );
 
 /** 移动游戏对象的位置 */
 LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y );

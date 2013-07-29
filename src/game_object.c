@@ -86,7 +86,8 @@ LCUI_API ActionData* Action_Create( void )
 	ActionData *p, action;
 
 	Queue_Init( &action.frame, sizeof(ActionFrameData), NULL );
-	
+	action.replay = TRUE;
+
 	if( !database_init ) {
 		Queue_Init(	&action_database,
 				sizeof(ActionData),
@@ -99,6 +100,12 @@ LCUI_API ActionData* Action_Create( void )
 	p = (ActionData*)Queue_Get( &action_database, pos );
 	Queue_Unlock( &action_database );
 	return p;
+}
+
+/** 设置动作是否重复播放 */
+LCUI_API void Action_SetReplay( ActionData *action, LCUI_BOOL replay )
+{
+	action->replay = replay;
 }
 
 /**
@@ -272,7 +279,8 @@ static void GameObjectStream_Sort(void)
 	Queue_Unlock( &gameobject_stream );
 }
 
-static void GameObjectStream_TimeSub( int time )
+/** 缩减各个动作的当前帧的剩余等待时间 */
+static void GameObjectStream_ShortenTime( int time )
 {
 	int i, total;
 	LCUI_Widget *widget;
@@ -291,6 +299,7 @@ static void GameObjectStream_TimeSub( int time )
 	Queue_Unlock( &gameobject_stream );
 }
 
+/** 检测动作中指定帧是否有新攻击 */
 static LCUI_BOOL Action_IsNewAttack(	ActionData* action,
 					int n_frame )
 {
@@ -324,7 +333,7 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 	GameObject *obj;
 	ActionFrameData *frame = NULL;
 	/* 减少所有GameObject当前帧的剩余等待时间 */
-	GameObjectStream_TimeSub( sleep_time );
+	GameObjectStream_ShortenTime( sleep_time );
 	total = Queue_GetTotal(&gameobject_stream);
 	for(i=0; i<total; ++i){
 		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
@@ -355,7 +364,12 @@ static void GameObjectStream_UpdateTime( int sleep_time )
 		n = Queue_GetTotal( &obj->current->action->frame );
 		/* 若当前帧号超出总帧数 */
 		if( obj->n_frame >= n ) {
-			obj->n_frame = 0;
+			/** 若该动作需要重复播放 */
+			if( obj->current->action->replay ) {
+				obj->n_frame = 0;
+			} else {
+				obj->n_frame = n-1;
+			}
 			obj->remain_time = Action_GetFrameSleepTime(
 						obj->current->action,
 						obj->n_frame
@@ -576,9 +590,12 @@ static void GameObjectStream_Proc( void )
 		暂不考虑其他对象对当前对象的着陆点的影响。
 		**/
 		if( (obj->phys_obj->z_acc > 0
-		 && obj->phys_obj->z > 0 )
-		|| (obj->phys_obj->z_acc < 0
-		 && obj->phys_obj->z < 0 ) ) {
+		   && obj->phys_obj->z > 0 )
+		 || (obj->phys_obj->z_acc < 0
+		   && obj->phys_obj->z < 0 )
+		 || ( obj->phys_obj->z <= 0
+		   && obj->phys_obj->z_speed < 0 
+		   && obj->phys_obj->z_acc == 0 ) ) {
 			obj->phys_obj->z = 0;
 			obj->phys_obj->z_acc = 0;
 			obj->phys_obj->z_speed = 0;
@@ -1181,6 +1198,15 @@ LCUI_API double GameObject_GetZSpeed( LCUI_Widget *widget )
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	return obj->phys_obj->z_speed;
+}
+
+/** 设置游戏对象在Z轴的坐标 */
+LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->z = z;
 }
 
 /** 移动游戏对象的位置 */
