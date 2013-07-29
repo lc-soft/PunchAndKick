@@ -49,7 +49,7 @@ static int global_action_list[]={
 	ACTION_CATCH_SKILL_BA,
 	ACTION_CATCH_SKILL_BB,
 	ACTION_CATCH_SKILL_FB,
-	ACTION_WEAK_WALK,
+	ACTION_WEAK_RUN,
 	ACTION_BE_ELBOW
 };
 
@@ -291,9 +291,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_CATCH_SKILL_FB:
 		action_type = ACTION_CATCH_SKILL_FB;
 		break;
-	case STATE_WEAK_WALK:
-	case STATE_WEAK_WALK_ATTACK:
-		action_type = ACTION_WEAK_WALK;
+	case STATE_WEAK_RUN:
+	case STATE_WEAK_RUN_ATTACK:
+		action_type = ACTION_WEAK_RUN;
 		break;
 	case STATE_BE_ELBOW:
 		action_type = ACTION_BE_ELBOW;
@@ -1641,8 +1641,8 @@ static void GamePlayer_SetPush( GamePlayer *player )
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BB );
 	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_BB, GamePlayer_AtAttackDone );
-	GamePlayer_ChangeState( player->other, STATE_WEAK_WALK );
-	/* 在 STATE_WEAK_WALK 状态持续一段时间后结束 */
+	GamePlayer_ChangeState( player->other, STATE_WEAK_RUN );
+	/* 在 STATE_WEAK_RUN 状态持续一段时间后结束 */
 	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
@@ -1654,22 +1654,30 @@ static void GamePlayer_SetPush( GamePlayer *player )
 	GamePlayer_LockMotion( player->other );
 }
 
+/** 处理游戏角色在进行虚弱奔跑时与其他角色的碰撞 */
 static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other )
 {
+	double x1, x2;
 	GamePlayer *player, *other_player;
+
 	player = GamePlayer_GetPlayerByWidget( self );
 	other_player = GamePlayer_GetPlayerByWidget( other );
 	if( !player || !other_player ) {
 		return;
 	}
+	/* 如果自己并不是处于 虚弱奔跑（带攻击） 的状态 */
+	if( player->state != STATE_WEAK_RUN_ATTACK ) {
+		return;
+	}
+	/* 若推自己的角色的动作还未完成，则忽略他 */
 	if( other_player->state == STATE_CATCH_SKILL_FB
 	&& other_player->other == player ) {
 		return;
 	}
-	if( player->state != STATE_WEAK_WALK_ATTACK ) {
-		return;
-	}
-	if( GamePlayer_IsLeftOriented(other_player) ) {
+	x1 = GameObject_GetX( self );
+	x2 = GameObject_GetX( other );
+	/* 根据两者坐标，判断击飞的方向 */
+	if( x1 < x2 ) {
 		GamePlayer_SetLeftHitFly( player );
 		GamePlayer_SetRightHitFly( other_player );
 	} else {
@@ -1692,7 +1700,7 @@ static void GamePlayer_SetPull( GamePlayer *player )
 	}
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FB );
 	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FB, GamePlayer_AtAttackDone );
-	GamePlayer_ChangeState( player->other, STATE_WEAK_WALK_ATTACK );
+	GamePlayer_ChangeState( player->other, STATE_WEAK_RUN_ATTACK );
 	/* 在与其他对象触碰时进行响应 */
 	GameObject_AtTouch( player->other->object, GamePlayer_ProcWeakWalkAttack );
 	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
