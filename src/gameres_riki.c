@@ -906,6 +906,28 @@ static ActionData *ActionRes_LoadBeCatch(void)
 	return action;
 }
 
+/** 背面被抓住 */
+static ActionData *ActionRes_LoadBackBeCatch(void)
+{
+	ActionData *action;
+	LCUI_Graph img;
+	RangeBox hit_range;
+	
+	Graph_Init( &img );
+	action = Action_Create();
+	
+	hit_range.x = -16;
+	hit_range.x_width = 40;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 56;
+	Graph_LoadImage( "drawable/back-be-catch.png", &img );
+	Action_AddFrame( action, -6, 0, &img, 5 );
+	Action_SetHitRange( action, 0, hit_range );
+	
+	return action;
+}
 /** 正面压制技能（A） */
 static ActionData *ActionRes_LoadFrontCatchSkillA(void)
 {
@@ -957,9 +979,56 @@ static ActionData *ActionRes_LoadFrontCatchSkillA(void)
 	hit_range.z = 0;
 	hit_range.z_width = 50;
 	Graph_LoadImage( "drawable/elbow-04.png", &img[3] );
+	Action_AddFrame( action, 0, 0, &img[3], 5 );
+	Action_AddFrame( action, 0, 5, &img[3], 5 );
 	Action_AddFrame( action, 0, 0, &img[3], 10 );
 	Action_SetHitRange( action, 3, hit_range );
+	Action_SetHitRange( action, 3, hit_range );
+	Action_SetHitRange( action, 3, hit_range );
+	/** 该动作不需要重复播放 */
+	Action_SetReplay( action, FALSE );
+	return action;
+}
 
+/** 被面压制技能（A） */
+static ActionData *ActionRes_LoadBackCatchSkillA(void)
+{
+	ActionData *action;
+	LCUI_Graph img[3];
+	RangeBox hit_range;
+	
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	
+	action = Action_Create();
+
+	hit_range.x = -21;
+	hit_range.x_width = 42;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 56;
+	Graph_LoadImage( "drawable/holding.png", &img[0] );
+	Action_AddFrame( action, 0, 0, &img[0], 10 );
+	Action_SetHitRange( action, 0, hit_range );
+	
+	hit_range.x = -16;
+	hit_range.x_width = 32;
+	hit_range.y = -GLOBAL_Y_WIDTH/2;
+	hit_range.y_width = GLOBAL_Y_WIDTH;
+	hit_range.z = 0;
+	hit_range.z_width = 60;
+	Graph_LoadImage( "drawable/jump-stomp.png", &img[1] );
+	Action_AddFrame( action, 0, 5, &img[1], 5 );
+	Action_SetHitRange( action, 1, hit_range );
+	Action_AddFrame( action, 0, 0, &img[1], 10 );
+	Action_SetHitRange( action, 1, hit_range );
+
+	Graph_LoadImage( "drawable/squat.png", &img[2] );
+	Action_AddFrame( action, 0, 0, &img[2], 5 );
+	/** 该动作不需要重复播放 */
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -981,7 +1050,8 @@ static ActionData* ActionRes_LoadBeElbow(void)
 	Action_AddFrame( action, 0, 0, &img[0], 5 );
 	Action_AddFrame( action, 0, 0, &img[1], 5 );
 	Action_AddFrame( action, 0, 0, &img[2], 5 );
-	Action_AddFrame( action, 0, 0, &img[3], 10 );
+	Action_AddFrame( action, 0, 0, &img[3], 5 );
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -1173,7 +1243,9 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_MACH_STOMP: return ActionRes_LoadMachStomp();
 	case ACTION_CATCH: return ActionRes_LoadCatch();
 	case ACTION_BE_CATCH: return ActionRes_LoadBeCatch();
+	case ACTION_BACK_BE_CATCH: return ActionRes_LoadBackBeCatch();
 	case ACTION_CATCH_SKILL_FA: return ActionRes_LoadFrontCatchSkillA();
+	case ACTION_CATCH_SKILL_BA: return ActionRes_LoadBackCatchSkillA();
 	case ACTION_BE_ELBOW: return ActionRes_LoadBeElbow();
 	default:break;
 	}
