@@ -1205,6 +1205,89 @@ static ActionData* ActionRes_LoadMachStomp(void)
 	return action;
 }
 
+static ActionData *ActionRes_LoadPull(void)
+{
+	LCUI_Graph img[2];
+	ActionData *action;
+	RangeBox range;
+
+	action = Action_Create();
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_LoadImage( "drawable/pull.png", &img[0] );
+	Graph_LoadImage( "drawable/push.png", &img[1] );
+	Action_AddFrame( action, 12, 0, &img[0], 10 );
+	Action_AddFrame( action, -12, 0, &img[1], 15 );
+	
+	range.x = 13;
+	range.x_width = 54;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 58;
+	Action_SetHitRange( action, 0, range );
+	
+	range.x = -22;
+	range.x_width = 44;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 56;
+	Action_SetHitRange( action, 1, range );
+	Action_SetReplay( action, FALSE );
+	return action;
+}
+
+static ActionData *ActionRes_LoadPush(void)
+{
+	LCUI_Graph img[2];
+	ActionData *action;
+	RangeBox range;
+
+	action = Action_Create();
+	range.x = -22;
+	range.x_width = 44;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 56;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_LoadImage( "drawable/rest-02.png", &img[0] );
+	Graph_LoadImage( "drawable/push.png", &img[1] );
+	Action_AddFrame( action, -6, 0, &img[0], 10 );
+	Action_AddFrame( action, -12, 0, &img[1], 10 );
+	Action_SetReplay( action, FALSE );
+	return action;
+}
+
+static ActionData *ActionRes_LoadWeakWalk(void)
+{	
+	LCUI_Graph img[2];
+	ActionData *action;
+	RangeBox range;
+
+	action = Action_Create();
+	range.x = -22;
+	range.x_width = 44;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 56;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_LoadImage( "drawable/weak-walk-01.png", &img[0] );
+	Graph_LoadImage( "drawable/weak-walk-02.png", &img[1] );
+	Action_AddFrame( action, -6, 2, &img[0], 5 );
+	Action_AddFrame( action, -6, 0, &img[1], 5 );
+	Action_SetHitRange( action, 0, range );
+	Action_SetHitRange( action, 1, range );
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -1246,6 +1329,9 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_BACK_BE_CATCH: return ActionRes_LoadBackBeCatch();
 	case ACTION_CATCH_SKILL_FA: return ActionRes_LoadFrontCatchSkillA();
 	case ACTION_CATCH_SKILL_BA: return ActionRes_LoadBackCatchSkillA();
+	case ACTION_CATCH_SKILL_BB: return ActionRes_LoadPush();
+	case ACTION_CATCH_SKILL_FB: return ActionRes_LoadPull();
+	case ACTION_WEAK_WALK: return ActionRes_LoadWeakWalk();
 	case ACTION_BE_ELBOW: return ActionRes_LoadBeElbow();
 	default:break;
 	}
