@@ -47,6 +47,9 @@ static int global_action_list[]={
 	ACTION_BACK_BE_CATCH,
 	ACTION_CATCH_SKILL_FA,
 	ACTION_CATCH_SKILL_BA,
+	ACTION_CATCH_SKILL_BB,
+	ACTION_CATCH_SKILL_FB,
+	ACTION_WEAK_WALK,
 	ACTION_BE_ELBOW
 };
 
@@ -66,6 +69,8 @@ static int global_action_list[]={
 #define ZSPEED_S_HIT_FLY	15
 
 #define XACC_ROLL	15
+
+#define XSPEED_WEAK_WALK 20
 
 #define XSPEED_X_HIT_FLY	70
 #define ZACC_XB_HIT_FLY		15
@@ -280,11 +285,19 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_CATCH_SKILL_BA:
 		action_type = ACTION_CATCH_SKILL_BA;
 		break;
+	case STATE_CATCH_SKILL_BB:
+		action_type = ACTION_CATCH_SKILL_BB;
+		break;
+	case STATE_CATCH_SKILL_FB:
+		action_type = ACTION_CATCH_SKILL_FB;
+		break;
+	case STATE_WEAK_WALK:
+	case STATE_WEAK_WALK_ATTACK:
+		action_type = ACTION_WEAK_WALK;
+		break;
 	case STATE_BE_ELBOW:
 		action_type = ACTION_BE_ELBOW;
 		break;
-	case STATE_CATCH_SKILL_FB:
-	case STATE_CATCH_SKILL_BB:
 	default:return;
 	}
 	player->state = state;
@@ -857,7 +870,7 @@ static void GamePlayer_AtCatchDone( GamePlayer *player )
 	GamePlayer_SetRest( player->other );
 }
 
-static void GamePlayer_SetCatch( GamePlayer *player )
+static void GamePlayer_SetLeftCatch( GamePlayer *player )
 {
 	double x, y;
 	if( !player->other ) {
@@ -868,21 +881,38 @@ static void GamePlayer_SetCatch( GamePlayer *player )
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
 	GameObject_GetPos( player->object, &x, &y );
-	if( GamePlayer_IsLeftOriented(player) ) {
-		if( GamePlayer_IsLeftOriented(player->other) ) {
-			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-		} else {
-			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-		}
-		GameObject_SetPos( player->other->object, x-30, y );
+
+	if( GamePlayer_IsLeftOriented(player->other) ) {
+		GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
 	} else {
-		if( GamePlayer_IsLeftOriented(player->other) ) {
-			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-		} else {
-			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-		}
-		GameObject_SetPos( player->other->object, x+30, y );
+		GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
 	}
+	GameObject_SetPos( player->other->object, x-30, y );
+	GamePlayer_ChangeState( player, STATE_CATCH );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockMotion( player->other );
+	GamePlayer_SetActionTimeOut( player, 2000, GamePlayer_AtCatchDone );
+}
+
+static void GamePlayer_SetRightCatch( GamePlayer *player )
+{
+	double x, y;
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	GameObject_GetPos( player->object, &x, &y );
+	if( GamePlayer_IsLeftOriented(player->other) ) {
+		GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
+	} else {
+		GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
+	}
+	GameObject_SetPos( player->other->object, x+30, y );
 	GamePlayer_ChangeState( player, STATE_CATCH );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
@@ -897,8 +927,9 @@ static GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 	RangeBox range;
 	LCUI_Widget *obj;
 	
-	range.x = -16;
-	range.x_width = 32;
+	/* 前面一块区域 */
+	range.x = 11;
+	range.x_width = 5;
 	range.y = -GLOBAL_Y_WIDTH/2;
 	range.y_width = GLOBAL_Y_WIDTH;
 	range.z = 0;
@@ -914,11 +945,19 @@ static GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 
 static void GamePlayer_ProcLeftKey( GamePlayer *player )
 {
+	double x, y;
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
 		 || player->state == STATE_SJUMP
 		 || player->state == STATE_SQUAT ) {
 			GamePlayer_SetLeftOriented( player );
+		}
+		if( player->state == STATE_CATCH && player->other
+		 && player->other->state == STATE_BACK_BE_CATCH ) {
+			GamePlayer_SetLeftOriented( player );
+			GamePlayer_SetLeftOriented( player->other );
+			GameObject_GetPos( player->object, &x, &y );
+			GameObject_SetPos( player->other->object, x-30, y );
 		}
 		return;
 	}
@@ -926,16 +965,16 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 	case STATE_READY:
 	case STATE_STANCE:
 	case STATE_WALK:
+		GamePlayer_SetLeftOriented( player );
 		player->other = GamePlayer_CatchGaspingPlayer( player );
 		if( player->other ) {
-			GamePlayer_SetCatch( player );
+			GamePlayer_SetLeftCatch( player );
 		}
 		if( LCUIKey_IsDoubleHit(player->ctrlkey.left,250) ) {
 			 GamePlayer_SetLeftRun( player );
 		} else {
 			 GamePlayer_SetLeftWalk( player );
 		}
-		GamePlayer_SetLeftOriented( player );
 	case STATE_LEFTRUN:
 		break;
 	case STATE_RIGHTRUN:
@@ -947,11 +986,19 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 
 static void GamePlayer_ProcRightKey( GamePlayer *player )
 {
+	double x, y;
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
 		 || player->state == STATE_SJUMP
 		 || player->state == STATE_SQUAT ) {
 			GamePlayer_SetRightOriented( player );
+		}
+		if( player->state == STATE_CATCH && player->other
+		 && player->other->state == STATE_BACK_BE_CATCH ) {
+			GamePlayer_SetRightOriented( player );
+			GamePlayer_SetRightOriented( player->other );
+			GameObject_GetPos( player->object, &x, &y );
+			GameObject_SetPos( player->other->object, x+30, y );
 		}
 		return;
 	}
@@ -959,9 +1006,10 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 	case STATE_READY:
 	case STATE_STANCE:
 	case STATE_WALK:
+		GamePlayer_SetRightOriented( player );
 		player->other = GamePlayer_CatchGaspingPlayer( player );
 		if( player->other ) {
-			GamePlayer_SetCatch( player );
+			GamePlayer_SetRightCatch( player );
 			break;
 		}
 		if( LCUIKey_IsDoubleHit(player->ctrlkey.right,250) ) {
@@ -969,7 +1017,6 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 		} else {
 			 GamePlayer_SetRightWalk( player );
 		}
-		GamePlayer_SetRightOriented( player );
 	case STATE_RIGHTRUN:
 		break;
 	case STATE_LEFTRUN:
@@ -996,18 +1043,12 @@ void GamePlayer_StopXWalk( GamePlayer *player )
 
 void GamePlayer_StopYMotion( GamePlayer *player )
 {
-	if( player->lock_motion ) {
-		return;
-	}
 	GameObject_SetYSpeed( player->object, 0 );
 	GameObject_SetYAcc( player->object, 0 );
 }
 
 void GamePlayer_StopXMotion( GamePlayer *player )
 {
-	if( player->lock_motion ) {
-		return;
-	}
 	GameObject_SetXSpeed( player->object, 0 );
 	GameObject_SetXAcc( player->object, 0 );
 }
@@ -1018,6 +1059,7 @@ static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_UnlockAction( player );
+	GameObject_AtXSpeedToZero( widget, 0, NULL );
 	player->attack_type = ATTACK_TYPE_NONE;
 	GamePlayer_SetReady( player );
 }
@@ -1414,6 +1456,10 @@ static void GamePlayer_BackCatchSkillAUpdate( LCUI_Widget *widget )
 		break;
 	case 3:
 		GameObject_SetZSpeed( player->other->object, -20 );
+		GamePlayer_SetRestTimeOut( 
+			player->other, SHORT_REST_TIMEOUT,
+			GamePlayer_StartStand 
+		);
 		start = FALSE;
 	default:
 		break;
@@ -1447,12 +1493,7 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 		GameObject_GetPos( player->object, &x, &y );
 		GameObject_SetPos( player->other->object, x, y );
 		GameObject_SetZ( player->other->object, 56 );
-		GameObject_SetZSpeed( player->other->object, -20 );
-		
-		GamePlayer_SetRestTimeOut( 
-			player->other, SHORT_REST_TIMEOUT,
-			GamePlayer_StartStand 
-		);
+		GameObject_AtLanding( player->other->object, -20, 0, NULL );
 		GameObject_AtActionUpdate(
 			player->object, ACTION_CATCH_SKILL_BA, 
 			GamePlayer_BackCatchSkillAUpdate 
@@ -1478,24 +1519,25 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 {
 	double acc, speed;
 	LCUI_Widget *widget;
-
-	if( player->lock_action ) {
-		if( player->state == STATE_CATCH && player->other ) {
-			/* 根据方向，判断该使用何种技能 */
-			if( GamePlayer_IsLeftOriented(player) ) {
-				if( GamePlayer_IsLeftOriented(player->other) ) {
-					GamePlayer_SetBackCatchSkillA( player );
-				} else {
-					GamePlayer_SetFrontCatchSkillA( player );
-				}
+	
+	if( player->state == STATE_CATCH && player->other ) {
+		/* 根据方向，判断该使用何种技能 */
+		if( GamePlayer_IsLeftOriented(player) ) {
+			if( GamePlayer_IsLeftOriented(player->other) ) {
+				GamePlayer_SetBackCatchSkillA( player );
 			} else {
-				if( GamePlayer_IsLeftOriented(player->other) ) {
-					GamePlayer_SetFrontCatchSkillA( player );
-				} else {
-					GamePlayer_SetBackCatchSkillA( player );
-				}
+				GamePlayer_SetFrontCatchSkillA( player );
+			}
+		} else {
+			if( GamePlayer_IsLeftOriented(player->other) ) {
+				GamePlayer_SetFrontCatchSkillA( player );
+			} else {
+				GamePlayer_SetBackCatchSkillA( player );
 			}
 		}
+		return;
+	}
+	if( player->lock_action ) {
 		return;
 	}
 
@@ -1585,15 +1627,112 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	GamePlayer_LockAction( player );
 }
 
+static void GamePlayer_AtWeakWalkDone( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_F_ROLL );
+	GamePlayer_LockAction( player );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtForwardRollTimeOut );
+}
+
+static void GamePlayer_SetPush( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BB );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_BB, GamePlayer_AtAttackDone );
+	GamePlayer_ChangeState( player->other, STATE_WEAK_WALK );
+	/* 在 STATE_WEAK_WALK 状态持续一段时间后结束 */
+	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	if( GamePlayer_IsLeftOriented(player->other) ) {
+		GameObject_SetXSpeed( player->other->object, -XSPEED_WEAK_WALK );
+	} else {
+		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
+	}
+	GamePlayer_LockMotion( player->other );
+}
+
+static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other )
+{
+	GamePlayer *player, *other_player;
+	player = GamePlayer_GetPlayerByWidget( self );
+	other_player = GamePlayer_GetPlayerByWidget( other );
+	if( !player || !other_player ) {
+		return;
+	}
+	if( other_player->state == STATE_CATCH_SKILL_FB
+	&& other_player->other == player ) {
+		return;
+	}
+	if( player->state != STATE_WEAK_WALK_ATTACK ) {
+		return;
+	}
+	if( GamePlayer_IsLeftOriented(other_player) ) {
+		GamePlayer_SetLeftHitFly( player );
+		GamePlayer_SetRightHitFly( other_player );
+	} else {
+		GamePlayer_SetRightHitFly( player );
+		GamePlayer_SetLeftHitFly( other_player );
+	}
+	GameObject_AtTouch( player->object, NULL );
+	player->n_attack = 0;
+	other_player->n_attack = 0;
+}
+
+static void GamePlayer_SetPull( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	if( GamePlayer_IsLeftOriented(player) ) {
+		GamePlayer_SetRightOriented( player );
+	} else {
+		GamePlayer_SetLeftOriented( player );
+	}
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FB );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FB, GamePlayer_AtAttackDone );
+	GamePlayer_ChangeState( player->other, STATE_WEAK_WALK_ATTACK );
+	/* 在与其他对象触碰时进行响应 */
+	GameObject_AtTouch( player->other->object, GamePlayer_ProcWeakWalkAttack );
+	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	if( GamePlayer_IsLeftOriented(player->other) ) {
+		GameObject_SetXSpeed( player->other->object, -XSPEED_WEAK_WALK );
+	} else {
+		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
+	}
+	GamePlayer_LockMotion( player->other );
+}
+
 /** 进行B攻击 */
 void GamePlayer_StartBAttack( GamePlayer *player )
 {
 	double acc, speed;
 	LCUI_Widget *widget;
 
+	if( player->state == STATE_CATCH && player->other ) {
+		/* 根据方向，判断该使用何种技能 */
+		if( GamePlayer_IsLeftOriented(player) ) {
+			if( GamePlayer_IsLeftOriented(player->other) ) {
+				GamePlayer_SetPush( player );
+			} else {
+				GamePlayer_SetPull( player );
+			}
+		} else {
+			if( GamePlayer_IsLeftOriented(player->other) ) {
+				GamePlayer_SetPull( player );
+			} else {
+				GamePlayer_SetPush( player );
+			}
+		}
+		return;
+	}
 	if( player->lock_action ) {
 		return;
 	}
+
 	switch(player->state) {
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
