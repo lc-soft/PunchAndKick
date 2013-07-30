@@ -68,7 +68,8 @@ enum GamePlayerState {
 	STATE_BE_LIFT_TUMMY,		/**< 被举起，趴着 */
 	STATE_BE_LIFT_LYING_HIT,	/**< 被举起，躺着挨打 */
 	STATE_BE_LIFT_TUMMY_HIT,	/**< 被举起，趴着挨打 */
-	STATE_BE_ELBOW
+	STATE_BE_ELBOW,
+	STATE_THROW
 };
 
 enum ActionType {
@@ -118,7 +119,8 @@ enum ActionType {
 	ACTION_LIFT_RUN,
 	ACTION_LIFT_JUMP,
 	ACTION_LIFT_FALL,
-	ACTION_BE_ELBOW
+	ACTION_BE_ELBOW,
+	ACTION_THROW
 };
 
 /** 攻击类型 */
