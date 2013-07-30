@@ -1009,7 +1009,7 @@ static ActionData *ActionRes_LoadBackCatchSkillA(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 56;
-	Graph_LoadImage( "drawable/holding.png", &img[0] );
+	Graph_LoadImage( "drawable/lift.png", &img[0] );
 	Action_AddFrame( action, 0, 0, &img[0], 10 );
 	Action_SetHitRange( action, 0, hit_range );
 	
@@ -1281,10 +1281,94 @@ static ActionData *ActionRes_LoadWeakWalk(void)
 	Graph_Init( &img[1] );
 	Graph_LoadImage( "drawable/weak-walk-01.png", &img[0] );
 	Graph_LoadImage( "drawable/weak-walk-02.png", &img[1] );
-	Action_AddFrame( action, -6, 2, &img[0], 5 );
-	Action_AddFrame( action, -6, 0, &img[1], 5 );
+	Action_AddFrame( action, -6, 2, &img[0], 7 );
+	Action_AddFrame( action, -6, 0, &img[1], 7 );
 	Action_SetHitRange( action, 0, range );
 	Action_SetHitRange( action, 1, range );
+	return action;
+}
+
+/** 举着，站立 */
+ActionData *ActionRes_LoadLiftStance(void)
+{
+	LCUI_Graph img;
+	ActionData *action;
+	RangeBox range;
+
+	action = Action_Create();
+	
+	range.x = -17;
+	range.x_width = 34;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 56;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/lift.png", &img );
+	Action_AddFrame( action, 0,0, &img, 5 );
+	Action_SetHitRange( action, 0, range );
+
+	return action;
+}
+
+/** 举着，行走 */
+ActionData *ActionRes_LoadLiftWalk(void)
+{
+	LCUI_Graph img[3];
+	ActionData *action;
+	RangeBox range;
+	
+	action = Action_Create();
+	
+	range.x = -17;
+	range.x_width = 34;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 56;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_Init( &img[2] );
+	Graph_LoadImage( "drawable/lift-walk-01.png", &img[0] );
+	Graph_LoadImage( "drawable/lift-walk-02.png", &img[1] );
+	Graph_LoadImage( "drawable/lift-walk-03.png", &img[2] );
+	Action_AddFrame( action, 0,0, &img[0], 5 );
+	Action_AddFrame( action, 0,0, &img[1], 5 );
+	Action_AddFrame( action, 0,0, &img[2], 5 );
+	Action_SetHitRange( action, 0, range );
+	Action_SetHitRange( action, 1, range );
+	Action_SetHitRange( action, 2, range );
+
+	return action;
+}
+
+/** 举着，奔跑 */
+ActionData *ActionRes_LoadLiftRun(void)
+{
+	LCUI_Graph img[2];
+	ActionData *action;
+	RangeBox range;
+	
+	action = Action_Create();
+	
+	range.x = -17;
+	range.x_width = 34;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 56;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	Graph_LoadImage( "drawable/lift-run-01.png", &img[0] );
+	Graph_LoadImage( "drawable/lift-run-02.png", &img[1] );
+	Action_AddFrame( action, 0,0, &img[0], 10 );
+	Action_AddFrame( action, 0,0, &img[1], 5 );
+	Action_SetHitRange( action, 0, range );
+	Action_SetHitRange( action, 1, range );
+
 	return action;
 }
 
@@ -1333,6 +1417,9 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_CATCH_SKILL_FB: return ActionRes_LoadPull();
 	case ACTION_WEAK_RUN: return ActionRes_LoadWeakWalk();
 	case ACTION_BE_ELBOW: return ActionRes_LoadBeElbow();
+	case ACTION_LIFT_STANCE: return ActionRes_LoadLiftStance();
+	case ACTION_LIFT_WALK: return ActionRes_LoadLiftWalk();
+	case ACTION_LIFT_RUN: return ActionRes_LoadLiftRun();
 	default:break;
 	}
 	return NULL;
