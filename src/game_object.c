@@ -620,6 +620,11 @@ static void GameObjectStream_Proc( void )
 				obj->at_zero_zspeed( widget );
 			}
 		}
+		if( obj->phys_obj->z > 0 ) {
+			Widget_Show( obj->shadow );
+		} else {
+			Widget_Hide( obj->shadow );
+		}
 		/**
 		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
 		暂不考虑其他对象对当前对象的着陆点的影响。
