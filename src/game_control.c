@@ -53,6 +53,8 @@ static int global_action_list[]={
 	ACTION_LIFT_STANCE,
 	ACTION_LIFT_WALK,
 	ACTION_LIFT_RUN,
+	ACTION_LIFT_JUMP,
+	ACTION_LIFT_FALL,
 	ACTION_BE_ELBOW
 };
 
@@ -315,6 +317,12 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_LIFT_RUN:
 		action_type = ACTION_LIFT_RUN;
 		break;
+	case STATE_LIFT_JUMP:
+		action_type = ACTION_LIFT_JUMP;
+		break;
+	case STATE_LIFT_FALL:
+		action_type = ACTION_LIFT_FALL;
+		break;
 	default:return;
 	}
 	player->state = state;
@@ -387,6 +395,17 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 	return 0;
 }
 
+static void GamePlayer_SetLeftLiftWalk( GamePlayer *player )
+{
+	double speed;
+	if( player->lock_motion ) {
+		return;
+	}
+	speed = -XSPEED_WALK * player->property.speed / 100;
+	GameObject_SetXSpeed( player->object, speed );
+	GamePlayer_ChangeState( player, STATE_LIFT_WALK );
+}
+
 static void GamePlayer_SetLeftWalk( GamePlayer *player )
 {
 	double speed;
@@ -409,7 +428,18 @@ static void GamePlayer_SetRightWalk( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_WALK );
 }
 
-void GamePlayer_SetLeftRun( GamePlayer *player )
+static void GamePlayer_SetRightLiftWalk( GamePlayer *player )
+{
+	double speed;
+	if( player->lock_motion ) {
+		return;
+	}
+	speed = XSPEED_WALK * player->property.speed / 100;
+	GameObject_SetXSpeed( player->object, speed );
+	GamePlayer_ChangeState( player, STATE_LIFT_WALK );
+}
+
+static void GamePlayer_SetLeftRun( GamePlayer *player )
 {
 	double speed;
 	if( player->lock_motion ) {
@@ -420,7 +450,7 @@ void GamePlayer_SetLeftRun( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_LEFTRUN );
 }
 
-void GamePlayer_SetRightRun( GamePlayer *player )
+static void GamePlayer_SetRightRun( GamePlayer *player )
 {
 	double speed;
 	if( player->lock_motion ) {
@@ -514,6 +544,33 @@ static void GamePlayer_SetSquat( GamePlayer *player )
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtSquatDone );
+}
+
+/** 举着，着陆 */
+static void GamePlayer_AtLiftLanding( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
+}
+
+/** 举着，下落 */
+static void GamePlayer_SetLiftFall( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_ChangeState( player, STATE_LIFT_FALL );
+	/* 撤销响应 */
+	GameObject_AtZeroZSpeed( player->object, NULL );
+}
+
+/** 举着，起跳 */
+static void GamePlayer_SetLiftJump( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_LIFT_JUMP );
+	GameObject_AtZeroZSpeed( player->object, GamePlayer_SetLiftFall );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLiftLanding );
 }
 
 /** 在歇息状态结束后 */
@@ -853,6 +910,29 @@ void GamePlayer_SetRightHitFly( GamePlayer *player )
 	);
 }
 
+static void GamePlayer_StopLiftRun( GamePlayer *player )
+{
+	double speed, acc;
+
+	if( GamePlayer_IsLeftOriented(player) ) {
+		acc = XACC_STOPRUN;
+	} else {
+		acc = -XACC_STOPRUN;
+	}
+	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtRunEnd );
+	speed = GameObject_GetYSpeed( player->object );
+	acc = YSPEED_WALK * XACC_STOPRUN / XSPEED_RUN;
+	if( speed < 0.0 ) {
+		GameObject_SetYAcc( player->object, acc );
+	}
+	else if( speed > 0.0 ) {
+		GameObject_SetYAcc( player->object, -acc );
+	}
+}
+
 /** 停止奔跑 */
 void GamePlayer_StopRun( GamePlayer *player )
 {
@@ -962,14 +1042,14 @@ static GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 
 static void GamePlayer_ProcLeftKey( GamePlayer *player )
 {
-	double x, y;
+	double x, y, speed;
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
 		 || player->state == STATE_SJUMP
 		 || player->state == STATE_SQUAT ) {
 			GamePlayer_SetLeftOriented( player );
 		}
-		if( player->state == STATE_CATCH && player->other
+		else if( player->state == STATE_CATCH && player->other
 		 && player->other->state == STATE_BACK_BE_CATCH ) {
 			GamePlayer_SetLeftOriented( player );
 			GamePlayer_SetLeftOriented( player->other );
@@ -979,6 +1059,17 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 		return;
 	}
 	switch(player->state) {
+	case STATE_LIFT_WALK:
+	case STATE_LIFT_STANCE:
+		GamePlayer_SetLeftOriented( player );
+		if( LCUIKey_IsDoubleHit(player->ctrlkey.left,250) ) {
+			speed = -XSPEED_RUN * player->property.speed / 100;
+			GameObject_SetXSpeed( player->object, speed );
+			GamePlayer_ChangeState( player, STATE_LIFT_RUN );
+		} else {
+			 GamePlayer_SetLeftLiftWalk( player );
+		}
+		break;
 	case STATE_READY:
 	case STATE_STANCE:
 	case STATE_WALK:
@@ -997,13 +1088,18 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 	case STATE_RIGHTRUN:
 		GamePlayer_StopRun( player );
 		break;
+	case STATE_LIFT_RUN:
+		if( GamePlayer_IsLeftOriented(player) ) {
+			break;
+		}
+		GamePlayer_StopLiftRun( player );
 	default:break;
 	}
 }
 
 static void GamePlayer_ProcRightKey( GamePlayer *player )
 {
-	double x, y;
+	double x, y, speed;
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
 		 || player->state == STATE_SJUMP
@@ -1020,6 +1116,17 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 		return;
 	}
 	switch(player->state) {
+	case STATE_LIFT_WALK:
+	case STATE_LIFT_STANCE:
+		GamePlayer_SetRightOriented( player );
+		if( LCUIKey_IsDoubleHit(player->ctrlkey.right,250) ) {
+			speed = XSPEED_RUN * player->property.speed / 100;
+			GameObject_SetXSpeed( player->object, speed );
+			GamePlayer_ChangeState( player, STATE_LIFT_RUN );
+		} else {
+			GamePlayer_SetRightLiftWalk( player );
+		}
+		break;
 	case STATE_READY:
 	case STATE_STANCE:
 	case STATE_WALK:
@@ -1039,6 +1146,11 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 	case STATE_LEFTRUN:
 		GamePlayer_StopRun( player );
 		break;
+	case STATE_LIFT_RUN:
+		if( !GamePlayer_IsLeftOriented(player) ) {
+			break;
+		}
+		GamePlayer_StopLiftRun( player );
 	default:break;
 	}
 }
@@ -1051,6 +1163,9 @@ void GamePlayer_StopXWalk( GamePlayer *player )
 	switch(player->state) {
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
+	case STATE_LIFT_RUN:
+	case STATE_LIFT_JUMP:
+	case STATE_LIFT_FALL:
 		return;
 	default:
 		GameObject_SetXSpeed( player->object, 0 );
@@ -1111,7 +1226,14 @@ void GamePlayer_StartJump( GamePlayer *player )
 	switch(player->state) {
 	case STATE_SJUMP:
 	case STATE_JUMP:
-		return;
+	case STATE_LIFT_JUMP:
+	case STATE_LIFT_FALL:
+		break;
+	case STATE_LIFT_STANCE:
+	case STATE_LIFT_WALK:
+	case STATE_LIFT_RUN:
+		GamePlayer_SetLiftJump( player );
+		break;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
 	case STATE_AS_ATTACK:
@@ -2365,6 +2487,9 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	if( stop_xmotion && stop_ymotion ) {
 		if( player->state == STATE_WALK ) {
 			GamePlayer_ChangeState( player, STATE_STANCE );
+		}
+		else if( player->state == STATE_LIFT_WALK ) {
+			GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 		}
 	}
 }

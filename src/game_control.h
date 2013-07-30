@@ -61,6 +61,8 @@ enum GamePlayerState {
 	STATE_LIFT_STANCE,		/**< 举着，站立 */
 	STATE_LIFT_WALK,		/**< 举着，行走 */
 	STATE_LIFT_RUN,			/**< 举着，奔跑 */
+	STATE_LIFT_JUMP,		/**< 举着，跳起 */
+	STATE_LIFT_FALL,		/**< 举着，下落 */
 	STATE_BE_LIFT_STANCE,		/**< 被举起，站立 */
 	STATE_BE_LIFT_LYING,		/**< 被举起，躺着 */
 	STATE_BE_LIFT_TUMMY,		/**< 被举起，趴着 */
@@ -114,6 +116,8 @@ enum ActionType {
 	ACTION_LIFT_STANCE,
 	ACTION_LIFT_WALK,
 	ACTION_LIFT_RUN,
+	ACTION_LIFT_JUMP,
+	ACTION_LIFT_FALL,
 	ACTION_BE_ELBOW
 };
 
