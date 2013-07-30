@@ -903,7 +903,6 @@ static void GameObject_ExecShow( LCUI_Widget *widget )
 {
 	GameObject *obj;
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	Widget_Show( obj->shadow );
 }
 
 static void GameObject_ExecDestroy( LCUI_Widget *widget )
