@@ -1422,6 +1422,30 @@ static ActionData* ActionRes_LoadLiftFall(void)
 	return action;
 }
 
+/** 投掷、抛 */
+static ActionData *ActionRes_LoadThrow(void)
+{	
+	LCUI_Graph img;
+	ActionData *action;
+	RangeBox range;
+	
+	action = Action_Create();
+	
+	range.x = -12;
+	range.x_width = 38;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 56;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/push.png", &img );
+	Action_AddFrame( action, -11,0, &img, 10 );
+	Action_SetHitRange( action, 0, range );
+
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -1472,6 +1496,7 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_LIFT_RUN: return ActionRes_LoadLiftRun();
 	case ACTION_LIFT_JUMP: return ActionRes_LoadLiftJump();
 	case ACTION_LIFT_FALL: return ActionRes_LoadLiftFall();
+	case ACTION_THROW: return ActionRes_LoadThrow();
 	default:break;
 	}
 	return NULL;
