@@ -58,6 +58,14 @@ enum GamePlayerState {
 	STATE_CATCH_SKILL_BB,
 	STATE_WEAK_RUN,
 	STATE_WEAK_RUN_ATTACK,
+	STATE_LIFT_STANCE,		/**< 举着，站立 */
+	STATE_LIFT_WALK,		/**< 举着，行走 */
+	STATE_LIFT_RUN,			/**< 举着，奔跑 */
+	STATE_BE_LIFT_STANCE,		/**< 被举起，站立 */
+	STATE_BE_LIFT_LYING,		/**< 被举起，躺着 */
+	STATE_BE_LIFT_TUMMY,		/**< 被举起，趴着 */
+	STATE_BE_LIFT_LYING_HIT,	/**< 被举起，躺着挨打 */
+	STATE_BE_LIFT_TUMMY_HIT,	/**< 被举起，趴着挨打 */
 	STATE_BE_ELBOW
 };
 
@@ -103,6 +111,9 @@ enum ActionType {
 	ACTION_CATCH_SKILL_BA,	/**< 背面抓握压制技能 A */
 	ACTION_CATCH_SKILL_BB,	/**< 背面抓握压制技能 B */
 	ACTION_WEAK_RUN,
+	ACTION_LIFT_STANCE,
+	ACTION_LIFT_WALK,
+	ACTION_LIFT_RUN,
 	ACTION_BE_ELBOW
 };
 

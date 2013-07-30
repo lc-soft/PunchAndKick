@@ -50,6 +50,9 @@ static int global_action_list[]={
 	ACTION_CATCH_SKILL_BB,
 	ACTION_CATCH_SKILL_FB,
 	ACTION_WEAK_RUN,
+	ACTION_LIFT_STANCE,
+	ACTION_LIFT_WALK,
+	ACTION_LIFT_RUN,
 	ACTION_BE_ELBOW
 };
 
@@ -172,6 +175,7 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		action_type = ACTION_READY;
 		break;
 	case STATE_STANCE: 
+	case STATE_BE_LIFT_STANCE:
 		action_type = ACTION_STANCE; 
 		break;
 	case STATE_WALK:
@@ -229,15 +233,19 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		action_type = ACTION_B_HIT_FLY;
 		break;
 	case STATE_LYING:
+	case STATE_BE_LIFT_LYING:
 		action_type = ACTION_LYING;
 		break;
 	case STATE_LYING_HIT:
+	case STATE_BE_LIFT_LYING_HIT:
 		action_type = ACTION_LYING_HIT;
 		break;
 	case STATE_TUMMY:
+	case STATE_BE_LIFT_TUMMY:
 		action_type = ACTION_TUMMY;
 		break;
 	case STATE_TUMMY_HIT:
+	case STATE_BE_LIFT_TUMMY_HIT:
 		action_type = ACTION_TUMMY_HIT;
 		break;
 	case STATE_REST:
@@ -297,6 +305,15 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		break;
 	case STATE_BE_ELBOW:
 		action_type = ACTION_BE_ELBOW;
+		break;
+	case STATE_LIFT_STANCE:
+		action_type = ACTION_LIFT_STANCE;
+		break;
+	case STATE_LIFT_WALK:
+		action_type = ACTION_LIFT_WALK;
+		break;
+	case STATE_LIFT_RUN:
+		action_type = ACTION_LIFT_RUN;
 		break;
 	default:return;
 	}
@@ -1206,11 +1223,10 @@ void GamePlayer_SetJumpTread( GamePlayer *player )
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_JumpTreadStep1 );
 }
 
-/** 检测玩家是否能够攻击躺在地上的玩家 */
-static LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player )
+/** 获取当前角色附近躺地的角色 */
+static GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
 {
 	RangeBox range;
-	double x1, x2;
 	LCUI_Widget *widget;
 
 	range.x = -5;
@@ -1224,27 +1240,45 @@ static LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player )
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_LYING );
 	if( widget ) {
-		goto check_done;
+		return GamePlayer_GetPlayerByWidget( widget );;
 	}
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_TUMMY );
 	if( widget ) {
-		goto check_done;
+		return GamePlayer_GetPlayerByWidget( widget );
 	}
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_LYING_HIT );
 	if( widget ) {
-		goto check_done;
+		return GamePlayer_GetPlayerByWidget( widget );
 	}
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_TUMMY_HIT );
 	if( widget ) {
-		goto check_done;
+		return GamePlayer_GetPlayerByWidget( widget );
+	}
+	return NULL;
+}
+
+/** 检测当前角色是否能够举起另一个角色 */
+static LCUI_BOOL GamePlayer_CanLiftPlayer( GamePlayer *player, GamePlayer *other_player )
+{
+	double x1, x2;
+	x1 = GameObject_GetX( player->object );
+	x2 = GameObject_GetX( other_player->object );
+	/* 如果在中间位置附近 */
+	if( x1 > x2-10 && x1 < x2+10 ) {
+		return TRUE;
 	}
 	return FALSE;
-check_done:;
+}
+
+/** 检测玩家是否能够攻击躺在地上的玩家 */
+static LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player, GamePlayer *other_player )
+{
+	double x1, x2;
 	x1 = GameObject_GetX( player->object );
-	x2 = GameObject_GetX( widget );
+	x2 = GameObject_GetX( other_player->object );
 	/* 游戏角色必须面向躺地的角色的中心位置 */
 	if( GamePlayer_IsLeftOriented( player ) ) {
 		if( x1 <= x2 ) {
@@ -1514,11 +1548,67 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 }
 
+static void GamePlayer_AtLiftDone( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
+	GameObject_SetZ( player->other->object, 56 );
+}
+
+/** 被举着，站立 */
+static void GamePlayer_SetBeLiftStance( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_BE_LIFT_STANCE );
+}
+
+/** 被举着，准备站起 */
+static void GamePlayer_BeLiftStartStand( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_SetBeLiftStance );
+	GamePlayer_LockAction( player );
+}
+
+/** 设置举起另一个角色 */
+static void GamePlayer_SetLiftPlayer( GamePlayer *player )
+{
+	double x, y;
+	int z_index;
+
+	if( !player->other ) {
+		return;
+	}
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index+1);
+	
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	if( player->other->state == STATE_LYING ) {
+		GamePlayer_ChangeState( player->other, STATE_BE_LIFT_LYING );
+	} else {
+		GamePlayer_ChangeState( player->other, STATE_BE_LIFT_TUMMY );
+	}
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_AtLiftDone );
+	GamePlayer_SetRestTimeOut( player->other, 4500, GamePlayer_BeLiftStartStand );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	/* 被举起的角色，需要记录举起他的角色 */
+	player->other->other = player;
+	GameObject_GetPos( player->object, &x, &y );
+	/* 改变躺地角色的坐标 */
+	GameObject_SetPos( player->other->object, x, y );
+	GameObject_SetZ( player->other->object, 20 );
+}
+
 /** 进行A攻击 */
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
 	double acc, speed;
 	LCUI_Widget *widget;
+	GamePlayer *other_player;
 	
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
@@ -1592,14 +1682,23 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		break;
 	}
 
-	if( GamePlayer_CanAttackGroundPlayer(player) ) {
-		if( player->skill.mach_stomp ) {
-			GamePlayer_SetMachStomp( player );
-		} else {
-			GamePlayer_SetJumpElbow( player );
+	other_player = GamePlayer_GetGroundPlayer( player );
+	if( other_player ) {
+		if( GamePlayer_CanLiftPlayer( player, other_player ) ) {
+			player->other = other_player;
+			GamePlayer_SetLiftPlayer( player );
+			return;
 		}
-		return;
+		if( GamePlayer_CanAttackGroundPlayer(player, other_player) ) {
+			if( player->skill.mach_stomp ) {
+				GamePlayer_SetMachStomp( player );
+			} else {
+				GamePlayer_SetJumpElbow( player );
+			}
+			return;
+		}
 	}
+
 	widget = GameObject_GetObjectInAttackRange( 
 				player->object,
 				ACTION_FINAL_BLOW,
@@ -1719,6 +1818,7 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 {
 	double acc, speed;
 	LCUI_Widget *widget;
+	GamePlayer *other_player;
 
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
@@ -1784,13 +1884,20 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	default:
 		break;
 	}
-	
-	if( GamePlayer_CanAttackGroundPlayer(player) ) {
-		GameObject_ClearAttack( player->object );
-		GamePlayer_SetJumpTread( player );
-		return;
+	/* 检测附近是否有躺在地上的其它角色 */
+	other_player = GamePlayer_GetGroundPlayer( player );
+	if( other_player ) {
+		/* 如果符合举起该角色的要求 */
+		if( GamePlayer_CanLiftPlayer( player, other_player ) ) {
+			player->other = other_player;
+			GamePlayer_SetLiftPlayer( player );
+			return;
+		}
+		if( GamePlayer_CanAttackGroundPlayer(player, other_player) ) {
+			GamePlayer_SetJumpTread( player );
+			return;
+		}
 	}
-
 	/* 清除攻击记录 */
 	GameObject_ClearAttack( player->object );
 	widget = GameObject_GetObjectInAttackRange( 
