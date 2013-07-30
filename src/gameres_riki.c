@@ -1315,7 +1315,7 @@ ActionData *ActionRes_LoadLiftStance(void)
 /** 举着，行走 */
 ActionData *ActionRes_LoadLiftWalk(void)
 {
-	LCUI_Graph img[3];
+	LCUI_Graph img[4];
 	ActionData *action;
 	RangeBox range;
 	
@@ -1331,15 +1331,19 @@ ActionData *ActionRes_LoadLiftWalk(void)
 	Graph_Init( &img[0] );
 	Graph_Init( &img[1] );
 	Graph_Init( &img[2] );
+	Graph_Init( &img[3] );
 	Graph_LoadImage( "drawable/lift-walk-01.png", &img[0] );
 	Graph_LoadImage( "drawable/lift-walk-02.png", &img[1] );
 	Graph_LoadImage( "drawable/lift-walk-03.png", &img[2] );
-	Action_AddFrame( action, 0,0, &img[0], 5 );
-	Action_AddFrame( action, 0,0, &img[1], 5 );
-	Action_AddFrame( action, 0,0, &img[2], 5 );
+	Graph_LoadImage( "drawable/lift-walk-04.png", &img[3] );
+	Action_AddFrame( action, 0,-2, &img[0], 8 );
+	Action_AddFrame( action, 0,0, &img[1], 8 );
+	Action_AddFrame( action, 0,-2, &img[2], 8 );
+	Action_AddFrame( action, 0,0, &img[3], 8 );
 	Action_SetHitRange( action, 0, range );
 	Action_SetHitRange( action, 1, range );
 	Action_SetHitRange( action, 2, range );
+	Action_SetHitRange( action, 3, range );
 
 	return action;
 }
@@ -1364,10 +1368,56 @@ ActionData *ActionRes_LoadLiftRun(void)
 	Graph_Init( &img[1] );
 	Graph_LoadImage( "drawable/lift-run-01.png", &img[0] );
 	Graph_LoadImage( "drawable/lift-run-02.png", &img[1] );
-	Action_AddFrame( action, 0,0, &img[0], 10 );
+	Action_AddFrame( action, 0,10, &img[0], 10 );
 	Action_AddFrame( action, 0,0, &img[1], 5 );
 	Action_SetHitRange( action, 0, range );
 	Action_SetHitRange( action, 1, range );
+
+	return action;
+}
+
+static ActionData* ActionRes_LoadLiftJump(void)
+{
+	LCUI_Graph img;
+	ActionData *action;
+	RangeBox range;
+	
+	action = Action_Create();
+	
+	range.x = -21;
+	range.x_width = 42;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 60;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/lift-jump.png", &img );
+	Action_AddFrame( action, 0,10, &img, 10 );
+	Action_SetHitRange( action, 0, range );
+
+	return action;
+}
+
+static ActionData* ActionRes_LoadLiftFall(void)
+{
+	LCUI_Graph img;
+	ActionData *action;
+	RangeBox range;
+	
+	action = Action_Create();
+	
+	range.x = -21;
+	range.x_width = 42;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 60;
+
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/lift-fall.png", &img );
+	Action_AddFrame( action, 0,10, &img, 10 );
+	Action_SetHitRange( action, 0, range );
 
 	return action;
 }
@@ -1420,6 +1470,8 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_LIFT_STANCE: return ActionRes_LoadLiftStance();
 	case ACTION_LIFT_WALK: return ActionRes_LoadLiftWalk();
 	case ACTION_LIFT_RUN: return ActionRes_LoadLiftRun();
+	case ACTION_LIFT_JUMP: return ActionRes_LoadLiftJump();
+	case ACTION_LIFT_FALL: return ActionRes_LoadLiftFall();
 	default:break;
 	}
 	return NULL;
