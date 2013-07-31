@@ -647,51 +647,8 @@ static ActionData *ActionRes_LoadTummyHit(void)
 	return action;
 }
 
-/** 被终结一击从正面击飞 */
-static ActionData *ActionRes_LoadFrontalHitFly(void)
-{
-	ActionData *action;
-	LCUI_Graph img[3];
-	RangeBox hit_range;
-	
-	action = Action_Create();
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	Graph_Init( &img[2] );
-	Graph_LoadImage( "drawable/hit-fly.png", &img[0] );
-	Graph_LoadImage( "drawable/lying-hit.png", &img[1] );
-	Graph_LoadImage( "drawable/fall.png", &img[2] );
-	Action_AddFrame( action, -6, 0, &img[0], 8 );
-	Action_AddFrame( action, 0, 0, &img[1], 8 );
-	Action_AddFrame( action, 0, 0, &img[2], 1000 );
-	
-	hit_range.x = -18;
-	hit_range.x_width = 38;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 64;
-	Action_SetHitRange( action, 0, hit_range );
-	
-	hit_range.x = -44;
-	hit_range.x_width = 64;
-	hit_range.z = 0;
-	hit_range.z_width = 26;
-	Action_SetHitRange( action, 1, hit_range );
-
-	
-	hit_range.x = -18;
-	hit_range.x_width = 38;
-	hit_range.z = 0;
-	hit_range.z_width = 64;
-	Action_SetHitRange( action, 2, hit_range );
-
-	return action;
-}
-
-/** 被终结一击从背面击飞 */
-static ActionData *ActionRes_LoadBackHitFly(void)
+/** 被击飞（头朝地） */
+static ActionData *ActionRes_LoadHitFlyFall(void)
 {
 	ActionData *action;
 	LCUI_Graph img;
@@ -699,16 +656,16 @@ static ActionData *ActionRes_LoadBackHitFly(void)
 	
 	action = Action_Create();
 
+	Graph_Init( &img );
+	Graph_LoadImage( "drawable/fall.png", &img );
+	Action_AddFrame( action, 0, 0, &img, 1000 );
+	
 	hit_range.x = -18;
 	hit_range.x_width = 38;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 64;
-
-	Graph_Init( &img );
-	Graph_LoadImage( "drawable/hit-fly.png", &img );
-	Action_AddFrame( action, -6, 0, &img, 1000 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
@@ -1467,9 +1424,8 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_HIT: return ActionRes_LoadHit();
 	case ACTION_REST: return ActionRes_LoadRest();
 	case ACTION_FINAL_BLOW:return ActionRes_LoadFinalBlow();
-	case ACTION_F_HIT_FLY: return ActionRes_LoadFrontalHitFly();
-	case ACTION_B_HIT_FLY: return ActionRes_LoadBackHitFly();
 	case ACTION_HIT_FLY: return ActionRes_LoadHitFly();
+	case ACTION_HIT_FLY_FALL: return ActionRes_LoadHitFlyFall();
 	case ACTION_LYING: return ActionRes_LoadLying();
 	case ACTION_LYING_HIT: return ActionRes_LoadLyingHit();
 	case ACTION_TUMMY: return ActionRes_LoadTummy();
