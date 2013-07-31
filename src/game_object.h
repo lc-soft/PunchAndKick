@@ -120,6 +120,11 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 					double z_acc,
 					void (*func)(LCUI_Widget*) );
 
+/** 设定当速度达到一定值时进行响应（在有加速度的情况下） */
+LCUI_API void GameObject_AtZSpeed(	LCUI_Widget *widget,
+					double target_z_speed,
+					void (*func)(LCUI_Widget*) );
+
 /** 设置在被攻击时进行响应 */
 LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
 					void (*func)(LCUI_Widget*) );
@@ -197,6 +202,9 @@ LCUI_API void GameObject_SetYSpeed( LCUI_Widget *widget, double y_speed );
 
 /** 获取游戏对象在Y轴的移动速度 */
 LCUI_API double GameObject_GetYSpeed( LCUI_Widget *widget );
+
+/** 获取游戏对象在Z轴的坐标 */
+LCUI_API double GameObject_GetZ( LCUI_Widget *widget );
 
 /** 设置游戏对象在Z轴的移动速度 */
 LCUI_API void GameObject_SetZSpeed( LCUI_Widget *widget, double z_speed );

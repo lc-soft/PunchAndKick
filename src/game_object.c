@@ -55,6 +55,8 @@ typedef struct GameObject_ {
 	void (*at_under_attack)(LCUI_Widget*);
 	void (*at_xspeed_to_zero)(LCUI_Widget*);
 	void (*at_zero_zspeed)(LCUI_Widget*);
+	void (*at_zspeed)(LCUI_Widget*);
+	double target_z_speed;
 } GameObject;
 
 static LCUI_Queue action_database;
@@ -219,6 +221,17 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 	GameObject_SetZSpeed( widget, z_speed );
 	GameObject_SetZAcc( widget, z_acc );
 	obj->at_landing = func;
+}
+
+/** 设定当速度达到一定值时进行响应（在有加速度的情况下） */
+LCUI_API void GameObject_AtZSpeed(	LCUI_Widget *widget,
+					double target_z_speed,
+					void (*func)(LCUI_Widget*) )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->at_zspeed = func;
+	obj->target_z_speed = target_z_speed;
 }
 
 /** 设置在被攻击时进行响应 */
@@ -582,6 +595,7 @@ static int GameObject_ProcAttack( LCUI_Widget *widget )
 static void GameObjectStream_Proc( void )
 {
 	int i, n;
+	double z_acc;
 	GameObject *obj;
 	LCUI_Widget *widget;
 
@@ -608,13 +622,40 @@ static void GameObjectStream_Proc( void )
 				obj->at_xspeed_to_zero( widget );
 			}
 		}
+		z_acc = obj->phys_obj->z_acc/MSEC_PER_FRAME;
+		if( obj->at_zspeed ) {
+			if( obj->phys_obj->z_acc > 0 ) {
+				if( obj->phys_obj->z_speed >= obj->target_z_speed
+				 && obj->phys_obj->z_speed - z_acc < obj->target_z_speed) {
+					obj->at_zspeed( widget );
+				}
+			}
+			else if( obj->phys_obj->z_acc < 0 ) {
+				if( obj->phys_obj->z_speed >= obj->target_z_speed
+				 && obj->phys_obj->z_speed + z_acc < obj->target_z_speed) {
+					obj->at_zspeed( widget );
+				}
+			}
+		}
 		/* 若在Z轴的移动速度接近0 */
 		if( (obj->phys_obj->z_acc > 0
-		 && obj->phys_obj->z_speed >= -obj->phys_obj->z_acc/MSEC_PER_FRAME
-		 && obj->phys_obj->z_speed < obj->phys_obj->z_acc/MSEC_PER_FRAME)
+		 && obj->phys_obj->z_speed >= -z_acc
+		 && obj->phys_obj->z_speed < z_acc)
 		|| (obj->phys_obj->z_acc < 0
-		 && obj->phys_obj->z_speed >= obj->phys_obj->z_acc/MSEC_PER_FRAME
-		 && obj->phys_obj->z_speed < -obj->phys_obj->z_acc/MSEC_PER_FRAME) ) {
+		 && obj->phys_obj->z_speed >= z_acc
+		 && obj->phys_obj->z_speed < -z_acc) ) {
+			Widget_Update( widget );
+			if( obj->at_zero_zspeed ) {
+				obj->at_zero_zspeed( widget );
+			}
+		}
+		/* 若在Z轴的移动速度接近0 */
+		if( (obj->phys_obj->z_acc > 0
+		 && obj->phys_obj->z_speed >= -z_acc
+		 && obj->phys_obj->z_speed < z_acc)
+		|| (obj->phys_obj->z_acc < 0
+		 && obj->phys_obj->z_speed >= z_acc
+		 && obj->phys_obj->z_speed < -z_acc) ) {
 			Widget_Update( widget );
 			if( obj->at_zero_zspeed ) {
 				obj->at_zero_zspeed( widget );
@@ -890,6 +931,8 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->at_under_attack = NULL;
 	obj->at_xspeed_to_zero = NULL;
 	obj->at_zero_zspeed = NULL;
+	obj->at_zspeed = NULL;
+	obj->target_z_speed = 0.0;
 }
 
 static void GameObject_ExecHide( LCUI_Widget *widget )
@@ -1220,6 +1263,15 @@ LCUI_API double GameObject_GetYSpeed( LCUI_Widget *widget )
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	return obj->phys_obj->y_speed;
+}
+
+/** 获取游戏对象在Z轴的坐标 */
+LCUI_API double GameObject_GetZ( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->z;
 }
 
 /** 设置游戏对象在Z轴的移动速度 */
