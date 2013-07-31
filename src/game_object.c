@@ -55,6 +55,7 @@ typedef struct GameObject_ {
 	void (*at_under_attack)(LCUI_Widget*);
 	void (*at_xspeed_to_zero)(LCUI_Widget*);
 	void (*at_zero_zspeed)(LCUI_Widget*);
+	void (*at_move)(LCUI_Widget*);
 	void (*at_zspeed)(LCUI_Widget*);
 	double target_z_speed;
 } GameObject;
@@ -190,6 +191,29 @@ LCUI_API int GameObject_GetCurrentActionFrameNumber( LCUI_Widget *widget )
 	return obj->n_frame;
 }
 
+/** 获取当前帧的顶点相对于底线的距离 */
+LCUI_API int GameObject_GetCurrentFrameTop( LCUI_Widget *widget )
+{
+	GameObject *obj;
+	ActionFrameData *frame;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	if( obj->current == NULL ) {
+		obj->current = (ActionRec*)Queue_Get( &obj->action_list, 0 );
+		if( obj->current == NULL ) {
+			return 0;
+		}
+	}
+	frame = (ActionFrameData*)Queue_Get(
+			&obj->current->action->frame,
+			obj->n_frame
+	);
+	if( frame == NULL ) {
+		return 0;
+	}
+	return frame->graph.h + frame->offset.y;
+}
+
 LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 						double acc,
 						void (*func)(LCUI_Widget*) )
@@ -241,6 +265,15 @@ LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
 	GameObject *obj;
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	obj->at_under_attack = func;
+}
+
+/** 在游戏对象移动时进行响应 */
+LCUI_API void GameObject_AtMove(	LCUI_Widget *widget,
+					void(*func)(LCUI_Widget*) )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->at_move = func;
 }
 
 /** 设置在被其它对象触碰到时进行响应 */
@@ -685,6 +718,9 @@ static void GameObjectStream_Proc( void )
 				obj->at_landing( widget );
 			}
 		}
+		if( obj->at_move ) {
+			obj->at_move( widget );
+		}
 	}
 }
 
@@ -931,6 +967,7 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->at_under_attack = NULL;
 	obj->at_xspeed_to_zero = NULL;
 	obj->at_zero_zspeed = NULL;
+	obj->at_move = NULL;
 	obj->at_zspeed = NULL;
 	obj->target_z_speed = 0.0;
 }
@@ -1191,6 +1228,24 @@ LCUI_API double GameObject_GetXAcc( LCUI_Widget *widget )
 	return obj->phys_obj->x_acc;
 }
 
+/** 设置在Y轴的坐标 */
+LCUI_API void GameObject_SetY( LCUI_Widget *widget, double y )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->y = y;
+}
+
+/** 获取在Y轴的坐标 */
+LCUI_API double GameObject_GetY( LCUI_Widget *widget )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	return obj->phys_obj->y;
+}
+
 /** 设置相对于Y轴的加速度 */
 LCUI_API void GameObject_SetYAcc( LCUI_Widget *widget, double acc )
 {
@@ -1321,6 +1376,15 @@ LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y )
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	*x = obj->x;
 	*y = obj->y;
+}
+
+/** 设置游戏对象的X轴坐标 */
+LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x )
+{
+	GameObject *obj;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->phys_obj->x = x;
 }
 
 /** 获取游戏对象的X轴坐标 */

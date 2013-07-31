@@ -106,6 +106,9 @@ LCUI_API int GameObject_AtActionUpdate(	LCUI_Widget *widget,
 /** 获取当前动作帧的序号 */
 LCUI_API int GameObject_GetCurrentActionFrameNumber( LCUI_Widget *widget );
 
+/** 获取当前帧的顶点相对于底线的距离 */
+LCUI_API int GameObject_GetCurrentFrameTop( LCUI_Widget *widget );
+
 LCUI_API void GameObject_AtXSpeedToZero(	LCUI_Widget *widget,
 						double acc,
 						void (*func)(LCUI_Widget*) );
@@ -128,6 +131,10 @@ LCUI_API void GameObject_AtZSpeed(	LCUI_Widget *widget,
 /** 设置在被攻击时进行响应 */
 LCUI_API void GameObject_AtUnderAttack(	LCUI_Widget *widget,
 					void (*func)(LCUI_Widget*) );
+
+/** 在游戏对象移动时进行响应 */
+LCUI_API void GameObject_AtMove(	LCUI_Widget *widget,
+					void(*func)(LCUI_Widget*) );
 
 /** 设置在被其它对象触碰到时进行响应 */
 LCUI_API void GameObject_AtTouch(	LCUI_Widget *widget,
@@ -182,6 +189,12 @@ LCUI_API void GameObject_SetXAcc( LCUI_Widget *widget, double acc );
 /** 获取相对于X轴的加速度 */
 LCUI_API double GameObject_GetXAcc( LCUI_Widget *widget );
 
+/** 设置在Y轴的坐标 */
+LCUI_API void GameObject_SetY( LCUI_Widget *widget, double y );
+
+/** 获取在Y轴的坐标 */
+LCUI_API double GameObject_GetY( LCUI_Widget *widget );
+
 /** 设置相对于Y轴的加速度 */
 LCUI_API void GameObject_SetYAcc( LCUI_Widget *widget, double acc );
 
@@ -223,6 +236,9 @@ LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y );
 
 /** 获取游戏对象的位置 */
 LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y );
+
+/** 设置游戏对象的X轴坐标 */
+LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x );
 
 /** 获取游戏对象的X轴坐标 */
 LCUI_API double GameObject_GetX( LCUI_Widget *widget );
