@@ -142,6 +142,9 @@ LCUI_API int GameObject_GetHitRange( LCUI_Widget *widget, RangeBox *range );
 /** 获取对象的攻击范围 */
 LCUI_API int GameObject_GetAttackRange( LCUI_Widget *widget, RangeBox *range );
 
+/** 判断两个范围是否相交 */
+LCUI_API LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 );
+
 /**
  * 切换对象的动作
  * @param widget

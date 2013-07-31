@@ -475,7 +475,7 @@ LCUI_API int GameObject_GetAttackRange( LCUI_Widget *widget, RangeBox *range )
 }
 
 /** 判断两个范围是否相交 */
-static LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 )
+LCUI_API LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 )
 {
 	/* 先判断在X轴上是否有相交 */
 	if( range1->x + range1->x_width <= range2->x ) {
