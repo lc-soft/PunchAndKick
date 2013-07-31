@@ -33,8 +33,7 @@ enum GamePlayerState {
 	STATE_SJUMP,
 	STATE_HIT,		/**< 被命中 */
 	STATE_HIT_FLY,		/**< 被击飞 */
-	STATE_F_HIT_FLY,
-	STATE_B_HIT_FLY,
+	STATE_HIT_FLY_FALL,	/**< 被击飞（头朝地） */
 	STATE_LYING,
 	STATE_LYING_HIT,
 	STATE_TUMMY,
@@ -64,6 +63,7 @@ enum GamePlayerState {
 	STATE_LIFT_JUMP,		/**< 举着，跳起 */
 	STATE_LIFT_FALL,		/**< 举着，下落 */
 	STATE_BE_LIFT_STANCE,		/**< 被举起，站立 */
+	STATE_BE_LIFT_SQUAT,		/**< 被举起，蹲着 */
 	STATE_BE_LIFT_LYING,		/**< 被举起，躺着 */
 	STATE_BE_LIFT_TUMMY,		/**< 被举起，趴着 */
 	STATE_BE_LIFT_LYING_HIT,	/**< 被举起，躺着挨打 */
@@ -88,8 +88,7 @@ enum ActionType {
 	ACTION_FINAL_BLOW,
 	ACTION_HIT,
 	ACTION_HIT_FLY,
-	ACTION_F_HIT_FLY,
-	ACTION_B_HIT_FLY,
+	ACTION_HIT_FLY_FALL,
 	ACTION_LYING,
 	ACTION_LYING_HIT,
 	ACTION_TUMMY,
