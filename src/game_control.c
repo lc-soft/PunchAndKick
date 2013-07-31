@@ -97,12 +97,12 @@ static int global_action_list[]={
 
 #define ROLL_TIMEOUT	330
 
-#define XSPEED_THROWUP_FLY	50
-#define XSPEED_THROWDOWN_FLY	50
-#define ZSPEED_THROWUP_FLY	50
-#define ZACC_THROWUP_FLY	20
-#define ZACC_THROWDOWN_FLY	20
+#define XSPEED_THROWUP_FLY	60
+#define XSPEED_THROWDOWN_FLY	100
+#define ZSPEED_THROWUP_FLY	60
 #define ZSPEED_THROWDOWN_FLY	40
+#define ZACC_THROWUP_FLY	30
+#define ZACC_THROWDOWN_FLY	40
 
 static GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
 {
@@ -621,8 +621,10 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 		/* 对方的状态不符合要求则退出 */
 		 return;
 	}
-	GameObject_GetPos( other, &x, &y );
-	GameObject_SetPos( self, x, y );
+	x = GameObject_GetX( other );
+	y = GameObject_GetY( other );
+	GameObject_SetX( self, x );
+	GameObject_SetY( self, y );
 	GamePlayer_ChangeState( other_player, state );
 	GamePlayer_StopXMotion( player );
 	GameObject_SetZSpeed( self, 0 );
@@ -1124,14 +1126,15 @@ static void GamePlayer_SetLeftCatch( GamePlayer *player )
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
-	GameObject_GetPos( player->object, &x, &y );
-
+	x = GameObject_GetX( player->object );
+	y = GameObject_GetY( player->object );
+	GameObject_SetX( player->other->object, x-30 );
+	GameObject_SetY( player->other->object, y );
 	if( GamePlayer_IsLeftOriented(player->other) ) {
 		GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
 	} else {
 		GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
 	}
-	GameObject_SetPos( player->other->object, x-30, y );
 	GamePlayer_ChangeState( player, STATE_CATCH );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
@@ -1150,13 +1153,15 @@ static void GamePlayer_SetRightCatch( GamePlayer *player )
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
-	GameObject_GetPos( player->object, &x, &y );
+	x = GameObject_GetX( player->object );
+	y = GameObject_GetY( player->object );
+	GameObject_SetX( player->other->object, x+30 );
+	GameObject_SetY( player->other->object, y );
 	if( GamePlayer_IsLeftOriented(player->other) ) {
 		GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
 	} else {
 		GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
 	}
-	GameObject_SetPos( player->other->object, x+30, y );
 	GamePlayer_ChangeState( player, STATE_CATCH );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
@@ -1202,8 +1207,10 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 		 && player->other->state == STATE_BACK_BE_CATCH ) {
 			GamePlayer_SetLeftOriented( player );
 			GamePlayer_SetLeftOriented( player->other );
-			GameObject_GetPos( player->object, &x, &y );
-			GameObject_SetPos( player->other->object, x-30, y );
+			x = GameObject_GetX( player->object );
+			y = GameObject_GetY( player->object );
+			GameObject_SetX( player->other->object, x-30 );
+			GameObject_SetY( player->other->object, y );
 		}
 		else if( player->state == STATE_BE_LIFT_STANCE ) {
 			GamePlayer_SetLeftOriented( player );
@@ -1264,8 +1271,10 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 		 && player->other->state == STATE_BACK_BE_CATCH ) {
 			GamePlayer_SetRightOriented( player );
 			GamePlayer_SetRightOriented( player->other );
-			GameObject_GetPos( player->object, &x, &y );
-			GameObject_SetPos( player->other->object, x+30, y );
+			x = GameObject_GetX( player->object );
+			y = GameObject_GetY( player->object );
+			GameObject_SetX( player->other->object, x+30 );
+			GameObject_SetY( player->other->object, y );
 		}
 		else if( player->state == STATE_BE_LIFT_STANCE ) {
 			GamePlayer_SetRightOriented( player );
@@ -1859,8 +1868,10 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 		/* 被攻击者需要显示在攻击者前面 */
 		Widget_SetZIndex( player->other->object, z_index+1 );
 
-		GameObject_GetPos( player->object, &x, &y );
-		GameObject_SetPos( player->other->object, x, y );
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
 		GameObject_SetZ( player->other->object, 56 );
 		GameObject_AtLanding( player->other->object, -20, 0, NULL );
 		GameObject_AtActionUpdate(
@@ -1883,6 +1894,30 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 }
 
+/** 在被举起的状态下，更新自身的位置 */
+static void GamePlayer_UpdateLiftPosition( LCUI_Widget *widget )
+{
+	double x, y, z;
+	GamePlayer *player;
+	LCUI_Widget *other;
+	
+	player = GamePlayer_GetPlayerByWidget( widget );
+	/* 如果没有举起者，或自己不是被举起者 */
+	if( !player->other || !player->other->other ) {
+		GameObject_AtMove( widget, NULL );
+		return;
+	}
+	other = player->other->object;
+	x = GameObject_GetX( widget );
+	y = GameObject_GetY( widget );
+	z = GameObject_GetZ( widget );
+	/* 获取当前帧的顶点相对于底线的距离 */
+	z += GameObject_GetCurrentFrameTop( widget );
+	GameObject_SetZ( other, z );
+	GameObject_SetX( other, x );
+	GameObject_SetY( other, y );
+}
+
 static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -1890,6 +1925,8 @@ static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 	GameObject_SetZ( player->other->object, LIFT_HEIGHT );
+	/* 在举起者的位置变化时更新被举起者的位置 */
+	GameObject_AtMove( widget, GamePlayer_UpdateLiftPosition );
 }
 
 /** 设置举起另一个角色 */
@@ -1930,9 +1967,11 @@ static void GamePlayer_SetLiftPlayer( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 	/* 被举起的角色，需要记录举起他的角色 */
 	player->other->other = player;
-	GameObject_GetPos( player->object, &x, &y );
 	/* 改变躺地角色的坐标 */
-	GameObject_SetPos( player->other->object, x, y );
+	x = GameObject_GetX( player->object );
+	y = GameObject_GetY( player->object );
+	GameObject_SetX( player->other->object, x );
+	GameObject_SetY( player->other->object, y );
 	GameObject_SetZ( player->other->object, 20 );
 }
 
@@ -2070,6 +2109,7 @@ static void GamePlayer_SetThrowUp( GamePlayer *player )
 				x_speed = XSPEED_THROWUP_FLY;
 				GamePlayer_SetLeftOriented( player->other );
 			}
+			x_speed += GameObject_GetXSpeed( player->object )/4;
 			GamePlayer_LockMotion( player->other );
 			GameObject_SetXSpeed( player->other->object, x_speed );
 			GamePlayer_ChangeState( player->other, STATE_HIT_FLY_FALL );
@@ -2105,9 +2145,12 @@ static void GamePlayer_SetThrowUp( GamePlayer *player )
 		default:
 			break;
 		}
+		GamePlayer_LockAction( player->other );
 	}
-	GamePlayer_LockAction( player->other );
 	GamePlayer_LockAction( player );
+	/* 解除举起者与被举起者的关系 */
+	player->other->other = NULL;
+	player->other = NULL;
 }
 
 static void GamePlayer_AtBeThrowDownDone( LCUI_Widget *widget )
@@ -2166,6 +2209,7 @@ static void GamePlayer_SetThrowDown( GamePlayer *player )
 	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_THROW );
+	GameObject_AtActionDone( player->object, ACTION_THROW, GamePlayer_AtThrowDone );
 	if( player->other ) {
 		GamePlayer_BreakRest( player->other );
 		GamePlayer_UnlockAction( player->other );
@@ -2184,11 +2228,12 @@ static void GamePlayer_SetThrowDown( GamePlayer *player )
 				x_speed = XSPEED_THROWDOWN_FLY;
 				GamePlayer_SetLeftOriented( player->other );
 			}
+			x_speed += GameObject_GetXSpeed( player->object )/4;
 			GamePlayer_LockMotion( player->other );
 			GameObject_SetXSpeed( player->other->object, x_speed );
 			GameObject_AtLanding(
 				player->other->object, -ZSPEED_THROWDOWN_FLY,
-				0, GamePlayer_AtBeThrowDownLanding
+				-ZACC_THROWDOWN_FLY, GamePlayer_AtBeThrowDownLanding
 			);
 			break;
 		case STATE_SQUAT:
@@ -2216,9 +2261,10 @@ static void GamePlayer_SetThrowDown( GamePlayer *player )
 		}
 		GamePlayer_LockAction( player->other );
 	}
-	player->other = NULL;
 	GamePlayer_LockAction( player );
-	GameObject_AtActionDone( player->object, ACTION_THROW, GamePlayer_AtThrowDone );
+	/* 解除举起者与被举起者的关系 */
+	player->other->other = NULL;
+	player->other = NULL;
 }
 
 /** 进行A攻击 */
@@ -2570,17 +2616,23 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 		return;
 	}
 	switch(player->state) {
+	case STATE_LIFT_STANCE:
+	case STATE_LIFT_WALK:
+		GamePlayer_ChangeState( player, STATE_LIFT_WALK );
+		break;
 	case STATE_READY:
 	case STATE_STANCE:
 		GamePlayer_ChangeState( player, STATE_WALK );
+		break;
 	case STATE_WALK:
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		speed = -YSPEED_WALK * player->property.speed / 100;
-		GameObject_SetYSpeed( player->object, speed );
+	case STATE_LIFT_RUN:
 		break;
-	default:break;
+	default:return;
 	}
+	speed = -YSPEED_WALK * player->property.speed / 100;
+	GameObject_SetYSpeed( player->object, speed );
 }
 
 void GamePlayer_SetDownMotion( GamePlayer *player )
@@ -2590,17 +2642,22 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 		return;
 	}
 	switch(player->state) {
+	case STATE_LIFT_STANCE:
+	case STATE_LIFT_WALK:
+		GamePlayer_ChangeState( player, STATE_LIFT_WALK );
+		break;
 	case STATE_READY:
 	case STATE_STANCE:
 		GamePlayer_ChangeState( player, STATE_WALK );
 	case STATE_WALK:
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
-		speed = YSPEED_WALK * player->property.speed / 100;
-		GameObject_SetYSpeed( player->object, speed );
+	case STATE_LIFT_RUN:
 		break;
-	default:break;
+	default:return;
 	}
+	speed = YSPEED_WALK * player->property.speed / 100;
+	GameObject_SetYSpeed( player->object, speed );
 }
 
 static void GamePlayer_JumpSpinKickStart( LCUI_Widget *widget )
