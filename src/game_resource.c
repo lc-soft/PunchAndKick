@@ -4,17 +4,6 @@
 
 #include "game.h"
 
-/** 载入指定角色的动作动画 */
-ActionData* ActionRes_Load( int id, int action_type )
-{
-	switch(id) {
-	case ROLE_RIKI: return ActionRes_LoadRiki( action_type );
-	default:
-		break;
-	}
-	return NULL;
-}
-
 #define HEADER_MARK_TEXT	"LC-GAMES Graphics Resource File"
 #define BLOCK_MARK_TEXT		"LC-GAMES Graphics Data Block"
 #define MARK_SIZE		sizeof(MARK_TEXT)
@@ -64,24 +53,14 @@ LCUI_API int GameGraphRes_Init( void )
 	}
 	Queue_Init( &resource_library, sizeof(GraphResClass), GraphResClass_Destroy );
 	library_init = TRUE;
+	return 0;
 }
 
 /** 释放全部资源 */
-LCUI_API int GameGraphRes_FreeAll( void )
+LCUI_API void GameGraphRes_FreeAll( void )
 {
 	library_init = FALSE;
 	Queue_Destroy( &resource_library );
-}
-
-/** 释放指定类名的资源 */
-LCUI_API int GameGraphRes_Free( const char *class_name )
-{
-
-}
-
-static void GraphResItem_Destroy( void *arg )
-{
-
 }
 
 static GraphResItem *GameGraphRes_FindItem( GraphResClass *res_class, int item_id )
@@ -126,6 +105,27 @@ static GraphResClass *GameGraphRes_FindClass( int class_id )
 	return NULL;
 }
 
+/** 释放指定类名的资源 */
+LCUI_API int GameGraphRes_Free( const char *class_name )
+{
+	int class_id;
+	GraphResClass *res_class;
+	class_id = BKDRHash( class_name );
+	res_class = GameGraphRes_FindClass( class_id );
+	if( res_class ) {
+		Queue_Destroy( &res_class->graph_res );
+		return 0;
+	}
+	return -1;
+}
+
+static void GraphResItem_Destroy( void *arg )
+{
+	GraphResItem *item;
+	item = (GraphResItem*)arg;
+	Graph_Free( &item->graph );
+}
+
 /** 添加一个新资源类，返回该资源类的标识号 */
 LCUI_API int GameGraphRes_AddClass( const char *class_name )
 {
@@ -136,7 +136,7 @@ LCUI_API int GameGraphRes_AddClass( const char *class_name )
 	p_class_data = GameGraphRes_FindClass( class_id );
 	if( p_class_data == NULL ) {
 		class_data.id = class_id;
-		strncpy( class_data.class_name, class_name, MAX_TEXT_LEN-1 );
+		strncpy( class_data.class_name, class_name, MAX_TEXT_LEN );
 		Queue_Init(	&class_data.graph_res,
 				sizeof(GraphResItem),
 				GraphResItem_Destroy 
@@ -145,7 +145,7 @@ LCUI_API int GameGraphRes_AddClass( const char *class_name )
 		Queue_Add( &resource_library, &class_data );
 		Queue_Unlock( &resource_library );
 	}
-	return 0;
+	return class_id;
 }
 
 LCUI_API int GameGraphRes_AddGraph( int class_id, const char *name, LCUI_Graph *graph )
@@ -155,14 +155,17 @@ LCUI_API int GameGraphRes_AddGraph( int class_id, const char *name, LCUI_Graph *
 	GraphResClass *p_class_data;
 
 	p_class_data = GameGraphRes_FindClass( class_id );
+	DEBUG_MSG("find class resources, id: %d, addr: %p\n", class_id, p_class_data);
 	if( p_class_data == NULL ) {
 		return -1;
 	}
 	item_id = BKDRHash( name );
+	DEBUG_MSG("graph item, name: %s, id: %d\n", name, item_id);
 	p_item = GameGraphRes_FindItem( p_class_data, item_id );
 	if( p_item == NULL ) {
+		DEBUG_MSG("add new graph item\n");
 		item_data.id = item_id;
-		strncpy( item_data.name, name, MAX_TEXT_LEN-1 );
+		strncpy( item_data.name, name, MAX_TEXT_LEN );
 		item_data.graph = *graph;
 		Queue_Lock( &p_class_data->graph_res );
 		Queue_Add( &p_class_data->graph_res, &item_data );
@@ -196,7 +199,7 @@ LCUI_API int GameGraphRes_LoadFromFile( const char *filepath )
 	if( header_data.total_number <= 0 ) {
 		return -4;
 	}
-	_DEBUG_MSG("class name: %s\n", header_data.class_name);
+	DEBUG_MSG("class name: %s\n", header_data.class_name);
 	class_id = GameGraphRes_AddClass( header_data.class_name );
 	for(i=0; i<header_data.total_number; ++i) {
 		count = fread( &data_block, sizeof(GraphResDataBlock), 1, fp );
@@ -218,7 +221,7 @@ LCUI_API int GameGraphRes_LoadFromFile( const char *filepath )
 			k = 3;
 		}
 		Graph_Create( &graph_buff, data_block.w, data_block.h );
-		_DEBUG_MSG("read graph, color type: %d, width: %d, height: %d\n",
+		DEBUG_MSG("read graph, color type: %d, width: %d, height: %d\n",
 			graph_buff.color_type, data_block.w, data_block.h );
 		n_pixel = data_block.w * data_block.h;
 		/* 读取像素数据 */
@@ -251,9 +254,12 @@ LCUI_API int GameGraphRes_WriteToFile( const char *filepath, const char *class_n
 
 	class_id = BKDRHash( class_name );
 	p_class_data = GameGraphRes_FindClass( class_id );
+	DEBUG_MSG("find class resources...\n");
 	if( p_class_data == NULL ) {
+		DEBUG_MSG("class resources not found!\n");
 		return -1;
 	}
+	DEBUG_MSG("class resources: %p\n", p_class_data);
 	fp = fopen( filepath, "wb+" );
 	if( fp == NULL ) {
 		return -2;
@@ -264,14 +270,16 @@ LCUI_API int GameGraphRes_WriteToFile( const char *filepath, const char *class_n
 	header_data.total_number = Queue_GetTotal( &p_class_data->graph_res );
 	/* 先将文件头数据写进去 */
 	count = fwrite( &header_data, sizeof(ResFileHeaderData), 1, fp );
+	DEBUG_MSG("write file header data...\n");
 	if( count < 1 ) {
+		DEBUG_MSG("file header data are write error!\n");
 		fclose( fp );
 		return -3;
 	}
-
 	Queue_Lock( &p_class_data->graph_res );
 	n = Queue_GetTotal( &p_class_data->graph_res );
 	strncpy( data_block.mark, BLOCK_MARK_TEXT, MAX_MARK_TEXT_LEN );
+	DEBUG_MSG("total number of graph item: %d\n", n);
 	for(i=0; i<n; ++i) {
 		p_item = (GraphResItem*)Queue_Get( &p_class_data->graph_res, i );
 		if( !p_item ) {
@@ -282,6 +290,8 @@ LCUI_API int GameGraphRes_WriteToFile( const char *filepath, const char *class_n
 		data_block.w = p_item->graph.w;
 		data_block.h = p_item->graph.h;
 		strncpy( data_block.name, p_item->name, MAX_TEXT_LEN );
+		DEBUG_MSG("write graph item: %p, name: %s, size: %d,%d\n",
+			p_item, p_item->name, data_block.w, data_block.h );
 		/* 写入本张图像的信息 */
 		count = fwrite( &data_block, sizeof(GraphResDataBlock), 1, fp );
 		if( count < 1 ) {
@@ -293,6 +303,7 @@ LCUI_API int GameGraphRes_WriteToFile( const char *filepath, const char *class_n
 		} else {
 			k = 3;
 		}
+		DEBUG_MSG("write graph pixel data, total pixel: %d\n", n_pixel );
 		/* 写入像素数据 */
 		for(j=0; j<k; ++j) {
 			count = fwrite(	p_item->graph.rgba[j],
@@ -305,6 +316,7 @@ LCUI_API int GameGraphRes_WriteToFile( const char *filepath, const char *class_n
 	}
 	Queue_Unlock( &p_class_data->graph_res );
 	fclose( fp );
+	DEBUG_MSG("every thing is OK!\n" );
 	return 0;
 
 error_exit:;
@@ -323,12 +335,15 @@ LCUI_API int GameGraphRes_GetGraph(	const char *class_name,
 	int class_id, item_id;
 
 	class_id = BKDRHash( class_name );
+	DEBUG_MSG("find class resources...\n");
 	p_class_data = GameGraphRes_FindClass( class_id );
 	if( p_class_data == NULL ) {
+		DEBUG_MSG("class resources not found!\n");
 		return -1;
 	}
 	item_id = BKDRHash( name );
 	p_item = GameGraphRes_FindItem( p_class_data, item_id );
+	DEBUG_MSG("graph item: %p\n",p_item );
 	if( p_item == NULL ) {
 		return -2;
 	}
