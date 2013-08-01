@@ -177,11 +177,33 @@ void GamePlayer_ChangeAction( GamePlayer *player, int action_id )
 	}
 }
 
+static void GamePlayer_BreakActionTiming( GamePlayer *player )
+{
+	if( player->t_action_timeout != -1 ) {
+		LCUITimer_Free( player->t_action_timeout );
+		player->t_action_timeout = -1;
+	}
+}
+
+/** 为游戏角色的动作设置时限，并在超时后进行响应 */
+void GamePlayer_SetActionTimeOut(	GamePlayer *player,
+					int n_ms,
+					void (*func)(GamePlayer*) )
+{
+	GamePlayer_BreakActionTiming( player );
+	player->t_action_timeout = LCUITimer_Set( n_ms, (void(*)(void*))func, player, FALSE );
+}
+
 void GamePlayer_ChangeState( GamePlayer *player, int state )
 {
 	int action_type; 
 	if( player->lock_action ) {
 		return;
+	}
+	if( player->state == STATE_LIFT_WALK ) {
+		if( state == STATE_STANCE ) {
+			abort();
+		}
 	}
 	switch(state) {
 	case STATE_READY:
@@ -339,10 +361,7 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	}
 	player->state = state;
 	/* 在切换动作时，撤销动作超时的响应 */
-	if( player->t_action_timeout != -1 ) {
-		LCUITimer_Free( player->t_action_timeout );
-		player->t_action_timeout = -1;
-	}
+	GamePlayer_BreakActionTiming( player );
 	GamePlayer_ChangeAction( player, action_type );
 }
 
@@ -364,17 +383,6 @@ void GamePlayer_LockMotion( GamePlayer *player )
 void GamePlayer_UnlockMotion( GamePlayer *player )
 {
 	player->lock_motion = FALSE;
-}
-
-/** 为游戏角色的动作设置时限，并在超时后进行响应 */
-void GamePlayer_SetActionTimeOut(	GamePlayer *player,
-					int n_ms,
-					void (*func)(GamePlayer*) )
-{
-	if( player->t_action_timeout != -1 ) {
-		LCUITimer_Free( player->t_action_timeout );
-	}
-	player->t_action_timeout = LCUITimer_Set( n_ms, (void(*)(void*))func, player, FALSE );
 }
 
 /** 打断休息 */
@@ -402,6 +410,7 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 	player->state = STATE_STANCE;
 	/* 创建GameObject部件 */
 	player->object = GameObject_New();
+
 	for(i=0; i<sizeof(global_action_list)/sizeof(int); ++i) {
 		/* 载入游戏角色资源 */
 		action = ActionRes_Load( id, global_action_list[i] );
@@ -502,8 +511,10 @@ static void GamePlayer_AtRunEnd( LCUI_Widget *widget )
 static void GamePlayer_AtReadyTimeOut( GamePlayer *player )
 {
 	player->t_action_timeout = -1;
-	/* 改为站立状态 */
-	GamePlayer_ChangeState( player, STATE_STANCE );
+	if( player->state == STATE_READY ) {
+		/* 改为站立状态 */
+		GamePlayer_ChangeState( player, STATE_STANCE );
+	}
 }
 
 void GamePlayer_SetReady( GamePlayer *player )
@@ -511,7 +522,7 @@ void GamePlayer_SetReady( GamePlayer *player )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_ChangeState( player, STATE_READY );
-	/* 设置响应动作结束信号 */
+	/* 设置响应动作超时信号 */
 	GamePlayer_SetActionTimeOut( player, 1000, GamePlayer_AtReadyTimeOut );
 }
 
@@ -573,6 +584,35 @@ static void GamePlayer_BeLiftStartStand( GamePlayer *player )
 	GamePlayer_LockAction( player );
 }
 
+/** 在被举起的状态下，更新自身的位置 */
+static void GamePlayer_UpdateLiftPosition( LCUI_Widget *widget )
+{
+	double x, y, z;
+	GamePlayer *player, *other_player;
+	LCUI_Widget *other;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	/* 如果没有举起者，或自己不是被举起者 */
+	if( !player->other ) {
+		GameObject_AtMove( widget, NULL );
+		return;
+	}
+	else if( !player->other->other ) {
+		GameObject_AtMove( widget, NULL );
+		return;
+	}
+	other_player = player->other;
+	other = player->other->object;
+	x = GameObject_GetX( widget );
+	y = GameObject_GetY( widget );
+	z = GameObject_GetZ( widget );
+	/* 获取当前帧的顶点相对于底线的距离 */
+	z += GameObject_GetCurrentFrameTop( widget );
+	GameObject_SetZ( other, z );
+	GameObject_SetX( other, x );
+	GameObject_SetY( other, y );
+}
+
 static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 {
 	int state;
@@ -595,11 +635,12 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 	/* 计算对方的头部范围 */
 	head_range.z = head_range.z_width - 5;
 	head_range.z_width = 5;
+	head_range.x += 5;
+	head_range.x_width -= 10;
 	/* 计算自己的脚步范围 */
 	foot_range.z_width = 5;
 	foot_range.x += 5;
 	foot_range.x_width -= 10;
-
 	/* 若不相交 */
 	if( !RangeBox_IsIntersect( &foot_range, &head_range ) ) {
 		return;
@@ -621,6 +662,8 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 		/* 对方的状态不符合要求则退出 */
 		 return;
 	}
+	player->other = other_player;
+	other_player->other = player;
 	x = GameObject_GetX( other );
 	y = GameObject_GetY( other );
 	GameObject_SetX( self, x );
@@ -632,9 +675,8 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 	GameObject_SetZ( self, LIFT_HEIGHT );
 	GamePlayer_ChangeState( player, STATE_BE_LIFT_SQUAT );
 	GameObject_AtActionDone( self, ACTION_SQUAT, GamePlayer_SetBeLiftStance );
-	other_player->other = player;
-	player->other = other_player;
-	_DEBUG_MSG("tip\n");
+	/* 在举起者的位置变化时更新被举起者的位置 */
+	GameObject_AtMove( other, GamePlayer_UpdateLiftPosition );
 }
 
 /** 在起跳动作结束时 */
@@ -806,6 +848,9 @@ static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
 /** 开始站起 */
 static void GamePlayer_StartStand( GamePlayer *player )
 {
+	if( player->other && player->other->other == player ) {
+		return;
+	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GamePlayer_UnlockMotion( player );
@@ -1194,6 +1239,7 @@ static GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 
 static void GamePlayer_ProcLeftKey( GamePlayer *player )
 {
+	GamePlayer *other_player;
 	double x, y, speed;
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
@@ -1233,8 +1279,9 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 	case STATE_STANCE:
 	case STATE_WALK:
 		GamePlayer_SetLeftOriented( player );
-		player->other = GamePlayer_CatchGaspingPlayer( player );
-		if( player->other ) {
+		other_player = GamePlayer_CatchGaspingPlayer( player );
+		if( other_player ) {
+			player->other = other_player;
 			GamePlayer_SetLeftCatch( player );
 		}
 		if( LCUIKey_IsDoubleHit(player->ctrlkey.left,250) ) {
@@ -1259,6 +1306,8 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 static void GamePlayer_ProcRightKey( GamePlayer *player )
 {
 	double x, y, speed;
+	GamePlayer *other_player;
+
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
 		 || player->state == STATE_SJUMP
@@ -1297,8 +1346,9 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 	case STATE_STANCE:
 	case STATE_WALK:
 		GamePlayer_SetRightOriented( player );
-		player->other = GamePlayer_CatchGaspingPlayer( player );
-		if( player->other ) {
+		other_player = GamePlayer_CatchGaspingPlayer( player );
+		if( other_player ) {
+			player->other = other_player;
 			GamePlayer_SetRightCatch( player );
 			break;
 		}
@@ -1894,30 +1944,6 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 }
 
-/** 在被举起的状态下，更新自身的位置 */
-static void GamePlayer_UpdateLiftPosition( LCUI_Widget *widget )
-{
-	double x, y, z;
-	GamePlayer *player;
-	LCUI_Widget *other;
-	
-	player = GamePlayer_GetPlayerByWidget( widget );
-	/* 如果没有举起者，或自己不是被举起者 */
-	if( !player->other || !player->other->other ) {
-		GameObject_AtMove( widget, NULL );
-		return;
-	}
-	other = player->other->object;
-	x = GameObject_GetX( widget );
-	y = GameObject_GetY( widget );
-	z = GameObject_GetZ( widget );
-	/* 获取当前帧的顶点相对于底线的距离 */
-	z += GameObject_GetCurrentFrameTop( widget );
-	GameObject_SetZ( other, z );
-	GameObject_SetX( other, x );
-	GameObject_SetY( other, y );
-}
-
 static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -1934,45 +1960,51 @@ static void GamePlayer_SetLiftPlayer( GamePlayer *player )
 {
 	double x, y;
 	int z_index;
+	GamePlayer *other_player;
 
 	if( !player->other ) {
 		return;
 	}
+	other_player = player->other;
 	/* 对方不处于躺地状态则退出 */
-	if( player->other->state != STATE_LYING
-	 && player->other->state != STATE_LYING_HIT
-	 && player->other->state != STATE_TUMMY
-	 && player->other->state != STATE_TUMMY_HIT ) {
-		 player->other = FALSE;
-		 return;
+	if( other_player->state != STATE_LYING
+	 && other_player->state != STATE_LYING_HIT
+	 && other_player->state != STATE_TUMMY
+	 && other_player->state != STATE_TUMMY_HIT ) {
+		player->other = NULL;
+		return;
 	}
-
-	GamePlayer_BreakRest( player->other );
+	
+	/* 被举起的角色，需要记录举起他的角色 */
+	other_player->other = player;
+	GamePlayer_BreakRest( other_player );
 	z_index = Widget_GetZIndex( player->object );
-	Widget_SetZIndex( player->other->object, z_index+1);
+	Widget_SetZIndex( other_player->object, z_index+1);
 	
 	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
+	GamePlayer_UnlockAction( other_player );
 
-	if( player->other->state == STATE_LYING
-	 || player->other->state == STATE_LYING_HIT ) {
-		GamePlayer_ChangeState( player->other, STATE_BE_LIFT_LYING );
+	if( other_player->state == STATE_LYING
+	 || other_player->state == STATE_LYING_HIT ) {
+		GamePlayer_ChangeState( other_player, STATE_BE_LIFT_LYING );
 	} else {
-		GamePlayer_ChangeState( player->other, STATE_BE_LIFT_TUMMY );
+		GamePlayer_ChangeState( other_player, STATE_BE_LIFT_TUMMY );
 	}
+	/* 举起前，先停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	/* 改为下蹲状态 */
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtLiftDone );
-	GamePlayer_SetRestTimeOut( player->other, BE_LIFT_REST_TIMEOUT, GamePlayer_BeLiftStartStand );
+	GamePlayer_SetRestTimeOut( other_player, BE_LIFT_REST_TIMEOUT, GamePlayer_BeLiftStartStand );
 	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-	/* 被举起的角色，需要记录举起他的角色 */
-	player->other->other = player;
+	GamePlayer_LockAction( other_player );
 	/* 改变躺地角色的坐标 */
 	x = GameObject_GetX( player->object );
 	y = GameObject_GetY( player->object );
-	GameObject_SetX( player->other->object, x );
-	GameObject_SetY( player->other->object, y );
-	GameObject_SetZ( player->other->object, 20 );
+	GameObject_SetX( other_player->object, x );
+	GameObject_SetY( other_player->object, y );
+	GameObject_SetZ( other_player->object, 20 );
 }
 
 static void GamePlayer_AtThrowLanding( LCUI_Widget *widget )
@@ -2929,7 +2961,7 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 			}
 			break;
 		}
-		_DEBUG_MSG("attacker: %p, action id: %d\n", p_info->attacker, p_info->attacker_action );
+		DEBUG_MSG("attacker: %p, action id: %d\n", p_info->attacker, p_info->attacker_action );
 		/* 删除攻击者记录 */
 		Queue_Delete( attacker_info, 0 );
 	}
@@ -2940,6 +2972,14 @@ int Game_Init(void)
 	int ret;
 	ControlKey ctrlkey;
 
+	ret = GameGraphRes_LoadFromFile("action-riki.data");
+	if( ret != 0 ) {
+		LCUI_MessageBoxW(
+			MB_ICON_ERROR,
+			L"角色资源载入出错，请检查程序的完整性！",
+			L"错误", MB_BTN_OK );
+		return ret;
+	}
 	/* 注册GameObject部件 */
 	GameObject_Register();
 	/* 记录玩家ID */
@@ -2967,8 +3007,9 @@ int Game_Init(void)
 	player_data[1].other = NULL;
 	player_data[2].other = NULL;
 	player_data[3].other = NULL;
+
 	Graph_Init( &img_shadow );
-	ret = Graph_LoadImage("drawable/shadow.png", &img_shadow );
+	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
 
 	/* 记录1号角色的控制键 */
 	ctrlkey.up = LCUIKEY_W;
@@ -3054,9 +3095,34 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	}
 }
 
-static void GamePlayer_Control( void *arg )
+int Game_Start(void)
 {
 	int i;
+
+	/* 移动游戏角色的位置 */
+	GameObject_SetPos( player_data[0].object, 200, 300 );
+	GameObject_SetPos( player_data[1].object, 400, 300 );
+	/* 改变游戏角色的朝向 */
+	GamePlayer_SetRightOriented( &player_data[0] );
+	GamePlayer_SetLeftOriented( &player_data[1] );
+	/* 设置游戏角色的初始状态 */
+	GamePlayer_SetReady( &player_data[0] );
+	GamePlayer_SetReady( &player_data[1] );
+	/* 播放动作动画，并显示游戏角色 */
+	for(i=0; i<4; ++i) {
+		if( !player_data[i].enable ) {
+			continue;
+		}
+		GameObject_PlayAction( player_data[i].object );
+		Widget_Show( player_data[i].object );
+	}
+	return 0;
+}
+
+int Game_Loop(void)
+{
+	int i;
+	/* 循环更新游戏数据 */
 	while(1) {
 		for(i=0; i<4; ++i) {
 			if( !player_data[i].enable
@@ -3067,27 +3133,6 @@ static void GamePlayer_Control( void *arg )
 			Widget_Update( player_data[i].object );
 		}
 		LCUI_MSleep( 10 );
-	}
-}
-
-int Game_Start(void)
-{
-	int i;
-	LCUI_Thread t;
-	LCUIThread_Create( &t, GamePlayer_Control, NULL );
-	/* 移动游戏角色的位置 */
-	GameObject_SetPos( player_data[0].object, 200, 300 );
-	GameObject_SetPos( player_data[1].object, 400, 300 );
-	GamePlayer_SetRightOriented( &player_data[0] );
-	GamePlayer_SetLeftOriented( &player_data[1] );
-	GamePlayer_SetReady( &player_data[0] );
-	GamePlayer_SetReady( &player_data[1] );
-	for(i=0; i<4; ++i) {
-		if( !player_data[i].enable ) {
-			continue;
-		}
-		GameObject_PlayAction( player_data[i].object );
-		Widget_Show( player_data[i].object );
 	}
 	return 0;
 }

@@ -194,6 +194,7 @@ struct GamePlayer_{
 
 extern int Game_Init(void);
 extern int Game_Start(void);
+extern int Game_Loop(void);
 extern int Game_Pause(void);
 
 /** 改变角色的动作动画  */
