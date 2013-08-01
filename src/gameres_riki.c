@@ -3,6 +3,7 @@
 #include LC_GRAPH_H
 
 #include "game.h"
+#include "game_resource.h"
 
 /** 载入角色的移动动作动画资源 */
 static ActionData* ActionRes_LoadWalk(void)
@@ -19,15 +20,15 @@ static ActionData* ActionRes_LoadWalk(void)
 	range.y_width = GLOBAL_Y_WIDTH;
 	range.z = 0;
 	range.z_width = 64;
-
+	
 	Graph_Init( &img_move[0] );
 	Graph_Init( &img_move[1] );
 	Graph_Init( &img_move[2] );
 	Graph_Init( &img_move[3] );
-	Graph_LoadImage( "drawable/walk-01.png", &img_move[0] );
-	Graph_LoadImage( "drawable/walk-02.png", &img_move[1] );
-	Graph_LoadImage( "drawable/walk-03.png", &img_move[2] );
-	Graph_LoadImage( "drawable/walk-04.png", &img_move[3] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-01", &img_move[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-02", &img_move[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-03", &img_move[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-04", &img_move[3] );
 	Action_AddFrame( action, 0,2, &img_move[0], 5 );
 	Action_AddFrame( action, 0,0, &img_move[1], 5 );
 	Action_AddFrame( action, 0,2, &img_move[2], 5 );
@@ -55,7 +56,7 @@ static ActionData* ActionRes_LoadStance(void)
 	range.z_width = 64;
 
 	Graph_Init( &img_stance );
-	Graph_LoadImage( "drawable/stance-01.png", &img_stance );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "stance-01", &img_stance );
 	Action_AddFrame( action, 0,0, &img_stance, 100 );
 	Action_SetHitRange( action, 0, range );
 	return action;
@@ -77,7 +78,7 @@ static ActionData* ActionRes_LoadReady(void)
 	hit_range.z_width = 62;
 
 	Graph_Init( &img_ready );
-	Graph_LoadImage( "drawable/ready-01.png", &img_ready );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ready-01", &img_ready );
 	Action_AddFrame( action, -6,0, &img_ready, 50 );
 	Action_SetHitRange( action, 0, hit_range );
 
@@ -103,8 +104,8 @@ static ActionData* ActionRes_LoadRun(void)
 
 	for(i=0; i<6; ++i) {
 		Graph_Init( &img_run[i] );
-		sprintf( path, "drawable/run-%02d.png", i+1 );
-		Graph_LoadImage( path, &img_run[i] );
+		sprintf( path, "run-%02d", i+1 );
+		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img_run[i] );
 		Action_AddFrame( action, 0,0, &img_run[i], 3 );
 		Action_SetHitRange( action, i, hit_range );
 	}
@@ -138,15 +139,15 @@ static ActionData* ActionRes_LoadAAttack(void)
 	Graph_Init( &img_attack[2] ); 
 	Graph_Init( &img_attack[1] );
 
-	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
 	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
 	Action_SetHitRange( action, 0, hit_range );
 
-	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-02", &img_attack[1] );
 	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
 	Action_SetHitRange( action, 1, hit_range );
 
-	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-03", &img_attack[2] );
 	Action_AddFrame( action, -14,0, &img_attack[2], 3 );
 	Action_SetAttackRange( action, 2, attack_range );
 	Action_SetHitRange( action, 2, hit_range );
@@ -183,11 +184,11 @@ static ActionData* ActionRes_LoadBAttack(void)
 	Graph_Init( &img_attack[0] );
 	Graph_Init( &img_attack[1] );
 
-	Graph_LoadImage( "drawable/B-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-01", &img_attack[0] );
 	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
-	Graph_LoadImage( "drawable/B-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img_attack[1] );
 	Action_AddFrame( action, -11,0, &img_attack[1], 5 );
 	Action_SetHitRange( action, 1, hit_range );
 	Action_SetAttackRange( action, 1, attack_range );
@@ -222,11 +223,11 @@ static ActionData* ActionRes_LoadASprintAttack(void)
 	Graph_Init( &img_attack[0] );
 	Graph_Init( &img_attack[1] );
 
-	Graph_LoadImage( "drawable/A-sprint-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-sprint-attack-01", &img_attack[0] );
 	Action_AddFrame( action, 0,0, &img_attack[0], 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
-	Graph_LoadImage( "drawable/A-sprint-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-sprint-attack-02", &img_attack[1] );
 	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
 	Action_SetHitRange( action, 1, hit_range );
 	Action_SetAttackRange( action, 1, attack_range );
@@ -259,11 +260,11 @@ static ActionData* ActionRes_LoadBSprintAttack(void)
 	Graph_Init( &img_attack[0] );
 	Graph_Init( &img_attack[1] );
 
-	Graph_LoadImage( "drawable/B-sprint-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-sprint-attack-01", &img_attack[0] );
 	Action_AddFrame( action, 0,0, &img_attack[0], 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
-	Graph_LoadImage( "drawable/B-sprint-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-sprint-attack-02", &img_attack[1] );
 	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
 	Action_SetAttackRange( action, 1, attack_range );
 	Action_SetHitRange( action, 1, hit_range );
@@ -297,15 +298,15 @@ static ActionData* ActionRes_LoadASprintJumpAttack(void)
 	Graph_Init( &img_attack[1] );
 	Graph_Init( &img_attack[2] ); 
 
-	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
 	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
 	Action_SetHitRange( action, 0, hit_range );
 
-	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-02", &img_attack[1] );
 	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
 	Action_SetHitRange( action, 1, hit_range );
 
-	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-03", &img_attack[2] );
 	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
 	Action_SetAttackRange( action, 2, attack_range );
 	Action_SetHitRange( action, 2, hit_range );
@@ -337,12 +338,12 @@ static ActionData* ActionRes_LoadBSprintJumpAttack(void)
 	hit_range.z_width = 60;
 
 	Graph_Init( &img_attack[0] );
-	Graph_LoadImage( "drawable/B-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-01", &img_attack[0] );
 	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
 	Graph_Init( &img_attack[1] );
-	Graph_LoadImage( "drawable/B-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img_attack[1] );
 	Action_AddFrame( action, -11,0, &img_attack[1], 1000 );
 	Action_SetHitRange( action, 1, hit_range );
 	Action_SetAttackRange( action, 1, attack_range );
@@ -377,15 +378,15 @@ static ActionData* ActionRes_LoadAJumpAttack(void)
 	Graph_Init( &img_attack[1] );
 	Graph_Init( &img_attack[2] ); 
 
-	Graph_LoadImage( "drawable/A-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
 	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
 	Action_SetHitRange( action, 0, hit_range );
 
-	Graph_LoadImage( "drawable/A-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-02", &img_attack[1] );
 	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
 	Action_SetHitRange( action, 1, hit_range );
 
-	Graph_LoadImage( "drawable/A-attack-03.png", &img_attack[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-03", &img_attack[2] );
 	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
 	Action_SetHitRange( action, 2, hit_range );
 	Action_SetAttackRange( action, 2, attack_range );
@@ -419,11 +420,11 @@ static ActionData* ActionRes_LoadBJumpAttack(void)
 	Graph_Init( &img_attack[0] );
 	Graph_Init( &img_attack[1] );
 
-	Graph_LoadImage( "drawable/B-attack-01.png", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-01", &img_attack[0] );
 	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
-	Graph_LoadImage( "drawable/B-attack-02.png", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img_attack[1] );
 	Action_AddFrame( action, -11,0, &img_attack[1], 1000 );
 	Action_SetHitRange( action, 1, hit_range );
 	Action_SetAttackRange( action, 1, attack_range );
@@ -447,7 +448,7 @@ static ActionData* ActionRes_LoadJump(void)
 	hit_range.z_width = 54;
 
 	Graph_Init( &img_jump );
-	Graph_LoadImage( "drawable/jump.png", &img_jump );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump", &img_jump );
 	/* 让该帧停留20秒，应该够了，现阶段不会遇到从起跳到着陆需要20秒的情况 */
 	Action_AddFrame( action, 0,0, &img_jump, 1000 );
 	Action_SetHitRange( action, 0, hit_range );
@@ -462,7 +463,7 @@ static ActionData* ActionRes_LoadSquat(void)
 	
 	action = Action_Create();
 	Graph_Init( &img_squat );
-	Graph_LoadImage( "drawable/squat.png", &img_squat );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "squat", &img_squat );
 	Action_AddFrame( action, 0,0, &img_squat, 7 );
 	
 	return action;
@@ -482,7 +483,7 @@ static ActionData* ActionRes_LoadHit(void)
 	hit_range.z = 0;
 	hit_range.z_width = 62;
 	Graph_Init( &img_hit );
-	Graph_LoadImage( "drawable/hit.png", &img_hit );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit", &img_hit );
 	Action_AddFrame( action, 0,0, &img_hit, 10 );
 	Action_SetHitRange( action, 0, hit_range );
 
@@ -504,8 +505,8 @@ static ActionData* ActionRes_LoadRest(void)
 	hit_range.z_width = 56;
 	Graph_Init( &img_rest[0] );
 	Graph_Init( &img_rest[1] );
-	Graph_LoadImage( "drawable/rest-01.png", &img_rest[0] );
-	Graph_LoadImage( "drawable/rest-02.png", &img_rest[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-01", &img_rest[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-02", &img_rest[1] );
 	Action_AddFrame( action, -6,0, &img_rest[0], 25 );
 	Action_AddFrame( action, -6,0, &img_rest[1], 25 );
 	Action_SetHitRange( action, 0, hit_range );
@@ -537,9 +538,9 @@ static ActionData *ActionRes_LoadFinalBlow( void )
 	Graph_Init( &img_attack[0] );
 	Graph_Init( &img_attack[1] );
 	Graph_Init( &img_attack[2] );
-	Graph_LoadImage( "drawable/final-blow-01.png", &img_attack[0] );
-	Graph_LoadImage( "drawable/final-blow-02.png", &img_attack[1] );
-	Graph_LoadImage( "drawable/final-blow-03.png", &img_attack[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "final-blow-01", &img_attack[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "final-blow-02", &img_attack[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "final-blow-03", &img_attack[2] );
 	Action_AddFrame( action, -2, 0, &img_attack[0], 3 );
 	Action_AddFrame( action, -2, 0, &img_attack[1], 3 );
 	Action_AddFrame( action, -2, 0, &img_attack[2], 10 );
@@ -568,7 +569,7 @@ static ActionData *ActionRes_LoadLying(void)
 	hit_range.z_width = 26;
 
 	Graph_Init( &img_lying );
-	Graph_LoadImage( "drawable/lying.png", &img_lying );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying", &img_lying );
 	Action_AddFrame( action, 0, 0, &img_lying, 50 );
 	Action_SetHitRange( action, 0, hit_range );
 
@@ -592,7 +593,7 @@ static ActionData *ActionRes_LoadLyingHit(void)
 	hit_range.z_width = 26;
 
 	Graph_Init( &img_lying );
-	Graph_LoadImage( "drawable/lying-hit.png", &img_lying );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying-hit", &img_lying );
 	Action_AddFrame( action, 0, 0, &img_lying, 10 );
 	Action_SetHitRange( action, 0, hit_range );
 
@@ -616,7 +617,7 @@ static ActionData *ActionRes_LoadTummy(void)
 	hit_range.z_width = 26;
 
 	Graph_Init( &img_tummy );
-	Graph_LoadImage( "drawable/tummy.png", &img_tummy );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy", &img_tummy );
 	Action_AddFrame( action, 0, 0, &img_tummy, 10 );
 	Action_SetHitRange( action, 0, hit_range );
 
@@ -640,7 +641,7 @@ static ActionData *ActionRes_LoadTummyHit(void)
 	hit_range.z_width = 26;
 
 	Graph_Init( &img_tummy );
-	Graph_LoadImage( "drawable/tummy-hit.png", &img_tummy );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy-hit", &img_tummy );
 	Action_AddFrame( action, 0, 0, &img_tummy, 5 );
 	Action_SetHitRange( action, 0, hit_range );
 
@@ -657,15 +658,15 @@ static ActionData *ActionRes_LoadHitFlyFall(void)
 	action = Action_Create();
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/fall.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "fall", &img );
 	Action_AddFrame( action, 0, 0, &img, 1000 );
 	
-	hit_range.x = -18;
-	hit_range.x_width = 38;
+	hit_range.x = -24;
+	hit_range.x_width = 32;
 	hit_range.y = -GLOBAL_Y_WIDTH/2;
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
-	hit_range.z_width = 64;
+	hit_range.z_width = 50;
 	Action_SetHitRange( action, 0, hit_range );
 
 	return action;
@@ -688,7 +689,7 @@ static ActionData *ActionRes_LoadHitFly(void)
 	hit_range.z_width = 64;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/hit-fly.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit-fly", &img );
 	Action_AddFrame( action, -6, 0, &img, 1000 );
 	Action_SetHitRange( action, 0, hit_range );
 
@@ -715,8 +716,8 @@ static ActionData *ActionRes_LoadForwardRoll(void)
 
 	for( i=0; i<8; ++i ) {
 		Graph_Init( &img[i] );
-		sprintf( path, "drawable/roll-%02d.png", i+1 );
-		Graph_LoadImage( path, &img[i] );
+		sprintf( path, "roll-%02d", i+1 );
+		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img[i] );
 		Action_AddFrame( action, 0, 0, &img[i], 2 );
 		Action_SetHitRange( action, i, hit_range );
 	}
@@ -744,8 +745,8 @@ static ActionData *ActionRes_LoadBackwardRoll(void)
 
 	for( i=0; i<8; ++i ) {
 		Graph_Init( &img[i] );
-		sprintf( path, "drawable/roll-%02d.png", 8-i );
-		Graph_LoadImage( path, &img[i] );
+		sprintf( path, "roll-%02d", 8-i );
+		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img[i] );
 		Action_AddFrame( action, 0, 0, &img[i], 2 );
 		Action_SetHitRange( action, i, hit_range );
 	}
@@ -777,7 +778,7 @@ static ActionData *ActionRes_LoadJumpStomp(void)
 	attack_range.z_width = 16;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/jump-stomp.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-stomp", &img );
 	Action_AddFrame( action, 0, 0, &img, 1000 );
 	Action_SetHitRange( action, 0, hit_range );
 	Action_SetAttackRange( action, 0, attack_range );
@@ -809,7 +810,7 @@ static ActionData *ActionRes_LoadJumpElbow(void)
 	attack_range.z_width = 20;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/jump-elbow.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-elbow", &img );
 	Action_AddFrame( action, 0, 0, &img, 1000 );
 	Action_SetHitRange( action, 0, hit_range );
 	Action_SetAttackRange( action, 0, attack_range );
@@ -833,7 +834,7 @@ static ActionData *ActionRes_LoadCatch(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 60;
-	Graph_LoadImage( "drawable/catch.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "catch", &img );
 	Action_AddFrame( action, 0, 0, &img, 5 );
 	Action_SetHitRange( action, 0, hit_range );
 	
@@ -856,7 +857,7 @@ static ActionData *ActionRes_LoadBeCatch(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 56;
-	Graph_LoadImage( "drawable/rest-02.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-02", &img );
 	Action_AddFrame( action, -6, 0, &img, 5 );
 	Action_SetHitRange( action, 0, hit_range );
 	
@@ -879,7 +880,7 @@ static ActionData *ActionRes_LoadBackBeCatch(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 56;
-	Graph_LoadImage( "drawable/back-be-catch.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "back-be-catch", &img );
 	Action_AddFrame( action, -6, 0, &img, 5 );
 	Action_SetHitRange( action, 0, hit_range );
 	
@@ -905,7 +906,7 @@ static ActionData *ActionRes_LoadFrontCatchSkillA(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 60;
-	Graph_LoadImage( "drawable/elbow-01.png", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-01", &img[0] );
 	Action_AddFrame( action, 0, 0, &img[0], 5 );
 	Action_SetHitRange( action, 0, hit_range );
 	
@@ -915,7 +916,7 @@ static ActionData *ActionRes_LoadFrontCatchSkillA(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 60;
-	Graph_LoadImage( "drawable/elbow-02.png", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-02", &img[1] );
 	Action_AddFrame( action, 0, 0, &img[1], 5 );
 	Action_SetHitRange( action, 1, hit_range );
 	
@@ -925,7 +926,7 @@ static ActionData *ActionRes_LoadFrontCatchSkillA(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 8;
 	hit_range.z_width = 50;
-	Graph_LoadImage( "drawable/elbow-03.png", &img[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-03", &img[2] );
 	Action_AddFrame( action, 0, 0, &img[2], 5 );
 	Action_SetHitRange( action, 2, hit_range );
 
@@ -935,7 +936,7 @@ static ActionData *ActionRes_LoadFrontCatchSkillA(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 50;
-	Graph_LoadImage( "drawable/elbow-04.png", &img[3] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-04", &img[3] );
 	Action_AddFrame( action, 0, 0, &img[3], 5 );
 	Action_AddFrame( action, 0, 5, &img[3], 5 );
 	Action_AddFrame( action, 0, 0, &img[3], 10 );
@@ -966,7 +967,7 @@ static ActionData *ActionRes_LoadBackCatchSkillA(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 56;
-	Graph_LoadImage( "drawable/lift.png", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift", &img[0] );
 	Action_AddFrame( action, 0, 0, &img[0], 10 );
 	Action_SetHitRange( action, 0, hit_range );
 	
@@ -976,13 +977,13 @@ static ActionData *ActionRes_LoadBackCatchSkillA(void)
 	hit_range.y_width = GLOBAL_Y_WIDTH;
 	hit_range.z = 0;
 	hit_range.z_width = 60;
-	Graph_LoadImage( "drawable/jump-stomp.png", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-stomp", &img[1] );
 	Action_AddFrame( action, 0, 5, &img[1], 5 );
 	Action_SetHitRange( action, 1, hit_range );
 	Action_AddFrame( action, 0, 0, &img[1], 10 );
 	Action_SetHitRange( action, 1, hit_range );
 
-	Graph_LoadImage( "drawable/squat.png", &img[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "squat", &img[2] );
 	Action_AddFrame( action, 0, 0, &img[2], 5 );
 	/** 该动作不需要重复播放 */
 	Action_SetReplay( action, FALSE );
@@ -1000,10 +1001,10 @@ static ActionData* ActionRes_LoadBeElbow(void)
 	Graph_Init( &img[1] );
 	Graph_Init( &img[2] );
 	Graph_Init( &img[3] );
-	Graph_LoadImage("drawable/hit.png", &img[0] );
-	Graph_LoadImage("drawable/hit-fly.png", &img[1] );
-	Graph_LoadImage("drawable/lying-hit.png", &img[2] );
-	Graph_LoadImage("drawable/lying.png", &img[3] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit-fly", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying-hit", &img[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying", &img[3] );
 	Action_AddFrame( action, 0, 0, &img[0], 5 );
 	Action_AddFrame( action, 0, 0, &img[1], 5 );
 	Action_AddFrame( action, 0, 0, &img[2], 5 );
@@ -1035,7 +1036,7 @@ static ActionData* ActionRes_LoadKick(void)
 	hit_range.z_width = 60;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/B-attack-02.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img );
 	Action_AddFrame( action, -11,0, &img, 5 );
 	Action_SetAttackRange( action, 0, attack_range );
 	Action_SetHitRange( action, 0, hit_range );
@@ -1062,8 +1063,8 @@ static ActionData *ActionRes_LoadSpinHit(void)
 	
 	for( i=0; i<8; ++i ) {
 		Graph_Init( &img[i] );
-		sprintf( path, "drawable/roll-%02d.png", i+1 );
-		Graph_LoadImage( path, &img[i] );
+		sprintf( path, "roll-%02d", i+1 );
+		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img[i] );
 		Action_AddFrame( action, 0, 0, &img[i], 2 );
 		Action_SetHitRange( action, i, hit_range );
 		/* 攻击范围和受攻击范围是一样的 */
@@ -1099,7 +1100,7 @@ static ActionData* ActionRes_LoadBombKick(void)
 	hit_range.z_width = 60;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/run-04.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "run-04", &img );
 	Action_AddFrame( action, 0,0, &img, 1000 );
 	Action_SetAttackRange( action, 0, attack_range );
 	Action_SetHitRange( action, 0, hit_range );
@@ -1126,9 +1127,9 @@ static ActionData* ActionRes_LoadMachStomp(void)
 	Graph_Init( &img[1] );
 	Graph_Init( &img[2] );
 	Graph_Init( &img[3] );
-	Graph_LoadImage( "drawable/defense.png", &img[0] );
-	Graph_LoadImage( "drawable/jump-stomp.png", &img[1] );
-	Graph_LoadImage( "drawable/defense.png", &img[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "defense", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-stomp", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "defense", &img[2] );
 	Graph_HorizFlip( &img[1], &img[3] );
 	Action_AddFrame( action, 0,0, &img[0], 3 );
 	Action_AddFrame( action, 0,0, &img[1], 3 );
@@ -1172,8 +1173,8 @@ static ActionData *ActionRes_LoadPull(void)
 
 	Graph_Init( &img[0] );
 	Graph_Init( &img[1] );
-	Graph_LoadImage( "drawable/pull.png", &img[0] );
-	Graph_LoadImage( "drawable/push.png", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "pull", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "push", &img[1] );
 	Action_AddFrame( action, 12, 0, &img[0], 10 );
 	Action_AddFrame( action, -12, 0, &img[1], 15 );
 	
@@ -1212,8 +1213,8 @@ static ActionData *ActionRes_LoadPush(void)
 
 	Graph_Init( &img[0] );
 	Graph_Init( &img[1] );
-	Graph_LoadImage( "drawable/rest-02.png", &img[0] );
-	Graph_LoadImage( "drawable/push.png", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-02", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "push", &img[1] );
 	Action_AddFrame( action, -6, 0, &img[0], 10 );
 	Action_AddFrame( action, -12, 0, &img[1], 10 );
 	Action_SetReplay( action, FALSE );
@@ -1236,8 +1237,8 @@ static ActionData *ActionRes_LoadWeakWalk(void)
 
 	Graph_Init( &img[0] );
 	Graph_Init( &img[1] );
-	Graph_LoadImage( "drawable/weak-walk-01.png", &img[0] );
-	Graph_LoadImage( "drawable/weak-walk-02.png", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "weak-walk-01", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "weak-walk-02", &img[1] );
 	Action_AddFrame( action, -6, 2, &img[0], 7 );
 	Action_AddFrame( action, -6, 0, &img[1], 7 );
 	Action_SetHitRange( action, 0, range );
@@ -1262,7 +1263,7 @@ ActionData *ActionRes_LoadLiftStance(void)
 	range.z_width = 56;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/lift.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift", &img );
 	Action_AddFrame( action, 0,0, &img, 5 );
 	Action_SetHitRange( action, 0, range );
 
@@ -1289,10 +1290,10 @@ ActionData *ActionRes_LoadLiftWalk(void)
 	Graph_Init( &img[1] );
 	Graph_Init( &img[2] );
 	Graph_Init( &img[3] );
-	Graph_LoadImage( "drawable/lift-walk-01.png", &img[0] );
-	Graph_LoadImage( "drawable/lift-walk-02.png", &img[1] );
-	Graph_LoadImage( "drawable/lift-walk-03.png", &img[2] );
-	Graph_LoadImage( "drawable/lift-walk-04.png", &img[3] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-01", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-02", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-03", &img[2] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-04", &img[3] );
 	Action_AddFrame( action, 0,-2, &img[0], 8 );
 	Action_AddFrame( action, 0,0, &img[1], 8 );
 	Action_AddFrame( action, 0,-2, &img[2], 8 );
@@ -1323,8 +1324,8 @@ ActionData *ActionRes_LoadLiftRun(void)
 
 	Graph_Init( &img[0] );
 	Graph_Init( &img[1] );
-	Graph_LoadImage( "drawable/lift-run-01.png", &img[0] );
-	Graph_LoadImage( "drawable/lift-run-02.png", &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-run-01", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-run-02", &img[1] );
 	Action_AddFrame( action, 0,10, &img[0], 10 );
 	Action_AddFrame( action, 0,0, &img[1], 5 );
 	Action_SetHitRange( action, 0, range );
@@ -1349,7 +1350,7 @@ static ActionData* ActionRes_LoadLiftJump(void)
 	range.z_width = 60;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/lift-jump.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-jump", &img );
 	Action_AddFrame( action, 0,10, &img, 10 );
 	Action_SetHitRange( action, 0, range );
 
@@ -1372,7 +1373,7 @@ static ActionData* ActionRes_LoadLiftFall(void)
 	range.z_width = 60;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/lift-fall.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-fall", &img );
 	Action_AddFrame( action, 0,10, &img, 10 );
 	Action_SetHitRange( action, 0, range );
 
@@ -1396,7 +1397,7 @@ static ActionData *ActionRes_LoadThrow(void)
 	range.z_width = 56;
 
 	Graph_Init( &img );
-	Graph_LoadImage( "drawable/push.png", &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "push", &img );
 	Action_AddFrame( action, -11,0, &img, 10 );
 	Action_SetHitRange( action, 0, range );
 
@@ -1454,6 +1455,17 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_LIFT_FALL: return ActionRes_LoadLiftFall();
 	case ACTION_THROW: return ActionRes_LoadThrow();
 	default:break;
+	}
+	return NULL;
+}
+
+/** 载入指定角色的动作动画 */
+ActionData* ActionRes_Load( int id, int action_type )
+{
+	switch(id) {
+	case ROLE_RIKI: return ActionRes_LoadRiki( action_type );
+	default:
+		break;
 	}
 	return NULL;
 }
