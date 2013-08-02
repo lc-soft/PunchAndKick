@@ -10,50 +10,79 @@
 #include "game.h"
 
 #define TEXT_COPYRIGHT		L"Developed by LC-Games."
+#define TEXT_STATEMENT		L"<size=20px>"\
+				L"本程序仅用于展示游戏角色的控制及技能动作效果，若本\n"\
+				L"程序在运行过程中出现BUG，请关闭并重新运行本程序。</size>"
 
 static void Game_ShowBootScreen(void)
 {
 	uchar_t alpha;
-	LCUI_Widget *wdg_img_logo, *wdg_text;
 	LCUI_Graph img_game_logo;
+	LCUI_Widget *wdg_img_logo, *wdg_text, *wdg_copyright_text;
 
 	wdg_img_logo = Widget_New(NULL);
+	wdg_copyright_text = Widget_New("label");
 	wdg_text = Widget_New("label");
 	
 	Graph_Init( &img_game_logo );
 	GameGraphRes_GetGraph(MAIN_RES, "main-logo", &img_game_logo );
-	Label_TextW( wdg_text, TEXT_COPYRIGHT );
+	
+	Label_TextW( wdg_copyright_text, TEXT_COPYRIGHT );
+	Label_TextW( wdg_text, TEXT_STATEMENT );
+
 	Widget_Resize( wdg_img_logo, Graph_GetSize(&img_game_logo) );
-	Widget_SetAlign( wdg_text, ALIGN_BOTTOM_CENTER, Pos(0,-20) );
+	
+	Widget_SetAlign( wdg_copyright_text, ALIGN_BOTTOM_CENTER, Pos(0,-20) );
 	Widget_SetAlign( wdg_img_logo, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	Widget_SetAlign( wdg_text, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	
 	Widget_SetBackgroundImage( wdg_img_logo, &img_game_logo );
 	Widget_SetBackgroundLayout( wdg_img_logo, LAYOUT_CENTER );
+	
 	Widget_SetAlpha( wdg_img_logo, 0 );
+	Widget_SetAlpha( wdg_copyright_text, 0 );
 	Widget_SetAlpha( wdg_text, 0 );
+
 	Widget_Show( wdg_img_logo );
-	Widget_Show( wdg_text );
+	Widget_Show( wdg_copyright_text );
 #ifndef SKIP_BOOT_SCREEN
 	/* 以淡入淡出的效果显示LOGO */
 	for( alpha=0; alpha<250; alpha+=10 ) {
 		Widget_SetAlpha( wdg_img_logo, alpha );
-		Widget_SetAlpha( wdg_text, alpha );
+		Widget_SetAlpha( wdg_copyright_text, alpha );
 		LCUI_MSleep(25);
 	}
 	Widget_SetAlpha( wdg_img_logo, 255 );
-	Widget_SetAlpha( wdg_text, 255 );
+	Widget_SetAlpha( wdg_copyright_text, 255 );
 	LCUI_Sleep(2);
 	for( alpha=255; alpha>5; alpha-=10 ) {
 		Widget_SetAlpha( wdg_img_logo, alpha );
-		Widget_SetAlpha( wdg_text, alpha );
+		Widget_SetAlpha( wdg_copyright_text, alpha );
 		LCUI_MSleep(25);
 	}
 #endif
 	Widget_SetAlpha( wdg_img_logo, 0 );
-	Widget_SetAlpha( wdg_text, 0 );
+	Widget_SetAlpha( wdg_copyright_text, 0 );
 	Widget_Hide( wdg_img_logo );
+	Widget_Hide( wdg_copyright_text );
+	Widget_Show( wdg_text );
+#ifndef SKIP_BOOT_SCREEN
+	/* 以淡入淡出的效果显示LOGO */
+	for( alpha=0; alpha<250; alpha+=10 ) {
+		Widget_SetAlpha( wdg_text, alpha );
+		LCUI_MSleep(25);
+	}
+	Widget_SetAlpha( wdg_text, 255 );
+	LCUI_Sleep(4);
+	for( alpha=255; alpha>5; alpha-=10 ) {
+		Widget_SetAlpha( wdg_text, alpha );
+		LCUI_MSleep(25);
+	}
+#endif
 	Widget_Hide( wdg_text );
 	Widget_Destroy( wdg_img_logo );
 	Widget_Destroy( wdg_text );
+	Widget_Destroy( wdg_copyright_text );
 }
 
 static void UpdateViewFPS( void *arg )
