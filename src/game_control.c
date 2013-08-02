@@ -529,6 +529,10 @@ static void GamePlayer_AtReadyTimeOut( GamePlayer *player )
 
 void GamePlayer_SetReady( GamePlayer *player )
 {
+	/* 如果处于站立举起状态，则不能切换为READY状态 */
+	if( player->state == STATE_LIFT_STANCE ) {
+		return;
+	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_ChangeState( player, STATE_READY );
@@ -1443,8 +1447,6 @@ static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockMotion( player );
-	GamePlayer_UnlockAction( player );
 	GameObject_AtXSpeedToZero( widget, 0, NULL );
 	player->attack_type = ATTACK_TYPE_NONE;
 	GamePlayer_SetReady( player );
@@ -2009,24 +2011,27 @@ static void GamePlayer_SetLiftPlayer( GamePlayer *player )
 	z_index = Widget_GetZIndex( player->object );
 	Widget_SetZIndex( other_player->object, z_index+1);
 	
-	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( other_player );
-
 	if( other_player->state == STATE_LYING
 	 || other_player->state == STATE_LYING_HIT ) {
 		GamePlayer_ChangeState( other_player, STATE_BE_LIFT_LYING );
 	} else {
 		GamePlayer_ChangeState( other_player, STATE_BE_LIFT_TUMMY );
 	}
+	GamePlayer_LockAction( other_player );
 	/* 举起前，先停止移动 */
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
+	GamePlayer_UnlockAction( player );
 	/* 改为下蹲状态 */
 	GamePlayer_ChangeState( player, STATE_SQUAT );
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtLiftDone );
-	GamePlayer_SetRestTimeOut( other_player, BE_LIFT_REST_TIMEOUT, GamePlayer_BeLiftStartStand );
 	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( other_player );
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtLiftDone );
+	GamePlayer_SetRestTimeOut(
+		other_player, 
+		BE_LIFT_REST_TIMEOUT, 
+		GamePlayer_BeLiftStartStand 
+	);
 	/* 改变躺地角色的坐标 */
 	x = GameObject_GetX( player->object );
 	y = GameObject_GetY( player->object );
@@ -2417,6 +2422,8 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	case STATE_RIDE:
 		GamePlayer_SetRideAttack( player );
 	case STATE_RIDE_ATTACK:
+	case STATE_A_ATTACK:
+	case STATE_B_ATTACK:
 		return;
 	case STATE_LIFT_JUMP:
 	case STATE_LIFT_FALL:
@@ -2643,6 +2650,8 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	case STATE_RIDE:
 		GamePlayer_SetRideJump( player );
 	case STATE_RIDE_ATTACK:
+	case STATE_A_ATTACK:
+	case STATE_B_ATTACK:
 		return;
 	case STATE_LIFT_JUMP:
 	case STATE_LIFT_FALL:
