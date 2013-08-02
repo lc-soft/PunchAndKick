@@ -195,6 +195,8 @@ static ActionData* ActionRes_LoadBAttack(void)
 	
 	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
 	Action_SetHitRange( action, 2, hit_range );
+
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -231,7 +233,8 @@ static ActionData* ActionRes_LoadASprintAttack(void)
 	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
 	Action_SetHitRange( action, 1, hit_range );
 	Action_SetAttackRange( action, 1, attack_range );
-
+	
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -268,6 +271,8 @@ static ActionData* ActionRes_LoadBSprintAttack(void)
 	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
 	Action_SetAttackRange( action, 1, attack_range );
 	Action_SetHitRange( action, 1, hit_range );
+
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -310,7 +315,8 @@ static ActionData* ActionRes_LoadASprintJumpAttack(void)
 	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
 	Action_SetAttackRange( action, 2, attack_range );
 	Action_SetHitRange( action, 2, hit_range );
-
+	
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -348,6 +354,7 @@ static ActionData* ActionRes_LoadBSprintJumpAttack(void)
 	Action_SetHitRange( action, 1, hit_range );
 	Action_SetAttackRange( action, 1, attack_range );
 
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -390,7 +397,8 @@ static ActionData* ActionRes_LoadAJumpAttack(void)
 	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
 	Action_SetHitRange( action, 2, hit_range );
 	Action_SetAttackRange( action, 2, attack_range );
-
+	
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -429,6 +437,7 @@ static ActionData* ActionRes_LoadBJumpAttack(void)
 	Action_SetHitRange( action, 1, hit_range );
 	Action_SetAttackRange( action, 1, attack_range );
 	
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -464,8 +473,8 @@ static ActionData* ActionRes_LoadSquat(void)
 	action = Action_Create();
 	Graph_Init( &img_squat );
 	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "squat", &img_squat );
-	Action_AddFrame( action, 0,0, &img_squat, 7 );
-	
+	Action_AddFrame( action, 0,0, &img_squat, 10 );
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -1104,6 +1113,8 @@ static ActionData* ActionRes_LoadBombKick(void)
 	Action_AddFrame( action, 0,0, &img, 1000 );
 	Action_SetAttackRange( action, 0, attack_range );
 	Action_SetHitRange( action, 0, hit_range );
+
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
@@ -1404,6 +1415,56 @@ static ActionData *ActionRes_LoadThrow(void)
 	return action;
 }
 
+static ActionData *ActionRes_LoadRide(void)
+{
+	LCUI_Graph img;
+	ActionData *action;
+	RangeBox range;
+	
+	action = Action_Create();
+	
+	range.x = -12;
+	range.x_width = 32;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 48;
+
+	Graph_Init( &img );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride", &img );
+	Action_AddFrame( action, 0,0, &img, 10 );
+	Action_SetHitRange( action, 0, range );
+
+	return action;
+}
+
+static ActionData *ActionRes_LoadRideAttack(void)
+{
+	LCUI_Graph img[2];
+	ActionData *action;
+	RangeBox range;
+	
+	action = Action_Create();
+	
+	range.x = -12;
+	range.x_width = 32;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 48;
+
+	Graph_Init( &img[0] );
+	Graph_Init( &img[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride-attack-01", &img[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride-attack-02", &img[1] );
+	Action_AddFrame( action, 0,0, &img[0], 5 );
+	Action_AddFrame( action, 0,0, &img[1], 5 );
+	Action_SetHitRange( action, 0, range );
+	Action_SetHitRange( action, 1, range );
+	Action_SetReplay( action, FALSE );
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -1454,6 +1515,8 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_LIFT_JUMP: return ActionRes_LoadLiftJump();
 	case ACTION_LIFT_FALL: return ActionRes_LoadLiftFall();
 	case ACTION_THROW: return ActionRes_LoadThrow();
+	case ACTION_RIDE: return ActionRes_LoadRide();
+	case ACTION_RIDE_ATTACK: return ActionRes_LoadRideAttack();
 	default:break;
 	}
 	return NULL;
