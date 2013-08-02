@@ -47,7 +47,7 @@ static void test_read(void)
 	}
 }
 
-#define ACTION_FILE_NUM 65
+#define ACTION_FILE_NUM 68
 #define MAIN_FILE_NUM	2
 
 struct fileinfo {
@@ -125,7 +125,10 @@ const struct fileinfo action_file_info[ACTION_FILE_NUM]={
 	{"walk-03.png","walk-03"},
 	{"walk-04.png","walk-04"},
 	{"weak-walk-01.png","weak-walk-01"},
-	{"weak-walk-02.png","weak-walk-02"}
+	{"weak-walk-02.png","weak-walk-02"},
+	{"ride.png","ride"},
+	{"ride-attack-01.png","ride-attack-01"},
+	{"ride-attack-02.png","ride-attack-02"}
 };
 
 static void ActionRes_Riki_WirteToFile( void )
@@ -192,8 +195,8 @@ int main(int argc, char** argv)
 	if( argc == 2 ) {
 		ActionRes_Riki_ReadFromFile();
 	} else {
-		//ActionRes_Riki_WirteToFile();
-		MainGraphRes_WirteToFile();
+		ActionRes_Riki_WirteToFile();
+		//MainGraphRes_WirteToFile();
 	}
 	return 0;
 }
