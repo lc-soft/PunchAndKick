@@ -55,13 +55,15 @@ static int global_action_list[]={
 	ACTION_LIFT_JUMP,
 	ACTION_LIFT_FALL,
 	ACTION_BE_ELBOW,
-	ACTION_THROW
+	ACTION_THROW,
+	ACTION_RIDE,
+	ACTION_RIDE_ATTACK
 };
 
 #define LIFT_HEIGHT	56
 
-#define SHORT_REST_TIMEOUT	1500
-#define LONG_REST_TIMEOUT	2000
+#define SHORT_REST_TIMEOUT	2000
+#define LONG_REST_TIMEOUT	3000
 #define BE_THROW_REST_TIMEOUT	500
 #define BE_LIFT_REST_TIMEOUT	4500
 
@@ -95,7 +97,7 @@ static int global_action_list[]={
 #define ZSPEED_HIT_FLY	100
 #define ZACC_HIT_FLY	50
 
-#define ROLL_TIMEOUT	330
+#define ROLL_TIMEOUT	200
 
 #define XSPEED_THROWUP_FLY	60
 #define XSPEED_THROWDOWN_FLY	100
@@ -248,6 +250,7 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		action_type = ACTION_FINAL_BLOW;
 		break;
 	case STATE_BE_LIFT_SQUAT:
+	case STATE_JSQUAT:
 	case STATE_SSQUAT:
 	case STATE_SQUAT:
 		action_type = ACTION_SQUAT;
@@ -296,6 +299,7 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_JUMP_ELBOW:
 		action_type = ACTION_JUMP_ELBOW;
 		break;
+	case STATE_RIDE_JUMP:
 	case STATE_JUMP_STOMP:
 		action_type = ACTION_JUMP_STOMP;
 		break;
@@ -356,6 +360,12 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		break;
 	case STATE_THROW:
 		action_type = ACTION_THROW;
+		break;
+	case STATE_RIDE:
+		action_type = ACTION_RIDE;
+		break;
+	case STATE_RIDE_ATTACK:
+		action_type = ACTION_RIDE_ATTACK;
 		break;
 	default:return;
 	}
@@ -684,7 +694,6 @@ static void GamePlayer_AtSquatDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP );
 	/* 在跳跃过程中检测是否有碰撞 */
 	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
@@ -695,8 +704,7 @@ static void GamePlayer_SetSquat( GamePlayer *player )
 	GamePlayer_UnlockAction( player );
 	/* 跳跃后，重置X轴上的加速度为0 */
 	GameObject_SetXAcc( player->object, 0 );
-	GamePlayer_ChangeState( player, STATE_SQUAT );
-	GamePlayer_LockAction( player );
+	GamePlayer_ChangeState( player, STATE_JSQUAT );
 	GamePlayer_LockMotion( player );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtSquatDone );
 	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLandingDone );
@@ -848,8 +856,26 @@ static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
 /** 开始站起 */
 static void GamePlayer_StartStand( GamePlayer *player )
 {
-	if( player->other && player->other->other == player ) {
-		return;
+	GamePlayer *other_player;
+	/* 如果自己正被对方举起，那么现在就不站起了 */
+	if( player->other ) {
+		other_player = player->other;
+		switch( other_player->state ) {
+		case STATE_SQUAT:
+			return;
+		case STATE_RIDE_JUMP:
+			break;
+		case STATE_RIDE:
+		case STATE_RIDE_ATTACK:
+			GamePlayer_UnlockAction( player->other );
+			/* 解除对方的记录 */
+			player->other->other = NULL;
+			player->other = NULL;
+			/* 让骑在自己身上的角色站起来 */
+			GamePlayer_StartStand( other_player );
+			break;
+		default:break;
+		}
 	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
@@ -1429,11 +1455,10 @@ static void GamePlayer_AtSprintSquatDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SJUMP );
-	GameObject_AtLanding( widget, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLandingDone );
 	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
 }
+
 
 /** 冲刺+下蹲 */
 static void GamePlayer_SetSprintSquat( GamePlayer *player )
@@ -1441,9 +1466,9 @@ static void GamePlayer_SetSprintSquat( GamePlayer *player )
 	GamePlayer_UnlockAction( player );
 	GameObject_SetXAcc( player->object, 0 );
 	GamePlayer_ChangeState( player, STATE_SSQUAT );
-	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtSprintSquatDone );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLandingDone );
 }
 
 /** 在被举起的状态下，主动起跳 */
@@ -1487,6 +1512,9 @@ static void GamePlayer_BeLiftActiveStartJump( GamePlayer *player )
 void GamePlayer_StartJump( GamePlayer *player )
 {
 	switch(player->state) {
+	case STATE_RIDE:
+	case STATE_RIDE_ATTACK:
+	case STATE_RIDE_JUMP:
 	case STATE_SJUMP:
 	case STATE_JUMP:
 	case STATE_LIFT_JUMP:
@@ -2299,6 +2327,63 @@ static void GamePlayer_SetThrowDown( GamePlayer *player )
 	player->other = NULL;
 }
 
+static void GamePlayer_AtRideAttackDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	/* 如果还骑在对方身上 */
+	if( player->other ) {
+		GamePlayer_ChangeState( player, STATE_RIDE );
+	}
+}
+
+/** 骑着攻击 */
+static void GamePlayer_SetRideAttack( GamePlayer *player )
+{
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
+	GamePlayer_LockAction( player );
+	GamePlayer_TryHit( player->other );
+	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
+}
+
+static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( !player->other ) {
+		GamePlayer_StartStand( player );
+		return;
+	}
+	switch( player->other->state ) {
+	case STATE_TUMMY:
+	case STATE_TUMMY_HIT:
+	case STATE_LYING:
+	case STATE_LYING_HIT:
+		GamePlayer_SetRideAttack( player );
+		break;
+	default:
+		GamePlayer_StartStand( player );
+		break;
+	}
+}
+
+static void GamePlayer_SetRideJump( GamePlayer *player )
+{
+	_DEBUG_MSG("tip\n");
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_RIDE_JUMP );
+	GamePlayer_LockAction( player );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtRideJumpDone );
+}
+
 /** 进行A攻击 */
 void GamePlayer_StartAAttack( GamePlayer *player )
 {
@@ -2329,6 +2414,10 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	}
 
 	switch(player->state) {
+	case STATE_RIDE:
+		GamePlayer_SetRideAttack( player );
+	case STATE_RIDE_ATTACK:
+		return;
 	case STATE_LIFT_JUMP:
 	case STATE_LIFT_FALL:
 	case STATE_LIFT_RUN:
@@ -2366,6 +2455,7 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GameObject_ClearAttack( player->object );
 		return;
 	case STATE_JUMP:
+	case STATE_JSQUAT:
 		speed = GameObject_GetZSpeed( player->object );
 		/* 如果满足使用 跳跃肘压 技能的条件 */
 		if( speed < 0 && player->skill.big_elbow ) {
@@ -2378,6 +2468,7 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 		GameObject_ClearAttack( player->object );
 		return;
 	case STATE_SJUMP:
+	case STATE_SSQUAT:
 		GamePlayer_ChangeState( player, STATE_ASJ_ATTACK );
 		GamePlayer_LockAction( player );
 		player->attack_type = ATTACK_TYPE_SJUMP_PUNCH;
@@ -2549,6 +2640,10 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	}
 
 	switch(player->state) {
+	case STATE_RIDE:
+		GamePlayer_SetRideJump( player );
+	case STATE_RIDE_ATTACK:
+		return;
 	case STATE_LIFT_JUMP:
 	case STATE_LIFT_FALL:
 	case STATE_LIFT_RUN:
@@ -2585,12 +2680,14 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 		GameObject_ClearAttack( player->object );
 		return;
 	case STATE_JUMP:
+	case STATE_JSQUAT:
 		GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
 		GamePlayer_LockAction( player );
 		player->attack_type = ATTACK_TYPE_JUMP_KICK;
 		GameObject_ClearAttack( player->object );
 		return;
 	case STATE_SJUMP:
+	case STATE_SSQUAT:
 		GamePlayer_ChangeState( player, STATE_BSJ_ATTACK );
 		GamePlayer_LockAction( player );
 		player->attack_type = ATTACK_TYPE_SJUMP_KICK;
@@ -2641,9 +2738,29 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	GamePlayer_LockAction( player );
 }
 
+/** 骑在躺地者身上 */
+static void GamePlayer_SetRidePlayer( GamePlayer *self, GamePlayer *other )
+{
+	int z_index;
+	double x, y;
+	self->other = other;
+	other->other = self;
+	GamePlayer_StopXMotion( self );
+	GamePlayer_StopYMotion( self );
+	x = GameObject_GetX( other->object );
+	y = GameObject_GetY( other->object );
+	GameObject_SetX( self->object, x );
+	GameObject_SetY( self->object, y );
+	GamePlayer_ChangeState( self, STATE_RIDE );
+	z_index = Widget_GetZIndex( other->object );
+	Widget_SetZIndex( self->object, z_index+1 );
+}
+
 void GamePlayer_SetUpMotion( GamePlayer *player )
 {
 	double speed;
+	GamePlayer *other_player;
+
 	if( player->lock_motion ) {
 		return;
 	}
@@ -2657,6 +2774,15 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_WALK );
 		break;
 	case STATE_WALK:
+		other_player = GamePlayer_GetGroundPlayer( player );
+		if( !other_player ) {
+			break;
+		}
+		if( !GamePlayer_CanLiftPlayer( player, other_player ) ) {
+			break;
+		}
+		GamePlayer_SetRidePlayer( player, other_player );
+		return;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
 	case STATE_LIFT_RUN:
@@ -2667,9 +2793,12 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 	GameObject_SetYSpeed( player->object, speed );
 }
 
+/** 设置向上移动 */
 void GamePlayer_SetDownMotion( GamePlayer *player )
 {
 	double speed;
+	GamePlayer *other_player;
+
 	if( player->lock_motion ) {
 		return;
 	}
@@ -2682,6 +2811,15 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 	case STATE_STANCE:
 		GamePlayer_ChangeState( player, STATE_WALK );
 	case STATE_WALK:
+		other_player = GamePlayer_GetGroundPlayer( player );
+		if( !other_player ) {
+			break;
+		}
+		if( !GamePlayer_CanLiftPlayer( player, other_player ) ) {
+			break;
+		}
+		GamePlayer_SetRidePlayer( player, other_player );
+		return;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
 	case STATE_LIFT_RUN:
@@ -2722,26 +2860,19 @@ static void GamePlayer_SetJumpSpinKick( GamePlayer *player )
 		return;
 	}
 	/* 如果该游戏角色并没处于奔跑后的 跳跃 的状态下 */
-	if( player->state != STATE_SJUMP ) {
+	if( player->state != STATE_SJUMP
+	&& player->state != STATE_SSQUAT ) {
 		return;
 	}
 	/* 增加点在Z轴的移动速度，以增加高度 */
 	z_speed = GameObject_GetZSpeed( player->object );
-	if( z_speed > 0 ) {
-		z_speed *= 2.5;
-	}
-	else if( z_speed == 0 ) {
-		z_speed += 50;
-	}
-	else {
-		z_speed *= -2.5;
-	}
+	z_speed += 100;
 	GameObject_SetZSpeed( player->object, z_speed );
 	GameObject_SetZAcc( player->object, -(ZACC_JUMP+50) );
 	player->attack_type = ATTACK_TYPE_JUMP_SPIN_KICK;
 	GameObject_ClearAttack( player->object );
 	/* 开始翻滚 */
-	GamePlayer_ChangeState( player, STATE_F_ROLL );
+	GamePlayer_ChangeState( player, STATE_SPINHIT );
 	/* 锁定动作和移动 */
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
@@ -3076,7 +3207,8 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		GamePlayer_SetUpMotion( player );
 	}
 	else if( LCUIKey_IsHit(player->ctrlkey.down) ) {
-		if( player->state == STATE_SJUMP ) {
+		if( player->state == STATE_SJUMP
+		 || player->state == STATE_SSQUAT ) {
 			GamePlayer_SetJumpSpinKick( player );
 		}
 		GamePlayer_SetDownMotion( player );
