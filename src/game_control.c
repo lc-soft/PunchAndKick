@@ -651,7 +651,7 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 	head_range.z_width = 5;
 	head_range.x += 5;
 	head_range.x_width -= 10;
-	/* 计算自己的脚步范围 */
+	/* 计算自己的脚部范围 */
 	foot_range.z_width = 5;
 	foot_range.x += 5;
 	foot_range.x_width -= 10;
@@ -2372,6 +2372,7 @@ static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
 		GamePlayer_SetRideAttack( player );
 		break;
 	default:
+		player->other = NULL;
 		GamePlayer_StartStand( player );
 		break;
 	}
