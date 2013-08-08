@@ -4,9 +4,9 @@
 #include LC_INPUT_H
 
 #include "game.h"
-#include "physics_system.h"
 
 static LCUI_Graph img_shadow;
+static LCUI_Widget *game_scene;
 static GamePlayer player_data[4];
 static int global_action_list[]={
 	ACTION_READY,
@@ -1521,6 +1521,7 @@ void GamePlayer_StartJump( GamePlayer *player )
 	case STATE_JUMP:
 	case STATE_LIFT_JUMP:
 	case STATE_LIFT_FALL:
+	case STATE_SQUAT:
 		break;
 	case STATE_BE_LIFT_SQUAT:
 	case STATE_BE_LIFT_STANCE:
@@ -2131,13 +2132,10 @@ static void GamePlayer_ProcThrowUpFlyAttack( LCUI_Widget *self, LCUI_Widget *oth
 static void GamePlayer_BeLiftPassiveStartJump( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	double x_speed, x_acc;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	player->other = NULL;
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SJUMP );
-	x_speed = GameObject_GetXSpeed( player->object );
-	x_acc = GameObject_GetXAcc( player->object );
 }
 
 /** 将举起的角色向前抛出 */
@@ -2191,10 +2189,11 @@ static void GamePlayer_SetThrowUp( GamePlayer *player )
 		case STATE_BE_LIFT_SQUAT:
 		case STATE_BE_LIFT_STANCE:
 			if( GamePlayer_IsLeftOriented(player) ) {
-				x_speed = -XSPEED_THROWDOWN_FLY;
+				x_speed = -XSPEED_RUN/2;
 			} else {
-				x_speed = XSPEED_THROWDOWN_FLY;
+				x_speed = XSPEED_RUN/2;
 			}
+			x_speed += GameObject_GetXSpeed( player->object )/2;
 			GamePlayer_LockMotion( player->other );
 			GameObject_SetXSpeed( player->other->object, x_speed );
 			GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
@@ -2293,7 +2292,7 @@ static void GamePlayer_SetThrowDown( GamePlayer *player )
 				x_speed = XSPEED_THROWDOWN_FLY;
 				GamePlayer_SetLeftOriented( player->other );
 			}
-			x_speed += GameObject_GetXSpeed( player->object )/4;
+			x_speed += GameObject_GetXSpeed( player->object )/2;
 			GamePlayer_LockMotion( player->other );
 			GameObject_SetXSpeed( player->other->object, x_speed );
 			GameObject_AtLanding(
@@ -2305,10 +2304,11 @@ static void GamePlayer_SetThrowDown( GamePlayer *player )
 		case STATE_BE_LIFT_SQUAT:
 		case STATE_BE_LIFT_STANCE:
 			if( GamePlayer_IsLeftOriented(player) ) {
-				x_speed = -XSPEED_THROWDOWN_FLY;
+				x_speed = -XSPEED_RUN/2;
 			} else {
-				x_speed = XSPEED_THROWDOWN_FLY;
+				x_speed = XSPEED_RUN/2;
 			}
+			x_speed += GameObject_GetXSpeed( player->object )/4;
 			GamePlayer_LockMotion( player->other );
 			GameObject_SetXSpeed( player->other->object, x_speed );
 			GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
@@ -3113,6 +3113,11 @@ int Game_Init(void)
 	int ret;
 	ControlKey ctrlkey;
 
+	game_scene = Widget_New(NULL);
+	ret = GameScene_Init( game_scene );
+	if( ret != 0 ) {
+		return ret;
+	}
 	ret = GameGraphRes_LoadFromFile("action-riki.data");
 	if( ret != 0 ) {
 		LCUI_MessageBoxW(
@@ -3190,12 +3195,14 @@ int Game_Init(void)
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
-
+	/* 将游戏对象放入战斗场景内 */
+	GameObject_AddToContainer( player_data[0].object, game_scene );
+	GameObject_AddToContainer( player_data[1].object, game_scene );
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
-	/* 设置空间边界 */
-	PhysicsSystem_SetSpaceBound( 20, 600, 200, 200 );
+
+	Widget_Show( game_scene );
 	return ret;
 }
 
@@ -3240,10 +3247,21 @@ static void GamePlayer_SyncData( GamePlayer *player )
 int Game_Start(void)
 {
 	int i;
+	int x, y, start_x, start_y;
+	LCUI_Size scene_size;
 
-	/* 移动游戏角色的位置 */
-	GameObject_SetPos( player_data[0].object, 200, 300 );
-	GameObject_SetPos( player_data[1].object, 400, 300 );
+	GameScene_GetLandSize( game_scene, &scene_size );
+	GameScene_GetLandStartX( game_scene, &start_x );
+	GameScene_GetLandStartY( game_scene, &start_y );
+	/* 计算并设置游戏角色的位置 */
+	x = scene_size.w/2 - 150;
+	GameObject_SetX( player_data[0].object, start_x+x );
+	x = scene_size.w/2 + 150;
+	GameObject_SetX( player_data[1].object, start_x+x );
+	y = scene_size.h/2;
+	GameObject_SetY( player_data[0].object, start_y+y );
+	GameObject_SetY( player_data[1].object, start_y+y );
+
 	/* 改变游戏角色的朝向 */
 	GamePlayer_SetRightOriented( &player_data[0] );
 	GamePlayer_SetLeftOriented( &player_data[1] );
@@ -3274,6 +3292,8 @@ int Game_Loop(void)
 			GamePlayer_SyncData( &player_data[i] );
 			Widget_Update( player_data[i].object );
 		}
+		/* 更新镜头 */
+		GameScene_UpdateCamera( game_scene, player_data[0].object );
 		LCUI_MSleep( 10 );
 	}
 	return 0;
