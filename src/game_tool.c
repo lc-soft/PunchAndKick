@@ -60,6 +60,10 @@ const struct fileinfo main_file_info[2]={
 	{"shadow.png", "shadow"}
 };
 
+const struct fileinfo scenes_file_info={
+	"default-scene.png","default"
+};
+
 const struct fileinfo action_file_info[ACTION_FILE_NUM]={
 	{"A-attack-01.png","A-attack-01"},
 	{"A-attack-02.png","A-attack-02"},
@@ -163,6 +167,21 @@ static void MainGraphRes_WirteToFile( void )
 	GameGraphRes_FreeAll();
 }
 
+/** 将战斗场景的图形资源写入至文件 */
+static void ScenesGraphRes_WirteToFile( void )
+{
+	int class_id;
+	LCUI_Graph graph_buff;
+
+	GameGraphRes_Init();
+	class_id = GameGraphRes_AddClass( SCENES_RES );
+	Graph_Init( &graph_buff );
+	Graph_LoadImage( scenes_file_info.filepath, &graph_buff );
+	GameGraphRes_AddGraph( class_id, scenes_file_info.name, &graph_buff );
+	GameGraphRes_WriteToFile( "scenes.data", SCENES_RES );
+	GameGraphRes_FreeAll();
+}
+
 static void ActionRes_Riki_ReadFromFile(void)
 {
 	int i;
@@ -195,7 +214,8 @@ int main(int argc, char** argv)
 	if( argc == 2 ) {
 		ActionRes_Riki_ReadFromFile();
 	} else {
-		ActionRes_Riki_WirteToFile();
+		ScenesGraphRes_WirteToFile();
+		//ActionRes_Riki_WirteToFile();
 		//MainGraphRes_WirteToFile();
 	}
 	return 0;
