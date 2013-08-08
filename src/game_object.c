@@ -3,7 +3,7 @@
 #include LC_WIDGET_H
 
 #include "game_object.h"
-#include "physics_system.h"
+#include "game_space.h"
 
 #include <time.h>
 
@@ -44,7 +44,7 @@ typedef struct GameObject_ {
 	int n_frame;			/**< 记录当前帧动作的序号，帧序号从0开始 */
 	long int remain_time;		/**< 当前帧剩下的停留时间 */
 
-	PhysicsObject *phys_obj;	/**< 对应的物理对象 */
+	SpaceObject *phys_obj;	/**< 对应的物理对象 */
 	LCUI_Widget *shadow;		/**< 对象的阴影 */
 
 	LCUI_Queue victim;		/**< 当前攻击的受害者 */
@@ -694,11 +694,6 @@ static void GameObjectStream_Proc( void )
 				obj->at_zero_zspeed( widget );
 			}
 		}
-		if( obj->phys_obj->z > 0 ) {
-			Widget_Show( obj->shadow );
-		} else {
-			Widget_Hide( obj->shadow );
-		}
 		/**
 		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
 		暂不考虑其他对象对当前对象的着陆点的影响。
@@ -733,7 +728,7 @@ static void GameObjectStream_Thread( void *arg )
 	while(LCUI_Active()) {
 		one_frame_lost_time = clock();
 		
-		PhysicsSystem_Step();
+		GameSpace_Step();
 		GameObjectStream_UpdateTime( 10 );
 		GameObjectStream_Proc();
 
@@ -948,7 +943,7 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->global_center_x = 0;
 	obj->global_bottom_line_y = 0;
 	obj->horiz_flip = FALSE;
-	obj->phys_obj = PhysicsObject_New(0,0,0,0,0,0 );
+	obj->phys_obj = SpaceObject_New(0,0,0,0,0,0 );
 	obj->shadow = Widget_New(NULL);
 
 	Queue_Init( &obj->action_list, sizeof(ActionRec), NULL );
@@ -983,6 +978,7 @@ static void GameObject_ExecShow( LCUI_Widget *widget )
 {
 	GameObject *obj;
 	obj = (GameObject*)Widget_GetPrivData( widget );
+	Widget_Show( obj->shadow );
 }
 
 static void GameObject_ExecDestroy( LCUI_Widget *widget )
@@ -1357,25 +1353,14 @@ LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z )
 	obj->phys_obj->z = z;
 }
 
-/** 移动游戏对象的位置 */
-LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y )
+/** 将游戏对象添加至容器中 */
+LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr )
 {
 	GameObject *obj;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	obj->phys_obj->x = x;
-	obj->phys_obj->y = y;
-	Widget_Update( widget );
-}
-
-/** 获取游戏对象的位置 */
-LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y )
-{
-	GameObject *obj;
-
-	obj = (GameObject*)Widget_GetPrivData( widget );
-	*x = obj->x;
-	*y = obj->y;
+	Widget_Container_Add( ctnr, widget );
+	Widget_Container_Add( ctnr, obj->shadow );
 }
 
 /** 设置游戏对象的X轴坐标 */

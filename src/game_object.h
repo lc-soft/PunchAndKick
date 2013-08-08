@@ -231,11 +231,11 @@ LCUI_API double GameObject_GetZSpeed( LCUI_Widget *widget );
 /** 设置游戏对象在Z轴的坐标 */
 LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z );
 
-/** 移动游戏对象的位置 */
-LCUI_API void GameObject_SetPos( LCUI_Widget *widget, double x, double y );
-
 /** 获取游戏对象的位置 */
 LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y );
+
+/** 将游戏对象添加至容器中 */
+LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr );
 
 /** 设置游戏对象的X轴坐标 */
 LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x );
