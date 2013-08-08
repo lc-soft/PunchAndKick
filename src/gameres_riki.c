@@ -1432,7 +1432,7 @@ static ActionData *ActionRes_LoadRide(void)
 
 	Graph_Init( &img );
 	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride", &img );
-	Action_AddFrame( action, 0,0, &img, 10 );
+	Action_AddFrame( action, 0,5, &img, 10 );
 	Action_SetHitRange( action, 0, range );
 
 	return action;
@@ -1457,8 +1457,8 @@ static ActionData *ActionRes_LoadRideAttack(void)
 	Graph_Init( &img[1] );
 	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride-attack-01", &img[0] );
 	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride-attack-02", &img[1] );
-	Action_AddFrame( action, 0,0, &img[0], 5 );
-	Action_AddFrame( action, 0,0, &img[1], 5 );
+	Action_AddFrame( action, 0,5, &img[0], 5 );
+	Action_AddFrame( action, 0,5, &img[1], 5 );
 	Action_SetHitRange( action, 0, range );
 	Action_SetHitRange( action, 1, range );
 	Action_SetReplay( action, FALSE );
