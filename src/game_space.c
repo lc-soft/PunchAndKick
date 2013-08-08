@@ -1,14 +1,14 @@
 ﻿#include <LCUI_Build.h>
 #include LC_LCUI_H
 
-#include "physics_system.h"
+#include "game_space.h"
 
 static LCUI_BOOL init = FALSE;
 static LCUI_Queue physics_object_list;
 static int space_x = 0, space_x_width = 600, space_y = 0, space_y_width = 600;
 
 /** 设置空间边界  */
-void PhysicsSystem_SetSpaceBound( int x, int x_width, int y, int y_width )
+void GameSpace_SetBound( int x, int x_width, int y, int y_width )
 {
 	space_x = x;
 	space_y = y;
@@ -16,16 +16,38 @@ void PhysicsSystem_SetSpaceBound( int x, int x_width, int y, int y_width )
 	space_y_width = y_width;
 }
 
-/** 处理物理对象的数据 */
-void PhysicsSystem_Step( void )
+/** 获取Y轴空间范围 */
+void GameSpace_GetXBound( int* x, int* x_width )
+{
+	if( x ) {
+		*x = space_x;
+	}
+	if( x_width ) {
+		*x_width = space_x_width;
+	}
+}
+
+/** 获取X轴空间范围 */
+void GameSpace_GetYBound( int* y, int* y_width )
+{
+	if( y ) {
+		*y = space_y;
+	}
+	if( y_width ) {
+		*y_width = space_y_width;
+	}
+}
+
+/** 处理空间内的对象的运动 */
+void GameSpace_Step( void )
 {
 	int i, n;
-	PhysicsObject *obj;
+	SpaceObject *obj;
 
 	Queue_Lock( &physics_object_list );
 	n = Queue_GetTotal( &physics_object_list );
 	for(i=0; i<n; ++i) {
-		obj = (PhysicsObject*)Queue_Get(
+		obj = (SpaceObject*)Queue_Get(
 				&physics_object_list, i );
 		if( !obj ) {
 			continue;
@@ -85,7 +107,7 @@ void PhysicsSystem_Step( void )
 
 
 /**
-创建一个新的物理对象
+创建一个新的对象
 @param x
 	对象所在的X轴的坐标
 @param y
@@ -101,10 +123,10 @@ void PhysicsSystem_Step( void )
 @return
 	创建成功则返回该对象，失败则返回NULL
 */
-PhysicsObject* PhysicsObject_New( int x, int y, int z, int x_width, int y_width, int z_width )
+SpaceObject* SpaceObject_New( int x, int y, int z, int x_width, int y_width, int z_width )
 {
 	int pos;
-	PhysicsObject *p, obj;
+	SpaceObject *p, obj;
 
 	obj.x = x;
 	obj.y = y;
@@ -119,12 +141,12 @@ PhysicsObject* PhysicsObject_New( int x, int y, int z, int x_width, int y_width,
 	obj.y_acc = 0;
 	obj.z_acc = 0;
 	if( !init ) {
-		Queue_Init( &physics_object_list, sizeof(PhysicsObject), NULL ); 
+		Queue_Init( &physics_object_list, sizeof(SpaceObject), NULL ); 
 		init = TRUE;
 	}
 	Queue_Lock( &physics_object_list );
 	pos = Queue_Add( &physics_object_list, &obj );
-	p = (PhysicsObject*)Queue_Get( &physics_object_list, pos );
+	p = (SpaceObject*)Queue_Get( &physics_object_list, pos );
 	Queue_Unlock( &physics_object_list );
 	return p;
 }

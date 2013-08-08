@@ -19,7 +19,7 @@
 ACC: acceleration 加速度
 **/
 
-typedef struct PhysicsObject_ {
+typedef struct SpaceObject_ {
 	double x,y,z;			/**< 对象在空间中的坐标 */
 	unsigned int x_width;		/**< 在X轴上的宽度 */
 	unsigned int y_width;		/**< 在Y轴上的宽度 */
@@ -30,14 +30,20 @@ typedef struct PhysicsObject_ {
 	double x_acc;			/**< 在X轴上的加速度 */
 	double y_acc;			/**< 在Y轴上的加速度 */
 	double z_acc;			/**< 在Z轴上的加速度 */
-} PhysicsObject;
+} SpaceObject;
 
 
-/** 设置空间边界  */
-extern void PhysicsSystem_SetSpaceBound( int x, int x_width, int y, int y_width );
+/** 设置空间边界 */
+extern void GameSpace_SetBound( int x, int x_width, int y, int y_width );
+
+/** 获取Y轴空间范围 */
+extern void GameSpace_GetXBound( int* x, int* x_width );
+
+/** 获取X轴空间范围 */
+extern void GameSpace_GetYBound( int* y, int* y_width );
 
 /** 处理物理对象的数据 */
-extern void PhysicsSystem_Step( void );
+extern void GameSpace_Step( void );
 
 /**
 创建一个新的物理对象
@@ -56,6 +62,6 @@ extern void PhysicsSystem_Step( void );
 @return
 	创建成功则返回该对象，失败则返回NULL
 */
-extern PhysicsObject* PhysicsObject_New( int x, int y, int z, int x_width, int y_width, int z_width );
+extern SpaceObject* SpaceObject_New( int x, int y, int z, int x_width, int y_width, int z_width );
 
 #endif
