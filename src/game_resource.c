@@ -194,9 +194,11 @@ LCUI_API int GameGraphRes_LoadFromFile( const char *filepath )
 	}
 	/* 验证文件头中的标记文本 */
 	if( strcmp( header_data.mark, HEADER_MARK_TEXT ) != 0 ) {
+		fclose( fp );
 		return -3;
 	}
 	if( header_data.total_number <= 0 ) {
+		fclose( fp );
 		return -4;
 	}
 	DEBUG_MSG("class name: %s\n", header_data.class_name);
