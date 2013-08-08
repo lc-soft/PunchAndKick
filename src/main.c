@@ -1,4 +1,4 @@
-﻿//#define SKIP_BOOT_SCREEN
+﻿#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -104,6 +104,7 @@ static void InitViewFPS( void )
 	Label_TextStyle( widget, style );
 	Widget_SetAlign( widget, ALIGN_TOP_RIGHT, Pos(-20,20) );
 	LCUITimer_Set( 500, UpdateViewFPS, widget, TRUE );
+	Widget_SetZIndex( widget, 1000 );
 	Widget_Show( widget );
 }
 
@@ -116,6 +117,7 @@ static void Game_MainThread( void *arg )
 			MB_ICON_ERROR,
 			L"游戏资源载入出错，请检查程序的完整性！",
 			L"错误", MB_BTN_OK );
+		LCUI_MainLoop_Quit(NULL);
 		LCUIThread_Exit(NULL);
 		return;
 	}
@@ -127,6 +129,7 @@ static void Game_MainThread( void *arg )
 	if( ret != 0 ) {
 		LCUI_MainLoop_Quit(NULL);
 		LCUIThread_Exit(NULL);
+		return;
 	}
 	Game_Start();
 	Game_Loop();
@@ -157,9 +160,9 @@ int main( int argc, char **argv )
 	LCUI_Thread t;
 	
 #ifdef LCUI_BUILD_IN_WIN32
-	//InitConsoleWindow();
+	InitConsoleWindow();
 #endif
-	LCUI_Init(640,480,0);
+	LCUI_Init(800,600,0);
 	
 	/* 初始化游戏资源 */
 	GameGraphRes_Init();
