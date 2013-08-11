@@ -33,13 +33,25 @@
     <ClCompile Include="src\game_control.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\physics_system.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\gameres_riki.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\game_resource.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_scene.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_space.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_statusbar.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\name_db.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_lifebar.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,13 +71,22 @@
     <ClInclude Include="src\main_menu.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\physics_system.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\game_resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\game_action.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_scene.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_space.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_statusbar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_lifebar.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -62,7 +62,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LCUI.lib</AdditionalDependencies>
+      <AdditionalDependencies>LCUI_D.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -90,11 +90,15 @@
     <ClCompile Include="src\game_control.c" />
     <ClCompile Include="src\game_object.c" />
     <ClCompile Include="src\game_resource.c" />
+    <ClCompile Include="src\game_scene.c" />
+    <ClCompile Include="src\game_statusbar.c" />
     <ClCompile Include="src\lan_battle.c" />
+    <ClCompile Include="src\game_lifebar.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\main_menu.c" />
     <ClCompile Include="src\game_msg.c" />
-    <ClCompile Include="src\physics_system.c" />
+    <ClCompile Include="src\game_space.c" />
+    <ClCompile Include="src\name_db.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h" />
@@ -103,8 +107,11 @@
     <ClInclude Include="src\game_msg.h" />
     <ClInclude Include="src\game_object.h" />
     <ClInclude Include="src\game_resource.h" />
+    <ClInclude Include="src\game_scene.h" />
+    <ClInclude Include="src\game_statusbar.h" />
+    <ClInclude Include="src\game_lifebar.h" />
     <ClInclude Include="src\main_menu.h" />
-    <ClInclude Include="src\physics_system.h" />
+    <ClInclude Include="src\game_space.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
