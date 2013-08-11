@@ -56,7 +56,6 @@ static int global_action_list[]={
 	ACTION_LIFT_RUN,
 	ACTION_LIFT_JUMP,
 	ACTION_LIFT_FALL,
-	ACTION_BE_ELBOW,
 	ACTION_THROW,
 	ACTION_RIDE,
 	ACTION_RIDE_ATTACK
@@ -341,9 +340,6 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_WEAK_RUN:
 	case STATE_WEAK_RUN_ATTACK:
 		action_type = ACTION_WEAK_RUN;
-		break;
-	case STATE_BE_ELBOW:
-		action_type = ACTION_BE_ELBOW;
 		break;
 	case STATE_LIFT_STANCE:
 		action_type = ACTION_LIFT_STANCE;
@@ -1835,22 +1831,53 @@ static void GamePlayer_SetMachStomp( GamePlayer *player )
 	GamePlayer_SetActionTimeOut( player, 1250, GamePlayer_StopMachStomp );
 }
 
-static void GamePlayer_AtBeElbowDone( LCUI_Widget *widget )
-{
-	GamePlayer* player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_LYING );
-	GamePlayer_LockAction( player );
-	GamePlayer_SetRestTimeOut( player, SHORT_REST_TIMEOUT, GamePlayer_StartStand );
-}
-
 /** 在肘压技能结束时 */
 static void GamePlayer_AtElbowDone( LCUI_Widget *widget )
 {
 	GamePlayer* player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_StartStand( player );
+}
+
+static void GamePlayer_AtElbowUpdate( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player->other );
+	switch( GameObject_GetCurrentActionFrameNumber( player->object) ) {
+	case 0:
+		GamePlayer_ChangeState( player->other, STATE_HIT );
+		GameObject_AtActionDone( player->other->object, ACTION_HIT, NULL );
+		break;
+	case 1:
+		/* 记录第一段攻击伤害 */
+		Game_RecordAttack(	player, ATTACK_TYPE_ELBOW1, 
+					player->other, player->other->state );
+		break;
+	case 2:
+		GamePlayer_ChangeState( player->other, STATE_HIT_FLY );
+		GameObject_AtActionDone( player->other->object, ACTION_HIT_FLY, NULL );
+		break;
+	case 4:
+		/* 记录第二段攻击伤害 */
+		Game_RecordAttack(	player, ATTACK_TYPE_ELBOW1, 
+					player->other, player->other->state );
+	case 3:
+		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
+		GameObject_AtActionDone( player->other->object, ACTION_LYING_HIT, NULL );
+		break;
+	case 5:
+		GamePlayer_ChangeState( player->other, STATE_LYING );
+		GamePlayer_SetRestTimeOut(
+			player->other, SHORT_REST_TIMEOUT, 
+			GamePlayer_StartStand 
+		);
+		break;
+	default:
+		break;
+	}
+	GamePlayer_LockAction( player->other );
 }
 
 static void GamePlayer_SetFrontCatchSkillA( GamePlayer *player )
@@ -1861,22 +1888,24 @@ static void GamePlayer_SetFrontCatchSkillA( GamePlayer *player )
 	switch(player->type) {
 	case PLAYER_TYPE_FIGHTER:break;
 	case PLAYER_TYPE_MARTIAL_ARTISTS:
+		GamePlayer_ChangeState( player->other, STATE_HIT );
+		GameObject_AtActionDone( player->other->object, ACTION_HIT, NULL );
 		if( GamePlayer_IsLeftOriented(player) ) {
 			GamePlayer_SetLeftOriented( player->other );
 		} else {
 			GamePlayer_SetRightOriented( player->other );
 		}
-		GamePlayer_ChangeState( player->other, STATE_BE_ELBOW );
-		GameObject_AtActionDone(
-			player->other->object, ACTION_BE_ELBOW,
-			GamePlayer_AtBeElbowDone 
-		);
 		break;
 	case PLAYER_TYPE_KUNG_FU:break;
 	case PLAYER_TYPE_JUDO_MASTERS:break;
 	default:return;
 	}
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
+	GameObject_AtActionUpdate(
+		player->object,
+		ACTION_CATCH_SKILL_FA, 
+		GamePlayer_AtElbowUpdate 
+	);
 	GameObject_AtActionDone(
 		player->object, ACTION_CATCH_SKILL_FA, 
 		GamePlayer_AtElbowDone 
@@ -1887,28 +1916,41 @@ static void GamePlayer_SetFrontCatchSkillA( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 }
 
+/** 在被膝击后落地时 */
+static void GamePlayer_AtLandingByAfterKneeHit( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	/* 记录第二段攻击伤害 */
+	Game_RecordAttack(	player->other, ATTACK_TYPE_KNEE_HIT2,
+				player, STATE_LYING
+	);
+	GamePlayer_SetRestTimeOut( 
+		player, SHORT_REST_TIMEOUT,
+		GamePlayer_StartStand 
+	);
+	if( player->other ) {
+		player->other->other = NULL;
+	}
+	player->other = NULL;
+}
+
 static void GamePlayer_BackCatchSkillAUpdate( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	static LCUI_BOOL start = FALSE;
 	
 	player = GamePlayer_GetPlayerByWidget( widget );
 	switch( GameObject_GetCurrentActionFrameNumber( player->object) ) {
 	case 0:
-		if( start ) {
-			break;
-		}
-		start = TRUE;
-		GamePlayer_SetRestTimeOut( 
-			player->other, SHORT_REST_TIMEOUT,
-			GamePlayer_StartStand 
-		);
 		break;
 	case 1:
-	case 2:
+		/* 记录第一段攻击伤害 */
+		Game_RecordAttack(	player, ATTACK_TYPE_KNEE_HIT1, 
+					player->other, STATE_LYING_HIT );
 		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
 		GamePlayer_LockAction( player->other );
+	case 2:
 		GameObject_SetZ( player->other->object, 24 );
 		GameObject_SetZSpeed( player->other->object, 0 );
 		break;
@@ -1916,12 +1958,8 @@ static void GamePlayer_BackCatchSkillAUpdate( LCUI_Widget *widget )
 		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_LYING );
 		GamePlayer_LockAction( player->other );
-		GameObject_SetZSpeed( player->other->object, -20 );
-		GamePlayer_SetRestTimeOut( 
-			player->other, SHORT_REST_TIMEOUT,
-			GamePlayer_StartStand 
-		);
-		start = FALSE;
+		GameObject_AtLanding(	player->other->object, -20, 0,
+					GamePlayer_AtLandingByAfterKneeHit );
 	default:
 		break;
 	}
@@ -2091,6 +2129,8 @@ static void GamePlayer_LandingBounce( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_ReduceSpeed( player, 75 );
+	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
+	player->other = NULL;
 	GameObject_AtLanding(
 		widget, ZSPEED_XF_HIT_FLY2, -ZACC_XF_HIT_FLY2,
 		GamePlayer_AtThrowUpFlyDone
@@ -2121,6 +2161,9 @@ static void GamePlayer_ProcThrowUpFlyAttack( LCUI_Widget *self, LCUI_Widget *oth
 	}
 	x1 = GameObject_GetX( self );
 	x2 = GameObject_GetX( other );
+	/* 记录攻击 */
+	Game_RecordAttack(	player->other, ATTACK_TYPE_BUMPED,
+				other_player, other_player->state );
 	/* 根据两者坐标，判断击飞的方向 */
 	if( x1 < x2 ) {
 		GamePlayer_SetRightHitFly( other_player );
@@ -2215,7 +2258,7 @@ static void GamePlayer_SetThrowUp( GamePlayer *player )
 	}
 	GamePlayer_LockAction( player );
 	/* 解除举起者与被举起者的关系 */
-	player->other->other = NULL;
+	//player->other->other = NULL;
 	player->other = NULL;
 }
 
@@ -2254,6 +2297,8 @@ static void GamePlayer_AtBeThrowDownLanding( LCUI_Widget *widget )
 		GamePlayer_ChangeState( player, STATE_LYING_HIT );
 	}
 	GamePlayer_LockAction( player );
+	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
+	player->other = NULL;
 	/* 落地后缩减该角色75%的移动速度 */
 	GamePlayer_ReduceSpeed( player, 75 );
 	GameObject_AtLanding(
@@ -2330,7 +2375,7 @@ static void GamePlayer_SetThrowDown( GamePlayer *player )
 	}
 	GamePlayer_LockAction( player );
 	/* 解除举起者与被举起者的关系 */
-	player->other->other = NULL;
+	//player->other->other = NULL;
 	player->other = NULL;
 }
 
@@ -2355,6 +2400,7 @@ static void GamePlayer_SetRideAttack( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
 	GamePlayer_LockAction( player );
 	GamePlayer_TryHit( player->other );
+	Game_RecordAttack( player, ATTACK_TYPE_RIDE_ATTACK, player->other, player->other->state );
 	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
 }
 
@@ -2371,6 +2417,8 @@ static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
 	case STATE_TUMMY_HIT:
 	case STATE_LYING:
 	case STATE_LYING_HIT:
+		Game_RecordAttack(	player, ATTACK_TYPE_RIDE_JUMP_ATTACK, 
+					player->other, player->other->state );
 		GamePlayer_SetRideAttack( player );
 		break;
 	default:
@@ -2382,7 +2430,6 @@ static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
 
 static void GamePlayer_SetRideJump( GamePlayer *player )
 {
-	_DEBUG_MSG("tip\n");
 	if( !player->other ) {
 		return;
 	}
@@ -2590,6 +2637,9 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 		GamePlayer_SetRightHitFly( player );
 		GamePlayer_SetLeftHitFly( other_player );
 	}
+	/* 两个都受到攻击伤害 */
+	Game_RecordAttack( other_player, ATTACK_TYPE_BUMPED, player, player->state );
+	Game_RecordAttack( player, ATTACK_TYPE_BUMPED, other_player, other_player->state );
 	GameObject_AtTouch( player->object, NULL );
 	player->n_attack = 0;
 	other_player->n_attack = 0;
@@ -3202,15 +3252,16 @@ int Game_Init(void)
 	player_data[0].skill.mach_stomp = TRUE;
 	player_data[0].skill.tornado_attack = TRUE;
 
-	player_data[0].property.max_hp = 200;
-	player_data[0].property.cur_hp = 200;
+	player_data[0].property.max_hp = 400;
+	player_data[0].property.cur_hp = 400;
 	player_data[0].property.defense = 50;
-	player_data[0].property.kick = 500;
-	player_data[0].property.punch = 500;
+	player_data[0].property.kick = 200;
+	player_data[0].property.punch = 200;
+	player_data[0].property.throw = 200;
 	
 	player_data[1].property.max_hp = 5000;
 	player_data[1].property.cur_hp = 5000;
-	player_data[1].property.defense = 500;
+	player_data[1].property.defense = 100;
 	player_data[1].property.kick = 50;
 	player_data[1].property.punch = 50;
 
@@ -3271,8 +3322,17 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		GamePlayer_SetDownMotion( player );
 	}
 	else {
-		GamePlayer_StopYMotion( player );
-		stop_ymotion = TRUE;
+		switch( player->state ) {
+		case STATE_LEFTRUN:
+		case STATE_RIGHTRUN:
+		case STATE_WALK:
+		case STATE_LIFT_RUN:
+		case STATE_LIFT_WALK:
+			GamePlayer_StopYMotion( player );
+			stop_ymotion = TRUE;
+		default:
+			break;
+		}
 	}
 	if( stop_xmotion && stop_ymotion ) {
 		if( player->state == STATE_WALK ) {
