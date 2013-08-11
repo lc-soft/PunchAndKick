@@ -36,8 +36,8 @@ static void StatusBar_ExecInit( LCUI_Widget *widget )
 
 	data = (StatusBarData*)Widget_NewPrivData( widget, sizeof(StatusBarData));
 	data->avatar = NULL;
-	data->hp = 250;
-	data->max_hp = 400;
+	data->hp = 0;
+	data->max_hp = 2000;
 	wcsncpy( data->player_name, L"匿名", 8 );
 	data->player_name[8] = 0;
 	wcsncpy( data->type_name, L"NONE", 8 );
@@ -79,7 +79,7 @@ static void StatusBar_ExecInit( LCUI_Widget *widget )
 	Widget_SetBackgroundTransparent( widget, FALSE );
 
 	/* 设置生命条的参数 */
-	LifeBar_SetFullHP( data->lifebar, 100 );
+	LifeBar_SetFullHP( data->lifebar, 400 );
 	LifeBar_SetMaxHP( data->lifebar, data->max_hp );
 	LifeBar_SetHP( data->lifebar, data->hp );
 	/* 设置显示的文本 */
