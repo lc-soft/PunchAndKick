@@ -73,6 +73,12 @@ void Game_ProcAttack(void)
 		case ATTACK_TYPE_SJUMP_PUNCH:
 			damage = p_data->attacker->property.punch/2.0;
 			break;
+		case ATTACK_TYPE_RIDE_ATTACK:
+			damage = p_data->attacker->property.punch/4.0;
+			break;
+		case ATTACK_TYPE_RIDE_JUMP_ATTACK:
+			damage = 10+p_data->attacker->property.kick/5.0;
+			break;
 		case ATTACK_TYPE_BIG_ELBOW:
 			damage = 20+p_data->attacker->property.punch/3.0;
 			break;
@@ -93,6 +99,25 @@ void Game_ProcAttack(void)
 			damage = p_data->attacker->property.punch/4.0;
 			damage += p_data->attacker->property.kick/4.0;
 			damage *= 2;
+			break;
+		case ATTACK_TYPE_THROW:
+			damage = 20 + p_data->attacker->property.throw/5.0;
+			break;
+		case ATTACK_TYPE_BUMPED:
+			damage = 20 + p_data->victim->property.max_hp*0.05;
+			break;
+		case ATTACK_TYPE_ELBOW1:
+			damage = 20 + p_data->attacker->property.punch/5.0;
+			break;
+		case ATTACK_TYPE_ELBOW2:
+			damage = 40 + p_data->attacker->property.punch/3.0;
+			break;
+		case ATTACK_TYPE_KNEE_HIT1:
+			damage = 20 + p_data->attacker->property.punch/5.0;
+			damage += p_data->attacker->property.kick/5.0;
+			break;
+		case ATTACK_TYPE_KNEE_HIT2:
+			damage = 20 + p_data->victim->property.max_hp*0.03;
 			break;
 		case ATTACK_TYPE_NONE:
 		default:
