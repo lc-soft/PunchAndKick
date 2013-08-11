@@ -142,7 +142,6 @@ enum AttackType {
 	ATTACK_TYPE_S_KICK,
 	ATTACK_TYPE_SJUMP_KICK,
 	ATTACK_TYPE_SJUMP_PUNCH,
-	ATTACK_TYPE_TORNADO_ATTACK,
 	ATTACK_TYPE_BIG_ELBOW,
 	ATTACK_TYPE_GUILLOTINE,
 	ATTACK_TYPE_SPIN_HIT,
@@ -153,7 +152,8 @@ enum AttackType {
 };
 
 typedef struct GamePlayerProperty_ {
-	int hp;		/**< 生命值 */
+	int max_hp;	/**< 最大生命值 */
+	int cur_hp;	/**< 当前生命值 */
 	int punch;	/**< 拳击的伤害 */
 	int kick;	/**< 踢的伤害 */
 	int speed;	/**< 移动速度 */
