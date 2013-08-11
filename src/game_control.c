@@ -7,6 +7,8 @@
 
 static LCUI_Graph img_shadow;
 static LCUI_Widget *game_scene;
+static LCUI_Widget *player_status_area;
+
 static GamePlayer player_data[4];
 static int global_action_list[]={
 	ACTION_READY,
@@ -1522,6 +1524,7 @@ void GamePlayer_StartJump( GamePlayer *player )
 	case STATE_LIFT_JUMP:
 	case STATE_LIFT_FALL:
 	case STATE_SQUAT:
+	case STATE_JSQUAT:
 		break;
 	case STATE_BE_LIFT_SQUAT:
 	case STATE_BE_LIFT_STANCE:
@@ -3108,6 +3111,23 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 	}
 }
 
+static void Game_InitPlayerStatusArea(void)
+{
+	player_status_area = Widget_New(NULL);
+	Widget_SetBackgroundColor( player_status_area, RGB(240,240,240) );
+	Widget_SetBackgroundTransparent( player_status_area, FALSE );
+	Widget_SetBorder( player_status_area, Border(1,BORDER_STYLE_SOLID,RGB(150,150,150)));
+	Widget_Resize( player_status_area, Size(800,STATUS_BAR_HEIGHT) );
+	Widget_SetAlign( player_status_area, ALIGN_BOTTOM_CENTER, Pos(0,0) );
+	/* 创建状态栏 */
+	player_data[0].statusbar = StatusBar_New();
+	player_data[1].statusbar = StatusBar_New();
+	Widget_Container_Add( player_status_area, player_data[0].statusbar );
+	Widget_Container_Add( player_status_area, player_data[1].statusbar );
+	Widget_SetAlign( player_data[0].statusbar, ALIGN_TOP_LEFT, Pos(5,5) );
+	Widget_SetAlign( player_data[1].statusbar, ALIGN_TOP_LEFT, Pos(5+200,5) );
+}
+
 int Game_Init(void)
 {
 	int ret;
@@ -3126,8 +3146,10 @@ int Game_Init(void)
 			L"错误", MB_BTN_OK );
 		return ret;
 	}
-	/* 注册GameObject部件 */
+	/* 注册所需部件 */
 	GameObject_Register();
+	StatusBar_Register();
+	LifeBar_Regiser();
 	/* 记录玩家ID */
 	player_data[0].id = 1;
 	player_data[1].id = 2;
@@ -3201,8 +3223,10 @@ int Game_Init(void)
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
-
+	
 	Widget_Show( game_scene );
+	/* 初始化角色状态信息区域 */
+	Game_InitPlayerStatusArea();
 	return ret;
 }
 
@@ -3244,11 +3268,22 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	}
 }
 
+static void update_hp(void *arg)
+{
+	int n;
+	for(n=400; n>=0; n-=(rand()%5)) {
+		StatusBar_SetHealth( player_data[0].statusbar, n );
+		LCUI_MSleep(50);
+	}
+	StatusBar_SetHealth( player_data[0].statusbar, 0 );
+}
+
 int Game_Start(void)
 {
 	int i;
 	int x, y, start_x, start_y;
 	LCUI_Size scene_size;
+	LCUI_Thread t;
 
 	GameScene_GetLandSize( game_scene, &scene_size );
 	GameScene_GetLandStartX( game_scene, &start_x );
@@ -3276,6 +3311,16 @@ int Game_Start(void)
 		GameObject_PlayAction( player_data[i].object );
 		Widget_Show( player_data[i].object );
 	}
+	/* 设置状态栏里的信息 */
+	StatusBar_SetPlayerNameW( player_data[0].statusbar, GetPlayerName() );
+	StatusBar_SetPlayerNameW( player_data[1].statusbar, GetPlayerName() );
+	StatusBar_SetPlayerTypeNameW( player_data[0].statusbar, L"1P" );
+	StatusBar_SetPlayerTypeNameW( player_data[1].statusbar, L"2P" );
+	/* 显示状态栏 */
+	Widget_Show( player_data[0].statusbar );
+	Widget_Show( player_data[1].statusbar );
+	Widget_Show( player_status_area );
+	LCUIThread_Create( &t, update_hp, NULL );
 	return 0;
 }
 
