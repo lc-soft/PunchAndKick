@@ -193,6 +193,7 @@ struct GamePlayer_{
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
 	int t_action_timeout;		/**< 定时器，用于处理动作超时 */
 	LCUI_Widget *object;		/**< 游戏对象 */
+	LCUI_Widget *statusbar;		/**< 状态栏 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
 	GamePlayer *other;
 
