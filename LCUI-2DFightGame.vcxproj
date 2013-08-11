@@ -87,6 +87,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\gameres_riki.c" />
+    <ClCompile Include="src\game_attack.c" />
     <ClCompile Include="src\game_control.c" />
     <ClCompile Include="src\game_object.c" />
     <ClCompile Include="src\game_resource.c" />
@@ -103,6 +104,7 @@
   <ItemGroup>
     <ClInclude Include="src\game.h" />
     <ClInclude Include="src\game_action.h" />
+    <ClInclude Include="src\game_attack.h" />
     <ClInclude Include="src\game_control.h" />
     <ClInclude Include="src\game_msg.h" />
     <ClInclude Include="src\game_object.h" />

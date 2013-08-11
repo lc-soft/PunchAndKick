@@ -54,6 +54,9 @@
     <ClCompile Include="src\game_lifebar.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\game_attack.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
@@ -87,6 +90,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\game_lifebar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_attack.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
