@@ -999,29 +999,6 @@ static ActionData *ActionRes_LoadBackCatchSkillA(void)
 	return action;
 }
 
-/** 在喘气状态下被对方的 肘压 技能压倒 */
-static ActionData* ActionRes_LoadBeElbow(void)
-{
-	LCUI_Graph img[4];
-	ActionData *action;
-
-	action = Action_Create();
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	Graph_Init( &img[2] );
-	Graph_Init( &img[3] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit-fly", &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying-hit", &img[2] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying", &img[3] );
-	Action_AddFrame( action, 0, 0, &img[0], 5 );
-	Action_AddFrame( action, 0, 0, &img[1], 5 );
-	Action_AddFrame( action, 0, 0, &img[2], 5 );
-	Action_AddFrame( action, 0, 0, &img[3], 5 );
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
 static ActionData* ActionRes_LoadKick(void)
 {
 	ActionData *action;
@@ -1080,7 +1057,6 @@ static ActionData *ActionRes_LoadSpinHit(void)
 		Action_SetAttackRange( action, i, hit_range );
 	}
 	
-	Action_SetNewAttack( action, 3, TRUE );
 	Action_SetNewAttack( action, 7, TRUE );
 	return action;
 }
@@ -1508,7 +1484,6 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_CATCH_SKILL_BB: return ActionRes_LoadPush();
 	case ACTION_CATCH_SKILL_FB: return ActionRes_LoadPull();
 	case ACTION_WEAK_RUN: return ActionRes_LoadWeakWalk();
-	case ACTION_BE_ELBOW: return ActionRes_LoadBeElbow();
 	case ACTION_LIFT_STANCE: return ActionRes_LoadLiftStance();
 	case ACTION_LIFT_WALK: return ActionRes_LoadLiftWalk();
 	case ACTION_LIFT_RUN: return ActionRes_LoadLiftRun();
