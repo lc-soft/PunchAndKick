@@ -1745,10 +1745,9 @@ static void GamePlayer_SetSecondSpinHit( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SPINHIT );
-	player->attack_type = ATTACK_TYPE_SPIN_HIT;
+	player->attack_type = ATTACK_TYPE_SPIN_HIT2;
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
-	player->attack_type = ATTACK_TYPE_SPIN_HIT2;
 	if( LCUIKey_IsHit(player->ctrlkey.left) ) {
 		GameObject_SetXSpeed( player->object, -40 );
 	} 
@@ -3047,11 +3046,11 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				/* 减少攻击者百分之50的移动速度 */
 				GamePlayer_ReduceSpeed( atk_player, 50 );
 			}
+		case ATTACK_TYPE_SPIN_HIT2:
 		case ATTACK_TYPE_BOMB_KICK:
 			if( atk_player->attack_type == ATTACK_TYPE_BOMB_KICK ) {
 				GamePlayer_ReduceSpeed( atk_player, 50 );
 			}
-		case ATTACK_TYPE_SPIN_HIT2:
 		case ATTACK_TYPE_BIG_ELBOW:
 		case ATTACK_TYPE_GUILLOTINE:
 		case ATTACK_TYPE_FINAL_BLOW:
@@ -3105,7 +3104,9 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 			}
 			break;
 		}
-		DEBUG_MSG("attacker: %p, action id: %d\n", p_info->attacker, p_info->attacker_action );
+		/* 记录本次攻击的信息 */
+		Game_RecordAttack(	atk_player, atk_player->attack_type,
+					player, player->state );
 		/* 删除攻击者记录 */
 		Queue_Delete( attacker_info, 0 );
 	}
@@ -3193,12 +3194,25 @@ int Game_Init(void)
 	GamePlayer_SetRole( 1, ROLE_RIKI );
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
+
 	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTISTS;
 	player_data[0].skill.bomb_kick = TRUE;
 	player_data[0].skill.jump_spin_kick = TRUE;
 	player_data[0].skill.big_elbow = TRUE;
 	player_data[0].skill.mach_stomp = TRUE;
 	player_data[0].skill.tornado_attack = TRUE;
+
+	player_data[0].property.max_hp = 200;
+	player_data[0].property.cur_hp = 200;
+	player_data[0].property.defense = 50;
+	player_data[0].property.kick = 500;
+	player_data[0].property.punch = 500;
+	
+	player_data[1].property.max_hp = 5000;
+	player_data[1].property.cur_hp = 5000;
+	player_data[1].property.defense = 500;
+	player_data[1].property.kick = 50;
+	player_data[1].property.punch = 50;
 
 	/* 记录2号角色的控制键 */
 	ctrlkey.up = LCUIKEY_UP;
@@ -3227,6 +3241,8 @@ int Game_Init(void)
 	Widget_Show( game_scene );
 	/* 初始化角色状态信息区域 */
 	Game_InitPlayerStatusArea();
+	/* 初始化攻击记录 */
+	Game_InitAttackRecord();
 	return ret;
 }
 
@@ -3268,22 +3284,11 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	}
 }
 
-static void update_hp(void *arg)
-{
-	int n;
-	for(n=400; n>=0; n-=(rand()%5)) {
-		StatusBar_SetHealth( player_data[0].statusbar, n );
-		LCUI_MSleep(50);
-	}
-	StatusBar_SetHealth( player_data[0].statusbar, 0 );
-}
-
 int Game_Start(void)
 {
 	int i;
 	int x, y, start_x, start_y;
 	LCUI_Size scene_size;
-	LCUI_Thread t;
 
 	GameScene_GetLandSize( game_scene, &scene_size );
 	GameScene_GetLandStartX( game_scene, &start_x );
@@ -3316,11 +3321,14 @@ int Game_Start(void)
 	StatusBar_SetPlayerNameW( player_data[1].statusbar, GetPlayerName() );
 	StatusBar_SetPlayerTypeNameW( player_data[0].statusbar, L"1P" );
 	StatusBar_SetPlayerTypeNameW( player_data[1].statusbar, L"2P" );
+	StatusBar_SetHealth( player_data[0].statusbar, player_data[0].property.cur_hp );
+	StatusBar_SetHealth( player_data[1].statusbar, player_data[1].property.cur_hp );
+	StatusBar_SetMaxHealth( player_data[0].statusbar, player_data[0].property.max_hp );
+	StatusBar_SetMaxHealth( player_data[1].statusbar, player_data[1].property.max_hp );
 	/* 显示状态栏 */
 	Widget_Show( player_data[0].statusbar );
 	Widget_Show( player_data[1].statusbar );
 	Widget_Show( player_status_area );
-	LCUIThread_Create( &t, update_hp, NULL );
 	return 0;
 }
 
@@ -3339,6 +3347,8 @@ int Game_Loop(void)
 		}
 		/* 更新镜头 */
 		GameScene_UpdateCamera( game_scene, player_data[0].object );
+		/* 处理攻击 */
+		Game_ProcAttack();
 		LCUI_MSleep( 10 );
 	}
 	return 0;
