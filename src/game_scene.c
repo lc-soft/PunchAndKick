@@ -4,7 +4,6 @@
 #include LC_DISPLAY_H
 #include "game.h"
 
-#define STATUS_BAR_HEIGHT	90	/**< 状态栏的高度 */
 #define CAMERA_X_PANDDING	200	/**< 镜头的水平内边距 */
 
 static LCUI_Size scene_land_size = {0,0};
@@ -111,7 +110,7 @@ int GameScene_UpdateCamera( LCUI_Widget *scene, LCUI_Widget *target )
 }
 
 /** 退出战斗场景，释放占用的内存资源 */
-int GameScene_Quit( LCUI_Widget *scene )
+void GameScene_Quit( LCUI_Widget *scene )
 {
 	Widget_SetBackgroundImage( scene, NULL );
 	GameGraphRes_Free( SCENES_RES );

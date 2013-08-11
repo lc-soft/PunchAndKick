@@ -15,4 +15,4 @@ void GameScene_GetLandStartX( LCUI_Widget *scene, int *x );
 int GameScene_UpdateCamera( LCUI_Widget *scene, LCUI_Widget *target );
 
 /** 退出战斗场景，释放占用的内存资源 */
-int GameScene_Quit( LCUI_Widget *scene );
+void GameScene_Quit( LCUI_Widget *scene );
