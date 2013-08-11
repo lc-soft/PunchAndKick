@@ -682,18 +682,6 @@ static void GameObjectStream_Proc( void )
 				obj->at_zero_zspeed( widget );
 			}
 		}
-		/* 若在Z轴的移动速度接近0 */
-		if( (obj->phys_obj->z_acc > 0
-		 && obj->phys_obj->z_speed >= -z_acc
-		 && obj->phys_obj->z_speed < z_acc)
-		|| (obj->phys_obj->z_acc < 0
-		 && obj->phys_obj->z_speed >= z_acc
-		 && obj->phys_obj->z_speed < -z_acc) ) {
-			Widget_Update( widget );
-			if( obj->at_zero_zspeed ) {
-				obj->at_zero_zspeed( widget );
-			}
-		}
 		/**
 		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
 		暂不考虑其他对象对当前对象的着陆点的影响。
