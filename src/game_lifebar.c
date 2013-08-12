@@ -147,6 +147,21 @@ void LifeBar_SetMaxHP( LCUI_Widget *widget, int hp )
 	LifeBar_SetHP( widget, data->current_life_point );
 }
 
+/** 获取生命条的数量 */
+int LifeBar_GetBarNum( LCUI_Widget *widget )
+{
+	int n;
+	LifeBarData *data;
+
+	data = (LifeBarData *)Widget_GetPrivData(widget);
+	if( data->current_life_point <= data->full_life_point ) {
+		n = 0;
+	} else {
+		n = data->current_life_point / data->full_life_point;
+	}
+	return n+1;
+}
+
 /** 注册生命条部件 */
 void LifeBar_Regiser(void)
 {
