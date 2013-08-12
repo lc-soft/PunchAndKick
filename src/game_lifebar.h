@@ -12,5 +12,8 @@ void LifeBar_SetHP( LCUI_Widget *widget, int hp );
 /** 为生命条设置最大生命值 */
 void LifeBar_SetMaxHP( LCUI_Widget *widget, int hp );
 
+/** 获取生命条的数量 */
+int LifeBar_GetBarNum( LCUI_Widget *widget );
+
 /** 注册生命条部件 */
 void LifeBar_Regiser(void);
