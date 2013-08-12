@@ -709,28 +709,24 @@ static void GameObjectStream_Proc( void )
 
 static void GameObjectStream_Thread( void *arg )
 {
-	clock_t lost_time, diff_val, n_ms, one_frame_lost_time;
-	
+	int64_t lost_time, diff_val, n_ms, one_frame_lost_time;
 	diff_val = 0;
 
 	while(LCUI_Active()) {
-		one_frame_lost_time = clock();
+		one_frame_lost_time = LCUI_GetTickCount();
 		
 		GameSpace_Step();
 		GameObjectStream_UpdateTime( 10 );
 		GameObjectStream_Proc();
 
-		one_frame_lost_time = clock() - one_frame_lost_time;
-		/* 将单位转换为毫秒 */
-		one_frame_lost_time *= 1000;
-		one_frame_lost_time /= CLOCKS_PER_SEC;
+		one_frame_lost_time = LCUI_GetTicks( one_frame_lost_time );
 		n_ms = MSEC_PER_FRAME - one_frame_lost_time;
 		n_ms = n_ms - diff_val;
 		if( n_ms > 0 ) {
-			lost_time = clock();
+			lost_time = LCUI_GetTickCount();
 			LCUI_MSleep( n_ms );
-			lost_time = clock() - lost_time;
-			diff_val = lost_time * 1000 / CLOCKS_PER_SEC;
+			lost_time = LCUI_GetTicks( lost_time );
+			diff_val = lost_time;
 			diff_val -= n_ms;
 		} else {
 			diff_val = 0 - n_ms;
