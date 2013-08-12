@@ -3162,8 +3162,17 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 	}
 }
 
-static void Game_InitPlayerStatusArea(void)
+static int Game_InitPlayerStatusArea(void)
 {
+	int ret;
+	ret = GameGraphRes_LoadFromFile( "font.data" );
+	if( ret != 0 ) {
+		LCUI_MessageBoxW(
+			MB_ICON_ERROR,
+			L"字体资源载入出错，请检查程序的完整性！",
+			L"错误", MB_BTN_OK );
+		return -1;
+	}
 	player_status_area = Widget_New(NULL);
 	Widget_SetBackgroundColor( player_status_area, RGB(240,240,240) );
 	Widget_SetBackgroundTransparent( player_status_area, FALSE );
@@ -3177,6 +3186,7 @@ static void Game_InitPlayerStatusArea(void)
 	Widget_Container_Add( player_status_area, player_data[1].statusbar );
 	Widget_SetAlign( player_data[0].statusbar, ALIGN_TOP_LEFT, Pos(5,5) );
 	Widget_SetAlign( player_data[1].statusbar, ALIGN_TOP_LEFT, Pos(5+200,5) );
+	return 0;
 }
 
 int Game_Init(void)
@@ -3291,7 +3301,7 @@ int Game_Init(void)
 	
 	Widget_Show( game_scene );
 	/* 初始化角色状态信息区域 */
-	Game_InitPlayerStatusArea();
+	ret |= Game_InitPlayerStatusArea();
 	/* 初始化攻击记录 */
 	Game_InitAttackRecord();
 	return ret;
