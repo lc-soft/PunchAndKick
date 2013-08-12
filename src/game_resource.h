@@ -5,6 +5,7 @@
 #define ACTION_RES_CLASS_RIKI	"graphics::action::riki"
 #define MAIN_RES		"graphics::main"
 #define SCENES_RES		"graphics::senes"
+#define FONT_RES		"graphics::font"
 
 /** 初始化 */
 LCUI_API int GameGraphRes_Init( void );
