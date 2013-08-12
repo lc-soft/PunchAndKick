@@ -49,10 +49,25 @@ static void test_read(void)
 
 #define ACTION_FILE_NUM 68
 #define MAIN_FILE_NUM	2
+#define FONT_FILE_NUM	11
 
 struct fileinfo {
 	char *filepath;
 	char *name;
+};
+
+const struct fileinfo font_file_info[FONT_FILE_NUM]={
+	{"font-0.png","0"},
+	{"font-1.png","1"},
+	{"font-2.png","2"},
+	{"font-3.png","3"},
+	{"font-4.png","4"},
+	{"font-5.png","5"},
+	{"font-6.png","6"},
+	{"font-7.png","7"},
+	{"font-8.png","8"},
+	{"font-9.png","9"},
+	{"font-x.png","x"}
 };
 
 const struct fileinfo main_file_info[2]={
@@ -182,6 +197,23 @@ static void ScenesGraphRes_WirteToFile( void )
 	GameGraphRes_FreeAll();
 }
 
+/** 将字体的图形资源写入至文件 */
+static void FontGraphRes_WirteToFile( void )
+{
+	int class_id, i;
+	LCUI_Graph graph_buff;
+
+	GameGraphRes_Init();
+	class_id = GameGraphRes_AddClass( FONT_RES );
+	for( i=0; i<FONT_FILE_NUM; ++i ) {
+		Graph_Init( &graph_buff );
+		Graph_LoadImage( font_file_info[i].filepath, &graph_buff );
+		GameGraphRes_AddGraph( class_id, font_file_info[i].name, &graph_buff );
+	}
+	GameGraphRes_WriteToFile( "font.data", FONT_RES );
+	GameGraphRes_FreeAll();
+}
+
 static void ActionRes_Riki_ReadFromFile(void)
 {
 	int i;
@@ -214,7 +246,8 @@ int main(int argc, char** argv)
 	if( argc == 2 ) {
 		ActionRes_Riki_ReadFromFile();
 	} else {
-		ScenesGraphRes_WirteToFile();
+		FontGraphRes_WirteToFile();
+		//ScenesGraphRes_WirteToFile();
 		//ActionRes_Riki_WirteToFile();
 		//MainGraphRes_WirteToFile();
 	}
