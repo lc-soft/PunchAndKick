@@ -299,6 +299,7 @@ static void LifeBar_ExecInit( LCUI_Widget *widget )
 	Widget_SetBackgroundColor( data->flashbar[0], RGB(255,255,255) );
 	Widget_SetBackgroundColor( data->flashbar[1], RGB(255,255,255) );
 	Widget_SetBackgroundColor( data->lifebar, color_set[0] );
+	Widget_SetBackgroundColor( widget, RGB(100,100,100) );
 	Widget_Show( data->lifebar );
 	/* 创建一个定时器，实现闪光条的淡出效果 */
 	data->timer_flashbar = LCUITimer_Set( 20, LifeBar_UpdateFlashBar, (void*)widget, TRUE );
