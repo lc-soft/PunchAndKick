@@ -1441,6 +1441,38 @@ static ActionData *ActionRes_LoadRideAttack(void)
 	return action;
 }
 
+/** 躺着，快死了 */
+ActionData* ActionRes_LoadLyingDying(void)
+{
+	ActionData *action;
+	LCUI_Graph img_lying[2];
+
+	action = Action_Create();
+	Graph_Init( &img_lying[0] );
+	Graph_Init( &img_lying[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying", &img_lying[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying-hit", &img_lying[1] );
+	Action_AddFrame( action, 0, 0, &img_lying[0], 5 );
+	Action_AddFrame( action, 0, 0, &img_lying[1], 5 );
+	return action;
+}
+
+/** 趴着，快死了 */
+ActionData* ActionRes_LoadTummyDying(void)
+{
+	ActionData *action;
+	LCUI_Graph img_tummy[2];
+
+	action = Action_Create();
+	Graph_Init( &img_tummy[0] );
+	Graph_Init( &img_tummy[1] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy", &img_tummy[0] );
+	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy-hit", &img_tummy[1] );
+	Action_AddFrame( action, 0, 0, &img_tummy[0], 5 );
+	Action_AddFrame( action, 0, 0, &img_tummy[1], 5 );
+	return action;
+}
+
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
@@ -1492,6 +1524,8 @@ ActionData* ActionRes_LoadRiki( int action_type )
 	case ACTION_THROW: return ActionRes_LoadThrow();
 	case ACTION_RIDE: return ActionRes_LoadRide();
 	case ACTION_RIDE_ATTACK: return ActionRes_LoadRideAttack();
+	case ACTION_LYING_DYING: return ActionRes_LoadLyingDying();
+	case ACTION_TUMMY_DYING: return ActionRes_LoadTummyDying();
 	default:break;
 	}
 	return NULL;
