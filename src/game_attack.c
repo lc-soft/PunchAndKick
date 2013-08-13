@@ -110,14 +110,15 @@ void Game_ProcAttack(void)
 			damage = 20 + p_data->attacker->property.punch/5.0;
 			break;
 		case ATTACK_TYPE_ELBOW2:
-			damage = 40 + p_data->attacker->property.punch/3.0;
+			damage = 100 + p_data->attacker->property.punch/3.0;
 			break;
 		case ATTACK_TYPE_KNEE_HIT1:
-			damage = 20 + p_data->attacker->property.punch/5.0;
+			damage = p_data->attacker->property.punch/5.0;
 			damage += p_data->attacker->property.kick/5.0;
+			damage += p_data->victim->property.max_hp*0.01;
 			break;
 		case ATTACK_TYPE_KNEE_HIT2:
-			damage = 20 + p_data->victim->property.max_hp*0.03;
+			damage = 20 + p_data->victim->property.max_hp*0.02;
 			break;
 		case ATTACK_TYPE_NONE:
 		default:
@@ -138,11 +139,11 @@ void Game_ProcAttack(void)
 		case STATE_BE_LIFT_LYING:
 		case STATE_BE_LIFT_LYING_HIT:
 			/* 躺着或者趴着，减免20%的伤害 */
-			reduce += 0.30;
+			reduce += 0.20;
 			break;
 		case STATE_F_ROLL:
 		case STATE_B_ROLL:
-			reduce += 0.20;
+			reduce += 0.10;
 			break;
 		default:
 			break;
@@ -153,7 +154,7 @@ void Game_ProcAttack(void)
 		}
 		/* 计算真实伤害 */
 		true_damage = damage * (1.00 - reduce) + 1;
-		_DEBUG_MSG("true damage: %.2lf, damage: %.2lf, reduce: %.2lf\n", true_damage, damage, reduce*100 );
+		_DEBUG_MSG("true damage: %.2lf, damage: %.2lf, reduce: %.2lf%%\n", true_damage, damage, reduce*100 );
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= (int)true_damage;
 		if( p_data->victim->property.cur_hp < 0 ) {
