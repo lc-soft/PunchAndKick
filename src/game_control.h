@@ -13,6 +13,9 @@ enum GamePlayerType {
 };
 
 enum GamePlayerState {
+	STATE_DIED,		/**< 已经死亡 */
+	STATE_LYING_DYING,	/**< 躺着，快死了 */
+	STATE_TUMMY_DYING,	/**< 趴着，快死了 */
 	STATE_READY,
 	STATE_STANCE,		/**< 站立 */
 	STATE_WALK,		/**< 步行 */
@@ -123,7 +126,9 @@ enum ActionType {
 	ACTION_LIFT_FALL,
 	ACTION_THROW,
 	ACTION_RIDE,
-	ACTION_RIDE_ATTACK
+	ACTION_RIDE_ATTACK,
+	ACTION_LYING_DYING,	/**< 躺着，快死了 */
+	ACTION_TUMMY_DYING,	/**< 趴着，快死了 */
 };
 
 /** 攻击类型 */
@@ -198,6 +203,7 @@ struct GamePlayer_{
 	int n_attack;			/**< 被攻击的次数 */
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
 	int t_action_timeout;		/**< 定时器，用于处理动作超时 */
+	int t_death_timer;		/**< 死亡定时器 */
 	LCUI_Widget *object;		/**< 游戏对象 */
 	LCUI_Widget *statusbar;		/**< 状态栏 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
