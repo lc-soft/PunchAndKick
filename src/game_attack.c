@@ -101,7 +101,7 @@ void Game_ProcAttack(void)
 			damage *= 2;
 			break;
 		case ATTACK_TYPE_THROW:
-			damage = 20 + p_data->attacker->property.throw/5.0;
+			damage = 20 + p_data->attacker->property.throw/2.0;
 			break;
 		case ATTACK_TYPE_BUMPED:
 			damage = 20 + p_data->victim->property.max_hp*0.05;
