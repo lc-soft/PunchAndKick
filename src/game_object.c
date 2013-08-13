@@ -724,7 +724,7 @@ static void GameObjectStream_Thread( void *arg )
 		n_ms = n_ms - diff_val;
 		if( n_ms > 0 ) {
 			lost_time = LCUI_GetTickCount();
-			LCUI_MSleep( n_ms );
+			LCUI_MSleep( (unsigned int)n_ms );
 			lost_time = LCUI_GetTicks( lost_time );
 			diff_val = lost_time;
 			diff_val -= n_ms;
