@@ -157,7 +157,6 @@ static void StatusBar_UpdateLifeBarNum( LCUI_Widget *widget )
 	Widget_SetZIndex( data->lifebar_num, 1000 );
 	/* 显示之 */
 	Widget_Show( data->lifebar_num );
-	print_widget_info( data->lifebar_num );
 }
 
 /** 设置玩家名称(最多8个字) */
