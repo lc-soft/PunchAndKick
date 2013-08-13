@@ -19,6 +19,7 @@ typedef struct LifeBarData_ {
 	int timer_flashbar;		/**< 闪光条的定时器 */
 	int timer_lifebar_shadow;	/**< 生命条残影的定时器 */
 	int n_erase_wait;		/**< 抹去生命条残影前需要等待的次数 */
+	int n_point_per_erase;		/**< 每次抹去时扣除的残影上的生命点数 */
 	LCUI_BOOL need_show_flash;	/**< 指示是否需要显示闪光 */
 	int lifebar_shadow_state;	/**< 生命条残影的状态 */
 	LCUI_Widget *lifebar;		/**< 当前生命条 */
@@ -164,8 +165,11 @@ static void LifeBar_UpdateShadow( void *arg )
 		Widget_Show( data->lifebar_shadow[1] );
 		Widget_Show( data->lifebar_shadow[0] );
 	}
-	/* 最少要扣1点，不然当data->full_life_point小于20时，血条残影就不会动了 */
-	data->shadow_life_point -= (data->full_life_point/20+1);
+	/* 增加每次在残影血条上扣除的生命点，直到最大扣除量为止 */
+	if( data->n_point_per_erase < data->full_life_point/20+1 ) {
+		++data->n_point_per_erase;
+	}
+	data->shadow_life_point -= data->n_point_per_erase;
 	if( data->shadow_life_point <= data->current_life_point ) {
 		data->lifebar_shadow_state = SHADOW_STATE_END_CLEAN;
 		Widget_Hide( data->lifebar_shadow[2] );
@@ -400,6 +404,7 @@ void LifeBar_SetHP( LCUI_Widget *widget, int hp )
 		if( data->lifebar_shadow_state == SHADOW_STATE_END_CLEAN ) {
 			/* 记录本次扣血前的血量，并标记需要抹去血条残影 */
 			data->shadow_life_point = data->old_life_point;
+			data->n_point_per_erase = 1;
 			data->n_erase_wait = SHADOW_N_WAIT;
 			data->lifebar_shadow_state = SHADOW_STATE_NEED_CLEAN;
 		}
