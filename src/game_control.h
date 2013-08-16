@@ -208,7 +208,7 @@ struct GamePlayer_{
 	LCUI_Widget *statusbar;		/**< 状态栏 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
 	GamePlayer *other;
-
+	AIIdeaData idea;		/**< 记录AI的想法 */
 };
 
 extern int Game_Init(void);
