@@ -3348,9 +3348,9 @@ int Game_Init(void)
 	player_data[0].property.max_hp = 400;
 	player_data[0].property.cur_hp = 400;
 	player_data[0].property.defense = 50;
-	player_data[0].property.kick = 2000;
-	player_data[0].property.punch = 2000;
-	player_data[0].property.throw = 2000;
+	player_data[0].property.kick = 500;
+	player_data[0].property.punch = 500;
+	player_data[0].property.throw = 500;
 	
 	player_data[1].property.max_hp = 8000;
 	player_data[1].property.cur_hp = 8000;
@@ -3387,6 +3387,8 @@ int Game_Init(void)
 	ret |= Game_InitPlayerStatusArea();
 	/* 初始化攻击记录 */
 	Game_InitAttackRecord();
+	/* 初始化游戏AI */
+	GameAI_Init();
 	return ret;
 }
 
@@ -3494,6 +3496,10 @@ int Game_Loop(void)
 			if( !player_data[i].enable
 			 || !player_data[i].local_control ) {
 				continue;
+			}
+			/* 如果该游戏玩家不是由人类控制的 */
+			if( !player_data[i].human_control ) {
+				GameAI_Control( player_data[i].id );
 			}
 			GamePlayer_SyncData( &player_data[i] );
 			Widget_Update( player_data[i].object );
