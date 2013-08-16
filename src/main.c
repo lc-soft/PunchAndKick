@@ -11,8 +11,8 @@
 
 #define TEXT_COPYRIGHT		L"Developed by LC-Games."
 #define TEXT_STATEMENT		L"<size=20px>"\
-				L"本程序仅用于展示游戏角色的控制及技能动作效果，若本\n"\
-				L"程序在运行过程中出现BUG，请关闭并重新运行本程序。</size>"
+				L"本程序仅用于展示游戏角色的控制、技能动作效果以及血条的动态效果，\n"\
+				L"若本程序在运行过程中出现BUG，请关闭并重新运行本程序。</size>"
 
 static void Game_ShowBootScreen(void)
 {
@@ -103,9 +103,9 @@ static void InitViewFPS( void )
 	TextStyle_FontSize( &style, 14 );
 	Label_TextStyle( widget, style );
 	Widget_SetAlign( widget, ALIGN_TOP_RIGHT, Pos(-20,20) );
-	LCUITimer_Set( 500, UpdateViewFPS, widget, TRUE );
 	Widget_SetZIndex( widget, 1000 );
 	Widget_Show( widget );
+	LCUITimer_Set( 500, UpdateViewFPS, widget, TRUE );
 }
 
 static void Game_MainThread( void *arg )
@@ -160,10 +160,9 @@ int main( int argc, char **argv )
 	LCUI_Thread t;
 	
 #ifdef LCUI_BUILD_IN_WIN32
-	InitConsoleWindow();
+	//InitConsoleWindow();
 #endif
 	LCUI_Init(800,600,0);
-	
 	/* 初始化游戏资源 */
 	GameGraphRes_Init();
 	/* 创建一个线程，用于进行游戏的初始化 */
