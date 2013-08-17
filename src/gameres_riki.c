@@ -136,25 +136,25 @@ static ActionData* ActionRes_LoadAAttack(void)
 	hit_range.z_width = 62;
 
 	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[2] ); 
-	Graph_Init( &img_attack[1] );
+	Graph_Init( &img_attack[1] ); 
+	Graph_Init( &img_attack[2] );
 
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
-	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
-	Action_SetHitRange( action, 0, hit_range );
+	//GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
+	//Action_AddFrame( action, -14,0, &img_attack[0], 1 );
+	//Action_SetHitRange( action, 0, hit_range );
 
 	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-02", &img_attack[1] );
-	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
-	Action_SetHitRange( action, 1, hit_range );
+	Action_AddFrame( action, -14,0, &img_attack[1], 5 );
+	Action_SetHitRange( action, 0, hit_range );
 
 	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-03", &img_attack[2] );
-	Action_AddFrame( action, -14,0, &img_attack[2], 3 );
-	Action_SetAttackRange( action, 2, attack_range );
-	Action_SetHitRange( action, 2, hit_range );
+	Action_AddFrame( action, -14,0, &img_attack[2], 5 );
+	Action_SetAttackRange( action, 1, attack_range );
+	Action_SetHitRange( action, 1, hit_range );
 
-	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
-	Action_SetHitRange( action, 3, hit_range );
-
+	//Action_AddFrame( action, -14,0, &img_attack[1], 1 );
+	//Action_SetHitRange( action, 3, hit_range );
+	Action_SetReplay( action, FALSE );
 	return action;
 }
 
