@@ -173,13 +173,10 @@ void GamePlayer_ChangeAction( GamePlayer *player, int action_id )
 	int current_action;
 
 	current_action = GameObject_GetCurrentActionID( player->object );
-	/* 若动作不一致 */
-	if( current_action != action_id ) {
-		msg.player_id = player->id;
-		msg.msg.msg_id = GAMEMSG_ACTION;
-		msg.msg.action.action_id = action_id;
-		Game_PostMsg( &msg );
-	}
+	msg.player_id = player->id;
+	msg.msg.msg_id = GAMEMSG_ACTION;
+	msg.msg.action.action_id = action_id;
+	Game_PostMsg( &msg );
 }
 
 static void GamePlayer_BreakActionTiming( GamePlayer *player )
@@ -201,7 +198,7 @@ void GamePlayer_SetActionTimeOut(	GamePlayer *player,
 
 void GamePlayer_ChangeState( GamePlayer *player, int state )
 {
-	int action_type; 
+	int action_type;
 	if( player->lock_action ) {
 		return;
 	}
@@ -539,8 +536,9 @@ void GamePlayer_SetReady( GamePlayer *player )
 	if( player->state == STATE_LIFT_STANCE ) {
 		return;
 	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockMotion( player );
+	if( player->lock_action ) {
+		return;
+	}
 	GamePlayer_ChangeState( player, STATE_READY );
 	/* 设置响应动作超时信号 */
 	GamePlayer_SetActionTimeOut( player, 1000, GamePlayer_AtReadyTimeOut );
@@ -855,6 +853,7 @@ static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 		if( player->n_attack >= 3 ) {
 			GamePlayer_SetRest( player );
 		} else {
+			GamePlayer_UnlockAction( player );
 			GamePlayer_SetReady( player );
 		}
 		break;
@@ -1244,6 +1243,7 @@ void GamePlayer_StopRun( GamePlayer *player )
 	} else {
 		acc = 0.0;
 	}
+	player->control.run = FALSE;
 	GamePlayer_SetReady( player );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
@@ -1342,7 +1342,7 @@ static GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 	return GamePlayer_GetPlayerByWidget( obj );
 }
 
-static void GamePlayer_ProcLeftKey( GamePlayer *player )
+static void GamePlayer_SetLeftMotion( GamePlayer *player )
 {
 	GamePlayer *other_player;
 	double x, y, speed;
@@ -1372,7 +1372,7 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 	case STATE_LIFT_WALK:
 	case STATE_LIFT_STANCE:
 		GamePlayer_SetLeftOriented( player );
-		if( LCUIKey_IsDoubleHit(player->ctrlkey.left,250) ) {
+		if( player->control.run ) {
 			speed = -XSPEED_RUN * player->property.speed / 100;
 			GameObject_SetXSpeed( player->object, speed );
 			GamePlayer_ChangeState( player, STATE_LIFT_RUN );
@@ -1389,7 +1389,7 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 			player->other = other_player;
 			GamePlayer_SetLeftCatch( player );
 		}
-		if( LCUIKey_IsDoubleHit(player->ctrlkey.left,250) ) {
+		if( player->control.run ) {
 			 GamePlayer_SetLeftRun( player );
 		} else {
 			 GamePlayer_SetLeftWalk( player );
@@ -1408,7 +1408,7 @@ static void GamePlayer_ProcLeftKey( GamePlayer *player )
 	}
 }
 
-static void GamePlayer_ProcRightKey( GamePlayer *player )
+static void GamePlayer_SetRightMotion( GamePlayer *player )
 {
 	double x, y, speed;
 	GamePlayer *other_player;
@@ -1439,7 +1439,7 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 	case STATE_LIFT_WALK:
 	case STATE_LIFT_STANCE:
 		GamePlayer_SetRightOriented( player );
-		if( LCUIKey_IsDoubleHit(player->ctrlkey.right,250) ) {
+		if( player->control.run ) {
 			speed = XSPEED_RUN * player->property.speed / 100;
 			GameObject_SetXSpeed( player->object, speed );
 			GamePlayer_ChangeState( player, STATE_LIFT_RUN );
@@ -1457,7 +1457,7 @@ static void GamePlayer_ProcRightKey( GamePlayer *player )
 			GamePlayer_SetRightCatch( player );
 			break;
 		}
-		if( LCUIKey_IsDoubleHit(player->ctrlkey.right,250) ) {
+		if( player->control.run ) {
 			 GamePlayer_SetRightRun( player );
 		} else {
 			 GamePlayer_SetRightWalk( player );
@@ -1524,6 +1524,8 @@ static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GameObject_AtXSpeedToZero( widget, 0, NULL );
 	player->attack_type = ATTACK_TYPE_NONE;
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
 	GamePlayer_SetReady( player );
 }
 
@@ -1606,12 +1608,14 @@ void GamePlayer_StartJump( GamePlayer *player )
 	case STATE_LIFT_STANCE:
 	case STATE_LIFT_WALK:
 	case STATE_LIFT_RUN:
+		player->control.run = FALSE;
 		GamePlayer_SetLiftJump( player );
 		break;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
 	case STATE_AS_ATTACK:
 	case STATE_BS_ATTACK:
+		player->control.run = FALSE;
 		GamePlayer_SetSprintSquat( player );
 		break;
 	default:
@@ -2184,6 +2188,7 @@ static void GamePlayer_AtThrowDone( LCUI_Widget *widget )
 	} else {
 		GamePlayer_StopXMotion( player );
 		GamePlayer_StopYMotion( player );
+		GamePlayer_UnlockAction( player );
 		GamePlayer_SetReady( player );
 	}
 }
@@ -2529,7 +2534,7 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	LCUI_Widget *widget;
 	GamePlayer *other_player;
 	void (*func)(LCUI_Widget*);
-	
+
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
 		if( GamePlayer_IsLeftOriented(player) ) {
@@ -2550,7 +2555,7 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	if( player->lock_action ) {
 		return;
 	}
-
+	
 	switch(player->state) {
 	case STATE_RIDE:
 		GamePlayer_SetRideAttack( player );
@@ -2563,11 +2568,13 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	case STATE_LIFT_RUN:
 	case STATE_LIFT_STANCE:
 	case STATE_LIFT_WALK:
+		player->control.run = FALSE;
 		/* 将举起的角色向下砸 */
 		GamePlayer_SetThrowDown( player );
 		return;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
+		player->control.run = FALSE;
 		if( player->state == STATE_RIGHTRUN ) {
 			GameObject_AtXSpeedToZero(
 				player->object, -XACC_DASH, 
@@ -2617,7 +2624,7 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	default: 
 		break;
 	}
-
+	
 	other_player = GamePlayer_GetGroundPlayer( player );
 	if( other_player ) {
 		if( GamePlayer_CanLiftPlayer( player, other_player ) ) {
@@ -2647,6 +2654,7 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	} else {
 		func = GamePlayer_AtAttackDone;
 	}
+
 	if( widget ) {
 		GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
 		GameObject_AtActionDone( player->object, ACTION_FINAL_BLOW, func );
@@ -2661,6 +2669,7 @@ void GamePlayer_StartAAttack( GamePlayer *player )
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
 	GamePlayer_LockAction( player );
+	player->control.run = FALSE;
 }
 
 static void GamePlayer_AtWeakWalkDone( GamePlayer *player )
@@ -2794,11 +2803,13 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	case STATE_LIFT_RUN:
 	case STATE_LIFT_STANCE:
 	case STATE_LIFT_WALK:
+		player->control.run = FALSE;
 		/* 将举起的角色向前抛 */
 		GamePlayer_SetThrowUp( player );
 		return;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
+		player->control.run = FALSE;
 		if( player->state == STATE_RIGHTRUN ) {
 			GameObject_AtXSpeedToZero(
 				player->object, -XACC_DASH, 
@@ -2881,6 +2892,7 @@ void GamePlayer_StartBAttack( GamePlayer *player )
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
 	GamePlayer_LockAction( player );
+	player->control.run = FALSE;
 }
 
 /** 骑在躺地者身上 */
@@ -3025,49 +3037,6 @@ static void GamePlayer_SetJumpSpinKick( GamePlayer *player )
 	GameObject_AtZeroZSpeed( player->object, GamePlayer_JumpSpinKickStart );
 }
 
-static void GameKeyboardProcKeyDown( int key_code )
-{
-	GamePlayer *target;
-
-	target = GamePlayer_GetPlayerByControlKey( key_code );
-	if( key_code == target->ctrlkey.a_attack ) {
-		GamePlayer_StartAAttack( target );
-	}
-	else if( key_code == target->ctrlkey.b_attack ) {
-		GamePlayer_StartBAttack( target );
-	}
-	else if( key_code == target->ctrlkey.jump ) {
-		GamePlayer_StartJump( target );
-	}
-	Widget_Update( target->object );
-}
-
-static void GameKeyboardProcKeyUp( int key_code )
-{
-	GamePlayer *target;
-	
-	target = GamePlayer_GetPlayerByControlKey( key_code );
-	
-	if( key_code == target->ctrlkey.left
-	 || key_code == target->ctrlkey.right ) {
-		GamePlayer_StopXWalk( target );
-	}
-	else if( key_code == target->ctrlkey.up
-	 || key_code == target->ctrlkey.down ) {
-		GamePlayer_StopYMotion( target );
-	}
-	
-	Widget_Update( target->object );
-}
-
-static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
-{
-	if( event->type == LCUI_KEYDOWN ) {
-		GameKeyboardProcKeyDown( event->key_code );
-	} else {
-		//GameKeyboardProcKeyUp( event->key_code );
-	}
-}
 
 /** 设置游戏角色的控制键 */
 int GamePlayer_SetControlKey( int player_id, ControlKey *key )
@@ -3272,6 +3241,55 @@ static int Game_InitPlayerStatusArea(void)
 	return 0;
 }
 
+void GamePlayer_Init( GamePlayer *player )
+{
+	player->id = 0;
+	player->role_id = 0;
+	player->type = 0;
+	player->state = 0;
+	player->enable = FALSE;
+	player->right_direction = TRUE;
+	player->human_control = TRUE;
+	player->local_control = TRUE;
+	player->lock_action = FALSE;
+	player->lock_motion = FALSE;
+	player->property.cur_hp = 0;
+	player->property.max_hp = 0;
+	player->property.defense = 0;
+	player->property.kick = 0;
+	player->property.punch = 0;
+	player->property.speed = 100;
+	player->property.throw = 0;
+	player->skill.big_elbow = FALSE;
+	player->skill.bomb_kick = FALSE;
+	player->skill.guillotine = FALSE;
+	player->skill.jump_spin_kick = FALSE;
+	player->skill.mach_kick = FALSE;
+	player->skill.mach_punch = FALSE;
+	player->skill.mach_stomp = FALSE;
+	player->skill.rock_defense = FALSE;
+	player->skill.spin_hit = FALSE;
+	player->skill.tornado_attack = FALSE;
+	player->attack_type = 0;
+	player->n_attack = 0;
+	player->t_rest_timeout = -1;
+	player->t_action_timeout = -1;
+	player->t_death_timer = -1;
+	player->object = NULL;
+	player->statusbar = NULL;
+	player->other = NULL;
+	player->idea.type = idea_type_none;
+	player->control.a_attack = FALSE;
+	player->control.b_attack = FALSE;
+	player->control.run = FALSE;
+	player->control.left_motion = FALSE;
+	player->control.right_motion = FALSE;
+	player->control.up_motion = FALSE;
+	player->control.down_motion = FALSE;
+	player->control.jump = FALSE;
+	ControlKey_Init( &player->ctrlkey );
+}
+
 int Game_Init(void)
 {
 	int ret;
@@ -3294,31 +3312,14 @@ int Game_Init(void)
 	GameObject_Register();
 	StatusBar_Register();
 	LifeBar_Regiser();
+
+	GamePlayer_Init( &player_data[0] );
+	GamePlayer_Init( &player_data[1] );
 	/* 记录玩家ID */
 	player_data[0].id = 1;
 	player_data[1].id = 2;
-	player_data[2].id = 3;
-	player_data[3].id = 4;
 	player_data[0].enable = TRUE;
 	player_data[1].enable = TRUE;
-	player_data[2].enable = FALSE;
-	player_data[3].enable = FALSE;
-	player_data[0].local_control = TRUE;
-	player_data[1].local_control = TRUE;
-	player_data[2].local_control = FALSE;
-	player_data[3].local_control = FALSE;
-	player_data[0].attack_type = ATTACK_TYPE_NONE;
-	player_data[1].attack_type = ATTACK_TYPE_NONE;
-	player_data[0].n_attack = 0;
-	player_data[1].n_attack = 0;
-	player_data[0].t_rest_timeout = -1;
-	player_data[1].t_rest_timeout = -1;
-	player_data[0].t_action_timeout = -1;
-	player_data[1].t_action_timeout = -1;
-	player_data[0].other = NULL;
-	player_data[1].other = NULL;
-	player_data[2].other = NULL;
-	player_data[3].other = NULL;
 
 	Graph_Init( &img_shadow );
 	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
@@ -3392,29 +3393,76 @@ int Game_Init(void)
 	return ret;
 }
 
+/** 响应按键的按下 */
+static void GameKeyboardProcKeyDown( int key_code )
+{
+	GamePlayer *target;
+
+	target = GamePlayer_GetPlayerByControlKey( key_code );
+	if( key_code == target->ctrlkey.left ) {
+		if( LCUIKey_IsDoubleHit(target->ctrlkey.left,250) ) {
+			target->control.run = TRUE;
+		}
+	}
+	else if( key_code == target->ctrlkey.right ) {
+		if( LCUIKey_IsDoubleHit(target->ctrlkey.right,250) ) {
+			target->control.run = TRUE;
+		}
+	}
+	if( key_code == target->ctrlkey.a_attack ) {
+		target->control.a_attack = TRUE;
+	}
+	else if( key_code == target->ctrlkey.b_attack ) {
+		target->control.b_attack = TRUE;
+	}
+	else if( key_code == target->ctrlkey.jump ) {
+		target->control.jump = TRUE;
+	}
+}
+
+static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
+{
+	if( event->type == LCUI_KEYDOWN ) {
+		GameKeyboardProcKeyDown( event->key_code );
+	}
+}
+
+/** 同步游戏玩家的按键控制 */
+static void GamePlayer_SyncKeyControl( GamePlayer *player )
+{
+	LCUI_BOOL stop_xmotion=FALSE, stop_ymotion=FALSE;
+
+	player->control.left_motion = LCUIKey_IsHit(player->ctrlkey.left);
+	player->control.right_motion = LCUIKey_IsHit(player->ctrlkey.right);
+	player->control.up_motion = LCUIKey_IsHit(player->ctrlkey.up);
+	player->control.down_motion = LCUIKey_IsHit(player->ctrlkey.down);
+}
+
+/** 同步游戏玩家的数据 */
 static void GamePlayer_SyncData( GamePlayer *player )
 {
 	LCUI_BOOL stop_xmotion=FALSE, stop_ymotion=FALSE;
 
-	if( LCUIKey_IsHit(player->ctrlkey.left) ) {
-		GamePlayer_ProcLeftKey( player );
+	if( player->control.left_motion ) {
+		GamePlayer_SetLeftMotion( player );
 	}
-	else if( LCUIKey_IsHit(player->ctrlkey.right) ) {
-		GamePlayer_ProcRightKey( player );
+	else if( player->control.right_motion ) {
+		GamePlayer_SetRightMotion( player );
 	}
 	else {
 		GamePlayer_StopXWalk( player );
 		stop_xmotion = TRUE;
 	}
-	if( LCUIKey_IsHit(player->ctrlkey.up) ) {
+	if( player->control.up_motion ) {
 		GamePlayer_SetUpMotion( player );
 	}
-	else if( LCUIKey_IsHit(player->ctrlkey.down) ) {
+	else if( player->control.down_motion ) {
 		if( player->state == STATE_SJUMP
 		 || player->state == STATE_SSQUAT ) {
 			GamePlayer_SetJumpSpinKick( player );
+		} else {
+			GamePlayer_SetDownMotion( player );
 		}
-		GamePlayer_SetDownMotion( player );
 	}
 	else {
 		switch( player->state ) {
@@ -3436,6 +3484,19 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		else if( player->state == STATE_LIFT_WALK ) {
 			GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 		}
+	}
+
+	if( player->control.a_attack ) {
+		player->control.a_attack = FALSE;
+		GamePlayer_StartAAttack( player );
+	}
+	else if( player->control.b_attack ) {
+		player->control.b_attack = FALSE;
+		GamePlayer_StartBAttack( player );
+	}
+	if( player->control.jump ) {
+		player->control.jump = FALSE;
+		GamePlayer_StartJump( player );
 	}
 }
 
@@ -3500,6 +3561,8 @@ int Game_Loop(void)
 			/* 如果该游戏玩家不是由人类控制的 */
 			if( !player_data[i].human_control ) {
 				GameAI_Control( player_data[i].id );
+			} else {
+				GamePlayer_SyncKeyControl( &player_data[i] );
 			}
 			GamePlayer_SyncData( &player_data[i] );
 			Widget_Update( player_data[i].object );

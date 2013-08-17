@@ -185,6 +185,17 @@ typedef struct SpecialSkill_ {
 	LCUI_BOOL jump_spin_kick;	/**< 高跳旋转落踢 */
 } SpecialSkill;
 
+typedef struct ControlState_ {
+	LCUI_BOOL run;			/**< 是否奔跑 */
+	LCUI_BOOL left_motion;		/**< 是否向左移动 */
+	LCUI_BOOL right_motion;		/**< 是否向右移动 */
+	LCUI_BOOL up_motion;		/**< 是否向上移动 */
+	LCUI_BOOL down_motion;		/**< 是否向下移动 */
+	LCUI_BOOL a_attack;		/**< 是否进行A攻击 */
+	LCUI_BOOL b_attack;		/**< 是否进行B攻击 */
+	LCUI_BOOL jump;			/**< 是否进行跳跃 */
+} ControlState;
+
 typedef struct GamePlayer_ GamePlayer;
 struct GamePlayer_{
 	int id;				/**< 玩家ID */
@@ -209,6 +220,7 @@ struct GamePlayer_{
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
 	GamePlayer *other;
 	AIIdeaData idea;		/**< 记录AI的想法 */
+	ControlState control;		/**< 角色的控制状态 */
 };
 
 extern int Game_Init(void);
