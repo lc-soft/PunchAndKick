@@ -3,6 +3,7 @@
 #define __GAME_AI_H__
 
 enum AIIdeaType {
+	idea_type_none,
 	idea_type_close,	/**< 靠近目标 */
 	idea_type_away,		/**< 远离目标 */
 	idea_type_observe,	/**< 观察目标 */
