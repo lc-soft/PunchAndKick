@@ -71,6 +71,10 @@ int Game_ProcMsg( GameMsg *p_msg )
 	}
 	switch( p_msg->msg.msg_id ) {
 	case GAMEMSG_ACTION:
+		if( GameObject_GetCurrentActionID( target->object )
+			== p_msg->msg.action.action_id ) {
+			break;
+		}
 		GameObject_SwitchAction( target->object, p_msg->msg.action.action_id );
 	default:
 		break;
