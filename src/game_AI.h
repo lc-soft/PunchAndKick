@@ -2,29 +2,11 @@
 #ifndef __GAME_AI_H__
 #define __GAME_AI_H__
 
-enum AIIdeaType {
-	idea_type_none,
-	idea_type_close,	/**< 靠近目标 */
-	idea_type_away,		/**< 远离目标 */
-	idea_type_observe,	/**< 观察目标 */
-	idea_type_stop_run,	/**< 停止奔跑 */
-	idea_type_a_attack,	/**< A攻击 */
-	idea_type_b_attack,	/**< B攻击 */
-	idea_type_jump		/**< 跳跃 */
-};
-
-typedef struct AIIdeaData_Move_ {
-	int type;
-	int target_id;
-	LCUI_BOOL need_run;
-} AIIdeaData_Close, AIIdeaData_Away;
-
-typedef union AIIdeaData_ {
-	int type;
-	AIIdeaData_Close close;
-	AIIdeaData_Away away;
-} AIIdeaData;
-
+typedef struct GameAI_Data_ {
+	int strategy_id;	/**< 策略的ID */
+	int action_num;		/**< 当前正执行的动作序号 */
+	int start_time;		/**< 动作开始时的时间 */
+} GameAI_Data;
 
 /** 初始化游戏AI */
 void GameAI_Init(void);

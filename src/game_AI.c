@@ -5,23 +5,378 @@
 #include <time.h>
 #include "game.h"
 
+#define RANGE_MAX		-1
+#define MAX_STRATEGY_NUM	25
+#define MAX_ACTION_NUM		5
+
+enum AIActionType {
+	ai_action_type_none,
+	ai_action_type_run_close,	/**< 跑步靠近目标 */
+	ai_action_type_walk_close,	/**< 步行靠近目标 */
+	ai_action_type_run_away,	/**< 跑步远离目标 */
+	ai_action_type_walk_away,	/**< 步行远离目标 */
+	ai_action_type_observe,		/**< 观察目标 */
+	ai_action_type_stop_run,	/**< 停止奔跑 */
+	ai_action_type_a_attack,	/**< A攻击 */
+	ai_action_type_b_attack,	/**< B攻击 */
+	ai_action_type_jump,		/**< 跳跃 */
+	ai_action_type_down
+};
+
+/** 距离范围 */
+typedef struct DistanceRange_ {
+	int min_x_width, max_x_width;
+	int min_y_width, max_y_width;
+} DistanceRange;
+
+typedef struct AIActionData_ {
+	LCUI_BOOL enable;	/**< 该动作是否启用 */
+	unsigned int time;	/**< 切换至下个动作前需要等待的时间(ms) */
+	int action_type;	/**< 动作类型 */
+} AIActionData;
+
+/** AI的对战策略 */
+typedef struct AIStrategy_ {
+	int priority;				/**< 优先级，-20至20，从高到低 */
+	LCUI_BOOL (*self_state)(int);		/**< 回调函数，用于检测自身的状态是否符合要求 */
+	LCUI_BOOL (*target_state)(int);		/**< 回调函数，用于检测对方的状态是否符合要求 */
+	DistanceRange range;			/**< 与目标的距离范围 */
+	AIActionData action[MAX_ACTION_NUM];	/**< 该策略中用到的连续动作 */
+} AIStrategy;
+
 /** 随机想法 */
 typedef struct RandIdea_ {
 	int id;			/**< 该想法的标识号 */
 	int probability;	/**< 该想法出现的概率，取值范围为0(0.0%)至10000(100%) */
 } RandIdea;
 
+static LCUI_BOOL ICanAction( int state )
+{
+	switch( state ) {
+	case STATE_READY:
+	case STATE_STANCE:
+	case STATE_WALK:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL TargetCanAction( int state )
+{
+	switch( state ) {
+	case STATE_LYING:
+	case STATE_TUMMY:
+	case STATE_LYING_HIT:
+	case STATE_TUMMY_HIT:
+	case STATE_REST:
+	case STATE_JUMP:
+	case STATE_SJUMP:
+	case STATE_SQUAT:
+	case STATE_SSQUAT:
+		return FALSE;
+	default:break;
+	}
+	return TRUE;
+}
+
+static LCUI_BOOL TargetIsRest( int state )
+{
+	if( state == STATE_REST ) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL IAmJumpDone( int state )
+{
+	switch( state ) {
+	case STATE_SQUAT:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL IAmRunning( int state )
+{
+	switch( state ) {
+	case STATE_LEFTRUN:
+	case STATE_RIGHTRUN:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL IAmSJump( int state )
+{
+	if( state == STATE_SJUMP ) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL ICanCloseTarget( int state )
+{
+	switch( state ) {
+	case STATE_READY:
+	case STATE_STANCE:
+	case STATE_WALK:
+	case STATE_LEFTRUN:
+	case STATE_RIGHTRUN:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL ICatchTarget( int state )
+{
+	if( state == STATE_CATCH ) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL ILifeTarget( int state )
+{
+	switch( state ) {
+	case STATE_LIFT_STANCE:
+	case STATE_LIFT_FALL:
+	case STATE_LIFT_JUMP:
+	case STATE_LIFT_RUN:
+	case STATE_LIFT_WALK:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
+	{ 
+		0,
+		/* 距离在10-55的范围内，对目标进行A攻击 */
+		ICanAction, TargetCanAction, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 200, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在10-55的范围内，对目标进行B攻击 */
+		ICanAction, NULL, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 200, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在10-55的范围内，目标处于喘气状态，跳跃+攻击目标 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 200, ai_action_type_jump},
+			{TRUE, 0, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在10-55的范围内，目标处于喘气状态，攻击目标 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 200, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在10-55的范围内，目标处于喘气状态，站着观察 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 500, ai_action_type_observe},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在10-55的范围内，目标处于喘气状态，靠近他 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 50, ai_action_type_walk_close},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在0-10的范围内，步行远离目标 */
+		ICanAction, TargetCanAction, {0,20,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 500, ai_action_type_walk_away},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在150以上的范围内，跑步靠近目标 */
+		ICanCloseTarget, NULL, {150,RANGE_MAX,0,RANGE_MAX}, 
+		{
+			{TRUE, 50, ai_action_type_run_close},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 跳跃落地时，若目标在攻击范围内，则使用自旋击 */
+		IAmJumpDone, NULL, {20,400,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 100, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 跳跃落地时，若目标在攻击范围内，则使用爆裂腿 */
+		IAmJumpDone, NULL, {20,400,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 100, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 跳跃落地后，观察目标 */
+		IAmJumpDone, NULL, {20,400,0,RANGE_MAX}, 
+		{
+			{TRUE, 500, ai_action_type_observe},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在10至150的范围内，处于跑步状态，使用冲刺A攻击 */
+		IAmRunning, TargetCanAction, {10,150,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 100, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在10至150的范围内，处于跑步状态，使用冲刺B攻击 */
+		IAmRunning, NULL, {10,150,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 100, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离500以上，观察目标 */
+		ICanAction, TargetCanAction, {500,RANGE_MAX,0,RANGE_MAX}, 
+		{
+			{TRUE, 300, ai_action_type_observe},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, {
+		0,
+		/* 距离在0-150的范围内，步行靠近目标 */
+		ICanAction, NULL, {0,150,0,RANGE_MAX}, 
+		{
+			{TRUE, 50, ai_action_type_walk_close},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在280-300的范围内，进行跳跃 */
+		IAmRunning, NULL, {250,300,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 0, ai_action_type_jump},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在250-300的范围内，进行跳跃+A攻击 */
+		IAmRunning, TargetCanAction, {250,300,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 50, ai_action_type_jump},
+			{TRUE, 50, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在250-300的范围内，进行跳跃+B攻击 */
+		IAmRunning, NULL, {250,300,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 50, ai_action_type_jump},
+			{TRUE, 50, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在20-150的范围内，自己处于奔跑后的跃起状态，进行A攻击 */
+		IAmSJump, TargetCanAction, {20,150,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 50, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在20-150的范围内，自己处于奔跑后的跃起状态，进行B攻击 */
+		IAmSJump, NULL, {20,150,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 50, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在350-420的范围内，进行跳跃，并使用高挑旋转落体 */
+		IAmRunning, NULL, {350,420,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 50, ai_action_type_jump},
+			{TRUE, 200, ai_action_type_down},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 如果自己擒住了一个目标，则使用A攻击 */
+		ICatchTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 如果自己擒住了一个目标，则使用B攻击 */
+		ICatchTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, {
+		0,
+		/* 如果自己举起了一个目标，则使用抛掷出去 */
+		ILifeTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, {
+		0,
+		/* 如果自己举起了一个目标，则使用往下摔 */
+		ILifeTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}
+};
 
 /** 获取自己的攻击目标 */
 static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 {
-	return NULL;
+	if( self->id == 1 ) {
+		return GamePlayer_GetByID( 2 );
+	}
+	return GamePlayer_GetByID( 1 );
 }
 
 /** 获取自己与对方的距离 */
 static void GamePlayer_GetDistance( GamePlayer *self, GamePlayer *target, int *x_width, int *y_width )
 {
-
+	*x_width = (int)GameObject_GetX( self->object );
+	*x_width -= (int)GameObject_GetX( target->object );
+	*y_width = (int)GameObject_GetY( self->object );
+	*y_width -= (int)GameObject_GetY( target->object );
 }
 
 /*******************************************************************************
@@ -76,16 +431,329 @@ static int RandIdea_Select( RandIdea* ideas, int n_idea )
 	return ideas[idea_pos[rand()%j]].id;
 }
 
-/** 实现AI的想法 */
-static void GameAI_RealizeIdea( GamePlayer *player )
-{
-
-}
-
 /** 初始化游戏AI */
 void GameAI_Init(void)
 {
 	srand((unsigned int)time(NULL));
+}
+
+LCUI_BOOL StrategyActionIsTimeOut( GameAI_Data *p_data )
+{
+	int64_t cur_time;
+	unsigned int diff_val;
+	AIStrategy *p_strategy;
+
+	/* 若动作序号超出有效范围 */
+	if( p_data->action_num >= MAX_ACTION_NUM ) {
+		return TRUE;
+	}
+	p_strategy = &global_strategy_set[p_data->strategy_id];
+	/* 若该动作并没有启用 */
+	if( !p_strategy->action[p_data->action_num].enable ) {
+		return TRUE;
+	}
+	cur_time = LCUI_GetTickCount();
+	diff_val = (unsigned int)(cur_time - p_data->start_time);
+	/* 若该动作的停留时间超出时限 */
+	if( diff_val >= p_strategy->action[p_data->action_num].time ) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/** 检测当前策略是否有效 */
+LCUI_BOOL StrategyIsValid( GameAI_Data *p_data, int target_state, int x_width, int y_width )
+{
+	int n_last_action;
+	AIStrategy *p_strategy;
+
+	/* 若策略ID超出有效范围 */
+	if( p_data->strategy_id >= MAX_STRATEGY_NUM ) {
+		return FALSE;
+	}
+	p_strategy = &global_strategy_set[p_data->strategy_id];
+	for(n_last_action=0; n_last_action<MAX_ACTION_NUM; ++n_last_action) {
+		if( !p_strategy->action[n_last_action].enable ) {
+			if( n_last_action > 0 ) {
+				--n_last_action;
+			}
+			break;
+		}
+	};
+	/* 如果这是最后一个动作，则检测该动作是否超时 */
+	if( p_data->action_num == n_last_action ) {
+		return !StrategyActionIsTimeOut( p_data );
+	}
+	else if( p_data->action_num > n_last_action ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/** 按条件过滤策略，并获取符合条件的策略ID */
+int FilterStrategy( int *strategy_buff, int max_num, int self_state, int target_state, int x_width, int y_width )
+{
+	int i, j;
+	/* 取距离的绝对值 */
+	if( x_width < 0 ) {
+		x_width = 0 - x_width;
+	}
+	if( y_width < 0 ) {
+		y_width = 0 - y_width;
+	}
+	DEBUG_MSG("[%d], y_width: %d, max: %d\n", i, y_width, global_strategy_set[i].range.max_y_width);
+	/* 遍历查找符合条件的策略 */
+	for(j=0,i=0; i<MAX_STRATEGY_NUM; ++i) {
+		/* 判断状态是否符合要求 */
+		if( global_strategy_set[i].self_state ) {
+			if( !global_strategy_set[i].self_state( self_state ) ) {
+				continue;;
+			}
+		}
+		if( global_strategy_set[i].target_state ) {
+			if( !global_strategy_set[i].target_state( target_state ) ) {
+				continue;;
+			}
+		}
+		/* 判断与目标的距离是否符合要求 */
+		if( x_width < global_strategy_set[i].range.min_x_width ) {
+			continue;
+		}
+		if( global_strategy_set[i].range.max_x_width != RANGE_MAX ) {
+			if( x_width >= global_strategy_set[i].range.max_x_width ) {
+				continue;
+			}
+		}
+		if( y_width < global_strategy_set[i].range.min_y_width ) {
+			continue;
+		}
+		if( global_strategy_set[i].range.max_y_width != RANGE_MAX ) {
+			if( y_width >= global_strategy_set[i].range.max_y_width ) {
+				continue;
+			}
+		}
+		/* 记录符合要求的策略的ID */
+		strategy_buff[j] = i;
+		++j;
+	}
+	return j;
+}
+
+/** 根据各个策略的优先级，随机选择一个策略 */
+int RandSelectStrategy( int *strategy_list, int n )
+{
+	int i;
+	DEBUG_MSG("strategy list:\n");
+	for( i=0; i<n; ++i) {
+		DEBUG_MSG("%d\n", strategy_list[i]);
+	}
+	i = rand()%n;
+	DEBUG_MSG("select strategy: %d\n", i);
+	return strategy_list[i];
+}
+
+void GamePlayer_Standby( GamePlayer *player )
+{
+	if( player->state == STATE_LEFTRUN
+		|| player->state == STATE_RIGHTRUN ) {
+		GamePlayer_StopRun( player );
+	}
+	player->control.a_attack = FALSE;
+	player->control.b_attack = FALSE;
+	player->control.left_motion = FALSE;
+	player->control.right_motion = FALSE;
+	player->control.up_motion = FALSE;
+	player->control.down_motion = FALSE;
+	player->control.run = FALSE;
+}
+
+/** 执行策略 */
+void ExecuteStrategy( GamePlayer *player )
+{
+	int action_type;
+	GamePlayer *target;
+	AIStrategy *p_strategy;
+	int x_width, y_width;
+
+	target = GamePlayer_GetTarget( player );
+	GamePlayer_GetDistance( player, target, &x_width, &y_width );
+	p_strategy = &global_strategy_set[player->ai_data.strategy_id];
+	action_type = p_strategy->action[player->ai_data.action_num].action_type;
+
+	switch( action_type ) {
+	case ai_action_type_none:
+		GamePlayer_Standby( player );
+		DEBUG_MSG("ai_action_type_none\n");
+		break;
+	case ai_action_type_run_close:
+		player->control.run = TRUE;
+		if( x_width > 0 ) {
+			player->control.left_motion = TRUE;
+			player->control.right_motion = FALSE;
+		} else {
+			player->control.left_motion = FALSE;
+			player->control.right_motion = TRUE;
+		}
+		if( y_width > GLOBAL_Y_WIDTH/2-2 ) {
+			player->control.up_motion = TRUE;
+			player->control.down_motion = FALSE;
+		}
+		else if( y_width < -(GLOBAL_Y_WIDTH/2-2) ) {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = TRUE;
+		} else {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = FALSE;
+		}
+		DEBUG_MSG("ai_action_type_run_close\n");
+		break;
+	case ai_action_type_walk_close:
+		player->control.run = FALSE;
+		if( x_width > 10 ) {
+			player->control.left_motion = TRUE;
+			player->control.right_motion = FALSE;
+		}
+		else if( x_width < -10 ) {
+			player->control.left_motion = FALSE;
+			player->control.right_motion = TRUE;
+		} else {
+			player->control.left_motion = FALSE;
+			player->control.right_motion = FALSE;
+		}
+		if( y_width > GLOBAL_Y_WIDTH/2-2 ) {
+			player->control.up_motion = TRUE;
+			player->control.down_motion = FALSE;
+		}
+		else if( y_width < -(GLOBAL_Y_WIDTH/2-2) ) {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = TRUE;
+		} else {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = FALSE;
+		}
+		DEBUG_MSG("ai_action_type_walk_close\n");
+		break;
+	case ai_action_type_run_away:
+		player->control.run = TRUE;
+		if( x_width < 0 ) {
+			player->control.left_motion = TRUE;
+			player->control.right_motion = FALSE;
+		} else {
+			player->control.left_motion = FALSE;
+			player->control.right_motion = TRUE;
+		}
+		if( y_width < GLOBAL_Y_WIDTH ) {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = TRUE;
+		}
+		else if( y_width > -GLOBAL_Y_WIDTH ) {
+			player->control.up_motion = TRUE;
+			player->control.down_motion = FALSE;
+		} else {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = FALSE;
+		}
+		DEBUG_MSG("ai_action_type_run_away\n");
+		break;
+	case ai_action_type_walk_away:
+		player->control.run = FALSE;
+		if( x_width > 0 ) {
+			player->control.left_motion = FALSE;
+			player->control.right_motion = TRUE;
+		} else {
+			player->control.left_motion = TRUE;
+			player->control.right_motion = FALSE;
+		}
+		if( y_width > GLOBAL_Y_WIDTH/2-2 ) {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = TRUE;
+		}
+		else if( y_width < -(GLOBAL_Y_WIDTH/2-2) ) {
+			player->control.up_motion = TRUE;
+			player->control.down_motion = FALSE;
+		} else {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = FALSE;
+		}
+		DEBUG_MSG("ai_action_type_walk_away\n");
+		break;
+	case ai_action_type_observe:
+		player->control.left_motion = FALSE;
+		player->control.right_motion = FALSE;
+		player->control.up_motion = FALSE;
+		player->control.down_motion = FALSE;
+		if( x_width < 0 ) {
+			GamePlayer_SetRightOriented( player );
+		} else {
+			GamePlayer_SetLeftOriented( player );
+		}
+		GamePlayer_SetReady( player );
+		DEBUG_MSG("ai_action_type_observe\n");
+		break;
+	case ai_action_type_stop_run:
+		DEBUG_MSG("ai_action_type_stop_run\n");
+		break;
+	case ai_action_type_a_attack:
+		if( x_width < 0 ) {
+			GamePlayer_SetRightOriented( player );
+		} else {
+			GamePlayer_SetLeftOriented( player );
+		}
+		player->control.a_attack = TRUE;
+		DEBUG_MSG("ai_action_type_a_attack\n");
+		break;
+	case ai_action_type_b_attack:
+		if( x_width < 0 ) {
+			GamePlayer_SetRightOriented( player );
+		} else {
+			GamePlayer_SetLeftOriented( player );
+		}
+		player->control.b_attack = TRUE;
+		DEBUG_MSG("ai_action_type_b_attack\n");
+		break;
+	case ai_action_type_jump:
+		player->control.jump = TRUE;
+		DEBUG_MSG("ai_action_type_jump\n");
+		break;
+	case ai_action_type_down:
+		player->control.down_motion = TRUE;
+		DEBUG_MSG("ai_action_type_down\n");
+	default:
+		break;
+	}
+}
+
+/** 检查是否还能继续靠近目标 */
+LCUI_BOOL CanCloseTarget( GamePlayer *player ) 
+{
+	int action_type;
+	GamePlayer *target;
+	AIStrategy *p_strategy;
+	int x_width, y_width;
+	
+	p_strategy = &global_strategy_set[player->ai_data.strategy_id];
+	action_type = p_strategy->action[player->ai_data.action_num].action_type;
+	if( action_type != ai_action_type_run_close ) {
+		return TRUE;
+	}
+	target = GamePlayer_GetTarget( player );
+	GamePlayer_GetDistance( player, target, &x_width, &y_width );
+	p_strategy = &global_strategy_set[player->ai_data.strategy_id];
+	if( player->state == STATE_LEFTRUN ) {
+		if( x_width < 0 ) {
+			_DEBUG_MSG("left run, x_width: %d\n", x_width);
+			GamePlayer_StopRun( player );
+			return FALSE;
+		}
+	}
+	else if( player->state == STATE_RIGHTRUN ) {
+		if( x_width > 0 ) {
+			GamePlayer_StopRun( player );
+			_DEBUG_MSG("right run, x_width: %d\n", x_width);
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 /** 将游戏玩家交给AI控制 */
@@ -93,156 +761,41 @@ void GameAI_Control( int player_id )
 {
 	GamePlayer *self, *target;
 	int x_width, y_width;
-	RandIdea idea[10];
-	
+	int n, strategy_buff[10];
+
 	self = GamePlayer_GetByID( player_id );
 	/* 获取自己的目标 */
 	target = GamePlayer_GetTarget( self );
 	/* 检测与目标的距离 */
 	GamePlayer_GetDistance( self, target, &x_width, &y_width );
-	/* 根据自己的当前状态，决定该干什么 */
-	switch( self->state ) {
-	case STATE_READY:
-	case STATE_STANCE:
-	case STATE_WALK:
-		if( x_width > 150 ) {
-			/* 有75%的概率想靠近目标 */
-			idea[0].id = idea_type_close;
-			idea[0].probability = 7500;
-			/* 其余的概率是站着观察 */
-			idea[1].id = idea_type_observe;	
-			/* 决定想法 */
-			self->idea.type = RandIdea_Select( idea, 2 );
-			/* 有80%的概率是跑着靠近目标 */
-			idea[0].id = 0;
-			idea[0].probability = 8000;
-			/* 剩余概率是步行靠近目标 */
-			idea[1].id = 1;
-			if( RandIdea_Select( idea, 2 ) == 0 ) {
-				self->idea.close.need_run = TRUE;
-			} else {
-				self->idea.close.need_run = FALSE;
-			}
-			self->idea.close.target_id = target->id;
+	DEBUG_MSG("x_width: %d\n", x_width);
+	/*如果当前条件不满足当前策略 */
+	if( StrategyIsValid(&self->ai_data, target->state, x_width, y_width)
+	 && CanCloseTarget(self) ) {
+		/* 检查当前动作是否超时 */
+		DEBUG_MSG("action: %d\n", self->ai_data.action_num);
+		if( StrategyActionIsTimeOut(&self->ai_data) ) {
+			DEBUG_MSG("timeout\n");
+			++self->ai_data.action_num;
+			self->ai_data.start_time = (unsigned int)LCUI_GetTickCount();
+			ExecuteStrategy( self );
 		}
-		else if( x_width > 20 && x_width < 50 ) {
-			/* 有65%的概率想对目标进行A攻击 */
-			idea[0].id = idea_type_a_attack;
-			idea[0].probability = 4500;
-			/* 有35%的概率想对目标进行B攻击 */
-			idea[1].id = idea_type_b_attack;
-			idea[1].probability = 3500;
-			/* 其余的概率是想远离目标 */
-			idea[1].id = idea_type_away;
-			self->idea.type = RandIdea_Select( idea, 3 );
-			/* 如果是决定远离目标 */
-			if( self->idea.type == idea_type_away ) {
-				idea[0].id = 0;
-				idea[0].probability = 4000;
-				idea[1].id = 1;
-				if( RandIdea_Select( idea, 2 ) == 0 ) {
-					self->idea.away.need_run = TRUE;
-				} else {
-					self->idea.away.need_run = FALSE;
-				}
-			}
-		}
-		else if( x_width < 20 && x_width >= 0 ) {
-			/* 有50%的概率想对目标进行攻击 */
-			idea[0].id = idea_type_a_attack;
-			idea[1].id = idea_type_b_attack;
-			idea[0].probability = 2500;
-			idea[1].probability = 2500;
-			/* 有50%的概率是想远离目标 */
-			idea[1].id = idea_type_away;
-			self->idea.type = RandIdea_Select( idea, 3 );
-			if( self->idea.type == idea_type_away ) {
-				idea[0].id = 0;
-				idea[0].probability = 4000;
-				idea[1].id = 1;
-				if( RandIdea_Select( idea, 2 ) == 0 ) {
-					self->idea.away.need_run = TRUE;
-				} else {
-					self->idea.away.need_run = FALSE;
-				}
-			}
-		}
-		/* 如果与目标在Y轴的距离小 */
-		if( y_width < GLOBAL_Y_WIDTH ) {
-			break;
-		}
-		/* 如果想法是攻击目标 */
-		if( self->idea.type == idea_type_a_attack
-		|| self->idea.type == idea_type_a_attack ) {
-			idea[0].id = idea_type_close;
-			idea[1].id = idea_type_observe;	
-			idea[2].id = idea_type_away;
-			idea[0].probability = 6000;
-			idea[1].probability = 2000;
-			idea[2].probability = 2000;
-			self->idea.type = RandIdea_Select( idea, 3 );
-			idea[0].id = 0;
-			idea[0].probability = 3000;
-			idea[1].id = 1;
-			switch(self->idea.type) {
-			case idea_type_away:
-				if( RandIdea_Select( idea, 2 ) == 0 ) {
-					self->idea.away.need_run = TRUE;
-				} else {
-					self->idea.away.need_run = FALSE;
-				}
-				self->idea.away.target_id = target->id;
-				break;
-			case idea_type_close:
-				if( RandIdea_Select( idea, 2 ) == 0 ) {
-					self->idea.close.need_run = TRUE;
-				} else {
-					self->idea.close.need_run = FALSE;
-				}
-				self->idea.close.target_id = target->id;
-			default:break;
-			}
-		}
-	case STATE_LEFTRUN:
-		if( x_width < 0 ) {
-			self->idea.type = idea_type_stop_run;
-		}
-		else if( x_width > 420 ) {
-			//继续跑吧
-		}
-		else if( (x_width >= 400 && x_width <= 420 )
-		 || ( x_width >= 280 && x_width <= 320) ) {
-			self->idea.type = idea_type_jump;
-		}
-		else if( x_width <= 150 && x_width > 50 ) {
-			idea[0].id = idea_type_a_attack;
-			idea[1].id = idea_type_b_attack;
-			idea[0].probability = 5000;
-			idea[1].probability = 5000;
-			self->idea.type = RandIdea_Select( idea, 2 );
-		}
-		break;
-	case STATE_RIGHTRUN:
-		if( x_width > 0 ) {
-			self->idea.type = idea_type_stop_run;
-		}
-		else if( x_width < -420 ) {
-			//继续跑吧
-		}
-		else if( (x_width < -400 && x_width > -420 )
-		 || ( x_width < -280 && x_width > -320) ) {
-			self->idea.type = idea_type_jump;
-		}
-		else if( x_width > -150 && x_width < -50 ) {
-			idea[0].id = idea_type_a_attack;
-			idea[1].id = idea_type_b_attack;
-			idea[0].probability = 5000;
-			idea[1].probability = 5000;
-			self->idea.type = RandIdea_Select( idea, 2 );
-		}
-		break;
-	default:
-		break;
+		return;
 	}
-	GameAI_RealizeIdea( self );
+	DEBUG_MSG("strategy not valid\n");
+	/* 根据当前条件筛选出候选策略 */
+	n = FilterStrategy( strategy_buff, 10, self->state, target->state, x_width, y_width );
+	DEBUG_MSG("n = %d\n", n);
+	if( n <= 0 ) {
+		GamePlayer_Standby( self );
+		return;
+	}
+	/* 在候选策略中随机抽选一个策略 */
+	n = RandSelectStrategy( strategy_buff, n );
+	self->ai_data.action_num = 0;
+	self->ai_data.strategy_id = n;
+	DEBUG_MSG("strategy_id = %d\n", n);
+	self->ai_data.start_time = (unsigned int)LCUI_GetTickCount();
+	/* 执行这个策略 */
+	ExecuteStrategy( self );
 }
