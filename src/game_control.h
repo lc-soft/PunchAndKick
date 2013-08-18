@@ -219,7 +219,7 @@ struct GamePlayer_{
 	LCUI_Widget *statusbar;		/**< 状态栏 */
 	ControlKey ctrlkey;		/**< 该角色的控制键 */
 	GamePlayer *other;
-	AIIdeaData idea;		/**< 记录AI的想法 */
+	GameAI_Data ai_data;		/**< 记录AI的数据 */
 	ControlState control;		/**< 角色的控制状态 */
 };
 
@@ -227,6 +227,14 @@ extern int Game_Init(void);
 extern int Game_Start(void);
 extern int Game_Loop(void);
 extern int Game_Pause(void);
+
+extern void GamePlayer_SetReady( GamePlayer *player );
+
+/** 设置角色面向右方 */
+void GamePlayer_SetRightOriented( GamePlayer *player );
+
+/** 设置角色面向左方 */
+void GamePlayer_SetLeftOriented( GamePlayer *player );
 
 /** 改变角色的动作动画  */
 extern void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
@@ -266,8 +274,6 @@ void GamePlayer_StopXWalk( GamePlayer *player );
 void GamePlayer_StopYMotion( GamePlayer *player );
 
 void GamePlayer_StopXMotion( GamePlayer *player );
-
-void GamePlayer_StartAAttack( GamePlayer *player );
 
 void GamePlayer_SetUpMotion( GamePlayer *player );
 
