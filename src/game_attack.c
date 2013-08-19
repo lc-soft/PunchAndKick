@@ -104,7 +104,7 @@ void Game_ProcAttack(void)
 			damage = 20 + p_data->attacker->property.throw/2.0;
 			break;
 		case ATTACK_TYPE_BUMPED:
-			damage = 20 + p_data->victim->property.max_hp*0.05;
+			damage = 20 + p_data->attacker->property.throw/4.0;
 			break;
 		case ATTACK_TYPE_ELBOW1:
 			damage = 20 + p_data->attacker->property.punch/5.0;
@@ -154,7 +154,7 @@ void Game_ProcAttack(void)
 		}
 		/* 计算真实伤害 */
 		true_damage = damage * (1.00 - reduce) + 1;
-		_DEBUG_MSG("true damage: %.2lf, damage: %.2lf, reduce: %.2lf%%\n", true_damage, damage, reduce*100 );
+		DEBUG_MSG("true damage: %.2lf, damage: %.2lf, reduce: %.2lf%%\n", true_damage, damage, reduce*100 );
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= (int)true_damage;
 		if( p_data->victim->property.cur_hp < 0 ) {
