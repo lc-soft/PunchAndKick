@@ -6,11 +6,12 @@
 #include "game.h"
 
 #define RANGE_MAX		-1
-#define MAX_STRATEGY_NUM	25
+#define MAX_STRATEGY_NUM	32
 #define MAX_ACTION_NUM		5
 
 enum AIActionType {
 	ai_action_type_none,
+	ai_action_type_wait,
 	ai_action_type_run_close,	/**< 跑步靠近目标 */
 	ai_action_type_walk_close,	/**< 步行靠近目标 */
 	ai_action_type_run_away,	/**< 跑步远离目标 */
@@ -153,6 +154,26 @@ static LCUI_BOOL ILifeTarget( int state )
 	return FALSE;
 }
 
+static LCUI_BOOL TargetIsLying( int state )
+{
+	switch( state ) {
+	case STATE_LYING:
+	case STATE_TUMMY:
+	case STATE_LYING_HIT:
+	case STATE_TUMMY_HIT:
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL IAmRide( int state )
+{
+	if( state == STATE_RIDE ) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	{ 
 		0,
@@ -205,6 +226,41 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		}
 	}, { 
 		0,
+		ICanAction, TargetIsLying, {10,55,0,RANGE_MAX},
+		{
+			{TRUE, 100, ai_action_type_walk_close},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		ICanAction, TargetIsLying, {0,10,0,GLOBAL_Y_WIDTH/2-2},
+		{
+			{TRUE, 200, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		ICanAction, TargetIsLying, {0,10,0,GLOBAL_Y_WIDTH/2-2},
+		{
+			{TRUE, 50, ai_action_type_down},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		IAmRide, TargetIsLying, {0,10,0,GLOBAL_Y_WIDTH/2-2},
+		{
+			{TRUE, 50, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		IAmRide, TargetIsLying, {0,10,0,GLOBAL_Y_WIDTH/2-2},
+		{
+			{TRUE, 50, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
 		/* 距离在0-10的范围内，步行远离目标 */
 		ICanAction, TargetCanAction, {0,20,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
@@ -241,6 +297,22 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		IAmJumpDone, NULL, {20,400,0,RANGE_MAX}, 
 		{
 			{TRUE, 500, ai_action_type_observe},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		ICanCloseTarget, TargetCanAction, {65,80,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 0, ai_action_type_run_close},
+			{TRUE, 100, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		ICanCloseTarget, NULL, {65,80,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 0, ai_action_type_run_close},
+			{TRUE, 100, ai_action_type_b_attack},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
@@ -331,7 +403,9 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		/* 如果自己擒住了一个目标，则使用A攻击 */
 		ICatchTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
 		{
+			{TRUE, 500, ai_action_type_wait},
 			{TRUE, 500, ai_action_type_a_attack},
+			{TRUE, 500, ai_action_type_observe},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
@@ -339,22 +413,26 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		/* 如果自己擒住了一个目标，则使用B攻击 */
 		ICatchTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
 		{
-			{TRUE, 500, ai_action_type_b_attack},
+			{TRUE, 500, ai_action_type_wait},
+			{TRUE, 200, ai_action_type_b_attack},
+			{TRUE, 500, ai_action_type_observe},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, {
 		0,
-		/* 如果自己举起了一个目标，则使用抛掷出去 */
+		/* 如果自己举起了一个目标，则抛掷出去 */
 		ILifeTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
 		{
+			{TRUE, 500, ai_action_type_wait},
 			{TRUE, 500, ai_action_type_a_attack},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, {
 		0,
-		/* 如果自己举起了一个目标，则使用往下摔 */
+		/* 如果自己举起了一个目标，则往下摔 */
 		ILifeTarget, NULL, {0,RANGE_MAX,0,GLOBAL_Y_WIDTH}, 
 		{
+			{TRUE, 500, ai_action_type_wait},
 			{TRUE, 500, ai_action_type_b_attack},
 			{FALSE, 0, ai_action_type_none}
 		}
@@ -494,6 +572,11 @@ LCUI_BOOL StrategyIsValid( GameAI_Data *p_data, int target_state, int x_width, i
 int FilterStrategy( int *strategy_buff, int max_num, int self_state, int target_state, int x_width, int y_width )
 {
 	int i, j;
+	/* 自己死了或者目标死了，那就没策略了 */
+	if( self_state == STATE_DIED
+	|| target_state == STATE_DIED ) {
+		return 0;
+	}
 	/* 取距离的绝对值 */
 	if( x_width < 0 ) {
 		x_width = 0 - x_width;
@@ -581,6 +664,8 @@ void ExecuteStrategy( GamePlayer *player )
 	action_type = p_strategy->action[player->ai_data.action_num].action_type;
 
 	switch( action_type ) {
+	case ai_action_type_wait:
+		break;
 	case ai_action_type_none:
 		GamePlayer_Standby( player );
 		DEBUG_MSG("ai_action_type_none\n");
