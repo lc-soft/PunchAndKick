@@ -66,6 +66,7 @@ enum GamePlayerState {
 	STATE_LIFT_RUN,			/**< 举着，奔跑 */
 	STATE_LIFT_JUMP,		/**< 举着，跳起 */
 	STATE_LIFT_FALL,		/**< 举着，下落 */
+	STATE_LIFT_SQUAT,
 	STATE_BE_LIFT_STANCE,		/**< 被举起，站立 */
 	STATE_BE_LIFT_SQUAT,		/**< 被举起，蹲着 */
 	STATE_BE_LIFT_LYING,		/**< 被举起，躺着 */
