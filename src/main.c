@@ -1,18 +1,22 @@
-﻿#define SKIP_BOOT_SCREEN
+﻿//#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_CURSOR_H
 #include LC_WIDGET_H
-#include LC_TEXTSTYLE_H
 #include LC_DISPLAY_H
 #include LC_LABEL_H
 #include "game.h"
 
 #define TEXT_COPYRIGHT		L"Developed by LC-Games."
 #define TEXT_STATEMENT		L"<size=20px>"\
-				L"本程序仅用于展示游戏角色的控制、技能动作效果以及血条的动态效果，\n"\
-				L"若本程序在运行过程中出现BUG，请关闭并重新运行本程序。</size>"
+				L"本程序仅用于展示：\n\n"\
+				L" ● 游戏角色的控制\n"\
+				L" ● 技能动作效果\n"\
+				L" ● 血条的动态效果\n"\
+				L" ● 人工智能\n\n"\
+				L"游戏中大部分BUG是已知的，请无视本程序出现的一些细节上的BUG。\n"\
+				L"如果遇到较为严重的BUG，请关闭并重新运行本程序。</size>"
 
 static void Game_ShowBootScreen(void)
 {
@@ -85,29 +89,6 @@ static void Game_ShowBootScreen(void)
 	Widget_Destroy( wdg_copyright_text );
 }
 
-static void UpdateViewFPS( void *arg )
-{
-	char str[10];
-	LCUI_Widget *label = (LCUI_Widget*)arg;
-	sprintf( str, "FPS: %d", LCUIScreen_GetFPS() );
-	Label_Text( label, str );
-}
-
-static void InitViewFPS( void )
-{
-	LCUI_Widget *widget;
-	LCUI_TextStyle style;
-
-	widget = Widget_New("label");
-	TextStyle_Init( &style );
-	TextStyle_FontSize( &style, 14 );
-	Label_TextStyle( widget, style );
-	Widget_SetAlign( widget, ALIGN_TOP_RIGHT, Pos(-20,20) );
-	Widget_SetZIndex( widget, 1000 );
-	Widget_Show( widget );
-	LCUITimer_Set( 500, UpdateViewFPS, widget, TRUE );
-}
-
 static void Game_MainThread( void *arg )
 {
 	int ret;
@@ -124,7 +105,6 @@ static void Game_MainThread( void *arg )
 	LCUICursor_Hide();		/* 隐藏鼠标游标 */
 	Game_ShowBootScreen();		/* 显示启动画面 */
 	LCUICursor_Show();		/* 显示鼠标游标 */
-	InitViewFPS();
 	ret = Game_Init();
 	if( ret != 0 ) {
 		LCUI_MainLoop_Quit(NULL);
