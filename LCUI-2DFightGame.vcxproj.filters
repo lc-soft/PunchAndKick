@@ -60,6 +60,9 @@
     <ClCompile Include="src\game_AI.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\game_action.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
