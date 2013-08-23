@@ -33,8 +33,6 @@ typedef struct GameMsg {
 	GameMsgBuff msg;	/**< 消息内容 */
 } GameMsg;
 
-extern void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg );
-
 /** 向消息队列中投递消息 */
 extern int Game_PostMsg( GameMsg *msg );
 
