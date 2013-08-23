@@ -259,14 +259,6 @@ void GamePlayer_LockMotion( GamePlayer *player );
 
 void GamePlayer_UnlockMotion( GamePlayer *player );
 
-void GamePlayer_SetLeftWalk( GamePlayer *player );
-
-void GamePlayer_SetRightWalk( GamePlayer *player );
-
-void GamePlayer_SetLeftRun( GamePlayer *player );
-
-void GamePlayer_SetRightRun( GamePlayer *player );
-
 /** 停止奔跑 */
 void GamePlayer_StopRun( GamePlayer *player );
 
