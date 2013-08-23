@@ -3431,6 +3431,40 @@ static void InitSceneText( LCUI_Widget *scene )
 	LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
 }
 
+/** 响应按键的按下 */
+static void GameKeyboardProcKeyDown( int key_code )
+{
+	GamePlayer *target;
+
+	target = GamePlayer_GetPlayerByControlKey( key_code );
+	if( key_code == target->ctrlkey.left ) {
+		if( LCUIKey_IsDoubleHit(target->ctrlkey.left,250) ) {
+			target->control.run = TRUE;
+		}
+	}
+	else if( key_code == target->ctrlkey.right ) {
+		if( LCUIKey_IsDoubleHit(target->ctrlkey.right,250) ) {
+			target->control.run = TRUE;
+		}
+	}
+	if( key_code == target->ctrlkey.a_attack ) {
+		target->control.a_attack = TRUE;
+	}
+	else if( key_code == target->ctrlkey.b_attack ) {
+		target->control.b_attack = TRUE;
+	}
+	else if( key_code == target->ctrlkey.jump ) {
+		target->control.jump = TRUE;
+	}
+}
+
+static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
+{
+	if( event->type == LCUI_KEYDOWN ) {
+		GameKeyboardProcKeyDown( event->key_code );
+	}
+}
+
 int Game_Init(void)
 {
 	int ret;
@@ -3542,40 +3576,6 @@ int Game_Init(void)
 	/* 初始化攻击记录 */
 	Game_InitAttackRecord();
 	return ret;
-}
-
-/** 响应按键的按下 */
-static void GameKeyboardProcKeyDown( int key_code )
-{
-	GamePlayer *target;
-
-	target = GamePlayer_GetPlayerByControlKey( key_code );
-	if( key_code == target->ctrlkey.left ) {
-		if( LCUIKey_IsDoubleHit(target->ctrlkey.left,250) ) {
-			target->control.run = TRUE;
-		}
-	}
-	else if( key_code == target->ctrlkey.right ) {
-		if( LCUIKey_IsDoubleHit(target->ctrlkey.right,250) ) {
-			target->control.run = TRUE;
-		}
-	}
-	if( key_code == target->ctrlkey.a_attack ) {
-		target->control.a_attack = TRUE;
-	}
-	else if( key_code == target->ctrlkey.b_attack ) {
-		target->control.b_attack = TRUE;
-	}
-	else if( key_code == target->ctrlkey.jump ) {
-		target->control.jump = TRUE;
-	}
-}
-
-static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
-{
-	if( event->type == LCUI_KEYDOWN ) {
-		GameKeyboardProcKeyDown( event->key_code );
-	}
 }
 
 /** 同步游戏玩家的按键控制 */
