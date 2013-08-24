@@ -5,1529 +5,681 @@
 #include "game.h"
 #include "game_resource.h"
 
-/** 载入角色的移动动作动画资源 */
-static ActionData* ActionRes_LoadWalk(void)
-{
-	RangeBox range;
-	ActionData *action;
-	LCUI_Graph img_move[4];
-
-	action = Action_Create();
-
-	range.x = -16;
-	range.x_width = 32;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 64;
-	
-	Graph_Init( &img_move[0] );
-	Graph_Init( &img_move[1] );
-	Graph_Init( &img_move[2] );
-	Graph_Init( &img_move[3] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-01", &img_move[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-02", &img_move[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-03", &img_move[2] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "walk-04", &img_move[3] );
-	Action_AddFrame( action, 0,2, &img_move[0], 5 );
-	Action_AddFrame( action, 0,0, &img_move[1], 5 );
-	Action_AddFrame( action, 0,2, &img_move[2], 5 );
-	Action_AddFrame( action, 0,0, &img_move[3], 5 );
-	Action_SetHitRange( action, 0, range );
-	Action_SetHitRange( action, 1, range );
-	Action_SetHitRange( action, 2, range );
-	Action_SetHitRange( action, 3, range );
-	return action;
-}
-
-/** 载入角色的站立动作动画资源 */
-static ActionData* ActionRes_LoadStance(void)
-{
-	RangeBox range;
-	ActionData *action;
-	LCUI_Graph img_stance;
-	
-	action = Action_Create();
-	range.x = -16;
-	range.x_width = 32;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 64;
-
-	Graph_Init( &img_stance );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "stance-01", &img_stance );
-	Action_AddFrame( action, 0,0, &img_stance, 100 );
-	Action_SetHitRange( action, 0, range );
-	return action;
-}
-
-/** 载入角色的站立动作动画资源 */
-static ActionData* ActionRes_LoadReady(void)
-{
-	ActionData *action;
-	LCUI_Graph img_ready;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-	hit_range.x = -16;
-	hit_range.x_width = 44;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 62;
-
-	Graph_Init( &img_ready );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ready-01", &img_ready );
-	Action_AddFrame( action, -6,0, &img_ready, 50 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-/** 载入角色的奔跑动作动画资源 */
-static ActionData* ActionRes_LoadRun(void)
-{
-	int i;
-	ActionData *action;
-	LCUI_Graph img_run[6];
-	RangeBox hit_range;
-	char path[512];
-	
-	action = Action_Create();
-
-	hit_range.x = -24;
-	hit_range.x_width = 48;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	for(i=0; i<6; ++i) {
-		Graph_Init( &img_run[i] );
-		sprintf( path, "run-%02d", i+1 );
-		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img_run[i] );
-		Action_AddFrame( action, 0,0, &img_run[i], 3 );
-		Action_SetHitRange( action, i, hit_range );
-	}
-	return action;
-}
-
-/** 载入角色的A攻击动作的动画资源 */
-static ActionData* ActionRes_LoadAAttack(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img_attack[3];
-	
-	action = Action_Create();
-	
-	attack_range.x = 20;
-	attack_range.x_width = 26;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 31;
-	attack_range.z_width = 18;
-
-	hit_range.x = -18;
-	hit_range.x_width = 38;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 62;
-
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] ); 
-	Graph_Init( &img_attack[2] );
-
-	//GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
-	//Action_AddFrame( action, -14,0, &img_attack[0], 1 );
-	//Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-02", &img_attack[1] );
-	Action_AddFrame( action, -14,0, &img_attack[1], 5 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-03", &img_attack[2] );
-	Action_AddFrame( action, -14,0, &img_attack[2], 5 );
-	Action_SetAttackRange( action, 1, attack_range );
-	Action_SetHitRange( action, 1, hit_range );
-
-	//Action_AddFrame( action, -14,0, &img_attack[1], 1 );
-	//Action_SetHitRange( action, 3, hit_range );
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 载入角色的B攻击动作的动画资源 */
-static ActionData* ActionRes_LoadBAttack(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img_attack[3];
-	
-	action = Action_Create();
-	
-	attack_range.x = 10;
-	attack_range.x_width = 25;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 44;
-
-	hit_range.x = -13;
-	hit_range.x_width = 34;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-01", &img_attack[0] );
-	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img_attack[1] );
-	Action_AddFrame( action, -11,0, &img_attack[1], 5 );
-	Action_SetHitRange( action, 1, hit_range );
-	Action_SetAttackRange( action, 1, attack_range );
-	
-	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
-	Action_SetHitRange( action, 2, hit_range );
-
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-static ActionData* ActionRes_LoadASprintAttack(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img_attack[2];
-	
-	action = Action_Create();
-	
-	attack_range.x = -13;
-	attack_range.x_width = 36;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 31;
-	attack_range.z_width = 25;
-
-	hit_range.x = -23;
-	hit_range.x_width = 38;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 58;
-
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-sprint-attack-01", &img_attack[0] );
-	Action_AddFrame( action, 0,0, &img_attack[0], 5 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-sprint-attack-02", &img_attack[1] );
-	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
-	Action_SetHitRange( action, 1, hit_range );
-	Action_SetAttackRange( action, 1, attack_range );
-	
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-static ActionData* ActionRes_LoadBSprintAttack(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img_attack[2];
-	
-	action = Action_Create();
-	
-	attack_range.x = 10;
-	attack_range.x_width = 25;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 44;
-
-	hit_range.x = -13;
-	hit_range.x_width = 34;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-sprint-attack-01", &img_attack[0] );
-	Action_AddFrame( action, 0,0, &img_attack[0], 5 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-sprint-attack-02", &img_attack[1] );
-	Action_AddFrame( action, 0,0, &img_attack[1], 100 );
-	Action_SetAttackRange( action, 1, attack_range );
-	Action_SetHitRange( action, 1, hit_range );
-
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 载入角色的冲刺+跳跃+A攻击动作的动画资源 */
-static ActionData* ActionRes_LoadASprintJumpAttack(void)
-{
-	ActionData *action;
-	LCUI_Graph img_attack[3];
-	RangeBox hit_range, attack_range;
-
-	action = Action_Create();
-	
-	attack_range.x = 20;
-	attack_range.x_width = 26;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 31;
-	attack_range.z_width = 18;
-
-	hit_range.x = -18;
-	hit_range.x_width = 38;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 62;
-
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] );
-	Graph_Init( &img_attack[2] ); 
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
-	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-02", &img_attack[1] );
-	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
-	Action_SetHitRange( action, 1, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-03", &img_attack[2] );
-	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
-	Action_SetAttackRange( action, 2, attack_range );
-	Action_SetHitRange( action, 2, hit_range );
-	
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 载入角色的冲刺+跳跃+B攻击动作的动画资源 */
-static ActionData* ActionRes_LoadBSprintJumpAttack(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img_attack[2];
-	
-	action = Action_Create();
-	
-	attack_range.x = 10;
-	attack_range.x_width = 25;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 44;
-
-	hit_range.x = -13;
-	hit_range.x_width = 34;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	Graph_Init( &img_attack[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-01", &img_attack[0] );
-	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	Graph_Init( &img_attack[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img_attack[1] );
-	Action_AddFrame( action, -11,0, &img_attack[1], 1000 );
-	Action_SetHitRange( action, 1, hit_range );
-	Action_SetAttackRange( action, 1, attack_range );
-
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 载入角色的跳跃+A攻击动作的动画资源 */
-static ActionData* ActionRes_LoadAJumpAttack(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img_attack[3];
-	
-	action = Action_Create();
-	
-	attack_range.x = 20;
-	attack_range.x_width = 26;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 31;
-	attack_range.z_width = 18;
-
-	hit_range.x = -18;
-	hit_range.x_width = 38;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 62;
-
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] );
-	Graph_Init( &img_attack[2] ); 
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-01", &img_attack[0] );
-	Action_AddFrame( action, -14,0, &img_attack[0], 3 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-02", &img_attack[1] );
-	Action_AddFrame( action, -14,0, &img_attack[1], 3 );
-	Action_SetHitRange( action, 1, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "A-attack-03", &img_attack[2] );
-	Action_AddFrame( action, -14,0, &img_attack[2], 1000 );
-	Action_SetHitRange( action, 2, hit_range );
-	Action_SetAttackRange( action, 2, attack_range );
-	
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 载入角色的跳跃+B攻击动作的动画资源 */
-static ActionData* ActionRes_LoadBJumpAttack(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img_attack[3];
-	
-	action = Action_Create();
-	
-	attack_range.x = 10;
-	attack_range.x_width = 25;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 44;
-
-	hit_range.x = -13;
-	hit_range.x_width = 34;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-01", &img_attack[0] );
-	Action_AddFrame( action, -11,0, &img_attack[0], 5 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img_attack[1] );
-	Action_AddFrame( action, -11,0, &img_attack[1], 1000 );
-	Action_SetHitRange( action, 1, hit_range );
-	Action_SetAttackRange( action, 1, attack_range );
-	
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-static ActionData* ActionRes_LoadJump(void)
-{
-	ActionData *action;
-	LCUI_Graph img_jump;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-	
-	hit_range.x = -16;
-	hit_range.x_width = 32;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 54;
-
-	Graph_Init( &img_jump );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump", &img_jump );
-	/* 让该帧停留20秒，应该够了，现阶段不会遇到从起跳到着陆需要20秒的情况 */
-	Action_AddFrame( action, 0,0, &img_jump, 1000 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-static ActionData* ActionRes_LoadSquat(void)
-{
-	ActionData *action;
-	LCUI_Graph img_squat;
-	
-	action = Action_Create();
-	Graph_Init( &img_squat );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "squat", &img_squat );
-	Action_AddFrame( action, 0,0, &img_squat, 10 );
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-static ActionData* ActionRes_LoadHit(void)
-{
-	ActionData *action;
-	LCUI_Graph img_hit;
-	RangeBox hit_range;
-
-	action = Action_Create();
-	hit_range.x = -23;
-	hit_range.x_width = 46;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 62;
-	Graph_Init( &img_hit );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit", &img_hit );
-	Action_AddFrame( action, 0,0, &img_hit, 10 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-static ActionData* ActionRes_LoadRest(void)
-{
-	ActionData *action;
-	LCUI_Graph img_rest[2];
-	RangeBox hit_range;
-
-	action = Action_Create();
-	hit_range.x = -16;
-	hit_range.x_width = 40;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 56;
-	Graph_Init( &img_rest[0] );
-	Graph_Init( &img_rest[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-01", &img_rest[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-02", &img_rest[1] );
-	Action_AddFrame( action, -6,0, &img_rest[0], 25 );
-	Action_AddFrame( action, -6,0, &img_rest[1], 25 );
-	Action_SetHitRange( action, 0, hit_range );
-	Action_SetHitRange( action, 1, hit_range );
-
-	return action;
-}
-
-/** 终结一击 */
-static ActionData *ActionRes_LoadFinalBlow( void )
-{
-	ActionData *action;
-	LCUI_Graph img_attack[3];
-	RangeBox hit_range, attack_range;
-
-	action = Action_Create();
-	hit_range.x = -4;
-	hit_range.x_width = 36;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-	attack_range.x = -12;
-	attack_range.x_width = 55;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 64;
-	Graph_Init( &img_attack[0] );
-	Graph_Init( &img_attack[1] );
-	Graph_Init( &img_attack[2] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "final-blow-01", &img_attack[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "final-blow-02", &img_attack[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "final-blow-03", &img_attack[2] );
-	Action_AddFrame( action, -2, 0, &img_attack[0], 3 );
-	Action_AddFrame( action, -2, 0, &img_attack[1], 3 );
-	Action_AddFrame( action, -2, 0, &img_attack[2], 10 );
-	Action_SetHitRange( action, 0, hit_range );
-	Action_SetHitRange( action, 1, hit_range );
-	Action_SetHitRange( action, 2, hit_range );
-	Action_SetAttackRange( action, 1, attack_range );
-	Action_SetAttackRange( action, 2, attack_range );
-	return action;
-}
-
-/** 躺着 */
-static ActionData *ActionRes_LoadLying(void)
-{
-	ActionData *action;
-	LCUI_Graph img_lying;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-
-	hit_range.x = -32;
-	hit_range.x_width = 64;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 26;
-
-	Graph_Init( &img_lying );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying", &img_lying );
-	Action_AddFrame( action, 0, 0, &img_lying, 50 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-/** 躺着也被打 */
-static ActionData *ActionRes_LoadLyingHit(void)
-{
-	ActionData *action;
-	LCUI_Graph img_lying;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-
-	hit_range.x = -32;
-	hit_range.x_width = 64;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 26;
-
-	Graph_Init( &img_lying );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying-hit", &img_lying );
-	Action_AddFrame( action, 0, 0, &img_lying, 10 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-/** 趴着 */
-static ActionData *ActionRes_LoadTummy(void)
-{
-	ActionData *action;
-	LCUI_Graph img_tummy;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-
-	hit_range.x = -32;
-	hit_range.x_width = 64;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 26;
-
-	Graph_Init( &img_tummy );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy", &img_tummy );
-	Action_AddFrame( action, 0, 0, &img_tummy, 10 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-/** 趴着也被打 */
-static ActionData *ActionRes_LoadTummyHit(void)
-{
-	ActionData *action;
-	LCUI_Graph img_tummy;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-
-	hit_range.x = -32;
-	hit_range.x_width = 64;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 26;
-
-	Graph_Init( &img_tummy );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy-hit", &img_tummy );
-	Action_AddFrame( action, 0, 0, &img_tummy, 5 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-/** 被击飞（头朝地） */
-static ActionData *ActionRes_LoadHitFlyFall(void)
-{
-	ActionData *action;
-	LCUI_Graph img;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "fall", &img );
-	Action_AddFrame( action, 0, 0, &img, 1000 );
-	
-	hit_range.x = -24;
-	hit_range.x_width = 32;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 50;
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-/** 普通的击飞 */
-static ActionData *ActionRes_LoadHitFly(void)
-{
-	ActionData *action;
-	LCUI_Graph img;
-	RangeBox hit_range;
-	
-	action = Action_Create();
-
-	hit_range.x = -18;
-	hit_range.x_width = 38;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 64;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "hit-fly", &img );
-	Action_AddFrame( action, -6, 0, &img, 1000 );
-	Action_SetHitRange( action, 0, hit_range );
-
-	return action;
-}
-
-/** 向前方滚动 */
-static ActionData *ActionRes_LoadForwardRoll(void)
-{
-	int i;
-	char path[256];
-	ActionData *action;
-	LCUI_Graph img[8];
-	RangeBox hit_range;
-	
-	action = Action_Create();
-	
-	hit_range.x = -22;
-	hit_range.x_width = 44;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 44;
-
-	for( i=0; i<8; ++i ) {
-		Graph_Init( &img[i] );
-		sprintf( path, "roll-%02d", i+1 );
-		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img[i] );
-		Action_AddFrame( action, 0, 0, &img[i], 2 );
-		Action_SetHitRange( action, i, hit_range );
-	}
-
-	return action;
-}
-
-/** 向后方滚动 */
-static ActionData *ActionRes_LoadBackwardRoll(void)
-{
-	int i;
-	char path[256];
-	ActionData *action;
-	LCUI_Graph img[8];
-	RangeBox hit_range;
-	
-	action = Action_Create();
-	
-	hit_range.x = -22;
-	hit_range.x_width = 44;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 44;
-
-	for( i=0; i<8; ++i ) {
-		Graph_Init( &img[i] );
-		sprintf( path, "roll-%02d", 8-i );
-		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img[i] );
-		Action_AddFrame( action, 0, 0, &img[i], 2 );
-		Action_SetHitRange( action, i, hit_range );
-	}
-
-	return action;
-}
-
-/** 跳跃踩 */
-static ActionData *ActionRes_LoadJumpStomp(void)
-{
-	ActionData *action;
-	LCUI_Graph img;
-	RangeBox attack_range, hit_range;
-	
-	action = Action_Create();
-
-	hit_range.x = -16;
-	hit_range.x_width = 32;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	attack_range.x = -16;
-	attack_range.x_width = 32;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 16;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-stomp", &img );
-	Action_AddFrame( action, 0, 0, &img, 1000 );
-	Action_SetHitRange( action, 0, hit_range );
-	Action_SetAttackRange( action, 0, attack_range );
-
-	return action;
-}
-
-/** 跳跃肘击 */
-static ActionData *ActionRes_LoadJumpElbow(void)
-{
-	ActionData *action;
-	LCUI_Graph img;
-	RangeBox attack_range, hit_range;
-	
-	action = Action_Create();
-
-	hit_range.x = -31;
-	hit_range.x_width = 62;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 48;
-
-	attack_range.x = -11;
-	attack_range.x_width = 42;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = -2;
-	attack_range.z_width = 20;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-elbow", &img );
-	Action_AddFrame( action, 0, 0, &img, 1000 );
-	Action_SetHitRange( action, 0, hit_range );
-	Action_SetAttackRange( action, 0, attack_range );
-
-	return action;
-}
-
-/** 抓住 */
-static ActionData *ActionRes_LoadCatch(void)
-{
-	ActionData *action;
-	LCUI_Graph img;
-	RangeBox hit_range;
-	
-	Graph_Init( &img );
-	action = Action_Create();
-
-	hit_range.x = -19;
-	hit_range.x_width = 38;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "catch", &img );
-	Action_AddFrame( action, 0, 0, &img, 5 );
-	Action_SetHitRange( action, 0, hit_range );
-	
-	return action;
-}
-
-/** 被抓住 */
-static ActionData *ActionRes_LoadBeCatch(void)
-{
-	ActionData *action;
-	LCUI_Graph img;
-	RangeBox hit_range;
-	
-	Graph_Init( &img );
-	action = Action_Create();
-	
-	hit_range.x = -16;
-	hit_range.x_width = 40;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 56;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-02", &img );
-	Action_AddFrame( action, -6, 0, &img, 5 );
-	Action_SetHitRange( action, 0, hit_range );
-	
-	return action;
-}
-
-/** 背面被抓住 */
-static ActionData *ActionRes_LoadBackBeCatch(void)
-{
-	ActionData *action;
-	LCUI_Graph img;
-	RangeBox hit_range;
-	
-	Graph_Init( &img );
-	action = Action_Create();
-	
-	hit_range.x = -16;
-	hit_range.x_width = 40;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 56;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "back-be-catch", &img );
-	Action_AddFrame( action, -6, 0, &img, 5 );
-	Action_SetHitRange( action, 0, hit_range );
-	
-	return action;
-}
-/** 正面压制技能（A） */
-static ActionData *ActionRes_LoadFrontCatchSkillA(void)
-{
-	ActionData *action;
-	LCUI_Graph img[4];
-	RangeBox hit_range;
-	
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	Graph_Init( &img[2] );
-	Graph_Init( &img[3] );
-	
-	action = Action_Create();
-
-	hit_range.x = -17;
-	hit_range.x_width = 50;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-01", &img[0] );
-	Action_AddFrame( action, 0, 0, &img[0], 5 );
-	Action_SetHitRange( action, 0, hit_range );
-	
-	hit_range.x = -17;
-	hit_range.x_width = 54;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-02", &img[1] );
-	Action_AddFrame( action, 0, 0, &img[1], 5 );
-	Action_SetHitRange( action, 1, hit_range );
-	
-	hit_range.x = -15;
-	hit_range.x_width = 64;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 8;
-	hit_range.z_width = 50;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-03", &img[2] );
-	Action_AddFrame( action, 0, 0, &img[2], 5 );
-	Action_SetHitRange( action, 2, hit_range );
-
-	hit_range.x = -30;
-	hit_range.x_width = 64;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 50;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "elbow-04", &img[3] );
-	Action_AddFrame( action, 0, 0, &img[3], 5 );
-	Action_AddFrame( action, 0, 5, &img[3], 5 );
-	Action_AddFrame( action, 0, 0, &img[3], 10 );
-	Action_SetHitRange( action, 3, hit_range );
-	Action_SetHitRange( action, 3, hit_range );
-	Action_SetHitRange( action, 3, hit_range );
-	/** 该动作不需要重复播放 */
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 被面压制技能（A） */
-static ActionData *ActionRes_LoadBackCatchSkillA(void)
-{
-	ActionData *action;
-	LCUI_Graph img[3];
-	RangeBox hit_range;
-	
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	Graph_Init( &img[2] );
-	
-	action = Action_Create();
-
-	hit_range.x = -21;
-	hit_range.x_width = 42;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 56;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift", &img[0] );
-	Action_AddFrame( action, 0, 0, &img[0], 10 );
-	Action_SetHitRange( action, 0, hit_range );
-	
-	hit_range.x = -16;
-	hit_range.x_width = 32;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-stomp", &img[1] );
-	Action_AddFrame( action, 0, 5, &img[1], 5 );
-	Action_SetHitRange( action, 1, hit_range );
-	Action_AddFrame( action, 0, 0, &img[1], 10 );
-	Action_SetHitRange( action, 1, hit_range );
-
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "squat", &img[2] );
-	Action_AddFrame( action, 0, 0, &img[2], 5 );
-	/** 该动作不需要重复播放 */
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-static ActionData* ActionRes_LoadKick(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img;
-	
-	action = Action_Create();
-	
-	attack_range.x = 10;
-	attack_range.x_width = 25;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 44;
-
-	hit_range.x = -13;
-	hit_range.x_width = 34;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "B-attack-02", &img );
-	Action_AddFrame( action, -11,0, &img, 5 );
-	Action_SetAttackRange( action, 0, attack_range );
-	Action_SetHitRange( action, 0, hit_range );
-	return action;
-}
-
-/** 翻滚击 */
-static ActionData *ActionRes_LoadSpinHit(void)
-{
-	int i;
-	char path[256];
-	ActionData *action;
-	LCUI_Graph img[8];
-	RangeBox hit_range;
-	
-	action = Action_Create();
-	
-	hit_range.x = -22;
-	hit_range.x_width = 44;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 44;
-	
-	for( i=0; i<8; ++i ) {
-		Graph_Init( &img[i] );
-		sprintf( path, "roll-%02d", i+1 );
-		GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, path, &img[i] );
-		Action_AddFrame( action, 0, 0, &img[i], 2 );
-		Action_SetHitRange( action, i, hit_range );
-		/* 攻击范围和受攻击范围是一样的 */
-		Action_SetAttackRange( action, i, hit_range );
-	}
-	
-	Action_SetNewAttack( action, 7, TRUE );
-	return action;
-}
-
-/** 爆裂腿 */
-static ActionData* ActionRes_LoadBombKick(void)
-{
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	LCUI_Graph img;
-	
-	action = Action_Create();
-	
-	attack_range.x = -21;
-	attack_range.x_width = 42;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 60;
-
-	hit_range.x = 0;
-	hit_range.x_width = 24;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "run-04", &img );
-	Action_AddFrame( action, 0,0, &img, 1000 );
-	Action_SetAttackRange( action, 0, attack_range );
-	Action_SetHitRange( action, 0, hit_range );
-
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 高速踩踏 */
-static ActionData* ActionRes_LoadMachStomp(void)
-{
-	LCUI_Graph img[4];
-	ActionData *action;
-	RangeBox hit_range, attack_range;
-	
-	action = Action_Create();
-
-	attack_range.x = -22;
-	attack_range.x_width = 44;
-	attack_range.y = -GLOBAL_Y_WIDTH/2;
-	attack_range.y_width = GLOBAL_Y_WIDTH;
-	attack_range.z = 0;
-	attack_range.z_width = 51;
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	Graph_Init( &img[2] );
-	Graph_Init( &img[3] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "defense", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "jump-stomp", &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "defense", &img[2] );
-	Graph_HorizFlip( &img[1], &img[3] );
-	Action_AddFrame( action, 0,0, &img[0], 3 );
-	Action_AddFrame( action, 0,0, &img[1], 3 );
-	Action_AddFrame( action, 0,0, &img[2], 3 );
-	Action_AddFrame( action, 0,0, &img[3], 3 );
-	
-	hit_range.x = -22;
-	hit_range.x_width = 44;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 51;
-
-	Action_SetHitRange( action, 0, hit_range );
-	Action_SetHitRange( action, 2, hit_range );
-	
-	hit_range.x = -16;
-	hit_range.x_width = 32;
-	hit_range.y = -GLOBAL_Y_WIDTH/2;
-	hit_range.y_width = GLOBAL_Y_WIDTH;
-	hit_range.z = 0;
-	hit_range.z_width = 60;
-
-	Action_SetHitRange( action, 1, hit_range );
-	Action_SetHitRange( action, 3, hit_range );
-
-	Action_SetAttackRange( action, 1, attack_range );
-	Action_SetNewAttack( action, 1, TRUE );
-	Action_SetAttackRange( action, 3, attack_range );
-	Action_SetNewAttack( action, 3, TRUE );
-	return action;
-}
-
-static ActionData *ActionRes_LoadPull(void)
-{
-	LCUI_Graph img[2];
-	ActionData *action;
-	RangeBox range;
-
-	action = Action_Create();
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "pull", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "push", &img[1] );
-	Action_AddFrame( action, 12, 0, &img[0], 10 );
-	Action_AddFrame( action, -12, 0, &img[1], 15 );
-	
-	range.x = 13;
-	range.x_width = 54;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 58;
-	Action_SetHitRange( action, 0, range );
-	
-	range.x = -22;
-	range.x_width = 44;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 56;
-	Action_SetHitRange( action, 1, range );
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-static ActionData *ActionRes_LoadPush(void)
-{
-	LCUI_Graph img[2];
-	ActionData *action;
-	RangeBox range;
-
-	action = Action_Create();
-	range.x = -22;
-	range.x_width = 44;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 56;
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "rest-02", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "push", &img[1] );
-	Action_AddFrame( action, -6, 0, &img[0], 10 );
-	Action_AddFrame( action, -12, 0, &img[1], 10 );
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-static ActionData *ActionRes_LoadWeakWalk(void)
-{	
-	LCUI_Graph img[2];
-	ActionData *action;
-	RangeBox range;
-
-	action = Action_Create();
-	range.x = -22;
-	range.x_width = 44;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 56;
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "weak-walk-01", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "weak-walk-02", &img[1] );
-	Action_AddFrame( action, -6, 2, &img[0], 7 );
-	Action_AddFrame( action, -6, 0, &img[1], 7 );
-	Action_SetHitRange( action, 0, range );
-	Action_SetHitRange( action, 1, range );
-	return action;
-}
-
-/** 举着，站立 */
-ActionData *ActionRes_LoadLiftStance(void)
-{
-	LCUI_Graph img;
-	ActionData *action;
-	RangeBox range;
-
-	action = Action_Create();
-	
-	range.x = -17;
-	range.x_width = 34;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 56;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift", &img );
-	Action_AddFrame( action, 0,0, &img, 5 );
-	Action_SetHitRange( action, 0, range );
-
-	return action;
-}
-
-/** 举着，行走 */
-ActionData *ActionRes_LoadLiftWalk(void)
-{
-	LCUI_Graph img[4];
-	ActionData *action;
-	RangeBox range;
-	
-	action = Action_Create();
-	
-	range.x = -17;
-	range.x_width = 34;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 56;
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	Graph_Init( &img[2] );
-	Graph_Init( &img[3] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-01", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-02", &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-03", &img[2] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-walk-04", &img[3] );
-	Action_AddFrame( action, 0,-2, &img[0], 8 );
-	Action_AddFrame( action, 0,0, &img[1], 8 );
-	Action_AddFrame( action, 0,-2, &img[2], 8 );
-	Action_AddFrame( action, 0,0, &img[3], 8 );
-	Action_SetHitRange( action, 0, range );
-	Action_SetHitRange( action, 1, range );
-	Action_SetHitRange( action, 2, range );
-	Action_SetHitRange( action, 3, range );
-
-	return action;
-}
-
-/** 举着，奔跑 */
-ActionData *ActionRes_LoadLiftRun(void)
-{
-	LCUI_Graph img[2];
-	ActionData *action;
-	RangeBox range;
-	
-	action = Action_Create();
-	
-	range.x = -17;
-	range.x_width = 34;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 56;
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-run-01", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-run-02", &img[1] );
-	Action_AddFrame( action, 0,10, &img[0], 10 );
-	Action_AddFrame( action, 0,0, &img[1], 5 );
-	Action_SetHitRange( action, 0, range );
-	Action_SetHitRange( action, 1, range );
-
-	return action;
-}
-
-static ActionData* ActionRes_LoadLiftJump(void)
-{
-	LCUI_Graph img;
-	ActionData *action;
-	RangeBox range;
-	
-	action = Action_Create();
-	
-	range.x = -21;
-	range.x_width = 42;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 60;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-jump", &img );
-	Action_AddFrame( action, 0,10, &img, 10 );
-	Action_SetHitRange( action, 0, range );
-
-	return action;
-}
-
-static ActionData* ActionRes_LoadLiftFall(void)
-{
-	LCUI_Graph img;
-	ActionData *action;
-	RangeBox range;
-	
-	action = Action_Create();
-	
-	range.x = -21;
-	range.x_width = 42;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 60;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lift-fall", &img );
-	Action_AddFrame( action, 0,10, &img, 10 );
-	Action_SetHitRange( action, 0, range );
-
-	return action;
-}
-
-/** 投掷、抛 */
-static ActionData *ActionRes_LoadThrow(void)
-{	
-	LCUI_Graph img;
-	ActionData *action;
-	RangeBox range;
-	
-	action = Action_Create();
-	
-	range.x = -12;
-	range.x_width = 38;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 56;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "push", &img );
-	Action_AddFrame( action, -11,0, &img, 10 );
-	Action_SetHitRange( action, 0, range );
-
-	return action;
-}
-
-static ActionData *ActionRes_LoadRide(void)
-{
-	LCUI_Graph img;
-	ActionData *action;
-	RangeBox range;
-	
-	action = Action_Create();
-	
-	range.x = -12;
-	range.x_width = 32;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 48;
-
-	Graph_Init( &img );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride", &img );
-	Action_AddFrame( action, 0,5, &img, 10 );
-	Action_SetHitRange( action, 0, range );
-
-	return action;
-}
-
-static ActionData *ActionRes_LoadRideAttack(void)
-{
-	LCUI_Graph img[2];
-	ActionData *action;
-	RangeBox range;
-	
-	action = Action_Create();
-	
-	range.x = -12;
-	range.x_width = 32;
-	range.y = -GLOBAL_Y_WIDTH/2;
-	range.y_width = GLOBAL_Y_WIDTH;
-	range.z = 0;
-	range.z_width = 48;
-
-	Graph_Init( &img[0] );
-	Graph_Init( &img[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride-attack-01", &img[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "ride-attack-02", &img[1] );
-	Action_AddFrame( action, 0,5, &img[0], 5 );
-	Action_AddFrame( action, 0,5, &img[1], 5 );
-	Action_SetHitRange( action, 0, range );
-	Action_SetHitRange( action, 1, range );
-	Action_SetReplay( action, FALSE );
-	return action;
-}
-
-/** 躺着，快死了 */
-ActionData* ActionRes_LoadLyingDying(void)
-{
-	ActionData *action;
-	LCUI_Graph img_lying[2];
-
-	action = Action_Create();
-	Graph_Init( &img_lying[0] );
-	Graph_Init( &img_lying[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying", &img_lying[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "lying-hit", &img_lying[1] );
-	Action_AddFrame( action, 0, 0, &img_lying[0], 5 );
-	Action_AddFrame( action, 0, 0, &img_lying[1], 5 );
-	return action;
-}
-
-/** 趴着，快死了 */
-ActionData* ActionRes_LoadTummyDying(void)
-{
-	ActionData *action;
-	LCUI_Graph img_tummy[2];
-
-	action = Action_Create();
-	Graph_Init( &img_tummy[0] );
-	Graph_Init( &img_tummy[1] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy", &img_tummy[0] );
-	GameGraphRes_GetGraph( ACTION_RES_CLASS_RIKI, "tummy-hit", &img_tummy[1] );
-	Action_AddFrame( action, 0, 0, &img_tummy[0], 5 );
-	Action_AddFrame( action, 0, 0, &img_tummy[1], 5 );
-	return action;
-}
+typedef struct ActionFrameInfo_ {
+	LCUI_BOOL enable;
+	LCUI_BOOL new_attack;
+	LCUI_BOOL horiz_flip;
+	char *graph_name;
+	int remain_time;
+	int offset_x, offset_y;
+	RangeBox hit, atk;
+} ActionFrameInfo;
+
+typedef struct ActionInfo_ {
+	int action_type;
+	LCUI_BOOL replay;
+	ActionFrameInfo frame[10];
+} ActionInfo;
+
+#define MAX_ACTION_NUM	50
+#define END_ACTION_FRAME {FALSE,}
+
+static const ActionInfo action_set[MAX_ACTION_NUM]={
+	/* 步行动作 */
+	{ ACTION_WALK, TRUE, {
+		{ TRUE, FALSE, FALSE, "walk-01", 5, 0, 2,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 64},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "walk-02", 5, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 64},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "walk-03", 5, 0, 2,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 64},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "walk-04", 5, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 64},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	} },
+	/* 站立动作 */
+	{ ACTION_STANCE, TRUE, {
+		{ TRUE, FALSE, FALSE, "stance-01", 100, 0, 0, 
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 64},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 待攻击动作 */
+	{ ACTION_READY, TRUE, {
+		{ TRUE, FALSE, FALSE, "ready-01", 50, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 奔跑动作 */
+	{ ACTION_RUN, TRUE, {
+		{ TRUE, FALSE, FALSE, "run-01", 3, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 48, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "run-02", 3, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 48, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "run-03", 3, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 48, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "run-04", 3, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 48, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "run-05", 3, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 48, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "run-06", 3, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 48, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* A 攻击动作 */
+	{ ACTION_A_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "A-attack-02", 5, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "A-attack-03", 5, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 62},
+			{20, -GLOBAL_Y_WIDTH/2, 31, 26, GLOBAL_Y_WIDTH, 18} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* B 攻击动作 */
+	{ ACTION_B_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "B-attack-01", 5, -11, 0, 
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "B-attack-02", 5, -11, 0, 
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 5, -11, 0, 
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* A 冲刺攻击动作 */
+	{ ACTION_AS_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "A-sprint-attack-01", 5, 0, 0,
+			{-23, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 58},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "A-sprint-attack-02", 100, 0, 0,
+			{-23, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 58},
+			{-13, -GLOBAL_Y_WIDTH/2, 31, 36, GLOBAL_Y_WIDTH, 25},
+		},
+		END_ACTION_FRAME
+	}},
+	/* B 冲刺攻击动作 */
+	{ ACTION_BS_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "B-sprint-attack-01", 5, 0, 0,
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "B-sprint-attack-02", 100, 0, 0,
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44},
+		},
+		END_ACTION_FRAME
+	}},
+	/* A 冲刺跳跃攻击动作 */
+	{ ACTION_ASJ_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, -GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "A-attack-02", 3, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, -GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "A-attack-03", 100, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, -GLOBAL_Y_WIDTH, 62},
+			{-13, -GLOBAL_Y_WIDTH/2, 31, 36, GLOBAL_Y_WIDTH, 18},
+		},
+		END_ACTION_FRAME
+	}},
+	/* B 冲刺跳跃攻击动作 */
+	{ ACTION_BSJ_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "B-attack-01", 5, -11, 0, 
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "B-attack-02", 100, -11, 0, 
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44},
+		},
+		END_ACTION_FRAME
+	}},
+	/* A 跳跃攻击动作 */
+	{ ACTION_AJ_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "A-attack-02", 3, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "A-attack-03", 100, -14, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 62},
+			{20, -GLOBAL_Y_WIDTH/2, 31, 26, GLOBAL_Y_WIDTH, 18},
+		},
+		END_ACTION_FRAME
+	}},
+	/* B 跳跃攻击动作 */
+	{ ACTION_BJ_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "B-attack-01", 5, -11, 0,
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "B-attack-02", 100, -11, 0,
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44},
+		},
+		END_ACTION_FRAME
+	}},
+	/* 跳跃动作 */
+	{ ACTION_JUMP, TRUE, {
+		{ TRUE, FALSE, FALSE, "jump", 100, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 54},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 下蹲动作 */
+	{ ACTION_SQUAT, FALSE, {
+		{ TRUE, FALSE, FALSE, "squat", 10, 0, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 被击中 动作 */
+	{ ACTION_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "hit", 5, 0, 0,
+			{-23, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 喘气/歇息 动作 */
+	{ ACTION_HIT, TRUE, {
+		{ TRUE, FALSE, FALSE, "rest-01", 25, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "rest-02", 25, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 终结一击 动作 */
+	{ ACTION_FINAL_BLOW, FALSE, {
+		{ TRUE, FALSE, FALSE, "final-blow-01", 3, -2, 0,
+			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "final-blow-02", 3, -2, 0,
+			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
+			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
+		},
+		{ TRUE, FALSE, FALSE, "final-blow-02", 10, -2, 0,
+			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 55, GLOBAL_Y_WIDTH, 64},
+		},
+		END_ACTION_FRAME
+	}},
+	/* 躺地动作 */
+	{ ACTION_LYING, FALSE, {
+		{ TRUE, FALSE, FALSE, "lying", 100, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 躺着被击中 动作 */
+	{ ACTION_LYING_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "lying-hit", 5, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 趴地动作 */
+	{ ACTION_TUMMY, FALSE, {
+		{ TRUE, FALSE, FALSE, "tummy", 100, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 趴着被击中 动作 */
+	{ ACTION_TUMMY_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "tummy-hit", 5, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 被击飞（头朝地坠落） 动作 */
+	{ ACTION_TUMMY_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "fall", 100, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 被击飞 动作 */
+	{ ACTION_TUMMY_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "hit-fly", 100, -6, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 64},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 向前翻滚 动作 */
+	{ ACTION_F_ROLL, TRUE, {
+		{ TRUE, FALSE, FALSE, "roll-01", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-02", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-03", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-04", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-05", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-06", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-07", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-08", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 向后翻滚 动作 */
+	{ ACTION_F_ROLL, TRUE, {
+		{ TRUE, FALSE, FALSE, "roll-08", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-07", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-06", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-05", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-04", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-03", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-02", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-01", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 跳跃踩 动作 */
+	{ ACTION_JUMP_STOMP, FALSE, {
+		{ TRUE, FALSE, FALSE, "jump-stomp", 100, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 16}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 跳跃肘击 动作 */
+	{ ACTION_JUMP_ELBOW, FALSE, {
+		{ TRUE, FALSE, FALSE, "jump-elbow", 100, 0, 0,
+			{-31, -GLOBAL_Y_WIDTH/2, 0, 62, GLOBAL_Y_WIDTH, 48},
+			{-11, -GLOBAL_Y_WIDTH/2, -2, 42, GLOBAL_Y_WIDTH, 20}
+		},
+		END_ACTION_FRAME
+	}},
+	/** 擒住 动作 */
+	{ ACTION_CATCH, FALSE, {
+		{ TRUE, FALSE, FALSE, "catch", 5, 0, 0,
+			{-19, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 被擒住 动作 */
+	{ ACTION_BE_CATCH, FALSE, {
+		{ TRUE, FALSE, FALSE, "rest-02", 5, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 背面被擒住 动作 */
+	{ ACTION_BACK_BE_CATCH, FALSE, {
+		{ TRUE, FALSE, FALSE, "back-be-catch", 5, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 正面压制技能（A） 动作 */
+	{ ACTION_CATCH_SKILL_FA, FALSE, {
+		{ TRUE, FALSE, FALSE, "elbow-01", 5, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 50, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "elbow-02", 5, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 54, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "elbow-03", 5, 0, 0,
+			{-15, -GLOBAL_Y_WIDTH/2, 8, 64, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "elbow-04", 5, 0, 0,
+			{-30, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "elbow-04", 5, 5, 0,
+			{-30, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "elbow-04", 5, 0, 0,
+			{-30, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 背面压制技能A 动作 */
+	{ ACTION_CATCH_SKILL_BA, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift", 10, 0, 0,
+			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "jump-stomp", 5, 0, 5,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "jump-stomp", 10, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "squat", 5, 0, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 踢 动作 */
+	{ ACTION_CATCH_SKILL_BA, FALSE, {
+		{ TRUE, FALSE, FALSE, "B-attack-02", 5, -11, 0,
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 自旋击 动作 */
+	{ ACTION_SPINHIT, TRUE, {
+		{ TRUE, FALSE, FALSE, "roll-01", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "roll-02", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "roll-03", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "roll-04", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "roll-05", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "roll-06", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "roll-07", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		{ TRUE, FALSE, FALSE, "roll-08", 2, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 爆裂踢 动作 */
+	{ ACTION_SPINHIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "run-04", 100, 0, 0,
+			{0, -GLOBAL_Y_WIDTH/2, 0, 24, GLOBAL_Y_WIDTH, 60},
+			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 高速踩踏 动作 */
+	{ ACTION_MACH_STOMP, TRUE, {
+		{ TRUE, FALSE, FALSE, "defense", 3, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
+			{0,0,0,0}
+		},
+		{ TRUE, TRUE, FALSE, "jump-stomp", 3, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51}
+		},
+		{ TRUE, FALSE, FALSE, "defense", 3, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
+			{0,0,0,0}
+		},
+		{ TRUE, TRUE, TRUE, "jump-stomp", 3, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 正面压制技能B（拉推） 动作 */
+	{ ACTION_CATCH_SKILL_FB, FALSE, {
+		{ TRUE, FALSE, FALSE, "pull", 10, 12, 0,
+			{13, -GLOBAL_Y_WIDTH/2, 0, 54, GLOBAL_Y_WIDTH, 58},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "push", 10, -12, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 背面压制技能B（推） 动作 */
+	{ ACTION_CATCH_SKILL_BB, FALSE, {
+		{ TRUE, FALSE, FALSE, "rest-02", 10, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "push", 10, -12, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 虚弱奔跑 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "weak-walk-01", 10, -6, 2,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "weak-walk-02", 10, -6, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并站立 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并行走 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift-walk-01", 10, 0, -2,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-walk-02", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-walk-03", 10, 0, -2,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-walk-04", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并奔跑 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift-run-01", 10, 0, 10,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-run-02", 5, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并跳跃 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift-jump", 10, 0, 10,
+			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并下落 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift-fall", 10, 0, 10,
+			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 投掷/抛 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "push", 10, -11, 0,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 骑乘 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "ride", 10, 0, 5,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 骑乘攻击 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "ride-attack-01", 10, 0, 5,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "ride-attack-02", 10, 0, 5,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 躺着濒死 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "lying", 10, 0, 5,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lying-hit", 10, 0, 5,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 趴着濒死 动作 */
+	{ ACTION_WEAK_RUN, FALSE, {
+		{ TRUE, FALSE, FALSE, "tummy", 10, 0, 5,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "tummy-hit", 10, 0, 5,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+};
 
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
-	switch( action_type ) {
-	case ACTION_STANCE: return ActionRes_LoadStance();
-	case ACTION_WALK: return ActionRes_LoadWalk();
-	case ACTION_RUN: return ActionRes_LoadRun();
-	case ACTION_A_ATTACK: return ActionRes_LoadAAttack();
-	case ACTION_B_ATTACK: return ActionRes_LoadBAttack();
-	case ACTION_READY: return ActionRes_LoadReady();
-	case ACTION_AS_ATTACK: return ActionRes_LoadASprintAttack();
-	case ACTION_BS_ATTACK: return ActionRes_LoadBSprintAttack();
-	case ACTION_AJ_ATTACK: return ActionRes_LoadAJumpAttack();
-	case ACTION_BJ_ATTACK: return ActionRes_LoadBJumpAttack();
-	case ACTION_ASJ_ATTACK: return ActionRes_LoadASprintJumpAttack();
-	case ACTION_BSJ_ATTACK: return ActionRes_LoadBSprintJumpAttack();
-	case ACTION_JUMP: return ActionRes_LoadJump();
-	case ACTION_SQUAT: return ActionRes_LoadSquat();
-	case ACTION_HIT: return ActionRes_LoadHit();
-	case ACTION_REST: return ActionRes_LoadRest();
-	case ACTION_FINAL_BLOW:return ActionRes_LoadFinalBlow();
-	case ACTION_HIT_FLY: return ActionRes_LoadHitFly();
-	case ACTION_HIT_FLY_FALL: return ActionRes_LoadHitFlyFall();
-	case ACTION_LYING: return ActionRes_LoadLying();
-	case ACTION_LYING_HIT: return ActionRes_LoadLyingHit();
-	case ACTION_TUMMY: return ActionRes_LoadTummy();
-	case ACTION_TUMMY_HIT: return ActionRes_LoadTummyHit();
-	case ACTION_F_ROLL: return ActionRes_LoadForwardRoll();
-	case ACTION_B_ROLL: return ActionRes_LoadBackwardRoll();
-	case ACTION_JUMP_ELBOW: return ActionRes_LoadJumpElbow();
-	case ACTION_JUMP_STOMP: return ActionRes_LoadJumpStomp();
-	case ACTION_KICK: return ActionRes_LoadKick();
-	case ACTION_SPINHIT: return ActionRes_LoadSpinHit();
-	case ACTION_BOMBKICK: return ActionRes_LoadBombKick();
-	case ACTION_MACH_STOMP: return ActionRes_LoadMachStomp();
-	case ACTION_CATCH: return ActionRes_LoadCatch();
-	case ACTION_BE_CATCH: return ActionRes_LoadBeCatch();
-	case ACTION_BACK_BE_CATCH: return ActionRes_LoadBackBeCatch();
-	case ACTION_CATCH_SKILL_FA: return ActionRes_LoadFrontCatchSkillA();
-	case ACTION_CATCH_SKILL_BA: return ActionRes_LoadBackCatchSkillA();
-	case ACTION_CATCH_SKILL_BB: return ActionRes_LoadPush();
-	case ACTION_CATCH_SKILL_FB: return ActionRes_LoadPull();
-	case ACTION_WEAK_RUN: return ActionRes_LoadWeakWalk();
-	case ACTION_LIFT_STANCE: return ActionRes_LoadLiftStance();
-	case ACTION_LIFT_WALK: return ActionRes_LoadLiftWalk();
-	case ACTION_LIFT_RUN: return ActionRes_LoadLiftRun();
-	case ACTION_LIFT_JUMP: return ActionRes_LoadLiftJump();
-	case ACTION_LIFT_FALL: return ActionRes_LoadLiftFall();
-	case ACTION_THROW: return ActionRes_LoadThrow();
-	case ACTION_RIDE: return ActionRes_LoadRide();
-	case ACTION_RIDE_ATTACK: return ActionRes_LoadRideAttack();
-	case ACTION_LYING_DYING: return ActionRes_LoadLyingDying();
-	case ACTION_TUMMY_DYING: return ActionRes_LoadTummyDying();
-	default:break;
-	}
+	// 载入资源
+	// code ...
 	return NULL;
 }
 
