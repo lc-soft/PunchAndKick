@@ -15,10 +15,12 @@ typedef struct ActionFrameInfo_ {
 	RangeBox hit, atk;
 } ActionFrameInfo;
 
+#define MAX_FRAME_NUM	10
+
 typedef struct ActionInfo_ {
 	int action_type;
 	LCUI_BOOL replay;
-	ActionFrameInfo frame[10];
+	ActionFrameInfo frame[MAX_FRAME_NUM];
 } ActionInfo;
 
 #define MAX_ACTION_NUM	50
@@ -215,14 +217,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* 被击中 动作 */
 	{ ACTION_HIT, FALSE, {
-		{ TRUE, FALSE, FALSE, "hit", 5, 0, 0,
+		{ TRUE, FALSE, FALSE, "hit", 10, 0, 0,
 			{-23, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
 		END_ACTION_FRAME
 	}},
 	/* 喘气/歇息 动作 */
-	{ ACTION_HIT, TRUE, {
+	{ ACTION_REST, TRUE, {
 		{ TRUE, FALSE, FALSE, "rest-01", 25, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
@@ -243,7 +245,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
 			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
 		},
-		{ TRUE, FALSE, FALSE, "final-blow-02", 10, -2, 0,
+		{ TRUE, FALSE, FALSE, "final-blow-03", 10, -2, 0,
 			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
 			{-12, -GLOBAL_Y_WIDTH/2, 0, 55, GLOBAL_Y_WIDTH, 64},
 		},
@@ -259,7 +261,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* 躺着被击中 动作 */
 	{ ACTION_LYING_HIT, FALSE, {
-		{ TRUE, FALSE, FALSE, "lying-hit", 5, 0, 0,
+		{ TRUE, FALSE, FALSE, "lying-hit", 10, 0, 0,
 			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
 			{0,0,0,0,0,0} 
 		},
@@ -275,14 +277,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* 趴着被击中 动作 */
 	{ ACTION_TUMMY_HIT, FALSE, {
-		{ TRUE, FALSE, FALSE, "tummy-hit", 5, 0, 0,
+		{ TRUE, FALSE, FALSE, "tummy-hit", 10, 0, 0,
 			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
 			{0,0,0,0,0,0} 
 		},
 		END_ACTION_FRAME
 	}},
 	/* 被击飞（头朝地坠落） 动作 */
-	{ ACTION_TUMMY_HIT, FALSE, {
+	{ ACTION_HIT_FLY_FALL, FALSE, {
 		{ TRUE, FALSE, FALSE, "fall", 100, 0, 0,
 			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
 			{0,0,0,0,0,0} 
@@ -290,7 +292,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 被击飞 动作 */
-	{ ACTION_TUMMY_HIT, FALSE, {
+	{ ACTION_HIT_FLY, FALSE, {
 		{ TRUE, FALSE, FALSE, "hit-fly", 100, -6, 0,
 			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 64},
 			{0,0,0,0,0,0} 
@@ -334,7 +336,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 向后翻滚 动作 */
-	{ ACTION_F_ROLL, TRUE, {
+	{ ACTION_B_ROLL, TRUE, {
 		{ TRUE, FALSE, FALSE, "roll-08", 2, 0, 0,
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
 			{0,0,0,0,0,0} 
@@ -458,7 +460,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/** 踢 动作 */
-	{ ACTION_CATCH_SKILL_BA, FALSE, {
+	{ ACTION_KICK, FALSE, {
 		{ TRUE, FALSE, FALSE, "B-attack-02", 5, -11, 0,
 			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44}
@@ -502,7 +504,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 爆裂踢 动作 */
-	{ ACTION_SPINHIT, FALSE, {
+	{ ACTION_BOMBKICK, FALSE, {
 		{ TRUE, FALSE, FALSE, "run-04", 100, 0, 0,
 			{0, -GLOBAL_Y_WIDTH/2, 0, 24, GLOBAL_Y_WIDTH, 60},
 			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60}
@@ -566,7 +568,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 举着并站立 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
+	{ ACTION_LIFT_STANCE, FALSE, {
 		{ TRUE, FALSE, FALSE, "lift", 10, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0}
@@ -574,7 +576,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 举着并行走 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
+	{ ACTION_LIFT_WALK, FALSE, {
 		{ TRUE, FALSE, FALSE, "lift-walk-01", 10, 0, -2,
 			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0}
@@ -594,7 +596,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 举着并奔跑 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
+	{ ACTION_LIFT_RUN, FALSE, {
 		{ TRUE, FALSE, FALSE, "lift-run-01", 10, 0, 10,
 			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0}
@@ -606,7 +608,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 举着并跳跃 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
+	{ ACTION_LIFT_JUMP, FALSE, {
 		{ TRUE, FALSE, FALSE, "lift-jump", 10, 0, 10,
 			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0}
@@ -614,7 +616,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 举着并下落 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
+	{ ACTION_LIFT_FALL, FALSE, {
 		{ TRUE, FALSE, FALSE, "lift-fall", 10, 0, 10,
 			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0}
@@ -622,7 +624,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 投掷/抛 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
+	{ ACTION_THROW, FALSE, {
 		{ TRUE, FALSE, FALSE, "push", 10, -11, 0,
 			{-12, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0}
@@ -630,44 +632,44 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 骑乘 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
-		{ TRUE, FALSE, FALSE, "ride", 10, 0, 5,
+	{ ACTION_RIDE, FALSE, {
+		{ TRUE, FALSE, FALSE, "ride", 100, 0, 5,
 			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
 			{0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
 	/* 骑乘攻击 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
-		{ TRUE, FALSE, FALSE, "ride-attack-01", 10, 0, 5,
+	{ ACTION_RIDE_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "ride-attack-01", 5, 0, 5,
 			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
 			{0,0,0,0}
 		},
-		{ TRUE, FALSE, FALSE, "ride-attack-02", 10, 0, 5,
+		{ TRUE, FALSE, FALSE, "ride-attack-02", 5, 0, 5,
 			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
 			{0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
 	/* 躺着濒死 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
-		{ TRUE, FALSE, FALSE, "lying", 10, 0, 5,
+	{ ACTION_LYING_DYING, TRUE, {
+		{ TRUE, FALSE, FALSE, "lying", 5, 0, 0,
 			{0,0,0,0},
 			{0,0,0,0}
 		},
-		{ TRUE, FALSE, FALSE, "lying-hit", 10, 0, 5,
+		{ TRUE, FALSE, FALSE, "lying-hit", 5, 0, 0,
 			{0,0,0,0},
 			{0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
 	/* 趴着濒死 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
-		{ TRUE, FALSE, FALSE, "tummy", 10, 0, 5,
+	{ ACTION_TUMMY_DYING, TRUE, {
+		{ TRUE, FALSE, FALSE, "tummy", 5, 0, 0,
 			{0,0,0,0},
 			{0,0,0,0}
 		},
-		{ TRUE, FALSE, FALSE, "tummy-hit", 10, 0, 5,
+		{ TRUE, FALSE, FALSE, "tummy-hit", 5, 0, 0,
 			{0,0,0,0},
 			{0,0,0,0}
 		},
@@ -678,9 +680,65 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 /** 载入角色的动作动画资源 */
 ActionData* ActionRes_LoadRiki( int action_type )
 {
-	// 载入资源
-	// code ...
-	return NULL;
+	int i, j;
+	ActionData *action;
+	LCUI_Graph *p_graph, graph_buff, tmp_graph;
+
+	action = Action_Create();
+	/* 在动作数据集里查找指定动作的数据 */
+	for(i=0; i<MAX_ACTION_NUM; ++i) {
+		if( action_set[i].action_type == action_type ) {
+			break;
+		}
+	}
+	/* 未找到则退出 */
+	if( i >= MAX_ACTION_NUM ) {
+		return NULL;
+	}
+	/* 设置该动作是否重复播放 */
+	Action_SetReplay( action, action_set[i].replay );
+	for(j=0; j<MAX_FRAME_NUM; ++j) {
+		if( !action_set[i].frame[j].enable ) {
+			break;
+		}
+		Graph_Init( &graph_buff );
+		/* 获取动作图资源 */
+		GameGraphRes_GetGraph(
+			ACTION_RES_CLASS_RIKI, 
+			action_set[i].frame[j].graph_name, 
+			&graph_buff
+		);
+		/* 若需要水平翻转 */
+		if( action_set[i].frame[j].horiz_flip ) {
+			Graph_Init( &tmp_graph );
+			tmp_graph.color_type = graph_buff.color_type;
+			Graph_HorizFlip( &graph_buff, &tmp_graph );
+			p_graph = &tmp_graph;
+		} else {
+			p_graph = &graph_buff;
+		}
+		/* 添加一帧动作 */
+		Action_AddFrame(
+			action, 
+			action_set[i].frame[j].offset_x, 
+			action_set[i].frame[j].offset_y,
+			p_graph,
+			action_set[i].frame[j].remain_time
+		);
+		/* 设置受攻击范围 */
+		Action_SetHitRange(
+			action, j, action_set[i].frame[j].hit 
+		);
+		/* 设置攻击范围 */
+		Action_SetAttackRange(
+			action, j, action_set[i].frame[j].atk
+		);
+		/* 设置该帧动作是否产生新攻击 */
+		Action_SetNewAttack(
+			action, j, action_set[i].frame[j].new_attack
+		);
+	}
+	return action;
 }
 
 /** 载入指定角色的动作动画 */
