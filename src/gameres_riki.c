@@ -556,7 +556,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 虚弱奔跑 动作 */
-	{ ACTION_WEAK_RUN, FALSE, {
+	{ ACTION_WEAK_RUN, TRUE, {
 		{ TRUE, FALSE, FALSE, "weak-walk-01", 10, -6, 2,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0}
