@@ -4,7 +4,7 @@
 #include "game_space.h"
 
 static LCUI_BOOL init = FALSE;
-static LCUI_Queue physics_object_list;
+static LCUI_Queue space_object_list;
 static int space_x = 0, space_x_width = 600, space_y = 0, space_y_width = 600;
 
 /** 设置空间边界  */
@@ -44,11 +44,11 @@ void GameSpace_Step( void )
 	int i, n;
 	SpaceObject *obj;
 
-	Queue_Lock( &physics_object_list );
-	n = Queue_GetTotal( &physics_object_list );
+	Queue_Lock( &space_object_list );
+	n = Queue_GetTotal( &space_object_list );
 	for(i=0; i<n; ++i) {
 		obj = (SpaceObject*)Queue_Get(
-				&physics_object_list, i );
+				&space_object_list, i );
 		if( !obj ) {
 			continue;
 		}
@@ -102,7 +102,7 @@ void GameSpace_Step( void )
 			obj->y = space_y + space_y_width - 1;
 		}
 	}
-	Queue_Unlock( &physics_object_list );
+	Queue_Unlock( &space_object_list );
 }
 
 
@@ -141,12 +141,12 @@ SpaceObject* SpaceObject_New( int x, int y, int z, int x_width, int y_width, int
 	obj.y_acc = 0;
 	obj.z_acc = 0;
 	if( !init ) {
-		Queue_Init( &physics_object_list, sizeof(SpaceObject), NULL ); 
+		Queue_Init( &space_object_list, sizeof(SpaceObject), NULL ); 
 		init = TRUE;
 	}
-	Queue_Lock( &physics_object_list );
-	pos = Queue_Add( &physics_object_list, &obj );
-	p = (SpaceObject*)Queue_Get( &physics_object_list, pos );
-	Queue_Unlock( &physics_object_list );
+	Queue_Lock( &space_object_list );
+	pos = Queue_Add( &space_object_list, &obj );
+	p = (SpaceObject*)Queue_Get( &space_object_list, pos );
+	Queue_Unlock( &space_object_list );
 	return p;
 }
