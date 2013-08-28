@@ -5,7 +5,6 @@ LCUI_BEGIN_HEADER
 
 #include "game_lifebar.h"
 #include "game_object.h"
-#include "game_AI.h"
 #include "game_control.h"
 #include "game_action.h"
 #include "game_resource.h"
