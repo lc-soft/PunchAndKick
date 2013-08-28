@@ -90,7 +90,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\gameres_riki.c" />
-    <ClCompile Include="src\game_action.c" />
     <ClCompile Include="src\game_AI.c" />
     <ClCompile Include="src\game_attack.c" />
     <ClCompile Include="src\game_control.c" />
@@ -105,6 +104,9 @@
     <ClCompile Include="src\game_msg.c" />
     <ClCompile Include="src\game_space.c" />
     <ClCompile Include="src\name_db.c" />
+    <ClCompile Include="src\skills\game_skill.c" />
+    <ClCompile Include="src\skills\skills_common.c" />
+    <ClCompile Include="src\skills\skills_martial_artist.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h" />
@@ -120,6 +122,7 @@
     <ClInclude Include="src\game_lifebar.h" />
     <ClInclude Include="src\main_menu.h" />
     <ClInclude Include="src\game_space.h" />
+    <ClInclude Include="src\skills\game_skill.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

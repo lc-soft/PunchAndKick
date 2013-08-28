@@ -60,7 +60,13 @@
     <ClCompile Include="src\game_AI.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\game_action.c">
+    <ClCompile Include="src\skills\game_skill.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\skills\skills_common.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\skills\skills_martial_artist.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -102,6 +108,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\game_AI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\skills\game_skill.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
