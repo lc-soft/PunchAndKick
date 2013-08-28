@@ -1,15 +1,17 @@
 ﻿#ifndef __GAME_CONTROL_H__
 #define __GAME_CONTROL_H__
 
+#include "game_AI.h"
+
 typedef struct ControlKey_ {
 	int up, down, left, right, a_attack, b_attack, jump;
 } ControlKey;
 
 enum GamePlayerType {
 	PLAYER_TYPE_FIGHTER,
-	PLAYER_TYPE_MARTIAL_ARTISTS,
+	PLAYER_TYPE_MARTIAL_ARTIST,
 	PLAYER_TYPE_KUNG_FU,
-	PLAYER_TYPE_JUDO_MASTERS
+	PLAYER_TYPE_JUDO_MASTER
 };
 
 enum GamePlayerState {
@@ -211,6 +213,7 @@ struct GamePlayer_{
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
 	GamePlayerProperty property;	/**< 角色的各项属性 */
 	SpecialSkill skill;		/**< 角色拥有的特殊技能 */
+	LCUI_Queue skills;		/**< 角色拥有的技能 */
 	int attack_type;		/**< 当前的攻击类型 */
 	int n_attack;			/**< 被攻击的次数 */
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
