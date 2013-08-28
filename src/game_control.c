@@ -7,6 +7,7 @@
 #include LC_LABEL_H
 
 #include "game.h"
+#include "skills/game_skill.h"
 
 static LCUI_Graph img_shadow;
 static LCUI_Widget *game_scene;
@@ -2066,7 +2067,7 @@ static void GamePlayer_SetFrontCatchSkillA( GamePlayer *player )
 	/* 根据攻击者的类型，让受攻击者做出相应动作 */
 	switch(player->type) {
 	case PLAYER_TYPE_FIGHTER:break;
-	case PLAYER_TYPE_MARTIAL_ARTISTS:
+	case PLAYER_TYPE_MARTIAL_ARTIST:
 		GamePlayer_ChangeState( player->other, STATE_HIT );
 		GameObject_AtActionDone( player->other->object, ACTION_HIT, NULL );
 		if( GamePlayer_IsLeftOriented(player) ) {
@@ -2076,7 +2077,7 @@ static void GamePlayer_SetFrontCatchSkillA( GamePlayer *player )
 		}
 		break;
 	case PLAYER_TYPE_KUNG_FU:break;
-	case PLAYER_TYPE_JUDO_MASTERS:break;
+	case PLAYER_TYPE_JUDO_MASTER:break;
 	default:return;
 	}
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
@@ -2154,7 +2155,7 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 	/* 根据攻击者的类型，让受攻击者做出相应动作 */
 	switch(player->type) {
 	case PLAYER_TYPE_FIGHTER:break;
-	case PLAYER_TYPE_MARTIAL_ARTISTS:
+	case PLAYER_TYPE_MARTIAL_ARTIST:
 		if( GamePlayer_IsLeftOriented(player) ) {
 			GamePlayer_SetLeftOriented( player->other );
 		} else {
@@ -2180,7 +2181,7 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 		);
 		break;
 	case PLAYER_TYPE_KUNG_FU:break;
-	case PLAYER_TYPE_JUDO_MASTERS:break;
+	case PLAYER_TYPE_JUDO_MASTER:break;
 	default:return;
 	}
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BA );
@@ -3382,6 +3383,9 @@ void GamePlayer_Init( GamePlayer *player )
 	player->skill.rock_defense = FALSE;
 	player->skill.spin_hit = FALSE;
 	player->skill.tornado_attack = FALSE;
+	
+	GamePlayer_InitSkillRecord( player );
+
 	player->attack_type = 0;
 	player->n_attack = 0;
 	player->t_rest_timeout = -1;
@@ -3487,7 +3491,7 @@ int Game_Init(void)
 	GameObject_Register();
 	StatusBar_Register();
 	LifeBar_Regiser();
-
+	/* 初始化角色信息 */
 	GamePlayer_Init( &player_data[0] );
 	GamePlayer_Init( &player_data[1] );
 	/* 记录玩家ID */
@@ -3514,14 +3518,14 @@ int Game_Init(void)
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
 
-	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTISTS;
+	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
 	player_data[0].skill.bomb_kick = TRUE;
 	player_data[0].skill.jump_spin_kick = TRUE;
 	player_data[0].skill.big_elbow = TRUE;
 	player_data[0].skill.mach_stomp = TRUE;
 	player_data[0].skill.tornado_attack = TRUE;
 	
-	player_data[1].type = PLAYER_TYPE_MARTIAL_ARTISTS;
+	player_data[1].type = PLAYER_TYPE_MARTIAL_ARTIST;
 	player_data[1].skill.bomb_kick = TRUE;
 	player_data[1].skill.jump_spin_kick = TRUE;
 	player_data[1].skill.big_elbow = TRUE;
@@ -3536,8 +3540,8 @@ int Game_Init(void)
 	player_data[0].property.throw = 100;
 	player_data[0].property.speed = 80;
 
-	player_data[1].property.max_hp = 8000;
-	player_data[1].property.cur_hp = 8000;
+	player_data[1].property.max_hp = 2000;
+	player_data[1].property.cur_hp = 2000;
 	player_data[1].property.defense = 200;
 	player_data[1].property.kick = 300;
 	player_data[1].property.punch = 300;
