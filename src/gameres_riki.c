@@ -429,7 +429,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-30, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 50},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "elbow-04", 5, 5, 0,
+		{ TRUE, FALSE, FALSE, "elbow-04", 5, 0, 5,
 			{-30, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 50},
 			{0,0,0,0,0,0} 
 		},
@@ -576,7 +576,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 举着并行走 动作 */
-	{ ACTION_LIFT_WALK, FALSE, {
+	{ ACTION_LIFT_WALK, TRUE, {
 		{ TRUE, FALSE, FALSE, "lift-walk-01", 10, 0, -2,
 			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0}
@@ -596,7 +596,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/* 举着并奔跑 动作 */
-	{ ACTION_LIFT_RUN, FALSE, {
+	{ ACTION_LIFT_RUN, TRUE, {
 		{ TRUE, FALSE, FALSE, "lift-run-01", 10, 0, 10,
 			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0}
