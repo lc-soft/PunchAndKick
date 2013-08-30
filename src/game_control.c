@@ -21,6 +21,8 @@ static int global_action_list[]={
 	ACTION_RUN,
 	ACTION_A_ATTACK,
 	ACTION_B_ATTACK,
+	ACTION_MACH_A_ATTACK,
+	ACTION_MACH_B_ATTACK,
 	ACTION_AS_ATTACK,
 	ACTION_BS_ATTACK,
 	ACTION_AJ_ATTACK,
@@ -113,7 +115,8 @@ static int global_action_list[]={
 #define ZACC_THROWUP_FLY	30
 #define ZACC_THROWDOWN_FLY	40
 
-static GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
+/** 通过部件获取游戏玩家数据 */
+GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
 {
 	int i;
 	for(i=0; i<4; ++i) {
@@ -135,7 +138,8 @@ static void ControlKey_Init( ControlKey *key )
 	key->jump = 0;
 }
 
-static void GamePlayer_ResetAttackControl( GamePlayer *player )
+/** 重置攻击控制 */
+void GamePlayer_ResetAttackControl( GamePlayer *player )
 {
 	player->control.a_attack = FALSE;
 	player->control.b_attack = FALSE;
@@ -241,6 +245,12 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		break;
 	case STATE_B_ATTACK:
 		action_type = ACTION_B_ATTACK;
+		break;
+	case STATE_MACH_A_ATTACK:
+		action_type = ACTION_MACH_A_ATTACK;
+		break;
+	case STATE_MACH_B_ATTACK:
+		action_type = ACTION_MACH_B_ATTACK;
 		break;
 	case STATE_AS_ATTACK:
 		action_type = ACTION_AS_ATTACK;
@@ -970,7 +980,7 @@ static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 		GamePlayer_SetTummy( player );
 		break;
 	default:
-		if( player->n_attack >= 3 ) {
+		if( player->n_attack >= 4 ) {
 			GamePlayer_SetRest( player );
 		} else {
 			GamePlayer_UnlockAction( player );
@@ -2638,10 +2648,9 @@ static void GamePlayer_SetRideJump( GamePlayer *player )
 /** 进行A攻击 */
 int GamePlayer_StartAAttack( GamePlayer *player )
 {
+	int skill_id;
 	double acc, speed;
-	LCUI_Widget *widget;
 	GamePlayer *other_player;
-	void (*func)(LCUI_Widget*);
 
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
@@ -2749,35 +2758,12 @@ int GamePlayer_StartAAttack( GamePlayer *player )
 			return 0;
 		}
 	}
-
-	widget = GameObject_GetObjectInAttackRange( 
-				player->object,
-				ACTION_FINAL_BLOW,
-				TRUE, ACTION_REST 
-	);
-	/* 若当前是在被举起的状态下，站立着，则改用相应回调函数 */
-	if( player->state == STATE_BE_LIFT_STANCE
-	|| player->state == STATE_BE_LIFT_SQUAT ) {
-		func = GamePlayer_AtBeLiftAttackDone;
-	} else {
-		func = GamePlayer_AtAttackDone;
-	}
-
-	if( widget ) {
-		GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
-		GameObject_AtActionDone( player->object, ACTION_FINAL_BLOW, func );
-		player->attack_type = ATTACK_TYPE_FINAL_BLOW;
-	} else {
-		GamePlayer_ChangeState( player, STATE_A_ATTACK );
-		GameObject_AtActionDone( player->object, ACTION_A_ATTACK, func );
-		player->attack_type = ATTACK_TYPE_PUNCH;
-	}
-	GameObject_ClearAttack( player->object );
-	GamePlayer_StopXWalk( player );
-	GamePlayer_StopYMotion( player );
-	GamePlayer_LockMotion( player );
-	GamePlayer_LockAction( player );
-	player->control.run = FALSE;
+	/* 获取满足发动条件的技能 */
+	skill_id = SkillLibrary_GetSkill( player );
+	/* 如果有，则发动该技能 */
+	if( skill_id > 0 ) {
+		GamePlayer_RunSkill( player, skill_id );
+	} 
 	return 0;
 }
 
@@ -2874,10 +2860,9 @@ static void GamePlayer_SetPull( GamePlayer *player )
 /** 进行B攻击 */
 int GamePlayer_StartBAttack( GamePlayer *player )
 {
+	int skill_id;
 	double acc, speed;
-	LCUI_Widget *widget;
 	GamePlayer *other_player;
-	void (*func)(LCUI_Widget*);
 
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
@@ -2975,33 +2960,12 @@ int GamePlayer_StartBAttack( GamePlayer *player )
 			return 0;
 		}
 	}
-	/* 清除攻击记录 */
-	GameObject_ClearAttack( player->object );
-	widget = GameObject_GetObjectInAttackRange( 
-				player->object,
-				ACTION_FINAL_BLOW,
-				TRUE, ACTION_REST 
-	);
-	if( player->state == STATE_BE_LIFT_STANCE
-	 || player->state == STATE_BE_LIFT_SQUAT ) {
-		func = GamePlayer_AtBeLiftAttackDone;
-	} else {
-		func = GamePlayer_AtAttackDone;
+	/* 获取满足发动条件的技能 */
+	skill_id = SkillLibrary_GetSkill( player );
+	/* 如果有，则发动该技能 */
+	if( skill_id > 0 ) {
+		GamePlayer_RunSkill( player, skill_id );
 	}
-	if( widget ) {
-		GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
-		player->attack_type = ATTACK_TYPE_FINAL_BLOW;
-		GameObject_AtActionDone( player->object, ACTION_FINAL_BLOW, func );
-	} else {
-		GamePlayer_ChangeState( player, STATE_B_ATTACK );
-		player->attack_type = ATTACK_TYPE_KICK;
-		GameObject_AtActionDone( player->object, ACTION_B_ATTACK, func );
-	}
-	GamePlayer_StopXWalk( player );
-	GamePlayer_StopYMotion( player );
-	GamePlayer_LockMotion( player );
-	GamePlayer_LockAction( player );
-	player->control.run = FALSE;
 	return 0;
 }
 
@@ -3491,6 +3455,8 @@ int Game_Init(void)
 	GameObject_Register();
 	StatusBar_Register();
 	LifeBar_Regiser();
+	/** 初始化技能库 */
+	SkillLibrary_Init();
 	/* 初始化角色信息 */
 	GamePlayer_Init( &player_data[0] );
 	GamePlayer_Init( &player_data[1] );
@@ -3532,17 +3498,17 @@ int Game_Init(void)
 	player_data[1].skill.mach_stomp = TRUE;
 	player_data[1].skill.tornado_attack = TRUE;
 
-	player_data[0].property.max_hp = 800;
-	player_data[0].property.cur_hp = 800;
+	player_data[0].property.max_hp = 80000;
+	player_data[0].property.cur_hp = 80000;
 	player_data[0].property.defense = 100;
 	player_data[0].property.kick = 100;
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
 	player_data[0].property.speed = 80;
 
-	player_data[1].property.max_hp = 2000;
-	player_data[1].property.cur_hp = 2000;
-	player_data[1].property.defense = 200;
+	player_data[1].property.max_hp = 80000;
+	player_data[1].property.cur_hp = 80000;
+	player_data[1].property.defense = 100;
 	player_data[1].property.kick = 300;
 	player_data[1].property.punch = 300;
 	player_data[1].property.throw = 300;
