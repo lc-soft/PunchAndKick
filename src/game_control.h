@@ -25,6 +25,8 @@ enum GamePlayerState {
 	STATE_RIGHTRUN,		/**< 向右奔跑 */
 	STATE_A_ATTACK,
 	STATE_B_ATTACK,
+	STATE_MACH_A_ATTACK,
+	STATE_MACH_B_ATTACK,
 	STATE_AS_ATTACK,
 	STATE_BS_ATTACK,
 	STATE_AJ_ATTACK,
@@ -88,6 +90,8 @@ enum ActionType {
 	ACTION_RUN,
 	ACTION_A_ATTACK,
 	ACTION_B_ATTACK,
+	ACTION_MACH_A_ATTACK,
+	ACTION_MACH_B_ATTACK,
 	ACTION_AS_ATTACK,
 	ACTION_BS_ATTACK,
 	ACTION_AJ_ATTACK,
@@ -231,6 +235,12 @@ extern int Game_Init(void);
 extern int Game_Start(void);
 extern int Game_Loop(void);
 extern int Game_Pause(void);
+
+/** 通过部件获取游戏玩家数据 */
+extern GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget );
+
+/** 重置攻击控制 */
+extern void GamePlayer_ResetAttackControl( GamePlayer *player );
 
 extern void GamePlayer_SetReady( GamePlayer *player );
 
