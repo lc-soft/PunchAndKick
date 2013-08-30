@@ -1,10 +1,19 @@
 ﻿#ifndef __GAME_SKILL_H__
 #define __GAME_SKILL_H__
 
+#include "skills_common.h"
+
+/** 初始化技能库 */
+void SkillLibrary_Init(void);
+
 /** 向技能库中添加新技能信息 */
-int SkillLibrary_AddSkil(	const char *skill_name, 
+int SkillLibrary_AddSkill(	const char *skill_name, 
+				int priority,
 				LCUI_BOOL (*can_use)(GamePlayer*),
 				void (*run_skill)(GamePlayer*) );
+
+/** 检测玩家是否拥有指定技能 */
+LCUI_BOOL GamePlayer_HaveSkill( GamePlayer *player, const char *skill_name );
 
 /** 初始化游戏角色拥有的技能的记录 */
 void GamePlayer_InitSkillRecord( GamePlayer *player );
