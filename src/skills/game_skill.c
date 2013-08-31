@@ -1,4 +1,5 @@
-﻿#include <LCUI_Build.h>
+﻿//#define DEBUG
+#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include "../game_control.h"
 #include "game_skill.h"
@@ -110,8 +111,15 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_B_FINALBLOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_AS_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_BS_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_A_LIFT );
+	GamePlayer_EnableSkill( player, SKILLNAME_B_LIFT );
+	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_ELBOW );
+	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_TREAD );
+	GamePlayer_EnableSkill( player, SKILLNAME_MACH_STOMP );
 }
 
 /** 为游戏角色启用一个技能 */
@@ -166,10 +174,11 @@ int SkillLibrary_GetSkill( GamePlayer* player )
 			continue;
 		}
 		if( p_skill->can_use( player ) ) {
-			DEBUG_MSG("tip\n");
+			DEBUG_MSG("use this skill\n");
 			return p_skill->skill_id;
 		}
 	}
+	DEBUG_MSG("no skill\n");
 	return -1;
 }
 
