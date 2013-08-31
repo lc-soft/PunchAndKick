@@ -23,6 +23,8 @@ static int global_action_list[]={
 	ACTION_B_ATTACK,
 	ACTION_MACH_A_ATTACK,
 	ACTION_MACH_B_ATTACK,
+	ACTION_JUMP_MACH_A_ATTACK,
+	ACTION_JUMP_MACH_B_ATTACK,
 	ACTION_AS_ATTACK,
 	ACTION_BS_ATTACK,
 	ACTION_AJ_ATTACK,
@@ -81,8 +83,8 @@ static int global_action_list[]={
 #define YSPEED_WALK	8
 #define XACC_STOPRUN	20
 #define XACC_DASH	10
-#define ZSPEED_JUMP	60
-#define ZACC_JUMP	22
+#define ZSPEED_JUMP	48
+#define ZACC_JUMP	15
 
 #define XSPEED_S_HIT_FLY	55
 #define ZACC_S_HIT_FLY		7
@@ -247,10 +249,14 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		action_type = ACTION_B_ATTACK;
 		break;
 	case STATE_MAJ_ATTACK:
+		action_type = ACTION_JUMP_MACH_A_ATTACK;
+		break;
 	case STATE_MACH_A_ATTACK:
 		action_type = ACTION_MACH_A_ATTACK;
 		break;
 	case STATE_MBJ_ATTACK:
+		action_type = ACTION_JUMP_MACH_B_ATTACK;
+		break;
 	case STATE_MACH_B_ATTACK:
 		action_type = ACTION_MACH_B_ATTACK;
 		break;
@@ -3035,7 +3041,8 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 				break;
 			}
 			/* 若当前玩家处于歇息状态，则将其击飞 */
-			if( player->state == STATE_REST ) {
+			if( player->n_attack >= 4
+			 || player->state == STATE_REST ) {
 				player->n_attack = 0;
 				if( GamePlayer_IsLeftOriented( atk_player ) ) {
 					GamePlayer_SetLeftHitFly( player );
