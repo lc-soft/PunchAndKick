@@ -124,6 +124,8 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_ELBOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_TREAD );
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_STOMP );
+	GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
+	GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
 }
 
 /** 为游戏角色启用一个技能 */
