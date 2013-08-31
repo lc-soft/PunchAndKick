@@ -181,7 +181,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 冲刺攻击动作 */
 	{ ACTION_AS_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-sprint-attack-01", 5, 0, 0,
+		{ TRUE, TRUE, FALSE, "A-sprint-attack-01", 5, 0, 0,
 			{-23, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 58},
 			{0,0,0,0,0,0} 
 		},
@@ -193,7 +193,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* B 冲刺攻击动作 */
 	{ ACTION_BS_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "B-sprint-attack-01", 5, 0, 0,
+		{ TRUE, TRUE, FALSE, "B-sprint-attack-01", 5, 0, 0,
 			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
