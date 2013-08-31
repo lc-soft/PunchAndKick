@@ -246,9 +246,11 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_B_ATTACK:
 		action_type = ACTION_B_ATTACK;
 		break;
+	case STATE_MAJ_ATTACK:
 	case STATE_MACH_A_ATTACK:
 		action_type = ACTION_MACH_A_ATTACK;
 		break;
+	case STATE_MBJ_ATTACK:
 	case STATE_MACH_B_ATTACK:
 		action_type = ACTION_MACH_B_ATTACK;
 		break;
@@ -995,7 +997,6 @@ static void GamePlayer_ResetCountAttack( GamePlayer *player )
 {
 	player->n_attack = 0;
 }
-
 
 int GamePlayer_TryHit( GamePlayer *player )
 {
@@ -2534,7 +2535,6 @@ static void GamePlayer_SetRideJump( GamePlayer *player )
 int GamePlayer_StartAAttack( GamePlayer *player )
 {
 	int skill_id;
-	double speed;
 
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
@@ -2572,19 +2572,6 @@ int GamePlayer_StartAAttack( GamePlayer *player )
 		player->control.run = FALSE;
 		/* 将举起的角色向下砸 */
 		GamePlayer_SetThrowDown( player );
-		return 0;
-	case STATE_JUMP:
-	case STATE_JSQUAT:
-		speed = GameObject_GetZSpeed( player->object );
-		/* 如果满足使用 跳跃肘压 技能的条件 */
-		if( speed < 0 && player->skill.big_elbow ) {
-			GamePlayer_SetBigElbow( player );
-			return 0;
-		}
-		GamePlayer_ChangeState( player, STATE_AJ_ATTACK );
-		GamePlayer_LockAction( player );
-		player->attack_type = ATTACK_TYPE_JUMP_PUNCH;
-		GameObject_ClearAttack( player->object );
 		return 0;
 	case STATE_SJUMP:
 	case STATE_SSQUAT:
@@ -2737,13 +2724,6 @@ int GamePlayer_StartBAttack( GamePlayer *player )
 		player->control.run = FALSE;
 		/* 将举起的角色向前抛 */
 		GamePlayer_SetThrowUp( player );
-		return 0;
-	case STATE_JUMP:
-	case STATE_JSQUAT:
-		GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
-		GamePlayer_LockAction( player );
-		player->attack_type = ATTACK_TYPE_JUMP_KICK;
-		GameObject_ClearAttack( player->object );
 		return 0;
 	case STATE_SJUMP:
 	case STATE_SSQUAT:
