@@ -551,7 +551,7 @@ static void GamePlayer_AtReadyTimeOut( GamePlayer *player )
 }
 
 /** 检测玩家是否处于举起状态 */
-static LCUI_BOOL GamePlayer_IsInLiftState( GamePlayer *player )
+LCUI_BOOL GamePlayer_IsInLiftState( GamePlayer *player )
 {
 	switch( player->state ) {
 	case STATE_LIFT_SQUAT:
@@ -1735,104 +1735,8 @@ void GamePlayer_StartJump( GamePlayer *player )
 	}
 }
 
-static void GamePlayer_AtGroundAttackDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_SQUAT );
-	GamePlayer_LockAction( player );
-	GameObject_SetXSpeed( player->object, 0 );
-	GameObject_SetYSpeed( player->object, 0 );
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtAttackDone );
-}
-
-static void GamePlayer_JumpElbowStep2( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
-	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_ELBOW;
-	GameObject_AtZeroZSpeed( widget, NULL );
-	GameObject_ClearAttack( player->object );
-}
-
-static void GamePlayer_JumpElbowStep1( LCUI_Widget *widget )
-{
-	double z_speed, z_acc;
-	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	z_acc = -ZACC_JUMP;
-	z_speed = ZSPEED_JUMP;
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_JUMP );
-	GamePlayer_LockAction( player );
-	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtGroundAttackDone );
-	GameObject_AtZeroZSpeed( widget, GamePlayer_JumpElbowStep2 );
-}
-
-/** 进行跳跃+肘击 */
-void GamePlayer_SetJumpElbow( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GameObject_SetXAcc( player->object, 0 );
-	GamePlayer_ChangeState( player, STATE_SQUAT );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	GameObject_SetXSpeed( player->object, 0 );
-	GameObject_SetYSpeed( player->object, 0 );
-	GameObject_SetZSpeed( player->object, 0 );
-	GameObject_ClearAttack( player->object );
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_JumpElbowStep1 );
-}
-
-static void GamePlayer_JumpTreadStep2( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_JUMP_STOMP );
-	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_TREAD;
-	GameObject_AtZeroZSpeed( widget, NULL );
-	GameObject_ClearAttack( player->object );
-}
-static void GamePlayer_JumpTreadStep1( LCUI_Widget *widget )
-{
-	double z_speed, z_acc;
-	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	z_acc = -ZACC_JUMP;
-	z_speed = ZSPEED_JUMP;
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_JUMP );
-	GamePlayer_LockAction( player );
-	GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtGroundAttackDone );
-	GameObject_AtZeroZSpeed( widget, GamePlayer_JumpTreadStep2 );
-}
-
-/** 进行跳跃+踩 */
-void GamePlayer_SetJumpTread( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GameObject_SetXAcc( player->object, 0 );
-	GamePlayer_ChangeState( player, STATE_SQUAT );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	GameObject_SetXSpeed( player->object, 0 );
-	GameObject_SetYSpeed( player->object, 0 );
-	GameObject_SetZSpeed( player->object, 0 );
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_JumpTreadStep1 );
-}
-
 /** 获取当前角色附近躺地的角色 */
-static GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
+GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
 {
 	RangeBox range;
 	LCUI_Widget *widget;
@@ -1869,7 +1773,7 @@ static GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
 }
 
 /** 检测当前角色是否能够举起另一个角色 */
-static LCUI_BOOL GamePlayer_CanLiftPlayer( GamePlayer *player, GamePlayer *other_player )
+LCUI_BOOL GamePlayer_CanLiftPlayer( GamePlayer *player, GamePlayer *other_player )
 {
 	double x1, x2;
 	x1 = GameObject_GetX( player->object );
@@ -1882,7 +1786,7 @@ static LCUI_BOOL GamePlayer_CanLiftPlayer( GamePlayer *player, GamePlayer *other
 }
 
 /** 检测玩家是否能够攻击躺在地上的玩家 */
-static LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player, GamePlayer *other_player )
+LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player, GamePlayer *other_player )
 {
 	double x1, x2;
 	x1 = GameObject_GetX( player->object );
@@ -1999,25 +1903,6 @@ static void GamePlayer_SetBigElbow( GamePlayer *player )
 	GamePlayer_LockMotion( player );
 	z_speed = GameObject_GetZSpeed( player->object );
 	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtBigElbowStep1 );
-}
-
-static void GamePlayer_StopMachStomp( GamePlayer *player )
-{
-	GamePlayer_AtAttackDone( player->object );
-}
-
-/** 高速踩踏 */
-static void GamePlayer_SetMachStomp( GamePlayer *player )
-{
-	GamePlayer_ChangeState( player, STATE_MACH_STOMP );
-	player->attack_type = ATTACK_TYPE_MACH_STOMP;
-	GameObject_ClearAttack( player->object );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	GameObject_SetXSpeed( player->object, 0 );
-	GameObject_SetYSpeed( player->object, 0 );
-	GameObject_AtActionDone( player->object, ACTION_MACH_STOMP, GameObject_ClearAttack );
-	GamePlayer_SetActionTimeOut( player, 1250, GamePlayer_StopMachStomp );
 }
 
 /** 在肘压技能结束时 */
@@ -2649,8 +2534,7 @@ static void GamePlayer_SetRideJump( GamePlayer *player )
 int GamePlayer_StartAAttack( GamePlayer *player )
 {
 	int skill_id;
-	double acc, speed;
-	GamePlayer *other_player;
+	double speed;
 
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
@@ -2689,35 +2573,6 @@ int GamePlayer_StartAAttack( GamePlayer *player )
 		/* 将举起的角色向下砸 */
 		GamePlayer_SetThrowDown( player );
 		return 0;
-	case STATE_LEFTRUN:
-	case STATE_RIGHTRUN:
-		player->control.run = FALSE;
-		if( player->state == STATE_RIGHTRUN ) {
-			GameObject_AtXSpeedToZero(
-				player->object, -XACC_DASH, 
-				GamePlayer_AtAttackDone 
-			);
-		} else {
-			GameObject_AtXSpeedToZero(
-				player->object, XACC_DASH, 
-				GamePlayer_AtAttackDone 
-			);
-		}
-		GamePlayer_ChangeState( player, STATE_AS_ATTACK );
-		GamePlayer_LockAction( player );
-		GamePlayer_LockMotion( player );
-		speed = GameObject_GetYSpeed( player->object );
-		acc = YSPEED_WALK * XACC_DASH / XSPEED_RUN;
-		if( speed < 0.0 ) {
-			GameObject_SetYAcc( player->object, acc );
-		}
-		else if( speed > 0.0 ) {
-			GameObject_SetYAcc( player->object, -acc );
-		}
-		player->attack_type = ATTACK_TYPE_S_PUNCH;
-		/* 清除攻击记录 */
-		GameObject_ClearAttack( player->object );
-		return 0;
 	case STATE_JUMP:
 	case STATE_JSQUAT:
 		speed = GameObject_GetZSpeed( player->object );
@@ -2742,22 +2597,6 @@ int GamePlayer_StartAAttack( GamePlayer *player )
 		break;
 	}
 	
-	other_player = GamePlayer_GetGroundPlayer( player );
-	if( other_player ) {
-		if( GamePlayer_CanLiftPlayer( player, other_player ) ) {
-			player->other = other_player;
-			GamePlayer_SetLiftPlayer( player );
-			return 0;
-		}
-		if( GamePlayer_CanAttackGroundPlayer(player, other_player) ) {
-			if( player->skill.mach_stomp ) {
-				GamePlayer_SetMachStomp( player );
-			} else {
-				GamePlayer_SetJumpElbow( player );
-			}
-			return 0;
-		}
-	}
 	/* 获取满足发动条件的技能 */
 	skill_id = SkillLibrary_GetSkill( player );
 	/* 如果有，则发动该技能 */
@@ -2861,8 +2700,6 @@ static void GamePlayer_SetPull( GamePlayer *player )
 int GamePlayer_StartBAttack( GamePlayer *player )
 {
 	int skill_id;
-	double acc, speed;
-	GamePlayer *other_player;
 
 	if( player->state == STATE_CATCH && player->other ) {
 		/* 根据方向，判断该使用何种技能 */
@@ -2901,34 +2738,6 @@ int GamePlayer_StartBAttack( GamePlayer *player )
 		/* 将举起的角色向前抛 */
 		GamePlayer_SetThrowUp( player );
 		return 0;
-	case STATE_LEFTRUN:
-	case STATE_RIGHTRUN:
-		player->control.run = FALSE;
-		if( player->state == STATE_RIGHTRUN ) {
-			GameObject_AtXSpeedToZero(
-				player->object, -XACC_DASH, 
-				GamePlayer_AtAttackDone 
-			);
-		} else {
-			GameObject_AtXSpeedToZero(
-				player->object, XACC_DASH, 
-				GamePlayer_AtAttackDone 
-			);
-		}
-		GamePlayer_ChangeState( player, STATE_BS_ATTACK );
-		GamePlayer_LockAction( player );
-		GamePlayer_LockMotion( player );
-		speed = GameObject_GetYSpeed( player->object );
-		acc = YSPEED_WALK * XACC_DASH / XSPEED_RUN;
-		if( speed < 0.0 ) {
-			GameObject_SetYAcc( player->object, acc );
-		}
-		else if( speed > 0.0 ) {
-			GameObject_SetYAcc( player->object, -acc );
-		}
-		player->attack_type = ATTACK_TYPE_S_KICK;
-		GameObject_ClearAttack( player->object );
-		return 0;
 	case STATE_JUMP:
 	case STATE_JSQUAT:
 		GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
@@ -2945,20 +2754,6 @@ int GamePlayer_StartBAttack( GamePlayer *player )
 		return 0;
 	default:
 		break;
-	}
-	/* 检测附近是否有躺在地上的其它角色 */
-	other_player = GamePlayer_GetGroundPlayer( player );
-	if( other_player ) {
-		/* 如果符合举起该角色的要求 */
-		if( GamePlayer_CanLiftPlayer( player, other_player ) ) {
-			player->other = other_player;
-			GamePlayer_SetLiftPlayer( player );
-			return 0;
-		}
-		if( GamePlayer_CanAttackGroundPlayer(player, other_player) ) {
-			GamePlayer_SetJumpTread( player );
-			return 0;
-		}
 	}
 	/* 获取满足发动条件的技能 */
 	skill_id = SkillLibrary_GetSkill( player );
