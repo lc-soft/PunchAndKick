@@ -111,6 +111,10 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_B_FINALBLOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_A_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_B_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_AS_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_BS_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
