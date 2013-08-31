@@ -593,7 +593,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* 自旋击 动作 */
 	{ ACTION_SPINHIT, TRUE, {
-		{ TRUE, FALSE, FALSE, "roll-01", 2, 0, 0,
+		{ TRUE, TRUE, FALSE, "roll-01", 2, 0, 0,
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44},
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 44}
 		},
