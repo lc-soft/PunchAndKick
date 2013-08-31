@@ -51,6 +51,32 @@
 #define ZACC_THROWUP_FLY	30
 #define ZACC_THROWDOWN_FLY	40
 
+static LCUI_BOOL GamePlayerStateCanNormalAttack( GamePlayer *player )
+{
+	switch(player->state) {
+	case STATE_READY:
+	case STATE_WALK:
+	case STATE_STANCE:
+	case STATE_BE_LIFT_STANCE:
+		return TRUE;
+	default: 
+		break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL GamePlayerStateCanJumpAttack( GamePlayer *player )
+{
+	switch(player->state) {
+	case STATE_JUMP:
+	case STATE_JSQUAT:
+		return TRUE;
+	default: 
+		break;
+	}
+	return FALSE;
+}
+
 /** 处于被举起的状态下，在攻击结束时  */
 static void GamePlayer_AtBeLiftAttackDone( LCUI_Widget *widget )
 {
@@ -86,6 +112,9 @@ static LCUI_BOOL CommonSkill_CanUseFinalBlow( GamePlayer *player )
 	if( !player->control.a_attack && !player->control.b_attack ) {
 		return FALSE;
 	}
+	if( !GamePlayerStateCanNormalAttack( player ) ) {
+		return FALSE;
+	}
 	/** 检测终结一击攻击范围内是否有处于喘气状态下的游戏角色 */
 	widget = GameObject_GetObjectInAttackRange( 
 				player->object,
@@ -119,20 +148,6 @@ static void CommonSkill_StartFinalBlow( GamePlayer *player )
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
 	GamePlayer_LockAction( player );
-}
-
-static LCUI_BOOL GamePlayerStateCanNormalAttack( GamePlayer *player )
-{
-	switch(player->state) {
-	case STATE_READY:
-	case STATE_WALK:
-	case STATE_STANCE:
-	case STATE_BE_LIFT_STANCE:
-		return TRUE;
-	default: 
-		break;
-	}
-	return FALSE;
 }
 
 static void _StartAttack( GamePlayer *player, int state, int action, int attack_type )
@@ -176,6 +191,30 @@ static LCUI_BOOL CommonSkill_CanUseBAttack( GamePlayer *player )
 		return FALSE;
 	}
 	return GamePlayerStateCanNormalAttack( player );
+}
+
+/** 检测是否能够使用跳跃A攻击 */
+static LCUI_BOOL CommonSkill_CanUseJumpAAttack( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	return GamePlayerStateCanJumpAttack( player );
+}
+
+/** 检测是否能够使用跳跃B攻击 */
+static LCUI_BOOL CommonSkill_CanUseJumpBAttack( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	return GamePlayerStateCanJumpAttack( player );
 }
 
 /** 开始发动A普通攻击 */
@@ -616,6 +655,38 @@ static void CommonSkill_StartMachStomp( GamePlayer *player )
 	GamePlayer_SetActionTimeOut( player, 1250, GamePlayer_StopMachStomp );
 }
 
+/** 开始发动跳跃A攻击 */
+static void CommonSkill_StartJumpAAttack( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_AJ_ATTACK );
+	GamePlayer_LockAction( player );
+	player->attack_type = ATTACK_TYPE_JUMP_PUNCH;
+}
+
+/** 开始发动跳跃高速A攻击 */
+static void CommonSkill_StartJumpMachAAttack( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_MAJ_ATTACK );
+	GamePlayer_LockAction( player );
+	player->attack_type = ATTACK_TYPE_JUMP_PUNCH;
+}
+
+/** 开始发动跳跃B攻击 */
+static void CommonSkill_StartJumpBAttack( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
+	GamePlayer_LockAction( player );
+	player->attack_type = ATTACK_TYPE_JUMP_KICK;
+}
+
+/** 开始发动跳跃高速B攻击 */
+static void CommonSkill_StartJumpMachBAttack( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_MBJ_ATTACK );
+	GamePlayer_LockAction( player );
+	player->attack_type = ATTACK_TYPE_JUMP_KICK;
+}
+
 /** 注册A攻击 */
 static void CommonSkill_RegisterAAttack(void)
 {
@@ -643,6 +714,36 @@ static void CommonSkill_RegisterBAttack(void)
 				SKILLPRIORITY_MACH_B_ATTACK,
 				CommonSkill_CanUseBAttack,
 				CommonSkill_StartMachBAttack
+	);
+}
+
+/** 注册跳跃A攻击 */
+static void CommonSkill_RegisterJumpAAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_A_ATTACK, 
+				SKILLPRIORITY_JUMP_A_ATTACK,
+				CommonSkill_CanUseJumpAAttack,
+				CommonSkill_StartJumpAAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_MACH_A_ATTACK, 
+				SKILLPRIORITY_JUMP_MACH_A_ATTACK,
+				CommonSkill_CanUseJumpAAttack,
+				CommonSkill_StartJumpMachAAttack
+	);
+}
+
+/** 注册跳跃B攻击 */
+static void CommonSkill_RegisterJumpBAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_B_ATTACK, 
+				SKILLPRIORITY_JUMP_B_ATTACK,
+				CommonSkill_CanUseJumpBAttack,
+				CommonSkill_StartJumpBAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_MACH_B_ATTACK, 
+				SKILLPRIORITY_JUMP_MACH_B_ATTACK,
+				CommonSkill_CanUseJumpBAttack,
+				CommonSkill_StartJumpMachBAttack
 	);
 }
 
@@ -725,6 +826,8 @@ void CommonSkill_Register(void)
 {
 	CommonSkill_RegisterAAttack();
 	CommonSkill_RegisterBAttack();
+	CommonSkill_RegisterJumpAAttack();
+	CommonSkill_RegisterJumpBAttack();
 	CommonSkill_RegisterASprintAttack();
 	CommonSkill_RegisterBSprintAttack();
 	CommonSkill_RegisterFinalBlow();
