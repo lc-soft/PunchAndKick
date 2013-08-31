@@ -336,6 +336,28 @@ static LCUI_BOOL CommonSkill_CanAttackGround( GamePlayer *player )
 	return FALSE;
 }
 
+static LCUI_BOOL CommonSkill_CanAAttackGround( GamePlayer *player )
+{
+	if( !GamePlayerStateCanNormalAttack( player ) ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	return CommonSkill_CanAttackGround( player );
+}
+
+static LCUI_BOOL CommonSkill_CanBAttackGround( GamePlayer *player )
+{
+	if( !GamePlayerStateCanNormalAttack( player ) ) {
+		return FALSE;
+	}
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	return CommonSkill_CanAttackGround( player );
+}
+
 /** 检测是否能够举起躺地玩家 */
 static LCUI_BOOL CommonSkill_CanLift( GamePlayer *player )
 {
@@ -784,7 +806,7 @@ static void CommonSkill_RegisterMachStomp(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_MACH_STOMP,
 				SKILLPRIORITY_MACH_STOMP,
-				CommonSkill_CanAttackGround,
+				CommonSkill_CanAAttackGround,
 				CommonSkill_StartMachStomp
 	);
 }
@@ -793,7 +815,7 @@ static void CommonSkill_RegisterJumpElbow(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_JUMP_ELBOW,
 				SKILLPRIORITY_JUMP_ELBOW,
-				CommonSkill_CanAttackGround,
+				CommonSkill_CanAAttackGround,
 				CommonSkill_StartJumpElbow
 	);
 }
@@ -802,7 +824,7 @@ static void CommonSkill_RegisterJumpTread(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_JUMP_TREAD,
 				SKILLPRIORITY_JUMP_TREAD,
-				CommonSkill_CanAttackGround,
+				CommonSkill_CanBAttackGround,
 				CommonSkill_StartJumpTread
 	);
 }
