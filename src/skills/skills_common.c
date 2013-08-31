@@ -434,7 +434,14 @@ static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_ResetAttackControl( player );
 	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_SQUAT );
+	GamePlayer_UnlockMotion( player );
+	if( player->control.left_motion ) {
+		GamePlayer_SetLeftOriented( player );
+	}
+	else if( player->control.right_motion ) {
+		GamePlayer_SetRightOriented( player );
+	}
+	GamePlayer_ChangeState( player, STATE_JUMP_DONE );
 	GamePlayer_LockAction( player );
 	GameObject_SetXSpeed( player->object, 0 );
 	GameObject_SetYSpeed( player->object, 0 );
@@ -843,6 +850,97 @@ static void CommonSkill_RegisterLift(void)
 	);
 }
 
+static LCUI_BOOL CommonSkill_CanUseBombKick( GamePlayer *player )
+{
+	if( player->state != STATE_JUMP_DONE ) {
+		return FALSE;
+	}
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/** 开始发动 爆裂腿技能 */
+static void CommonSkill_StartBombKick( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_BOMBKICK );
+	player->attack_type = ATTACK_TYPE_BOMB_KICK;
+	GameObject_ClearAttack( player->object );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	if( player->control.left_motion ) {
+		GameObject_SetXSpeed( player->object, -100 );
+		GamePlayer_SetLeftOriented( player );
+	}
+	else if( player->control.right_motion ) {
+		GameObject_SetXSpeed( player->object, 100 );
+		GamePlayer_SetRightOriented( player );
+	}
+	else if( GamePlayer_IsLeftOriented(player) ) {
+		GameObject_SetXSpeed( player->object, -100 );
+	} else {
+		GameObject_SetXSpeed( player->object, 100 );
+	}
+	GameObject_AtLanding( player->object, 20, -10, GamePlayer_AtLandingDone );
+}
+
+/** 注册 爆裂腿技能 */
+static void CommonSkill_RegisterBombKick(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_BOMBKICK,
+				SKILLPRIORITY_BOMBKICK,
+				CommonSkill_CanUseBombKick,
+				CommonSkill_StartBombKick
+	);
+}
+
+static LCUI_BOOL CommonSkill_CanUseSpinHit( GamePlayer *player )
+{
+	if( player->state != STATE_JUMP_DONE ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/** 开始发动 自旋击（翻转击） 技能 */
+static void CommonSkill_StartSpinHit( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SPINHIT );
+	player->attack_type = ATTACK_TYPE_SPIN_HIT;
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	if( player->control.left_motion ) {
+		GameObject_SetXSpeed( player->object, -100 );
+		GamePlayer_SetLeftOriented( player );
+	}
+	else if( player->control.right_motion ) {
+		GameObject_SetXSpeed( player->object, 100 );
+		GamePlayer_SetRightOriented( player );
+	}
+	else if( GamePlayer_IsLeftOriented(player) ) {
+		GameObject_SetXSpeed( player->object, -100 );
+	} else {
+		GameObject_SetXSpeed( player->object, 100 );
+	}
+	GameObject_AtLanding( player->object, 30, -10, GamePlayer_AtLandingDone );
+}
+
+/** 注册 爆裂腿技能 */
+static void CommonSkill_RegisterSpinHit(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPINHIT,
+				SKILLPRIORITY_SPINHIT,
+				CommonSkill_CanUseSpinHit,
+				CommonSkill_StartSpinHit
+	);
+}
+
 /** 注册通用技能 */
 void CommonSkill_Register(void)
 {
@@ -857,4 +955,6 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterJumpTread();
 	CommonSkill_RegisterLift();
 	CommonSkill_RegisterMachStomp();
+	CommonSkill_RegisterBombKick();
+	CommonSkill_RegisterSpinHit();
 }
