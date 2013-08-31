@@ -41,6 +41,7 @@ enum GamePlayerState {
 	STATE_SSQUAT,
 	STATE_JUMP,
 	STATE_SJUMP,
+	STATE_JUMP_DONE,
 	STATE_HIT,		/**< 被命中 */
 	STATE_HIT_FLY,		/**< 被击飞 */
 	STATE_HIT_FLY_FALL,	/**< 被击飞（头朝地） */
@@ -253,6 +254,9 @@ void GamePlayer_SetRightOriented( GamePlayer *player );
 
 /** 设置角色面向左方 */
 void GamePlayer_SetLeftOriented( GamePlayer *player );
+
+/** 判断角色是否面向左方 */
+LCUI_BOOL GamePlayer_IsLeftOriented( GamePlayer *player );
 
 /** 改变角色的动作动画  */
 extern void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
