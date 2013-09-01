@@ -292,6 +292,22 @@ void GamePlayer_SetRestTimeOut(	GamePlayer *player,
 				int n_ms,
 				void (*func)(GamePlayer*) );
 
+/** 按百分比变更移动速度，n 取值范围为 0 ~ 100 */
+void GamePlayer_ReduceSpeed( GamePlayer *player, int n );
+
+int GamePlayer_SetLying( GamePlayer *player );
+
+int GamePlayer_SetTummy( GamePlayer *player );
+
+/** 开始站起 */
+void GamePlayer_StartStand( GamePlayer *player );
+
+int GamePlayer_TryHit( GamePlayer *player );
+
+void GamePlayer_SetRightHitFly( GamePlayer *player );
+
+void GamePlayer_SetLeftHitFly( GamePlayer *player );
+
 /** 改变角色的动作动画  */
 void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
 
