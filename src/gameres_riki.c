@@ -269,7 +269,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 冲刺跳跃攻击动作 */
 	{ ACTION_ASJ_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -14, 0,
+		{ TRUE, TRUE, FALSE, "A-attack-01", 3, -14, 0,
 			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, -GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
@@ -285,7 +285,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* B 冲刺跳跃攻击动作 */
 	{ ACTION_BSJ_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "B-attack-01", 5, -11, 0, 
+		{ TRUE, TRUE, FALSE, "B-attack-01", 5, -11, 0, 
 			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
@@ -297,7 +297,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 跳跃攻击动作 */
 	{ ACTION_AJ_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -14, 0,
+		{ TRUE, TRUE, FALSE, "A-attack-01", 3, -14, 0,
 			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
@@ -313,7 +313,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* B 跳跃攻击动作 */
 	{ ACTION_BJ_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "B-attack-01", 5, -11, 0,
+		{ TRUE, TRUE, FALSE, "B-attack-01", 5, -11, 0,
 			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
