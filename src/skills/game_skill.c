@@ -115,12 +115,16 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
-	GamePlayer_EnableSkill( player, SKILLNAME_AS_ATTACK );
-	GamePlayer_EnableSkill( player, SKILLNAME_BS_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_A_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_B_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_JUMP_A_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_JUMP_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_LIFT );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_LIFT );
+	GamePlayer_EnableSkill( player, SKILLNAME_A_THROW );
+	GamePlayer_EnableSkill( player, SKILLNAME_B_THROW );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_ELBOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_TREAD );
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_STOMP );
