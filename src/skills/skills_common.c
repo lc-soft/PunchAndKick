@@ -77,6 +77,32 @@ static LCUI_BOOL GamePlayerStateCanJumpAttack( GamePlayer *player )
 	return FALSE;
 }
 
+static LCUI_BOOL GamePlayerStateCanSprintJumpAttack( GamePlayer *player )
+{
+	switch(player->state) {
+	case STATE_SJUMP:
+	case STATE_SSQUAT:
+		return TRUE;
+	default: 
+		break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL GamePlayerStateCanThrow( GamePlayer *player )
+{
+	switch(player->state) {
+	case STATE_LIFT_JUMP:
+	case STATE_LIFT_FALL:
+	case STATE_LIFT_RUN:
+	case STATE_LIFT_STANCE:
+	case STATE_LIFT_WALK:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
 /** 处于被举起的状态下，在攻击结束时  */
 static void GamePlayer_AtBeLiftAttackDone( LCUI_Widget *widget )
 {
@@ -300,7 +326,7 @@ static LCUI_BOOL CommonSkill_CanUseASprintAttack( GamePlayer *player )
 }
 
 /** 开始发动冲撞A攻击 */
-static void CommonSkill_StartASprintAttack( GamePlayer *player )
+static void CommonSkill_StartSprintAAttack( GamePlayer *player )
 {
 	_StartSprintAttack( player, STATE_AS_ATTACK, ATTACK_TYPE_S_PUNCH );
 }
@@ -318,9 +344,39 @@ static LCUI_BOOL CommonSkill_CanUseBSprintAttack( GamePlayer *player )
 }
 
 /** 开始发动冲撞B攻击 */
-static void CommonSkill_StartBSprintAttack( GamePlayer *player )
+static void CommonSkill_StartSprintBAttack( GamePlayer *player )
 {
 	_StartSprintAttack( player, STATE_BS_ATTACK, ATTACK_TYPE_S_KICK );
+}
+
+static LCUI_BOOL CommonSkill_CanUseSprintJumpAAttack( GamePlayer *player )
+{
+	if( player->lock_action || !player->control.a_attack ) {
+		return FALSE;
+	}
+	return GamePlayerStateCanSprintJumpAttack( player );
+}
+
+static LCUI_BOOL CommonSkill_CanUseSprintJumpBAttack( GamePlayer *player )
+{
+	if( player->lock_action || !player->control.b_attack ) {
+		return FALSE;
+	}
+	return GamePlayerStateCanSprintJumpAttack( player );
+}
+
+static void CommonSkill_StartSprintJumpAAttack( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_ASJ_ATTACK );
+	GamePlayer_LockAction( player );
+	player->attack_type = ATTACK_TYPE_SJUMP_PUNCH;
+}
+
+static void CommonSkill_StartSprintJumpBAttack( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_BSJ_ATTACK );
+	GamePlayer_LockAction( player );
+	player->attack_type = ATTACK_TYPE_SJUMP_KICK;
 }
 
 /** 检测是否可以攻击到躺地玩家 */
@@ -716,6 +772,411 @@ static void CommonSkill_StartJumpMachBAttack( GamePlayer *player )
 	player->attack_type = ATTACK_TYPE_JUMP_KICK;
 }
 
+static LCUI_BOOL CommonSkill_CanUseBombKick( GamePlayer *player )
+{
+	if( player->state != STATE_JUMP_DONE ) {
+		return FALSE;
+	}
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/** 开始发动 爆裂腿技能 */
+static void CommonSkill_StartBombKick( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_BOMBKICK );
+	player->attack_type = ATTACK_TYPE_BOMB_KICK;
+	GameObject_ClearAttack( player->object );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	if( player->control.left_motion ) {
+		GameObject_SetXSpeed( player->object, -100 );
+		GamePlayer_SetLeftOriented( player );
+	}
+	else if( player->control.right_motion ) {
+		GameObject_SetXSpeed( player->object, 100 );
+		GamePlayer_SetRightOriented( player );
+	}
+	else if( GamePlayer_IsLeftOriented(player) ) {
+		GameObject_SetXSpeed( player->object, -100 );
+	} else {
+		GameObject_SetXSpeed( player->object, 100 );
+	}
+	GameObject_AtLanding( player->object, 20, -10, GamePlayer_AtLandingDone );
+}
+
+static LCUI_BOOL CommonSkill_CanUseSpinHit( GamePlayer *player )
+{
+	if( player->state != STATE_JUMP_DONE ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/** 开始发动 自旋击（翻转击） 技能 */
+static void CommonSkill_StartSpinHit( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SPINHIT );
+	player->attack_type = ATTACK_TYPE_SPIN_HIT;
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	if( player->control.left_motion ) {
+		GameObject_SetXSpeed( player->object, -100 );
+		GamePlayer_SetLeftOriented( player );
+	}
+	else if( player->control.right_motion ) {
+		GameObject_SetXSpeed( player->object, 100 );
+		GamePlayer_SetRightOriented( player );
+	}
+	else if( GamePlayer_IsLeftOriented(player) ) {
+		GameObject_SetXSpeed( player->object, -100 );
+	} else {
+		GameObject_SetXSpeed( player->object, 100 );
+	}
+	GameObject_AtLanding( player->object, 30, -10, GamePlayer_AtLandingDone );
+}
+
+static LCUI_BOOL CommonSkill_CanUseAThrow( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	return GamePlayerStateCanThrow( player );
+}
+
+static LCUI_BOOL CommonSkill_CanUseBThrow( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	return GamePlayerStateCanThrow( player );
+}
+
+/** 在被举起的状态下，被动起跳 */
+static void GamePlayer_BeLiftPassiveStartJump( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	player->other = NULL;
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SJUMP );
+}
+
+static void GamePlayer_AtThrowLanding( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_StartStand( player );
+}
+
+/** 在抛飞结束时 */
+static void GamePlayer_AtThrowUpFlyDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_StopXMotion( player );
+	GameObject_AtTouch( widget, NULL );
+	if( GamePlayer_SetLying( player ) == 0 ) {
+		GamePlayer_SetRestTimeOut(
+			player, BE_THROW_REST_TIMEOUT, 
+			GamePlayer_StartStand 
+		);
+	}
+}
+
+/** 被抛后落地时，弹起 */
+static void GamePlayer_LandingBounce( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_ReduceSpeed( player, 75 );
+	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
+	player->other = NULL;
+	GameObject_AtLanding(
+		widget, ZSPEED_XF_HIT_FLY2, -ZACC_XF_HIT_FLY2,
+		GamePlayer_AtThrowUpFlyDone
+	);
+}
+
+/** 处理游戏角色在被抛出时与其他角色的碰撞 */
+static void GamePlayer_ProcThrowUpFlyAttack( LCUI_Widget *self, LCUI_Widget *other )
+{
+	double x1, x2;
+	GamePlayer *player, *other_player;
+
+	player = GamePlayer_GetPlayerByWidget( self );
+	other_player = GamePlayer_GetPlayerByWidget( other );
+	if( !player || !other_player ) {
+		return;
+	}
+
+	/* 判断自己的状态是否符合要求 */
+	if( player->state != STATE_HIT_FLY
+	 && player->state != STATE_HIT_FLY_FALL 
+	 && player->state != STATE_LYING_HIT ) {
+		return;
+	}
+
+	if( GamePlayer_TryHit( other_player ) == 0 ) {
+		return;
+	}
+	x1 = GameObject_GetX( self );
+	x2 = GameObject_GetX( other );
+	/* 记录攻击 */
+	Game_RecordAttack(	player->other, ATTACK_TYPE_BUMPED,
+				other_player, other_player->state );
+	/* 根据两者坐标，判断击飞的方向 */
+	if( x1 < x2 ) {
+		GamePlayer_SetRightHitFly( other_player );
+	} else {
+		GamePlayer_SetLeftHitFly( other_player );
+	}
+	other_player->n_attack = 0;
+}
+
+/** 在抛投动作结束时 */
+static void GamePlayer_AtThrowDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	double z, z_speed, z_acc;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	z = GameObject_GetZ( widget );
+	z_speed = GameObject_GetZSpeed( widget );
+	z_acc = GameObject_GetZAcc( widget );
+	/* 若还未落地，则维持该动作，直至落地时切换 */
+	if( z > 0 && z_acc < 0 ) {
+		GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtThrowLanding );
+	} else {
+		GamePlayer_StopXMotion( player );
+		GamePlayer_StopYMotion( player );
+		GamePlayer_UnlockAction( player );
+		GamePlayer_SetReady( player );
+	}
+}
+
+static void GamePlayer_AtBeThrowDownDone( LCUI_Widget *widget )
+{
+	int ret = 0;
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	switch( player->state ) {
+	case STATE_TUMMY:
+	case STATE_TUMMY_HIT:
+		ret = GamePlayer_SetTummy( player );
+		break;
+	case STATE_LYING:
+	case STATE_LYING_HIT:
+		ret = GamePlayer_SetLying( player );
+		break;
+	default:
+		break;
+	}
+	GamePlayer_LockAction( player );
+	GamePlayer_StopXMotion( player );
+	if( ret == 0 ) {
+		GamePlayer_SetRestTimeOut( player, BE_THROW_REST_TIMEOUT, GamePlayer_StartStand );
+	}
+}
+
+static void GamePlayer_AtBeThrowDownLanding( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	if( player->state == STATE_BE_LIFT_TUMMY ) {
+		GamePlayer_ChangeState( player, STATE_TUMMY_HIT );
+	} else {
+		GamePlayer_ChangeState( player, STATE_LYING_HIT );
+	}
+	GamePlayer_LockAction( player );
+	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
+	player->other = NULL;
+	/* 落地后缩减该角色75%的移动速度 */
+	GamePlayer_ReduceSpeed( player, 75 );
+	GameObject_AtLanding(
+		player->object, ZSPEED_XF_HIT_FLY2,
+		-ZACC_XF_HIT_FLY2, GamePlayer_AtBeThrowDownDone
+	);
+}
+
+/** 将举起的角色向下摔 */
+static void CommonSkill_StartAThrow( GamePlayer *player )
+{
+	double x_speed;
+	if( !GamePlayer_IsInLiftState(player)
+	|| player->state == STATE_LIFT_SQUAT ) {
+		return;
+	}
+	if( player->state == STATE_LIFT_RUN ) {
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GameObject_SetXAcc( player->object, XACC_STOPRUN );
+		} else {
+			GameObject_SetXAcc( player->object, -XACC_STOPRUN );
+		}
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_THROW );
+	GameObject_AtActionDone( player->object, ACTION_THROW, GamePlayer_AtThrowDone );
+	if( player->other ) {
+		GamePlayer_BreakRest( player->other );
+		GamePlayer_UnlockAction( player->other );
+		switch( player->other->state ) {
+		case STATE_BE_LIFT_LYING:
+		case STATE_BE_LIFT_LYING_HIT:
+		case STATE_BE_LIFT_TUMMY:
+		case STATE_BE_LIFT_TUMMY_HIT:
+			/* 如果被举起的角色还处于 躺/趴着 的状态，
+			 * 那就根据举起者的方向，将被举起者向相应方向扔。
+			 */
+			if( GamePlayer_IsLeftOriented(player) ) {
+				x_speed = -XSPEED_THROWDOWN_FLY;
+				GamePlayer_SetRightOriented( player->other );
+			} else {
+				x_speed = XSPEED_THROWDOWN_FLY;
+				GamePlayer_SetLeftOriented( player->other );
+			}
+			x_speed += GameObject_GetXSpeed( player->object )/2;
+			GamePlayer_LockMotion( player->other );
+			GameObject_SetXSpeed( player->other->object, x_speed );
+			GameObject_AtLanding(
+				player->other->object, -ZSPEED_THROWDOWN_FLY,
+				-ZACC_THROWDOWN_FLY, GamePlayer_AtBeThrowDownLanding
+			);
+			break;
+		case STATE_SQUAT:
+		case STATE_BE_LIFT_SQUAT:
+		case STATE_BE_LIFT_STANCE:
+			if( GamePlayer_IsLeftOriented(player) ) {
+				x_speed = -XSPEED_RUN/2;
+			} else {
+				x_speed = XSPEED_RUN/2;
+			}
+			x_speed += GameObject_GetXSpeed( player->object )/4;
+			GamePlayer_LockMotion( player->other );
+			GameObject_SetXSpeed( player->other->object, x_speed );
+			GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
+			GameObject_AtLanding( 
+				player->other->object, 
+				ZSPEED_JUMP, -ZACC_JUMP, 
+				GamePlayer_AtLandingDone
+			);
+			GameObject_AtActionDone(
+				player->other->object, ACTION_SQUAT,
+				GamePlayer_BeLiftPassiveStartJump 
+			);
+		default:
+			break;
+		}
+		GamePlayer_LockAction( player->other );
+	}
+	GamePlayer_LockAction( player );
+	/* 解除举起者与被举起者的关系 */
+	//player->other->other = NULL;
+	player->other = NULL;
+}
+
+/** 将举起的角色向前抛出 */
+static void CommonSkill_StartBThrow( GamePlayer *player )
+{
+	double x_speed;
+	if( !GamePlayer_IsInLiftState(player)
+	|| player->state == STATE_LIFT_SQUAT ) {
+		return;
+	}
+	/* 如果在跑步，那就减点速度 */
+	if( player->state == STATE_LIFT_RUN ) {
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GameObject_SetXAcc( player->object, XACC_STOPRUN );
+		} else {
+			GameObject_SetXAcc( player->object, -XACC_STOPRUN );
+		}
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_THROW );
+	GameObject_AtActionDone( player->object, ACTION_THROW, GamePlayer_AtThrowDone );
+	if( player->other ) {
+		/* 打断休息时限倒计时，避免角色被抛出时，在空中站起 */
+		GamePlayer_BreakRest( player->other );
+		GamePlayer_UnlockAction( player->other );
+		switch( player->other->state ) {
+		case STATE_BE_LIFT_LYING:
+		case STATE_BE_LIFT_LYING_HIT:
+		case STATE_BE_LIFT_TUMMY:
+		case STATE_BE_LIFT_TUMMY_HIT:
+			/* 如果被举起的角色还处于 躺/趴着 的状态，
+			 * 那就根据举起者的方向，将被举起者向相应方向扔。
+			 */
+			if( GamePlayer_IsLeftOriented(player) ) {
+				x_speed = -XSPEED_THROWUP_FLY;
+				GamePlayer_SetRightOriented( player->other );
+			} else {
+				x_speed = XSPEED_THROWUP_FLY;
+				GamePlayer_SetLeftOriented( player->other );
+			}
+			x_speed += GameObject_GetXSpeed( player->object )/4;
+			GamePlayer_LockMotion( player->other );
+			GameObject_SetXSpeed( player->other->object, x_speed );
+			GamePlayer_ChangeState( player->other, STATE_HIT_FLY_FALL );
+			GameObject_AtLanding(
+				player->other->object, ZSPEED_THROWUP_FLY, 
+				-ZACC_THROWUP_FLY, GamePlayer_LandingBounce
+			);
+			GameObject_AtTouch(
+				player->other->object,
+				GamePlayer_ProcThrowUpFlyAttack 
+			);
+			break;
+		case STATE_SQUAT:
+		case STATE_BE_LIFT_SQUAT:
+		case STATE_BE_LIFT_STANCE:
+			if( GamePlayer_IsLeftOriented(player) ) {
+				x_speed = -XSPEED_RUN/2;
+			} else {
+				x_speed = XSPEED_RUN/2;
+			}
+			x_speed += GameObject_GetXSpeed( player->object )/2;
+			GamePlayer_LockMotion( player->other );
+			GameObject_SetXSpeed( player->other->object, x_speed );
+			GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
+			GameObject_AtLanding( 
+				player->other->object, 
+				ZSPEED_JUMP, -ZACC_JUMP, 
+				GamePlayer_AtLandingDone
+			);
+			GameObject_AtActionDone(
+				player->other->object, ACTION_SQUAT,
+				GamePlayer_BeLiftPassiveStartJump 
+			);
+		default:
+			break;
+		}
+		GamePlayer_LockAction( player->other );
+	}
+	GamePlayer_LockAction( player );
+	/* 解除举起者与被举起者的关系 */
+	//player->other->other = NULL;
+	player->other = NULL;
+}
+
 /** 注册A攻击 */
 static void CommonSkill_RegisterAAttack(void)
 {
@@ -776,6 +1237,26 @@ static void CommonSkill_RegisterJumpBAttack(void)
 	);
 }
 
+/** 注册冲刺跳跃A攻击 */
+static void CommonSkill_RegisterSprintJumpAAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_JUMP_A_ATTACK, 
+				SKILLPRIORITY_SPRINT_JUMP_A_ATTACK,
+				CommonSkill_CanUseSprintJumpAAttack,
+				CommonSkill_StartSprintJumpAAttack
+	);
+}
+
+/** 注册冲刺跳跃B攻击 */
+static void CommonSkill_RegisterSprintJumpBAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_JUMP_B_ATTACK, 
+				SKILLPRIORITY_SPRINT_JUMP_B_ATTACK,
+				CommonSkill_CanUseSprintJumpBAttack,
+				CommonSkill_StartSprintJumpBAttack
+	);
+}
+
 /** 注册 终结一击 技能 */
 static void CommonSkill_RegisterFinalBlow(void)
 {
@@ -791,21 +1272,21 @@ static void CommonSkill_RegisterFinalBlow(void)
 	);
 }
 
-static void CommonSkill_RegisterASprintAttack(void)
+static void CommonSkill_RegisterSprintAAttack(void)
 {
-	SkillLibrary_AddSkill(	SKILLNAME_AS_ATTACK,
-				SKILLPRIORITY_AS_ATTACK,
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_A_ATTACK,
+				SKILLPRIORITY_SPRINT_A_ATTACK,
 				CommonSkill_CanUseASprintAttack,
-				CommonSkill_StartASprintAttack
+				CommonSkill_StartSprintAAttack
 	);
 }
 
-static void CommonSkill_RegisterBSprintAttack(void)
+static void CommonSkill_RegisterSprintBAttack(void)
 {
-	SkillLibrary_AddSkill(	SKILLNAME_BS_ATTACK,
-				SKILLPRIORITY_BS_ATTACK,
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_B_ATTACK,
+				SKILLPRIORITY_SPRINT_B_ATTACK,
 				CommonSkill_CanUseBSprintAttack,
-				CommonSkill_StartBSprintAttack
+				CommonSkill_StartSprintBAttack
 	);
 }
 
@@ -850,42 +1331,6 @@ static void CommonSkill_RegisterLift(void)
 	);
 }
 
-static LCUI_BOOL CommonSkill_CanUseBombKick( GamePlayer *player )
-{
-	if( player->state != STATE_JUMP_DONE ) {
-		return FALSE;
-	}
-	if( !player->control.b_attack ) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/** 开始发动 爆裂腿技能 */
-static void CommonSkill_StartBombKick( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_BOMBKICK );
-	player->attack_type = ATTACK_TYPE_BOMB_KICK;
-	GameObject_ClearAttack( player->object );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	if( player->control.left_motion ) {
-		GameObject_SetXSpeed( player->object, -100 );
-		GamePlayer_SetLeftOriented( player );
-	}
-	else if( player->control.right_motion ) {
-		GameObject_SetXSpeed( player->object, 100 );
-		GamePlayer_SetRightOriented( player );
-	}
-	else if( GamePlayer_IsLeftOriented(player) ) {
-		GameObject_SetXSpeed( player->object, -100 );
-	} else {
-		GameObject_SetXSpeed( player->object, 100 );
-	}
-	GameObject_AtLanding( player->object, 20, -10, GamePlayer_AtLandingDone );
-}
-
 /** 注册 爆裂腿技能 */
 static void CommonSkill_RegisterBombKick(void)
 {
@@ -894,41 +1339,6 @@ static void CommonSkill_RegisterBombKick(void)
 				CommonSkill_CanUseBombKick,
 				CommonSkill_StartBombKick
 	);
-}
-
-static LCUI_BOOL CommonSkill_CanUseSpinHit( GamePlayer *player )
-{
-	if( player->state != STATE_JUMP_DONE ) {
-		return FALSE;
-	}
-	if( !player->control.a_attack ) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/** 开始发动 自旋击（翻转击） 技能 */
-static void CommonSkill_StartSpinHit( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_SPINHIT );
-	player->attack_type = ATTACK_TYPE_SPIN_HIT;
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	if( player->control.left_motion ) {
-		GameObject_SetXSpeed( player->object, -100 );
-		GamePlayer_SetLeftOriented( player );
-	}
-	else if( player->control.right_motion ) {
-		GameObject_SetXSpeed( player->object, 100 );
-		GamePlayer_SetRightOriented( player );
-	}
-	else if( GamePlayer_IsLeftOriented(player) ) {
-		GameObject_SetXSpeed( player->object, -100 );
-	} else {
-		GameObject_SetXSpeed( player->object, 100 );
-	}
-	GameObject_AtLanding( player->object, 30, -10, GamePlayer_AtLandingDone );
 }
 
 /** 注册 爆裂腿技能 */
@@ -941,6 +1351,20 @@ static void CommonSkill_RegisterSpinHit(void)
 	);
 }
 
+static void CommonSkill_RegisterThrow(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_A_THROW,
+				SKILLPRIORITY_A_THROW,
+				CommonSkill_CanUseAThrow,
+				CommonSkill_StartAThrow
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_B_THROW,
+				SKILLPRIORITY_B_THROW,
+				CommonSkill_CanUseBThrow,
+				CommonSkill_StartBThrow
+	);
+}
+
 /** 注册通用技能 */
 void CommonSkill_Register(void)
 {
@@ -948,12 +1372,15 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterBAttack();
 	CommonSkill_RegisterJumpAAttack();
 	CommonSkill_RegisterJumpBAttack();
-	CommonSkill_RegisterASprintAttack();
-	CommonSkill_RegisterBSprintAttack();
+	CommonSkill_RegisterSprintAAttack();
+	CommonSkill_RegisterSprintBAttack();
+	CommonSkill_RegisterSprintJumpAAttack();
+	CommonSkill_RegisterSprintJumpBAttack();
 	CommonSkill_RegisterFinalBlow();
 	CommonSkill_RegisterJumpElbow();
 	CommonSkill_RegisterJumpTread();
 	CommonSkill_RegisterLift();
+	CommonSkill_RegisterThrow();
 	CommonSkill_RegisterMachStomp();
 	CommonSkill_RegisterBombKick();
 	CommonSkill_RegisterSpinHit();
