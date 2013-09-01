@@ -465,7 +465,7 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 }
 
 /** 按百分比变更移动速度，n 取值范围为 0 ~ 100 */
-static void GamePlayer_ReduceSpeed( GamePlayer *player, int n )
+void GamePlayer_ReduceSpeed( GamePlayer *player, int n )
 {
 	double speed;
 	speed = GameObject_GetXSpeed( player->object );
@@ -621,7 +621,7 @@ static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
 }
 
 /** 开始站起 */
-static void GamePlayer_StartStand( GamePlayer *player )
+void GamePlayer_StartStand( GamePlayer *player )
 {
 	GamePlayer *other_player;
 	/* 如果已经死了，就不站起来了 */
@@ -692,7 +692,7 @@ static void GamePlayer_SetDeath( GamePlayer *player )
 	LCUITimer_Set( 50, GamePlayer_GraduallyDisappear, (void*)player, TRUE );
 }
 
-static int GamePlayer_SetLying( GamePlayer *player )
+int GamePlayer_SetLying( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LYING );
@@ -705,7 +705,7 @@ static int GamePlayer_SetLying( GamePlayer *player )
 	return 0;
 }
 
-static int GamePlayer_SetTummy( GamePlayer *player )
+int GamePlayer_SetTummy( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_TUMMY );
@@ -2106,318 +2106,6 @@ static void GamePlayer_SetLiftPlayer( GamePlayer *player )
 	GameObject_SetZ( other_player->object, 20 );
 }
 
-static void GamePlayer_AtThrowLanding( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_StopXMotion( player );
-	GamePlayer_StopYMotion( player );
-	GamePlayer_StartStand( player );
-}
-
-/** 在抛投动作结束时 */
-static void GamePlayer_AtThrowDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	double z, z_speed, z_acc;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	z = GameObject_GetZ( widget );
-	z_speed = GameObject_GetZSpeed( widget );
-	z_acc = GameObject_GetZAcc( widget );
-	/* 若还未落地，则维持该动作，直至落地时切换 */
-	if( z > 0 && z_acc < 0 ) {
-		GameObject_AtLanding( widget, z_speed, z_acc, GamePlayer_AtThrowLanding );
-	} else {
-		GamePlayer_StopXMotion( player );
-		GamePlayer_StopYMotion( player );
-		GamePlayer_UnlockAction( player );
-		GamePlayer_SetReady( player );
-	}
-}
-
-/** 在抛飞结束时 */
-static void GamePlayer_AtThrowUpFlyDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_StopXMotion( player );
-	GameObject_AtTouch( widget, NULL );
-	if( GamePlayer_SetLying( player ) == 0 ) {
-		GamePlayer_SetRestTimeOut(
-			player, BE_THROW_REST_TIMEOUT, 
-			GamePlayer_StartStand 
-		);
-	}
-}
-
-/** 被抛后落地时，弹起 */
-static void GamePlayer_LandingBounce( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_ReduceSpeed( player, 75 );
-	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
-	player->other = NULL;
-	GameObject_AtLanding(
-		widget, ZSPEED_XF_HIT_FLY2, -ZACC_XF_HIT_FLY2,
-		GamePlayer_AtThrowUpFlyDone
-	);
-}
-
-/** 处理游戏角色在被抛出时与其他角色的碰撞 */
-static void GamePlayer_ProcThrowUpFlyAttack( LCUI_Widget *self, LCUI_Widget *other )
-{
-	double x1, x2;
-	GamePlayer *player, *other_player;
-
-	player = GamePlayer_GetPlayerByWidget( self );
-	other_player = GamePlayer_GetPlayerByWidget( other );
-	if( !player || !other_player ) {
-		return;
-	}
-
-	/* 判断自己的状态是否符合要求 */
-	if( player->state != STATE_HIT_FLY
-	 && player->state != STATE_HIT_FLY_FALL 
-	 && player->state != STATE_LYING_HIT ) {
-		return;
-	}
-
-	if( GamePlayer_TryHit( other_player ) == 0 ) {
-		return;
-	}
-	x1 = GameObject_GetX( self );
-	x2 = GameObject_GetX( other );
-	/* 记录攻击 */
-	Game_RecordAttack(	player->other, ATTACK_TYPE_BUMPED,
-				other_player, other_player->state );
-	/* 根据两者坐标，判断击飞的方向 */
-	if( x1 < x2 ) {
-		GamePlayer_SetRightHitFly( other_player );
-	} else {
-		GamePlayer_SetLeftHitFly( other_player );
-	}
-	other_player->n_attack = 0;
-}
-
-/** 在被举起的状态下，被动起跳 */
-static void GamePlayer_BeLiftPassiveStartJump( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	player->other = NULL;
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_SJUMP );
-}
-
-/** 将举起的角色向前抛出 */
-static void GamePlayer_SetThrowUp( GamePlayer *player )
-{
-	double x_speed;
-	if( !GamePlayer_IsInLiftState(player)
-	|| player->state == STATE_LIFT_SQUAT ) {
-		return;
-	}
-	/* 如果在跑步，那就减点速度 */
-	if( player->state == STATE_LIFT_RUN ) {
-		if( GamePlayer_IsLeftOriented(player) ) {
-			GameObject_SetXAcc( player->object, XACC_STOPRUN );
-		} else {
-			GameObject_SetXAcc( player->object, -XACC_STOPRUN );
-		}
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_THROW );
-	GameObject_AtActionDone( player->object, ACTION_THROW, GamePlayer_AtThrowDone );
-	if( player->other ) {
-		/* 打断休息时限倒计时，避免角色被抛出时，在空中站起 */
-		GamePlayer_BreakRest( player->other );
-		GamePlayer_UnlockAction( player->other );
-		switch( player->other->state ) {
-		case STATE_BE_LIFT_LYING:
-		case STATE_BE_LIFT_LYING_HIT:
-		case STATE_BE_LIFT_TUMMY:
-		case STATE_BE_LIFT_TUMMY_HIT:
-			/* 如果被举起的角色还处于 躺/趴着 的状态，
-			 * 那就根据举起者的方向，将被举起者向相应方向扔。
-			 */
-			if( GamePlayer_IsLeftOriented(player) ) {
-				x_speed = -XSPEED_THROWUP_FLY;
-				GamePlayer_SetRightOriented( player->other );
-			} else {
-				x_speed = XSPEED_THROWUP_FLY;
-				GamePlayer_SetLeftOriented( player->other );
-			}
-			x_speed += GameObject_GetXSpeed( player->object )/4;
-			GamePlayer_LockMotion( player->other );
-			GameObject_SetXSpeed( player->other->object, x_speed );
-			GamePlayer_ChangeState( player->other, STATE_HIT_FLY_FALL );
-			GameObject_AtLanding(
-				player->other->object, ZSPEED_THROWUP_FLY, 
-				-ZACC_THROWUP_FLY, GamePlayer_LandingBounce
-			);
-			GameObject_AtTouch(
-				player->other->object,
-				GamePlayer_ProcThrowUpFlyAttack 
-			);
-			break;
-		case STATE_SQUAT:
-		case STATE_BE_LIFT_SQUAT:
-		case STATE_BE_LIFT_STANCE:
-			if( GamePlayer_IsLeftOriented(player) ) {
-				x_speed = -XSPEED_RUN/2;
-			} else {
-				x_speed = XSPEED_RUN/2;
-			}
-			x_speed += GameObject_GetXSpeed( player->object )/2;
-			GamePlayer_LockMotion( player->other );
-			GameObject_SetXSpeed( player->other->object, x_speed );
-			GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
-			GameObject_AtLanding( 
-				player->other->object, 
-				ZSPEED_JUMP, -ZACC_JUMP, 
-				GamePlayer_AtLandingDone
-			);
-			GameObject_AtActionDone(
-				player->other->object, ACTION_SQUAT,
-				GamePlayer_BeLiftPassiveStartJump 
-			);
-		default:
-			break;
-		}
-		GamePlayer_LockAction( player->other );
-	}
-	GamePlayer_LockAction( player );
-	/* 解除举起者与被举起者的关系 */
-	//player->other->other = NULL;
-	player->other = NULL;
-}
-
-static void GamePlayer_AtBeThrowDownDone( LCUI_Widget *widget )
-{
-	int ret = 0;
-	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	switch( player->state ) {
-	case STATE_TUMMY:
-	case STATE_TUMMY_HIT:
-		ret = GamePlayer_SetTummy( player );
-		break;
-	case STATE_LYING:
-	case STATE_LYING_HIT:
-		ret = GamePlayer_SetLying( player );
-		break;
-	default:
-		break;
-	}
-	GamePlayer_LockAction( player );
-	GamePlayer_StopXMotion( player );
-	if( ret == 0 ) {
-		GamePlayer_SetRestTimeOut( player, BE_THROW_REST_TIMEOUT, GamePlayer_StartStand );
-	}
-}
-
-static void GamePlayer_AtBeThrowDownLanding( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	if( player->state == STATE_BE_LIFT_TUMMY ) {
-		GamePlayer_ChangeState( player, STATE_TUMMY_HIT );
-	} else {
-		GamePlayer_ChangeState( player, STATE_LYING_HIT );
-	}
-	GamePlayer_LockAction( player );
-	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
-	player->other = NULL;
-	/* 落地后缩减该角色75%的移动速度 */
-	GamePlayer_ReduceSpeed( player, 75 );
-	GameObject_AtLanding(
-		player->object, ZSPEED_XF_HIT_FLY2,
-		-ZACC_XF_HIT_FLY2, GamePlayer_AtBeThrowDownDone
-	);
-}
-
-/** 将举起的角色向下砸 */
-static void GamePlayer_SetThrowDown( GamePlayer *player )
-{
-	double x_speed;
-	if( !GamePlayer_IsInLiftState(player)
-	|| player->state == STATE_LIFT_SQUAT ) {
-		return;
-	}
-	if( player->state == STATE_LIFT_RUN ) {
-		if( GamePlayer_IsLeftOriented(player) ) {
-			GameObject_SetXAcc( player->object, XACC_STOPRUN );
-		} else {
-			GameObject_SetXAcc( player->object, -XACC_STOPRUN );
-		}
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_THROW );
-	GameObject_AtActionDone( player->object, ACTION_THROW, GamePlayer_AtThrowDone );
-	if( player->other ) {
-		GamePlayer_BreakRest( player->other );
-		GamePlayer_UnlockAction( player->other );
-		switch( player->other->state ) {
-		case STATE_BE_LIFT_LYING:
-		case STATE_BE_LIFT_LYING_HIT:
-		case STATE_BE_LIFT_TUMMY:
-		case STATE_BE_LIFT_TUMMY_HIT:
-			/* 如果被举起的角色还处于 躺/趴着 的状态，
-			 * 那就根据举起者的方向，将被举起者向相应方向扔。
-			 */
-			if( GamePlayer_IsLeftOriented(player) ) {
-				x_speed = -XSPEED_THROWDOWN_FLY;
-				GamePlayer_SetRightOriented( player->other );
-			} else {
-				x_speed = XSPEED_THROWDOWN_FLY;
-				GamePlayer_SetLeftOriented( player->other );
-			}
-			x_speed += GameObject_GetXSpeed( player->object )/2;
-			GamePlayer_LockMotion( player->other );
-			GameObject_SetXSpeed( player->other->object, x_speed );
-			GameObject_AtLanding(
-				player->other->object, -ZSPEED_THROWDOWN_FLY,
-				-ZACC_THROWDOWN_FLY, GamePlayer_AtBeThrowDownLanding
-			);
-			break;
-		case STATE_SQUAT:
-		case STATE_BE_LIFT_SQUAT:
-		case STATE_BE_LIFT_STANCE:
-			if( GamePlayer_IsLeftOriented(player) ) {
-				x_speed = -XSPEED_RUN/2;
-			} else {
-				x_speed = XSPEED_RUN/2;
-			}
-			x_speed += GameObject_GetXSpeed( player->object )/4;
-			GamePlayer_LockMotion( player->other );
-			GameObject_SetXSpeed( player->other->object, x_speed );
-			GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
-			GameObject_AtLanding( 
-				player->other->object, 
-				ZSPEED_JUMP, -ZACC_JUMP, 
-				GamePlayer_AtLandingDone
-			);
-			GameObject_AtActionDone(
-				player->other->object, ACTION_SQUAT,
-				GamePlayer_BeLiftPassiveStartJump 
-			);
-		default:
-			break;
-		}
-		GamePlayer_LockAction( player->other );
-	}
-	GamePlayer_LockAction( player );
-	/* 解除举起者与被举起者的关系 */
-	//player->other->other = NULL;
-	player->other = NULL;
-}
-
 static void GamePlayer_AtRideAttackDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -2503,25 +2191,6 @@ int GamePlayer_StartAAttack( GamePlayer *player )
 	switch(player->state) {
 	case STATE_RIDE:
 		GamePlayer_SetRideAttack( player );
-	case STATE_RIDE_ATTACK:
-	case STATE_A_ATTACK:
-	case STATE_B_ATTACK:
-		return 0;
-	case STATE_LIFT_JUMP:
-	case STATE_LIFT_FALL:
-	case STATE_LIFT_RUN:
-	case STATE_LIFT_STANCE:
-	case STATE_LIFT_WALK:
-		player->control.run = FALSE;
-		/* 将举起的角色向下砸 */
-		GamePlayer_SetThrowDown( player );
-		return 0;
-	case STATE_SJUMP:
-	case STATE_SSQUAT:
-		GamePlayer_ChangeState( player, STATE_ASJ_ATTACK );
-		GamePlayer_LockAction( player );
-		player->attack_type = ATTACK_TYPE_SJUMP_PUNCH;
-		GameObject_ClearAttack( player->object );
 		return 0;
 	default: 
 		break;
@@ -2652,25 +2321,6 @@ int GamePlayer_StartBAttack( GamePlayer *player )
 	switch(player->state) {
 	case STATE_RIDE:
 		GamePlayer_SetRideJump( player );
-	case STATE_RIDE_ATTACK:
-	case STATE_A_ATTACK:
-	case STATE_B_ATTACK:
-		return 0;
-	case STATE_LIFT_JUMP:
-	case STATE_LIFT_FALL:
-	case STATE_LIFT_RUN:
-	case STATE_LIFT_STANCE:
-	case STATE_LIFT_WALK:
-		player->control.run = FALSE;
-		/* 将举起的角色向前抛 */
-		GamePlayer_SetThrowUp( player );
-		return 0;
-	case STATE_SJUMP:
-	case STATE_SSQUAT:
-		GamePlayer_ChangeState( player, STATE_BSJ_ATTACK );
-		GamePlayer_LockAction( player );
-		player->attack_type = ATTACK_TYPE_SJUMP_KICK;
-		GameObject_ClearAttack( player->object );
 		return 0;
 	default:
 		break;
