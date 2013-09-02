@@ -130,6 +130,8 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_MACH_STOMP );
 	GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
 	GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
+	GamePlayer_EnableSkill( player, SKILLNAME_RIDE_A_ATTACK );
+	GamePlayer_EnableSkill( player, SKILLNAME_RIDE_B_ATTACK );
 }
 
 /** 为游戏角色启用一个技能 */
