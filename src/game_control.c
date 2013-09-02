@@ -2106,66 +2106,6 @@ static void GamePlayer_SetLiftPlayer( GamePlayer *player )
 	GameObject_SetZ( other_player->object, 20 );
 }
 
-static void GamePlayer_AtRideAttackDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	/* 如果还骑在对方身上 */
-	if( player->other ) {
-		GamePlayer_ChangeState( player, STATE_RIDE );
-	}
-}
-
-/** 骑着攻击 */
-static void GamePlayer_SetRideAttack( GamePlayer *player )
-{
-	if( !player->other ) {
-		return;
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
-	GamePlayer_LockAction( player );
-	GamePlayer_TryHit( player->other );
-	Game_RecordAttack( player, ATTACK_TYPE_RIDE_ATTACK, player->other, player->other->state );
-	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
-}
-
-static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	if( !player->other ) {
-		GamePlayer_StartStand( player );
-		return;
-	}
-	switch( player->other->state ) {
-	case STATE_TUMMY:
-	case STATE_TUMMY_HIT:
-	case STATE_LYING:
-	case STATE_LYING_HIT:
-		Game_RecordAttack(	player, ATTACK_TYPE_RIDE_JUMP_ATTACK, 
-					player->other, player->other->state );
-		GamePlayer_SetRideAttack( player );
-		break;
-	default:
-		player->other = NULL;
-		GamePlayer_StartStand( player );
-		break;
-	}
-}
-
-static void GamePlayer_SetRideJump( GamePlayer *player )
-{
-	if( !player->other ) {
-		return;
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_RIDE_JUMP );
-	GamePlayer_LockAction( player );
-	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtRideJumpDone );
-}
-
 /** 进行A攻击 */
 int GamePlayer_StartAAttack( GamePlayer *player )
 {
@@ -2187,13 +2127,6 @@ int GamePlayer_StartAAttack( GamePlayer *player )
 			}
 		}
 		return 0;
-	}
-	switch(player->state) {
-	case STATE_RIDE:
-		GamePlayer_SetRideAttack( player );
-		return 0;
-	default: 
-		break;
 	}
 	
 	/* 获取满足发动条件的技能 */
@@ -2318,13 +2251,6 @@ int GamePlayer_StartBAttack( GamePlayer *player )
 		return 0;
 	}
 
-	switch(player->state) {
-	case STATE_RIDE:
-		GamePlayer_SetRideJump( player );
-		return 0;
-	default:
-		break;
-	}
 	/* 获取满足发动条件的技能 */
 	skill_id = SkillLibrary_GetSkill( player );
 	/* 如果有，则发动该技能 */
