@@ -1365,6 +1365,112 @@ static void CommonSkill_RegisterThrow(void)
 	);
 }
 
+static void CommonSkill_RegisterRide(void)
+{
+
+}
+
+static LCUI_BOOL CommonSkill_CanUseRideAAttack( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	if( !player->state == STATE_RIDE ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static LCUI_BOOL CommonSkill_CanUseRideBAttack( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	if( !player->state == STATE_RIDE ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void GamePlayer_AtRideAttackDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	/* 如果还骑在对方身上 */
+	if( player->other ) {
+		GamePlayer_ChangeState( player, STATE_RIDE );
+	}
+}
+
+static void CommonSkill_StartRideAAttack( GamePlayer *player )
+{
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
+	GamePlayer_LockAction( player );
+	GamePlayer_TryHit( player->other );
+	Game_RecordAttack( player, ATTACK_TYPE_RIDE_ATTACK, player->other, player->other->state );
+	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
+}
+
+static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( !player->other ) {
+		GamePlayer_StartStand( player );
+		return;
+	}
+	switch( player->other->state ) {
+	case STATE_TUMMY:
+	case STATE_TUMMY_HIT:
+	case STATE_LYING:
+	case STATE_LYING_HIT:
+		Game_RecordAttack(	player, ATTACK_TYPE_RIDE_JUMP_ATTACK, 
+					player->other, player->other->state );
+		CommonSkill_StartRideAAttack( player );
+		break;
+	default:
+		player->other = NULL;
+		GamePlayer_StartStand( player );
+		break;
+	}
+}
+
+static void CommonSkill_StartRideBAttack( GamePlayer *player )
+{
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_RIDE_JUMP );
+	GamePlayer_LockAction( player );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtRideJumpDone );
+}
+
+static void CommonSkill_RegisterRideAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_RIDE_A_ATTACK,
+				SKILLPRIORITY_RIDE_A_ATTACK,
+				CommonSkill_CanUseRideAAttack,
+				CommonSkill_StartRideAAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_RIDE_B_ATTACK,
+				SKILLPRIORITY_RIDE_B_ATTACK,
+				CommonSkill_CanUseRideBAttack,
+				CommonSkill_StartRideBAttack
+	);
+}
+
 /** 注册通用技能 */
 void CommonSkill_Register(void)
 {
@@ -1384,4 +1490,6 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterMachStomp();
 	CommonSkill_RegisterBombKick();
 	CommonSkill_RegisterSpinHit();
+	CommonSkill_RegisterRide();
+	CommonSkill_RegisterRideAttack();
 }

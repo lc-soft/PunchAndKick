@@ -24,6 +24,9 @@
 #define SKILLNAME_MACH_STOMP		"mach stomp"
 #define SKILLNAME_BOMBKICK		"bomb kick"
 #define SKILLNAME_SPINHIT		"spin hit"
+#define SKILLNAME_RIDE			"ride"
+#define SKILLNAME_RIDE_A_ATTACK		"ride A attack"
+#define SKILLNAME_RIDE_B_ATTACK		"ride B attack"
 
 enum SkillPriority_AAttack {
 	SKILLPRIORITY_A_LIFT,
@@ -38,6 +41,7 @@ enum SkillPriority_AAttack {
 	SKILLPRIORITY_JUMP_A_ATTACK,
 	SKILLPRIORITY_MACH_A_ATTACK,
 	SKILLPRIORITY_A_ATTACK,
+	SKILLPRIORITY_RIDE_A_ATTACK
 };
 
 enum SkillPriority_BAttack {
@@ -52,6 +56,15 @@ enum SkillPriority_BAttack {
 	SKILLPRIORITY_JUMP_MACH_B_ATTACK,
 	SKILLPRIORITY_JUMP_B_ATTACK,
 	SKILLPRIORITY_B_ATTACK,
+	SKILLPRIORITY_RIDE_B_ATTACK
+};
+
+enum SkillPriority_HorizMotion {
+	SKILLPRIORITY_RIDE
+};
+
+enum SkillPriority_VertiMotion {
+	SKILLPRIORITY_CATCH
 };
 
 /** 注册通用技能 */
