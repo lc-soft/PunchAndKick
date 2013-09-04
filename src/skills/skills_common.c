@@ -1177,6 +1177,143 @@ static void CommonSkill_StartBThrow( GamePlayer *player )
 	player->other = NULL;
 }
 
+static LCUI_BOOL CommonSkill_CanUseRide( GamePlayer *player )
+{
+	GamePlayer *other_player;
+	if( player->lock_motion ) {
+		return FALSE;
+	}
+	if( !player->control.up_motion
+	 && !player->control.down_motion ) {
+		 return FALSE;
+	}
+	if( player->state != STATE_WALK ) {
+		return FALSE;
+	}
+	other_player = GamePlayer_GetGroundPlayer( player );
+	if( !other_player ) {
+		return FALSE;
+	}
+	if( !GamePlayer_CanLiftPlayer( player, other_player ) ) {
+		return FALSE;
+	}
+	player->other = other_player;
+	return TRUE;
+}
+
+static void CommonSkill_StartRide( GamePlayer *player )
+{
+	int z_index;
+	double x, y;
+	if( player->other ) {
+		player->other->other = player;
+	} else {
+		return;
+	}
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	x = GameObject_GetX( player->other->object );
+	y = GameObject_GetY( player->other->object );
+	GameObject_SetX( player->object, x );
+	GameObject_SetY( player->object, y );
+	GamePlayer_ChangeState( player, STATE_RIDE );
+	z_index = Widget_GetZIndex( player->other->object );
+	Widget_SetZIndex( player->object, z_index+1 );
+}
+
+static LCUI_BOOL CommonSkill_CanUseCatch( GamePlayer *player )
+{
+	GamePlayer *other_player;
+	if( player->lock_motion ) {
+		return FALSE;
+	}
+	switch( player->state ) {
+	case STATE_READY:
+	case STATE_STANCE:
+	case STATE_WALK:
+		other_player = GamePlayer_CatchGaspingPlayer( player );
+		if( other_player ) {
+			player->other = other_player;
+			return TRUE;
+		}
+	default:
+		break;
+	}
+	return FALSE;
+}
+
+static void GamePlayer_AtCatchDone( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_SetReady( player );
+	if( player->other ) {
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_SetRest( player->other );
+	}
+}
+
+static void CommonSkill_StartCatch( GamePlayer *player )
+{
+	double x, y;
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	x = GameObject_GetX( player->object );
+	y = GameObject_GetY( player->object );
+	GameObject_SetY( player->other->object, y );
+	if( player->control.left_motion && player->control.right_motion ) {
+		if( GamePlayer_IsLeftOriented(player->other) ) {
+			if( x < GameObject_GetX( player->other->object ) ) {
+				return;
+			}
+			if( GamePlayer_IsLeftOriented(player->other) ) {
+				GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
+			} else {
+				GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
+			}
+			GameObject_SetX( player->other->object, x-30 );
+		} else {
+			if( x > GameObject_GetX( player->other->object ) ) {
+				return;
+			}
+			if( GamePlayer_IsLeftOriented(player->other) ) {
+				GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
+			} else {
+				GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
+			}
+			GameObject_SetX( player->other->object, x+30 );
+		}
+	}
+	else if( player->control.left_motion && !player->control.right_motion ) {
+		if( GamePlayer_IsLeftOriented(player->other) ) {
+			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
+		} else {
+			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
+		}
+		GameObject_SetX( player->other->object, x-30 );
+	}
+	else if( player->control.right_motion && !player->control.left_motion ) {
+		if( GamePlayer_IsLeftOriented(player->other) ) {
+			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
+		} else {
+			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
+		}
+		GameObject_SetX( player->other->object, x+30 );
+	} else {
+		return;
+	}
+	GamePlayer_ChangeState( player, STATE_CATCH );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockMotion( player->other );
+	GamePlayer_SetActionTimeOut( player, 2000, GamePlayer_AtCatchDone );
+}
+
 /** 注册A攻击 */
 static void CommonSkill_RegisterAAttack(void)
 {
@@ -1367,7 +1504,11 @@ static void CommonSkill_RegisterThrow(void)
 
 static void CommonSkill_RegisterRide(void)
 {
-
+	SkillLibrary_AddSkill(	SKILLNAME_RIDE,
+				SKILLPRIORITY_RIDE,
+				CommonSkill_CanUseRide,
+				CommonSkill_StartRide
+	);
 }
 
 static LCUI_BOOL CommonSkill_CanUseRideAAttack( GamePlayer *player )
@@ -1471,6 +1612,15 @@ static void CommonSkill_RegisterRideAttack(void)
 	);
 }
 
+static void CommonSkill_RegisterCatch(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_CATCH,
+				SKILLPRIORITY_CATCH,
+				CommonSkill_CanUseCatch,
+				CommonSkill_StartCatch
+	);
+}
+
 /** 注册通用技能 */
 void CommonSkill_Register(void)
 {
@@ -1492,4 +1642,5 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterSpinHit();
 	CommonSkill_RegisterRide();
 	CommonSkill_RegisterRideAttack();
+	CommonSkill_RegisterCatch();
 }

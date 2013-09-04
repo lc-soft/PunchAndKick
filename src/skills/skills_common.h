@@ -27,6 +27,7 @@
 #define SKILLNAME_RIDE			"ride"
 #define SKILLNAME_RIDE_A_ATTACK		"ride A attack"
 #define SKILLNAME_RIDE_B_ATTACK		"ride B attack"
+#define SKILLNAME_CATCH			"catch"
 
 enum SkillPriority_AAttack {
 	SKILLPRIORITY_A_LIFT,
