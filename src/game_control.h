@@ -308,6 +308,12 @@ void GamePlayer_SetRightHitFly( GamePlayer *player );
 
 void GamePlayer_SetLeftHitFly( GamePlayer *player );
 
+/** 抓住正处于喘气（歇息）状态下的玩家 */
+GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player );
+
+/** 设置为歇息状态 */
+void GamePlayer_SetRest( GamePlayer *player );
+
 /** 改变角色的动作动画  */
 void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
 
