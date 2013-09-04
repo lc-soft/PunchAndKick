@@ -1355,72 +1355,8 @@ void GamePlayer_StopRun( GamePlayer *player )
 	}
 }
 
-static void GamePlayer_AtCatchDone( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_SetReady( player );
-	if( player->other ) {
-		GamePlayer_UnlockAction( player->other );
-		GamePlayer_SetRest( player->other );
-	}
-}
-
-static void GamePlayer_SetLeftCatch( GamePlayer *player )
-{
-	double x, y;
-	if( !player->other ) {
-		return;
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	GamePlayer_StopXMotion( player );
-	GamePlayer_StopYMotion( player );
-	x = GameObject_GetX( player->object );
-	y = GameObject_GetY( player->object );
-	GameObject_SetX( player->other->object, x-30 );
-	GameObject_SetY( player->other->object, y );
-	if( GamePlayer_IsLeftOriented(player->other) ) {
-		GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-	} else {
-		GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-	}
-	GamePlayer_ChangeState( player, STATE_CATCH );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-	GamePlayer_LockMotion( player );
-	GamePlayer_LockMotion( player->other );
-	GamePlayer_SetActionTimeOut( player, 2000, GamePlayer_AtCatchDone );
-}
-
-static void GamePlayer_SetRightCatch( GamePlayer *player )
-{
-	double x, y;
-	if( !player->other ) {
-		return;
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	GamePlayer_StopXMotion( player );
-	GamePlayer_StopYMotion( player );
-	x = GameObject_GetX( player->object );
-	y = GameObject_GetY( player->object );
-	GameObject_SetX( player->other->object, x+30 );
-	GameObject_SetY( player->other->object, y );
-	if( GamePlayer_IsLeftOriented(player->other) ) {
-		GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-	} else {
-		GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-	}
-	GamePlayer_ChangeState( player, STATE_CATCH );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-	GamePlayer_LockMotion( player );
-	GamePlayer_LockMotion( player->other );
-	GamePlayer_SetActionTimeOut( player, 2000, GamePlayer_AtCatchDone );
-}
-
 /** 抓住正处于喘气（歇息）状态下的玩家 */
-static GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
+GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 {
 	RangeBox range;
 	LCUI_Widget *obj;
@@ -1443,8 +1379,9 @@ static GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 
 static int GamePlayer_SetLeftMotion( GamePlayer *player )
 {
-	GamePlayer *other_player;
+	int skill_id;
 	double x, y, speed;
+
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
 		 || player->state == STATE_SJUMP
@@ -1485,10 +1422,9 @@ static int GamePlayer_SetLeftMotion( GamePlayer *player )
 	case STATE_STANCE:
 	case STATE_WALK:
 		GamePlayer_SetLeftOriented( player );
-		other_player = GamePlayer_CatchGaspingPlayer( player );
-		if( other_player ) {
-			player->other = other_player;
-			GamePlayer_SetLeftCatch( player );
+		skill_id = SkillLibrary_GetSkill( player );
+		if( skill_id > 0 ) {
+			GamePlayer_RunSkill( player, skill_id );
 		}
 		if( player->control.run ) {
 			 GamePlayer_SetLeftRun( player );
@@ -1512,8 +1448,8 @@ static int GamePlayer_SetLeftMotion( GamePlayer *player )
 
 static int GamePlayer_SetRightMotion( GamePlayer *player )
 {
+	int skill_id;
 	double x, y, speed;
-	GamePlayer *other_player;
 
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
@@ -1555,11 +1491,9 @@ static int GamePlayer_SetRightMotion( GamePlayer *player )
 	case STATE_STANCE:
 	case STATE_WALK:
 		GamePlayer_SetRightOriented( player );
-		other_player = GamePlayer_CatchGaspingPlayer( player );
-		if( other_player ) {
-			player->other = other_player;
-			GamePlayer_SetRightCatch( player );
-			break;
+		skill_id = SkillLibrary_GetSkill( player );
+		if( skill_id > 0 ) {
+			GamePlayer_RunSkill( player, skill_id );
 		}
 		if( player->control.run ) {
 			 GamePlayer_SetRightRun( player );
@@ -2260,28 +2194,10 @@ int GamePlayer_StartBAttack( GamePlayer *player )
 	return 0;
 }
 
-/** 骑在躺地者身上 */
-static void GamePlayer_SetRidePlayer( GamePlayer *self, GamePlayer *other )
-{
-	int z_index;
-	double x, y;
-	self->other = other;
-	other->other = self;
-	GamePlayer_StopXMotion( self );
-	GamePlayer_StopYMotion( self );
-	x = GameObject_GetX( other->object );
-	y = GameObject_GetY( other->object );
-	GameObject_SetX( self->object, x );
-	GameObject_SetY( self->object, y );
-	GamePlayer_ChangeState( self, STATE_RIDE );
-	z_index = Widget_GetZIndex( other->object );
-	Widget_SetZIndex( self->object, z_index+1 );
-}
-
 void GamePlayer_SetUpMotion( GamePlayer *player )
 {
 	double speed;
-	GamePlayer *other_player;
+	int skill_id;
 
 	if( player->lock_motion ) {
 		return;
@@ -2296,15 +2212,11 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_WALK );
 		break;
 	case STATE_WALK:
-		other_player = GamePlayer_GetGroundPlayer( player );
-		if( !other_player ) {
-			break;
+		skill_id = SkillLibrary_GetSkill( player );
+		if( skill_id > 0 ) {
+			GamePlayer_RunSkill( player, skill_id );
+			return;
 		}
-		if( !GamePlayer_CanLiftPlayer( player, other_player ) ) {
-			break;
-		}
-		GamePlayer_SetRidePlayer( player, other_player );
-		return;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
 	case STATE_LIFT_RUN:
@@ -2319,7 +2231,7 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 void GamePlayer_SetDownMotion( GamePlayer *player )
 {
 	double speed;
-	GamePlayer *other_player;
+	int skill_id;
 
 	if( player->lock_motion ) {
 		return;
@@ -2333,15 +2245,11 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 	case STATE_STANCE:
 		GamePlayer_ChangeState( player, STATE_WALK );
 	case STATE_WALK:
-		other_player = GamePlayer_GetGroundPlayer( player );
-		if( !other_player ) {
-			break;
+		skill_id = SkillLibrary_GetSkill( player );
+		if( skill_id > 0 ) {
+			GamePlayer_RunSkill( player, skill_id );
+			return;
 		}
-		if( !GamePlayer_CanLiftPlayer( player, other_player ) ) {
-			break;
-		}
-		GamePlayer_SetRidePlayer( player, other_player );
-		return;
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
 	case STATE_LIFT_RUN:
