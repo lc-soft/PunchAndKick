@@ -1716,74 +1716,6 @@ static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 }
 
-static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GameObject_SetZ( player->other->object, LIFT_HEIGHT );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
-	/* 在举起者的位置变化时更新被举起者的位置 */
-	GameObject_AtMove( widget, GamePlayer_UpdateLiftPosition );
-}
-
-/** 设置举起另一个角色 */
-static void GamePlayer_SetLiftPlayer( GamePlayer *player )
-{
-	double x, y;
-	int z_index;
-	GamePlayer *other_player;
-
-	if( !player->other ) {
-		return;
-	}
-	other_player = player->other;
-	/* 对方不处于躺地状态则退出 */
-	if( other_player->state != STATE_LYING
-	 && other_player->state != STATE_LYING_HIT
-	 && other_player->state != STATE_TUMMY
-	 && other_player->state != STATE_TUMMY_HIT ) {
-		player->other = NULL;
-		return;
-	}
-	
-	/* 被举起的角色，需要记录举起他的角色 */
-	other_player->other = player;
-	GamePlayer_BreakRest( other_player );
-	z_index = Widget_GetZIndex( player->object );
-	Widget_SetZIndex( other_player->object, z_index+1);
-	
-	GamePlayer_UnlockAction( other_player );
-	if( other_player->state == STATE_LYING
-	 || other_player->state == STATE_LYING_HIT ) {
-		GamePlayer_ChangeState( other_player, STATE_BE_LIFT_LYING );
-	} else {
-		GamePlayer_ChangeState( other_player, STATE_BE_LIFT_TUMMY );
-	}
-	GamePlayer_LockAction( other_player );
-	/* 举起前，先停止移动 */
-	GamePlayer_StopXMotion( player );
-	GamePlayer_StopYMotion( player );
-	player->control.left_motion = FALSE;
-	player->control.right_motion = FALSE;
-	GamePlayer_UnlockAction( player );
-	/* 改为下蹲状态 */
-	GamePlayer_ChangeState( player, STATE_LIFT_SQUAT );
-	GamePlayer_LockAction( player );
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtLiftDone );
-	GamePlayer_SetRestTimeOut(
-		other_player, 
-		BE_LIFT_REST_TIMEOUT, 
-		GamePlayer_BeLiftStartStand 
-	);
-	/* 改变躺地角色的坐标 */
-	x = GameObject_GetX( player->object );
-	y = GameObject_GetY( player->object );
-	GameObject_SetX( other_player->object, x );
-	GameObject_SetY( other_player->object, y );
-	GameObject_SetZ( other_player->object, 20 );
-}
-
 /** 进行A攻击 */
 int GamePlayer_StartAAttack( GamePlayer *player )
 {
@@ -1813,128 +1745,6 @@ int GamePlayer_StartAAttack( GamePlayer *player )
 	if( skill_id > 0 ) {
 		GamePlayer_RunSkill( player, skill_id );
 	} 
-	return 0;
-}
-
-static void GamePlayer_AtWeakWalkDone( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_F_ROLL );
-	GamePlayer_LockAction( player );
-	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtForwardRollTimeOut );
-}
-
-static void GamePlayer_SetPush( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BB );
-	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_BB, GamePlayer_AtAttackDone );
-	GamePlayer_ChangeState( player->other, STATE_WEAK_RUN );
-	/* 在 STATE_WEAK_RUN 状态持续一段时间后结束 */
-	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-	if( GamePlayer_IsLeftOriented(player->other) ) {
-		GameObject_SetXSpeed( player->other->object, -XSPEED_WEAK_WALK );
-	} else {
-		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
-	}
-	GamePlayer_LockMotion( player->other );
-}
-
-/** 处理游戏角色在进行虚弱奔跑时与其他角色的碰撞 */
-static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other )
-{
-	double x1, x2;
-	GamePlayer *player, *other_player;
-
-	player = GamePlayer_GetPlayerByWidget( self );
-	other_player = GamePlayer_GetPlayerByWidget( other );
-	if( !player || !other_player ) {
-		return;
-	}
-	/* 如果自己并不是处于 虚弱奔跑（带攻击） 的状态 */
-	if( player->state != STATE_WEAK_RUN_ATTACK ) {
-		return;
-	}
-	/* 若推自己的角色的动作还未完成，则忽略他 */
-	if( other_player->state == STATE_CATCH_SKILL_FB
-	&& other_player->other == player ) {
-		return;
-	}
-	x1 = GameObject_GetX( self );
-	x2 = GameObject_GetX( other );
-	/* 根据两者坐标，判断击飞的方向 */
-	if( x1 < x2 ) {
-		GamePlayer_SetLeftHitFly( player );
-		GamePlayer_SetRightHitFly( other_player );
-	} else {
-		GamePlayer_SetRightHitFly( player );
-		GamePlayer_SetLeftHitFly( other_player );
-	}
-	/* 两个都受到攻击伤害 */
-	Game_RecordAttack( other_player, ATTACK_TYPE_BUMPED, player, player->state );
-	Game_RecordAttack( player, ATTACK_TYPE_BUMPED, other_player, other_player->state );
-	GameObject_AtTouch( player->object, NULL );
-	player->n_attack = 0;
-	other_player->n_attack = 0;
-}
-
-static void GamePlayer_SetPull( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	if( GamePlayer_IsLeftOriented(player) ) {
-		GamePlayer_SetRightOriented( player );
-	} else {
-		GamePlayer_SetLeftOriented( player );
-	}
-	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FB );
-	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FB, GamePlayer_AtAttackDone );
-	GamePlayer_ChangeState( player->other, STATE_WEAK_RUN_ATTACK );
-	/* 在与其他对象触碰时进行响应 */
-	GameObject_AtTouch( player->other->object, GamePlayer_ProcWeakWalkAttack );
-	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-	if( GamePlayer_IsLeftOriented(player->other) ) {
-		GameObject_SetXSpeed( player->other->object, -XSPEED_WEAK_WALK );
-	} else {
-		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
-	}
-	GamePlayer_LockMotion( player->other );
-}
-
-/** 进行B攻击 */
-int GamePlayer_StartBAttack( GamePlayer *player )
-{
-	int skill_id;
-
-	if( player->state == STATE_CATCH && player->other ) {
-		/* 根据方向，判断该使用何种技能 */
-		if( GamePlayer_IsLeftOriented(player) ) {
-			if( GamePlayer_IsLeftOriented(player->other) ) {
-				GamePlayer_SetPush( player );
-			} else {
-				GamePlayer_SetPull( player );
-			}
-		} else {
-			if( GamePlayer_IsLeftOriented(player->other) ) {
-				GamePlayer_SetPull( player );
-			} else {
-				GamePlayer_SetPush( player );
-			}
-		}
-		return 0;
-	}
-
-	/* 获取满足发动条件的技能 */
-	skill_id = SkillLibrary_GetSkill( player );
-	/* 如果有，则发动该技能 */
-	if( skill_id > 0 ) {
-		GamePlayer_RunSkill( player, skill_id );
-	}
 	return 0;
 }
 
@@ -2567,9 +2377,11 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		}
 	}
 	else if( player->control.b_attack ) {
-		if( GamePlayer_StartBAttack( player ) == 0 ) {
-			player->control.b_attack = FALSE;
+		skill_id = SkillLibrary_GetSkill( player );
+		if( skill_id > 0 ) {
+			GamePlayer_RunSkill( player, skill_id );
 		}
+		player->control.b_attack = FALSE;
 	}
 	if( player->control.jump ) {
 		skill_id = SkillLibrary_GetSkill( player );
