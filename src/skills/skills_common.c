@@ -1935,6 +1935,146 @@ static void CommonSkill_RegisterJump(void)
 	);
 }
 
+/** 向前翻滚超时后 */
+static void GamePlayer_AtForwardRollTimeOut( GamePlayer *player )
+{
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_SetYAcc( player->object, 0 );
+	GameObject_SetXAcc( player->object, 0 );
+	if( GamePlayer_SetTummy( player ) == 0 ) {
+		GamePlayer_SetRestTimeOut( 
+			player, LONG_REST_TIMEOUT, 
+			GamePlayer_StartStand 
+		);
+	}
+}
+
+static LCUI_BOOL CommonSkill_CanUsePush( GamePlayer *player )
+{
+	if( player->state != STATE_CATCH || !player->other ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void GamePlayer_AtWeakWalkDone( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_F_ROLL );
+	GamePlayer_LockAction( player );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtForwardRollTimeOut );
+}
+
+static void CommonSkill_StartBackPush( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BB );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_BB, GamePlayer_AtAttackDone );
+	GamePlayer_ChangeState( player->other, STATE_WEAK_RUN );
+	/* 在 STATE_WEAK_RUN 状态持续一段时间后结束 */
+	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	if( GamePlayer_IsLeftOriented(player->other) ) {
+		GameObject_SetXSpeed( player->other->object, -XSPEED_WEAK_WALK );
+	} else {
+		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
+	}
+	GamePlayer_LockMotion( player->other );
+}
+
+/** 处理游戏角色在进行虚弱奔跑时与其他角色的碰撞 */
+static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other )
+{
+	double x1, x2;
+	GamePlayer *player, *other_player;
+
+	player = GamePlayer_GetPlayerByWidget( self );
+	other_player = GamePlayer_GetPlayerByWidget( other );
+	if( !player || !other_player ) {
+		return;
+	}
+	/* 如果自己并不是处于 虚弱奔跑（带攻击） 的状态 */
+	if( player->state != STATE_WEAK_RUN_ATTACK ) {
+		return;
+	}
+	/* 若推自己的角色的动作还未完成，则忽略他 */
+	if( other_player->state == STATE_CATCH_SKILL_FB
+	&& other_player->other == player ) {
+		return;
+	}
+	x1 = GameObject_GetX( self );
+	x2 = GameObject_GetX( other );
+	/* 根据两者坐标，判断击飞的方向 */
+	if( x1 < x2 ) {
+		GamePlayer_SetLeftHitFly( player );
+		GamePlayer_SetRightHitFly( other_player );
+	} else {
+		GamePlayer_SetRightHitFly( player );
+		GamePlayer_SetLeftHitFly( other_player );
+	}
+	/* 两个都受到攻击伤害 */
+	Game_RecordAttack( other_player, ATTACK_TYPE_BUMPED, player, player->state );
+	Game_RecordAttack( player, ATTACK_TYPE_BUMPED, other_player, other_player->state );
+	GameObject_AtTouch( player->object, NULL );
+	player->n_attack = 0;
+	other_player->n_attack = 0;
+}
+
+static void CommonSkill_StartFrontPush( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	if( GamePlayer_IsLeftOriented(player) ) {
+		GamePlayer_SetRightOriented( player );
+	} else {
+		GamePlayer_SetLeftOriented( player );
+	}
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FB );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FB, GamePlayer_AtAttackDone );
+	GamePlayer_ChangeState( player->other, STATE_WEAK_RUN_ATTACK );
+	/* 在与其他对象触碰时进行响应 */
+	GameObject_AtTouch( player->other->object, GamePlayer_ProcWeakWalkAttack );
+	GamePlayer_SetActionTimeOut( player->other, 2000, GamePlayer_AtWeakWalkDone );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	if( GamePlayer_IsLeftOriented(player->other) ) {
+		GameObject_SetXSpeed( player->other->object, -XSPEED_WEAK_WALK );
+	} else {
+		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
+	}
+	GamePlayer_LockMotion( player->other );
+}
+
+static void CommonSkill_StartPush( GamePlayer *player )
+{
+	/* 根据方向，判断该使用何种技能 */
+	if( GamePlayer_IsLeftOriented(player) ) {
+		if( GamePlayer_IsLeftOriented(player->other) ) {
+			CommonSkill_StartBackPush( player );
+		} else {
+			CommonSkill_StartFrontPush( player );
+		}
+	} else {
+		if( GamePlayer_IsLeftOriented(player->other) ) {
+			CommonSkill_StartFrontPush( player );
+		} else {
+			CommonSkill_StartBackPush( player );
+		}
+	}
+}
+
+static void CommonSkill_RegisterPush(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_PUSH,
+				SKILLPRIORITY_PUSH,
+				CommonSkill_CanUsePush,
+				CommonSkill_StartPush
+	);
+}
+
 /** 注册通用技能 */
 void CommonSkill_Register(void)
 {
@@ -1959,4 +2099,5 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterRide();
 	CommonSkill_RegisterRideAttack();
 	CommonSkill_RegisterCatch();
+	CommonSkill_RegisterPush();
 }
