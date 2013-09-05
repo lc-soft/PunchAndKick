@@ -92,7 +92,7 @@ static LCUI_BOOL TargetIsRest( int state )
 static LCUI_BOOL IAmJumpDone( int state )
 {
 	switch( state ) {
-	case STATE_SQUAT:
+	case STATE_JUMP_DONE:
 		return TRUE;
 	default:break;
 	}
