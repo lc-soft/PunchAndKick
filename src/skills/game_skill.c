@@ -136,6 +136,7 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_RIDE_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_RIDE_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_CATCH );
+	GamePlayer_EnableSkill( player, SKILLNAME_PUSH );
 }
 
 /** 为游戏角色启用一个技能 */
