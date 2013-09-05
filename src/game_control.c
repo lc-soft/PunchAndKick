@@ -822,132 +822,6 @@ static void GamePlayer_UpdateLiftPosition( LCUI_Widget *widget )
 	GameObject_SetY( other, y );
 }
 
-static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
-{
-	int state;
-	double x, y;
-	GamePlayer *player, *other_player;
-	RangeBox head_range, foot_range;
-	
-	player = GamePlayer_GetPlayerByWidget( self );
-	if( player->state != STATE_JUMP
-	 && player->state != STATE_SJUMP ) {
-		GameObject_AtTouch( self, NULL );
-		return;
-	}
-	/* 若自己不处于下落状态 */
-	if( GameObject_GetZSpeed( self ) > -10 ) {
-		return;
-	}
-	GameObject_GetHitRange( other, &head_range );
-	GameObject_GetHitRange( self, &foot_range );
-	/* 计算对方的头部范围 */
-	head_range.z = head_range.z_width - 5;
-	head_range.z_width = 5;
-	head_range.x += 5;
-	head_range.x_width -= 10;
-	/* 计算自己的脚部范围 */
-	foot_range.z_width = 5;
-	foot_range.x += 5;
-	foot_range.x_width -= 10;
-	/* 若不相交 */
-	if( !RangeBox_IsIntersect( &foot_range, &head_range ) ) {
-		return;
-	}
-	other_player = GamePlayer_GetPlayerByWidget( other );
-	switch( other_player->state ) {
-	case STATE_READY:
-	case STATE_STANCE:
-		state = STATE_LIFT_STANCE;
-		break;
-	case STATE_WALK:
-		state = STATE_LIFT_WALK;
-		break;
-	case STATE_LEFTRUN:
-	case STATE_RIGHTRUN:
-		state = STATE_LIFT_RUN;
-		break;
-	default:
-		/* 对方的状态不符合要求则退出 */
-		 return;
-	}
-	player->other = other_player;
-	other_player->other = player;
-	x = GameObject_GetX( other );
-	y = GameObject_GetY( other );
-	GameObject_SetX( self, x );
-	GameObject_SetY( self, y );
-	GamePlayer_ChangeState( other_player, state );
-	GamePlayer_StopXMotion( player );
-	GameObject_SetZSpeed( self, 0 );
-	GameObject_SetZAcc( self, 0 );
-	GameObject_SetZ( self, LIFT_HEIGHT );
-	GamePlayer_ChangeState( player, STATE_BE_LIFT_SQUAT );
-	GameObject_AtActionDone( self, ACTION_SQUAT, GamePlayer_SetBeLiftStance );
-	/* 在举起者的位置变化时更新被举起者的位置 */
-	GameObject_AtMove( other, GamePlayer_UpdateLiftPosition );
-}
-
-/** 在起跳动作结束时 */
-static void GamePlayer_AtSquatDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_ChangeState( player, STATE_JUMP );
-	/* 在跳跃过程中检测是否有碰撞 */
-	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
-}
-
-static void GamePlayer_SetSquat( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	/* 跳跃后，重置X轴上的加速度为0 */
-	GameObject_SetXAcc( player->object, 0 );
-	GamePlayer_ChangeState( player, STATE_JSQUAT );
-	GamePlayer_LockMotion( player );
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtSquatDone );
-	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLandingDone );
-}
-
-/** 举着，着陆 */
-static void GamePlayer_AtLiftLanding( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	if( player->state == STATE_THROW ) {
-		GamePlayer_ReduceSpeed( player, 75 );
-	}
-	else if( player->state == STATE_LIFT_JUMP
-	 || player->state == STATE_LIFT_FALL ) {
-		GamePlayer_UnlockMotion( player );
-		GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
-	}
-}
-
-/** 举着，下落 */
-static void GamePlayer_SetLiftFall( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	/* 撤销响应 */
-	GameObject_AtZeroZSpeed( player->object, NULL );
-	if( player->other == NULL ) {
-		GamePlayer_ChangeState( player, STATE_JUMP );
-		return;
-	}
-	GamePlayer_ChangeState( player, STATE_LIFT_FALL );
-}
-
-/** 举着，起跳 */
-static void GamePlayer_SetLiftJump( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_LockMotion( player );
-	GamePlayer_ChangeState( player, STATE_LIFT_JUMP );
-	GameObject_AtZeroZSpeed( player->object, GamePlayer_SetLiftFall );
-	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLiftLanding );
-}
-
 /** 在歇息状态结束后 */
 static void GamePlayer_AtRestTimeOut( GamePlayer *player )
 {
@@ -1569,104 +1443,6 @@ static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 	GamePlayer_SetReady( player );
 }
 
-/** 在冲刺后的起跳动作结束时 */
-static void GamePlayer_AtSprintSquatDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_ChangeState( player, STATE_SJUMP );
-	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
-}
-
-
-/** 冲刺+下蹲 */
-static void GamePlayer_SetSprintSquat( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GameObject_SetXAcc( player->object, 0 );
-	GamePlayer_ChangeState( player, STATE_SSQUAT );
-	GamePlayer_LockMotion( player );
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtSprintSquatDone );
-	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLandingDone );
-}
-
-/** 在被举起的状态下，主动起跳 */
-static void GamePlayer_BeLiftActiveStartJump( GamePlayer *player )
-{
-	if( player->other ) {
-		switch( player->other->state ) {
-		case STATE_LIFT_FALL:
-		case STATE_LIFT_JUMP:
-			GamePlayer_ChangeState( player->other, STATE_JUMP );
-			break;
-		case STATE_LIFT_STANCE:
-			GamePlayer_ChangeState( player->other, STATE_STANCE );
-			break;
-		case STATE_LIFT_WALK:
-			GamePlayer_ChangeState( player->other, STATE_WALK );
-			break;
-		case STATE_LIFT_RUN:
-			if( GamePlayer_IsLeftOriented(player->other) ) {
-				GamePlayer_ChangeState( player->other, STATE_LEFTRUN );
-			} else {
-				GamePlayer_ChangeState( player->other, STATE_RIGHTRUN );
-			}
-			break;
-		default: break;
-		}
-		player->other->other = NULL;
-		player->other = NULL;
-	}
-	GamePlayer_LockMotion( player );
-	if( LCUIKey_IsHit(player->ctrlkey.left) ) {
-		GameObject_SetXSpeed( player->object, -XSPEED_WALK );
-	}
-	else if( LCUIKey_IsHit(player->ctrlkey.right) ){
-		GameObject_SetXSpeed( player->object, XSPEED_WALK );
-	}
-	GamePlayer_SetSquat( player );
-}
-
-/** 跳跃 */
-void GamePlayer_StartJump( GamePlayer *player )
-{
-	switch(player->state) {
-	case STATE_RIDE:
-	case STATE_RIDE_ATTACK:
-	case STATE_RIDE_JUMP:
-	case STATE_SJUMP:
-	case STATE_JUMP:
-	case STATE_LIFT_JUMP:
-	case STATE_LIFT_FALL:
-	case STATE_SQUAT:
-	case STATE_JSQUAT:
-		break;
-	case STATE_BE_LIFT_SQUAT:
-	case STATE_BE_LIFT_STANCE:
-		GamePlayer_BeLiftActiveStartJump( player );
-		break;
-	case STATE_LIFT_STANCE:
-	case STATE_LIFT_WALK:
-	case STATE_LIFT_RUN:
-		player->control.run = FALSE;
-		GamePlayer_SetLiftJump( player );
-		break;
-	case STATE_LEFTRUN:
-	case STATE_RIGHTRUN:
-	case STATE_AS_ATTACK:
-	case STATE_BS_ATTACK:
-		player->control.run = FALSE;
-		GamePlayer_SetSprintSquat( player );
-		break;
-	default:
-		if( player->lock_action ) {
-			return;
-		}
-		GamePlayer_SetSquat( player );
-		break;
-	}
-}
-
 /** 获取当前角色附近躺地的角色 */
 GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
 {
@@ -1753,38 +1529,6 @@ static void GamePlayer_SetSecondSpinHit( GamePlayer *player )
 		GameObject_SetXSpeed( player->object, 0 );
 	}
 	GameObject_AtLanding( player->object, 80, -20, GamePlayer_AtLandingDone );
-}
-
-static void GamePlayer_AtBigElbowStep2( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GameObject_AtZeroZSpeed( widget, NULL );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_SQUAT );
-	/* 撤销再 下蹲 动作结束时的响应 */
-	GameObject_AtActionDone( widget, ACTION_SQUAT, NULL );
-	GamePlayer_LockAction( player );
-}
-
-static void GamePlayer_AtBigElbowStep1( LCUI_Widget *widget )
-{
-	GameObject_SetXSpeed( widget, 0 );
-	GameObject_AtLanding( widget, 20, -10, GamePlayer_AtAttackDone );
-	GameObject_AtZeroZSpeed( widget, GamePlayer_AtBigElbowStep2 );
-}
-
-/** 肘压 */
-static void GamePlayer_SetBigElbow( GamePlayer *player )
-{
-	double z_speed;
-	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
-	player->attack_type = ATTACK_TYPE_BIG_ELBOW;
-	GameObject_ClearAttack( player->object );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	z_speed = GameObject_GetZSpeed( player->object );
-	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtBigElbowStep1 );
 }
 
 /** 在肘压技能结束时 */
@@ -2727,7 +2471,7 @@ int Game_Init(void)
 	/* 设置2号玩家的角色 */
 	GamePlayer_SetRole( 2, ROLE_RIKI );
 	/* 设置2号玩家由人来控制 */
-	GamePlayer_ControlByHuman( 2, TRUE );
+	GamePlayer_ControlByHuman( 2, FALSE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
@@ -2762,6 +2506,7 @@ static void GamePlayer_SyncKeyControl( GamePlayer *player )
 /** 同步游戏玩家的数据 */
 static void GamePlayer_SyncData( GamePlayer *player )
 {
+	int skill_id;
 	LCUI_BOOL stop_xmotion=FALSE, stop_ymotion=FALSE;
 
 	if( player->control.left_motion ) {
@@ -2827,8 +2572,10 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		}
 	}
 	if( player->control.jump ) {
-		player->control.jump = FALSE;
-		GamePlayer_StartJump( player );
+		skill_id = SkillLibrary_GetSkill( player );
+		if( skill_id > 0 ) {
+			GamePlayer_RunSkill( player, skill_id );
+		}
 	}
 }
 
