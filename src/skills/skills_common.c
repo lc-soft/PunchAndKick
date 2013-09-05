@@ -1227,6 +1227,10 @@ static LCUI_BOOL CommonSkill_CanUseCatch( GamePlayer *player )
 	if( player->lock_motion ) {
 		return FALSE;
 	}
+	if( !player->control.left_motion
+	 && !player->control.right_motion ) {
+		 return FALSE;
+	}
 	switch( player->state ) {
 	case STATE_READY:
 	case STATE_STANCE:
@@ -1312,6 +1316,385 @@ static void CommonSkill_StartCatch( GamePlayer *player )
 	GamePlayer_LockMotion( player );
 	GamePlayer_LockMotion( player->other );
 	GamePlayer_SetActionTimeOut( player, 2000, GamePlayer_AtCatchDone );
+}
+
+static LCUI_BOOL CommonSkill_CanUseRideAAttack( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	if( !player->state == STATE_RIDE ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static LCUI_BOOL CommonSkill_CanUseRideBAttack( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	if( !player->state == STATE_RIDE ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void GamePlayer_AtRideAttackDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	/* 如果还骑在对方身上 */
+	if( player->other ) {
+		GamePlayer_ChangeState( player, STATE_RIDE );
+	}
+}
+
+static void CommonSkill_StartRideAAttack( GamePlayer *player )
+{
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
+	GamePlayer_LockAction( player );
+	GamePlayer_TryHit( player->other );
+	Game_RecordAttack( player, ATTACK_TYPE_RIDE_ATTACK, player->other, player->other->state );
+	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
+}
+
+static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( !player->other ) {
+		GamePlayer_StartStand( player );
+		return;
+	}
+	switch( player->other->state ) {
+	case STATE_TUMMY:
+	case STATE_TUMMY_HIT:
+	case STATE_LYING:
+	case STATE_LYING_HIT:
+		Game_RecordAttack(	player, ATTACK_TYPE_RIDE_JUMP_ATTACK, 
+					player->other, player->other->state );
+		CommonSkill_StartRideAAttack( player );
+		break;
+	default:
+		player->other = NULL;
+		GamePlayer_StartStand( player );
+		break;
+	}
+}
+
+static void CommonSkill_StartRideBAttack( GamePlayer *player )
+{
+	if( !player->other ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_RIDE_JUMP );
+	GamePlayer_LockAction( player );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtRideJumpDone );
+}
+
+static LCUI_BOOL CommonSkill_CanUseBigElbow( GamePlayer *player )
+{
+	double speed;
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	switch( player->state ) {
+	case STATE_JUMP:
+	case STATE_JSQUAT:
+		speed = GameObject_GetZSpeed( player->object );
+		if( speed < 0 ) {
+			return TRUE;
+		}
+	default:
+		break;
+	}
+	return FALSE;
+}
+
+static void GamePlayer_AtBigElbowStep2( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GameObject_AtZeroZSpeed( widget, NULL );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SQUAT );
+	/* 撤销再 下蹲 动作结束时的响应 */
+	GameObject_AtActionDone( widget, ACTION_SQUAT, NULL );
+	GamePlayer_LockAction( player );
+}
+
+static void GamePlayer_AtBigElbowStep1( LCUI_Widget *widget )
+{
+	GameObject_SetXSpeed( widget, 0 );
+	GameObject_AtLanding( widget, 20, -10, GamePlayer_AtAttackDone );
+	GameObject_AtZeroZSpeed( widget, GamePlayer_AtBigElbowStep2 );
+}
+
+static void CommonSkill_StartBigElbow( GamePlayer *player )
+{
+	double z_speed;
+	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
+	player->attack_type = ATTACK_TYPE_BIG_ELBOW;
+	GameObject_ClearAttack( player->object );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	z_speed = GameObject_GetZSpeed( player->object );
+	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtBigElbowStep1 );
+}
+
+static LCUI_BOOL CommonSkill_CanUseJump( GamePlayer *player )
+{
+	if( !player->control.jump ) {
+		return FALSE;
+	}
+	player->control.jump = FALSE;
+	switch(player->state) {
+	case STATE_WALK:
+	case STATE_STANCE:
+	case STATE_READY:
+		if( player->lock_action ) {
+			return FALSE;
+		}
+	case STATE_BE_LIFT_SQUAT:
+	case STATE_BE_LIFT_STANCE:
+	case STATE_LIFT_STANCE:
+	case STATE_LIFT_WALK:
+	case STATE_LIFT_RUN:
+	case STATE_LEFTRUN:
+	case STATE_RIGHTRUN:
+	case STATE_AS_ATTACK:
+	case STATE_BS_ATTACK:
+		return TRUE;
+	default:
+		break;
+	}
+	return FALSE;
+}
+
+static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
+{
+	int state;
+	double x, y;
+	GamePlayer *player, *other_player;
+	RangeBox head_range, foot_range;
+	
+	player = GamePlayer_GetPlayerByWidget( self );
+	if( player->state != STATE_JUMP
+	 && player->state != STATE_SJUMP ) {
+		GameObject_AtTouch( self, NULL );
+		return;
+	}
+	/* 若自己不处于下落状态 */
+	if( GameObject_GetZSpeed( self ) > -10 ) {
+		return;
+	}
+	GameObject_GetHitRange( other, &head_range );
+	GameObject_GetHitRange( self, &foot_range );
+	/* 计算对方的头部范围 */
+	head_range.z = head_range.z_width - 5;
+	head_range.z_width = 5;
+	head_range.x += 5;
+	head_range.x_width -= 10;
+	/* 计算自己的脚部范围 */
+	foot_range.z_width = 5;
+	foot_range.x += 5;
+	foot_range.x_width -= 10;
+	/* 若不相交 */
+	if( !RangeBox_IsIntersect( &foot_range, &head_range ) ) {
+		return;
+	}
+	other_player = GamePlayer_GetPlayerByWidget( other );
+	switch( other_player->state ) {
+	case STATE_READY:
+	case STATE_STANCE:
+		state = STATE_LIFT_STANCE;
+		break;
+	case STATE_WALK:
+		state = STATE_LIFT_WALK;
+		break;
+	case STATE_LEFTRUN:
+	case STATE_RIGHTRUN:
+		state = STATE_LIFT_RUN;
+		break;
+	default:
+		/* 对方的状态不符合要求则退出 */
+		 return;
+	}
+	player->other = other_player;
+	other_player->other = player;
+	x = GameObject_GetX( other );
+	y = GameObject_GetY( other );
+	GameObject_SetX( self, x );
+	GameObject_SetY( self, y );
+	GamePlayer_ChangeState( other_player, state );
+	GamePlayer_StopXMotion( player );
+	GameObject_SetZSpeed( self, 0 );
+	GameObject_SetZAcc( self, 0 );
+	GameObject_SetZ( self, LIFT_HEIGHT );
+	GamePlayer_ChangeState( player, STATE_BE_LIFT_SQUAT );
+	GameObject_AtActionDone( self, ACTION_SQUAT, GamePlayer_SetBeLiftStance );
+	/* 在举起者的位置变化时更新被举起者的位置 */
+	GameObject_AtMove( other, GamePlayer_UpdateLiftPosition );
+}
+
+/** 在起跳动作结束时 */
+static void GamePlayer_AtSquatActionDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_ChangeState( player, STATE_JUMP );
+	/* 在跳跃过程中检测是否有碰撞 */
+	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
+}
+
+static void CommonSkill_StartNormalJump( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	/* 跳跃后，重置X轴上的加速度为0 */
+	GameObject_SetXAcc( player->object, 0 );
+	GamePlayer_ChangeState( player, STATE_JSQUAT );
+	GamePlayer_LockMotion( player );
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtSquatActionDone );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLandingDone );
+}
+
+/** 在被举起的状态下，主动起跳 */
+static void CommonSkill_StartActiveJumpOnBeLift( GamePlayer *player )
+{
+	if( player->other ) {
+		switch( player->other->state ) {
+		case STATE_LIFT_FALL:
+		case STATE_LIFT_JUMP:
+			GamePlayer_ChangeState( player->other, STATE_JUMP );
+			break;
+		case STATE_LIFT_STANCE:
+			GamePlayer_ChangeState( player->other, STATE_STANCE );
+			break;
+		case STATE_LIFT_WALK:
+			GamePlayer_ChangeState( player->other, STATE_WALK );
+			break;
+		case STATE_LIFT_RUN:
+			if( GamePlayer_IsLeftOriented(player->other) ) {
+				GamePlayer_ChangeState( player->other, STATE_LEFTRUN );
+			} else {
+				GamePlayer_ChangeState( player->other, STATE_RIGHTRUN );
+			}
+			break;
+		default: break;
+		}
+		player->other->other = NULL;
+		player->other = NULL;
+	}
+	GamePlayer_LockMotion( player );
+	if( player->control.left_motion ) {
+		GameObject_SetXSpeed( player->object, -XSPEED_WALK );
+	}
+	else if( player->control.right_motion ){
+		GameObject_SetXSpeed( player->object, XSPEED_WALK );
+	}
+	CommonSkill_StartNormalJump( player );
+}
+
+/** 举着，下落 */
+static void GamePlayer_SetLiftFall( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	/* 撤销响应 */
+	GameObject_AtZeroZSpeed( player->object, NULL );
+	if( player->other == NULL ) {
+		GamePlayer_ChangeState( player, STATE_JUMP );
+		return;
+	}
+	GamePlayer_ChangeState( player, STATE_LIFT_FALL );
+}
+
+/** 举着，着陆 */
+static void GamePlayer_AtLiftLanding( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( player->state == STATE_THROW ) {
+		GamePlayer_ReduceSpeed( player, 75 );
+	}
+	else if( player->state == STATE_LIFT_JUMP
+	 || player->state == STATE_LIFT_FALL ) {
+		GamePlayer_UnlockMotion( player );
+		GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
+	}
+}
+
+/** 举着，起跳 */
+static void CommonSkill_StartJumpOnLift( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_ChangeState( player, STATE_LIFT_JUMP );
+	GameObject_AtZeroZSpeed( player->object, GamePlayer_SetLiftFall );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLiftLanding );
+}
+
+/** 在冲刺后的起跳动作结束时 */
+static void GamePlayer_AtSprintSquatDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_ChangeState( player, STATE_SJUMP );
+	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
+}
+
+/** 冲刺+起跳 */
+static void CommonSkill_StartJumpOnRun( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GameObject_SetXAcc( player->object, 0 );
+	GamePlayer_ChangeState( player, STATE_SSQUAT );
+	GamePlayer_LockMotion( player );
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtSprintSquatDone );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtLandingDone );
+}
+
+static void CommonSkill_StartJump( GamePlayer *player )
+{
+	switch(player->state) {
+	case STATE_WALK:
+	case STATE_STANCE:
+	case STATE_READY:
+		CommonSkill_StartNormalJump( player );
+		break;
+	case STATE_BE_LIFT_SQUAT:
+	case STATE_BE_LIFT_STANCE:
+		CommonSkill_StartActiveJumpOnBeLift( player );
+		break;
+	case STATE_LIFT_STANCE:
+	case STATE_LIFT_WALK:
+	case STATE_LIFT_RUN:
+		player->control.run = FALSE;
+		CommonSkill_StartJumpOnLift( player );
+		break;
+	case STATE_LEFTRUN:
+	case STATE_RIGHTRUN:
+	case STATE_AS_ATTACK:
+	case STATE_BS_ATTACK:
+		player->control.run = FALSE;
+		CommonSkill_StartJumpOnRun( player );
+		break;
+	default:
+		break;
+	}
 }
 
 /** 注册A攻击 */
@@ -1511,93 +1894,6 @@ static void CommonSkill_RegisterRide(void)
 	);
 }
 
-static LCUI_BOOL CommonSkill_CanUseRideAAttack( GamePlayer *player )
-{
-	if( player->lock_action ) {
-		return FALSE;
-	}
-	if( !player->control.a_attack ) {
-		return FALSE;
-	}
-	if( !player->state == STATE_RIDE ) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static LCUI_BOOL CommonSkill_CanUseRideBAttack( GamePlayer *player )
-{
-	if( player->lock_action ) {
-		return FALSE;
-	}
-	if( !player->control.b_attack ) {
-		return FALSE;
-	}
-	if( !player->state == STATE_RIDE ) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static void GamePlayer_AtRideAttackDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player );
-	/* 如果还骑在对方身上 */
-	if( player->other ) {
-		GamePlayer_ChangeState( player, STATE_RIDE );
-	}
-}
-
-static void CommonSkill_StartRideAAttack( GamePlayer *player )
-{
-	if( !player->other ) {
-		return;
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
-	GamePlayer_LockAction( player );
-	GamePlayer_TryHit( player->other );
-	Game_RecordAttack( player, ATTACK_TYPE_RIDE_ATTACK, player->other, player->other->state );
-	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
-}
-
-static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	if( !player->other ) {
-		GamePlayer_StartStand( player );
-		return;
-	}
-	switch( player->other->state ) {
-	case STATE_TUMMY:
-	case STATE_TUMMY_HIT:
-	case STATE_LYING:
-	case STATE_LYING_HIT:
-		Game_RecordAttack(	player, ATTACK_TYPE_RIDE_JUMP_ATTACK, 
-					player->other, player->other->state );
-		CommonSkill_StartRideAAttack( player );
-		break;
-	default:
-		player->other = NULL;
-		GamePlayer_StartStand( player );
-		break;
-	}
-}
-
-static void CommonSkill_StartRideBAttack( GamePlayer *player )
-{
-	if( !player->other ) {
-		return;
-	}
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_RIDE_JUMP );
-	GamePlayer_LockAction( player );
-	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, GamePlayer_AtRideJumpDone );
-}
-
 static void CommonSkill_RegisterRideAttack(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_RIDE_A_ATTACK,
@@ -1621,11 +1917,30 @@ static void CommonSkill_RegisterCatch(void)
 	);
 }
 
+static void CommonSkill_RegisterBigElbow(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_BIG_ELBOW,
+				SKILLPRIORITY_BIG_ELBOW,
+				CommonSkill_CanUseBigElbow,
+				CommonSkill_StartBigElbow
+	);
+}
+
+static void CommonSkill_RegisterJump(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP,
+				SKILLPRIORITY_JUMP,
+				CommonSkill_CanUseJump,
+				CommonSkill_StartJump
+	);
+}
+
 /** 注册通用技能 */
 void CommonSkill_Register(void)
 {
 	CommonSkill_RegisterAAttack();
 	CommonSkill_RegisterBAttack();
+	CommonSkill_RegisterJump();
 	CommonSkill_RegisterJumpAAttack();
 	CommonSkill_RegisterJumpBAttack();
 	CommonSkill_RegisterSprintAAttack();
@@ -1640,6 +1955,7 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterMachStomp();
 	CommonSkill_RegisterBombKick();
 	CommonSkill_RegisterSpinHit();
+	CommonSkill_RegisterBigElbow();
 	CommonSkill_RegisterRide();
 	CommonSkill_RegisterRideAttack();
 	CommonSkill_RegisterCatch();

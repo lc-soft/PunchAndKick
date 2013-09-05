@@ -3,6 +3,7 @@
 
 #define SKILLNAME_A_ATTACK		"A attack"
 #define SKILLNAME_B_ATTACK		"B attack"
+#define SKILLNAME_JUMP			"jump"
 #define SKILLNAME_JUMP_A_ATTACK		"jump A attack"
 #define SKILLNAME_JUMP_B_ATTACK		"jump B attack"
 #define SKILLNAME_JUMP_MACH_A_ATTACK	"jump mach A attack"
@@ -28,6 +29,7 @@
 #define SKILLNAME_RIDE_A_ATTACK		"ride A attack"
 #define SKILLNAME_RIDE_B_ATTACK		"ride B attack"
 #define SKILLNAME_CATCH			"catch"
+#define SKILLNAME_BIG_ELBOW		"big elbow"
 
 enum SkillPriority_AAttack {
 	SKILLPRIORITY_A_LIFT,
@@ -38,6 +40,7 @@ enum SkillPriority_AAttack {
 	SKILLPRIORITY_SPINHIT,
 	SKILLPRIORITY_SPRINT_A_ATTACK,
 	SKILLPRIORITY_SPRINT_JUMP_A_ATTACK,
+	SKILLPRIORITY_BIG_ELBOW,
 	SKILLPRIORITY_JUMP_MACH_A_ATTACK,
 	SKILLPRIORITY_JUMP_A_ATTACK,
 	SKILLPRIORITY_MACH_A_ATTACK,
@@ -66,6 +69,10 @@ enum SkillPriority_HorizMotion {
 
 enum SkillPriority_VertiMotion {
 	SKILLPRIORITY_CATCH
+};
+
+enum SkillPriority_Jump {
+	SKILLPRIORITY_JUMP
 };
 
 /** 注册通用技能 */
