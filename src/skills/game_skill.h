@@ -2,6 +2,7 @@
 #define __GAME_SKILL_H__
 
 #include "skills_common.h"
+#include "skills_martial_artist.h"
 
 /** 初始化技能库 */
 void SkillLibrary_Init(void);
