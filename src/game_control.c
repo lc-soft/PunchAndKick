@@ -2380,8 +2380,8 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		skill_id = SkillLibrary_GetSkill( player );
 		if( skill_id > 0 ) {
 			GamePlayer_RunSkill( player, skill_id );
+			player->control.b_attack = FALSE;
 		}
-		player->control.b_attack = FALSE;
 	}
 	if( player->control.jump ) {
 		skill_id = SkillLibrary_GetSkill( player );
