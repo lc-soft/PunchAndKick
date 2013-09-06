@@ -21,6 +21,7 @@ void SkillLibrary_Init(void)
 	Queue_Init( &skill_library, sizeof(SkillData), NULL );
 	skill_library_init = TRUE;
 	CommonSkill_Register();
+	MartialArtistSkill_Register();
 }
 
 /** 向技能库中添加新技能信息 */
@@ -35,7 +36,7 @@ int SkillLibrary_AddSkill(	const char *skill_name,
 	if( !skill_library_init ) {
 		return -1;
 	}
-	skill.skill_id = BKDRHash( skill_name );
+	skill.skill_id = (int)BKDRHash( skill_name );
 	n = Queue_GetTotal( &skill_library );
 	DEBUG_MSG("add skill: %s, id: %d, priority: %d\n", 
 	skill_name, skill.skill_id, priority);
@@ -88,6 +89,7 @@ static LCUI_BOOL _GamePlayer_HaveSkill( GamePlayer *player, int skill_id )
 	n = Queue_GetTotal( &player->skills );
 	while(n--) {
 		exist_skill_id = (int*)Queue_Get( &player->skills, n );
+		DEBUG_MSG("skill id: %d, pos: %d\n", exist_skill_id, n);
 		if( exist_skill_id && *exist_skill_id == skill_id ) {
 			return TRUE;
 		}
@@ -99,7 +101,7 @@ static LCUI_BOOL _GamePlayer_HaveSkill( GamePlayer *player, int skill_id )
 LCUI_BOOL GamePlayer_HaveSkill( GamePlayer *player, const char *skill_name )
 {
 	int skill_id;
-	skill_id = BKDRHash( skill_name );
+	skill_id = (int)BKDRHash( skill_name );
 	return _GamePlayer_HaveSkill( player, skill_id );
 }
 
@@ -143,8 +145,7 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 int GamePlayer_EnableSkill( GamePlayer *player, const char *skill_name )
 {
 	int skill_id;
-
-	skill_id = BKDRHash( skill_name );
+	skill_id = (int)BKDRHash( skill_name );
 	if( _GamePlayer_HaveSkill( player, skill_id ) ) {
 		return -1;
 	}
@@ -185,11 +186,14 @@ int SkillLibrary_GetSkill( GamePlayer* player )
 		DEBUG_MSG("skill: %s, id: %d, pos: %d\n", 
 		p_skill->skill_name, p_skill->skill_id, i);
 		if( !_GamePlayer_HaveSkill( player, p_skill->skill_id ) ) {
+			DEBUG_MSG("player id: %d, not enable\n", player->id);
 			continue;
 		}
 		if( !p_skill->can_use ) {
+			DEBUG_MSG("no check\n");
 			continue;
 		}
+		DEBUG_MSG("function addr: %p\n", p_skill->can_use);
 		if( p_skill->can_use( player ) ) {
 			DEBUG_MSG("use this skill\n");
 			return p_skill->skill_id;
