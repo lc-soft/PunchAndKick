@@ -71,52 +71,6 @@ static int global_action_list[]={
 	ACTION_TUMMY_DYING,
 };
 
-#define LIFT_HEIGHT	56
-
-#define SHORT_REST_TIMEOUT	2000
-#define LONG_REST_TIMEOUT	3000
-#define BE_THROW_REST_TIMEOUT	500
-#define BE_LIFT_REST_TIMEOUT	4500
-
-#define XSPEED_RUN	60
-#define XSPEED_WALK	15
-#define YSPEED_WALK	8
-#define XACC_STOPRUN	20
-#define XACC_DASH	10
-#define ZSPEED_JUMP	48
-#define ZACC_JUMP	15
-
-#define XSPEED_S_HIT_FLY	55
-#define ZACC_S_HIT_FLY		7
-#define ZSPEED_S_HIT_FLY	15
-
-#define XACC_ROLL	15
-
-#define XSPEED_WEAK_WALK 20
-
-#define XSPEED_X_HIT_FLY	70
-#define ZACC_XB_HIT_FLY		15
-#define ZSPEED_XB_HIT_FLY	25
-#define ZACC_XF_HIT_FLY		50
-#define ZSPEED_XF_HIT_FLY	100
-
-#define XSPEED_X_HIT_FLY2	20
-#define ZACC_XF_HIT_FLY2	10
-#define ZSPEED_XF_HIT_FLY2	15
-
-#define XSPEED_HIT_FLY	20
-#define ZSPEED_HIT_FLY	100
-#define ZACC_HIT_FLY	50
-
-#define ROLL_TIMEOUT	200
-
-#define XSPEED_THROWUP_FLY	60
-#define XSPEED_THROWDOWN_FLY	70
-#define ZSPEED_THROWUP_FLY	60
-#define ZSPEED_THROWDOWN_FLY	40
-#define ZACC_THROWUP_FLY	30
-#define ZACC_THROWDOWN_FLY	40
-
 /** 通过部件获取游戏玩家数据 */
 GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
 {
@@ -1531,223 +1485,6 @@ static void GamePlayer_SetSecondSpinHit( GamePlayer *player )
 	GameObject_AtLanding( player->object, 80, -20, GamePlayer_AtLandingDone );
 }
 
-/** 在肘压技能结束时 */
-static void GamePlayer_AtElbowDone( LCUI_Widget *widget )
-{
-	GamePlayer* player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_StartStand( player );
-}
-
-static void GamePlayer_AtElbowUpdate( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	
-	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_UnlockAction( player->other );
-	switch( GameObject_GetCurrentActionFrameNumber( player->object) ) {
-	case 0:
-		GamePlayer_ChangeState( player->other, STATE_HIT );
-		GameObject_AtActionDone( player->other->object, ACTION_HIT, NULL );
-		break;
-	case 1:
-		/* 记录第一段攻击伤害 */
-		Game_RecordAttack(	player, ATTACK_TYPE_ELBOW1, 
-					player->other, player->other->state );
-		break;
-	case 2:
-		GamePlayer_ChangeState( player->other, STATE_HIT_FLY );
-		GameObject_AtActionDone( player->other->object, ACTION_HIT_FLY, NULL );
-		break;
-	case 4:
-		/* 记录第二段攻击伤害 */
-		Game_RecordAttack(	player, ATTACK_TYPE_ELBOW1, 
-					player->other, player->other->state );
-	case 3:
-		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
-		GameObject_AtActionDone( player->other->object, ACTION_LYING_HIT, NULL );
-		break;
-	case 5:
-		if( GamePlayer_SetLying( player->other ) == 0 ) {
-			GamePlayer_SetRestTimeOut(
-				player->other, SHORT_REST_TIMEOUT, 
-				GamePlayer_StartStand 
-			);
-		}
-		break;
-	default:
-		break;
-	}
-	GamePlayer_LockAction( player->other );
-}
-
-static void GamePlayer_SetFrontCatchSkillA( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	/* 根据攻击者的类型，让受攻击者做出相应动作 */
-	switch(player->type) {
-	case PLAYER_TYPE_FIGHTER:break;
-	case PLAYER_TYPE_MARTIAL_ARTIST:
-		GamePlayer_ChangeState( player->other, STATE_HIT );
-		GameObject_AtActionDone( player->other->object, ACTION_HIT, NULL );
-		if( GamePlayer_IsLeftOriented(player) ) {
-			GamePlayer_SetLeftOriented( player->other );
-		} else {
-			GamePlayer_SetRightOriented( player->other );
-		}
-		break;
-	case PLAYER_TYPE_KUNG_FU:break;
-	case PLAYER_TYPE_JUDO_MASTER:break;
-	default:return;
-	}
-	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
-	GameObject_AtActionUpdate(
-		player->object,
-		ACTION_CATCH_SKILL_FA, 
-		GamePlayer_AtElbowUpdate 
-	);
-	GameObject_AtActionDone(
-		player->object, ACTION_CATCH_SKILL_FA, 
-		GamePlayer_AtElbowDone 
-	);
-	/* 重置被攻击的次数 */
-	player->other->n_attack = 0;
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-}
-
-/** 在被膝击后落地时 */
-static void GamePlayer_AtLandingByAfterKneeHit( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
-	/* 记录第二段攻击伤害 */
-	Game_RecordAttack(	player->other, ATTACK_TYPE_KNEE_HIT2,
-				player, STATE_LYING
-	);
-	GamePlayer_SetRestTimeOut( 
-		player, SHORT_REST_TIMEOUT,
-		GamePlayer_StartStand 
-	);
-	if( player->other ) {
-		player->other->other = NULL;
-	}
-	player->other = NULL;
-}
-
-static void GamePlayer_BackCatchSkillAUpdate( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-	
-	player = GamePlayer_GetPlayerByWidget( widget );
-	switch( GameObject_GetCurrentActionFrameNumber( player->object) ) {
-	case 0:
-		break;
-	case 1:
-		/* 记录第一段攻击伤害 */
-		Game_RecordAttack(	player, ATTACK_TYPE_KNEE_HIT1, 
-					player->other, STATE_LYING_HIT );
-		GamePlayer_UnlockAction( player->other );
-		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
-		GamePlayer_LockAction( player->other );
-	case 2:
-		GameObject_SetZ( player->other->object, 24 );
-		GameObject_SetZSpeed( player->other->object, 0 );
-		break;
-	case 3:
-		GamePlayer_UnlockAction( player->other );
-		GamePlayer_ChangeState( player->other, STATE_LYING );
-		GamePlayer_LockAction( player->other );
-		GameObject_AtLanding(	player->other->object, -20, 0,
-					GamePlayer_AtLandingByAfterKneeHit );
-	default:
-		break;
-	}
-}
-
-static void GamePlayer_SetBackCatchSkillA( GamePlayer *player )
-{
-	double x, y;
-	int z_index;
-
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	/* 根据攻击者的类型，让受攻击者做出相应动作 */
-	switch(player->type) {
-	case PLAYER_TYPE_FIGHTER:break;
-	case PLAYER_TYPE_MARTIAL_ARTIST:
-		if( GamePlayer_IsLeftOriented(player) ) {
-			GamePlayer_SetLeftOriented( player->other );
-		} else {
-			GamePlayer_SetRightOriented( player->other );
-		}
-		GamePlayer_UnlockAction( player->other );
-		GamePlayer_ChangeState( player->other, STATE_LYING );
-		GamePlayer_LockAction( player->other );
-		
-		z_index = Widget_GetZIndex( player->object );
-		/* 被攻击者需要显示在攻击者前面 */
-		Widget_SetZIndex( player->other->object, z_index+1 );
-
-		x = GameObject_GetX( player->object );
-		y = GameObject_GetY( player->object );
-		GameObject_SetX( player->other->object, x );
-		GameObject_SetY( player->other->object, y );
-		GameObject_SetZ( player->other->object, 56 );
-		GameObject_AtLanding( player->other->object, -20, 0, NULL );
-		GameObject_AtActionUpdate(
-			player->object, ACTION_CATCH_SKILL_BA, 
-			GamePlayer_BackCatchSkillAUpdate 
-		);
-		break;
-	case PLAYER_TYPE_KUNG_FU:break;
-	case PLAYER_TYPE_JUDO_MASTER:break;
-	default:return;
-	}
-	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BA );
-	GameObject_AtActionDone(
-		player->object, ACTION_CATCH_SKILL_BA, 
-		GamePlayer_AtElbowDone
-	);
-	/* 重置被攻击的次数 */
-	player->other->n_attack = 0;
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-}
-
-/** 进行A攻击 */
-int GamePlayer_StartAAttack( GamePlayer *player )
-{
-	int skill_id;
-
-	if( player->state == STATE_CATCH && player->other ) {
-		/* 根据方向，判断该使用何种技能 */
-		if( GamePlayer_IsLeftOriented(player) ) {
-			if( GamePlayer_IsLeftOriented(player->other) ) {
-				GamePlayer_SetBackCatchSkillA( player );
-			} else {
-				GamePlayer_SetFrontCatchSkillA( player );
-			}
-		} else {
-			if( GamePlayer_IsLeftOriented(player->other) ) {
-				GamePlayer_SetFrontCatchSkillA( player );
-			} else {
-				GamePlayer_SetBackCatchSkillA( player );
-			}
-		}
-		return 0;
-	}
-	
-	/* 获取满足发动条件的技能 */
-	skill_id = SkillLibrary_GetSkill( player );
-	/* 如果有，则发动该技能 */
-	if( skill_id > 0 ) {
-		GamePlayer_RunSkill( player, skill_id );
-	} 
-	return 0;
-}
-
 void GamePlayer_SetUpMotion( GamePlayer *player )
 {
 	double speed;
@@ -1839,10 +1576,6 @@ static void GamePlayer_SetJumpSpinKick( GamePlayer *player )
 	if( player->lock_action ) {
 		return;
 	}
-	/* 如果该游戏角色没有 高跳旋转落踢 这一技能  */
-	if( !player->skill.jump_spin_kick ) {
-		return;
-	}
 	/* 如果该游戏角色并没处于奔跑后的 跳跃 的状态下 */
 	if( player->state != STATE_SJUMP
 	&& player->state != STATE_SSQUAT ) {
@@ -1886,10 +1619,18 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		return -1;
 	}
 	player->role_id = role_id;
-	player->property.speed = 100;
 	/* 初始化角色动作动画 */
 	GamePlayer_InitAction( player, role_id );
 	GameObject_SetShadow( player->object, img_shadow );
+	/* 根据职业来选择需要启用的特殊技能 */
+	switch( player->type ) {
+	case PLAYER_TYPE_MARTIAL_ARTIST:
+		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
+		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
+		_DEBUG_MSG("player id: %d\n", player->id);
+	default:break;
+	}
+
 	return 0;
 }
 
@@ -2091,17 +1832,7 @@ void GamePlayer_Init( GamePlayer *player )
 	player->property.punch = 0;
 	player->property.speed = 100;
 	player->property.throw = 0;
-	player->skill.big_elbow = FALSE;
-	player->skill.bomb_kick = FALSE;
-	player->skill.guillotine = FALSE;
-	player->skill.jump_spin_kick = FALSE;
-	player->skill.mach_kick = FALSE;
-	player->skill.mach_punch = FALSE;
-	player->skill.mach_stomp = FALSE;
-	player->skill.rock_defense = FALSE;
-	player->skill.spin_hit = FALSE;
-	player->skill.tornado_attack = FALSE;
-	
+
 	GamePlayer_InitSkillRecord( player );
 
 	player->attack_type = 0;
@@ -2219,6 +1950,24 @@ int Game_Init(void)
 	player_data[1].id = 2;
 	player_data[0].enable = TRUE;
 	player_data[1].enable = TRUE;
+	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
+	player_data[1].type = PLAYER_TYPE_MARTIAL_ARTIST;
+
+	player_data[0].property.max_hp = 80000;
+	player_data[0].property.cur_hp = 80000;
+	player_data[0].property.defense = 100;
+	player_data[0].property.kick = 100;
+	player_data[0].property.punch = 100;
+	player_data[0].property.throw = 100;
+	player_data[0].property.speed = 80;
+
+	player_data[1].property.max_hp = 80000;
+	player_data[1].property.cur_hp = 80000;
+	player_data[1].property.defense = 100;
+	player_data[1].property.kick = 300;
+	player_data[1].property.punch = 300;
+	player_data[1].property.throw = 300;
+	player_data[1].property.speed = 100;
 
 	Graph_Init( &img_shadow );
 	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
@@ -2238,36 +1987,6 @@ int Game_Init(void)
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
 
-	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
-	player_data[0].skill.bomb_kick = TRUE;
-	player_data[0].skill.jump_spin_kick = TRUE;
-	player_data[0].skill.big_elbow = TRUE;
-	player_data[0].skill.mach_stomp = TRUE;
-	player_data[0].skill.tornado_attack = TRUE;
-	
-	player_data[1].type = PLAYER_TYPE_MARTIAL_ARTIST;
-	player_data[1].skill.bomb_kick = TRUE;
-	player_data[1].skill.jump_spin_kick = TRUE;
-	player_data[1].skill.big_elbow = TRUE;
-	player_data[1].skill.mach_stomp = TRUE;
-	player_data[1].skill.tornado_attack = TRUE;
-
-	player_data[0].property.max_hp = 80000;
-	player_data[0].property.cur_hp = 80000;
-	player_data[0].property.defense = 100;
-	player_data[0].property.kick = 100;
-	player_data[0].property.punch = 100;
-	player_data[0].property.throw = 100;
-	player_data[0].property.speed = 80;
-
-	player_data[1].property.max_hp = 80000;
-	player_data[1].property.cur_hp = 80000;
-	player_data[1].property.defense = 100;
-	player_data[1].property.kick = 300;
-	player_data[1].property.punch = 300;
-	player_data[1].property.throw = 300;
-	player_data[1].property.speed = 100;
-
 	/* 记录2号角色的控制键 */
 	ctrlkey.up = LCUIKEY_UP;
 	ctrlkey.down = LCUIKEY_DOWN;
@@ -2281,7 +2000,7 @@ int Game_Init(void)
 	/* 设置2号玩家的角色 */
 	GamePlayer_SetRole( 2, ROLE_RIKI );
 	/* 设置2号玩家由人来控制 */
-	GamePlayer_ControlByHuman( 2, FALSE );
+	GamePlayer_ControlByHuman( 2, TRUE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
@@ -2370,24 +2089,17 @@ static void GamePlayer_SyncData( GamePlayer *player )
 			GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 		}
 	}
-
-	if( player->control.a_attack ) {
-		if( GamePlayer_StartAAttack( player ) == 0 ) {
-			player->control.a_attack = FALSE;
-		}
+	if( !player->control.a_attack && !player->control.b_attack
+	 && !player->control.jump && !player->control.left_motion 
+	 && !player->control.right_motion && !player->control.up_motion
+	 && !player->control.down_motion ) {
+		return;
 	}
-	else if( player->control.b_attack ) {
-		skill_id = SkillLibrary_GetSkill( player );
-		if( skill_id > 0 ) {
-			GamePlayer_RunSkill( player, skill_id );
-			player->control.b_attack = FALSE;
-		}
-	}
-	if( player->control.jump ) {
-		skill_id = SkillLibrary_GetSkill( player );
-		if( skill_id > 0 ) {
-			GamePlayer_RunSkill( player, skill_id );
-		}
+	skill_id = SkillLibrary_GetSkill( player );
+	if( skill_id > 0 ) {
+		GamePlayer_RunSkill( player, skill_id );
+		player->control.a_attack = FALSE;
+		player->control.b_attack = FALSE;
 	}
 }
 
