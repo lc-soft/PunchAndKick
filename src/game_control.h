@@ -143,37 +143,6 @@ enum ActionType {
 	ACTION_TUMMY_DYING,	/**< 趴着，快死了 */
 };
 
-/** 攻击类型 */
-enum AttackType {
-	ATTACK_TYPE_NONE,
-	ATTACK_TYPE_PUNCH,
-	ATTACK_TYPE_KICK,
-	ATTACK_TYPE_RIDE_ATTACK,
-	ATTACK_TYPE_RIDE_JUMP_ATTACK,
-	ATTACK_TYPE_THROW,
-	ATTACK_TYPE_BUMPED,
-	ATTACK_TYPE_MACH_STOMP,
-	ATTACK_TYPE_ELBOW1,
-	ATTACK_TYPE_ELBOW2,
-	ATTACK_TYPE_KNEE_HIT1,
-	ATTACK_TYPE_KNEE_HIT2,
-	ATTACK_TYPE_JUMP_ELBOW,
-	ATTACK_TYPE_JUMP_TREAD,
-	ATTACK_TYPE_JUMP_KICK,
-	ATTACK_TYPE_JUMP_PUNCH,
-	ATTACK_TYPE_S_PUNCH,
-	ATTACK_TYPE_S_KICK,
-	ATTACK_TYPE_SJUMP_KICK,
-	ATTACK_TYPE_SJUMP_PUNCH,
-	ATTACK_TYPE_BIG_ELBOW,
-	ATTACK_TYPE_GUILLOTINE,
-	ATTACK_TYPE_SPIN_HIT,
-	ATTACK_TYPE_SPIN_HIT2,
-	ATTACK_TYPE_BOMB_KICK,
-	ATTACK_TYPE_JUMP_SPIN_KICK,
-	ATTACK_TYPE_FINAL_BLOW
-};
-
 typedef struct GamePlayerProperty_ {
 	int max_hp;	/**< 最大生命值 */
 	int cur_hp;	/**< 当前生命值 */
@@ -221,9 +190,8 @@ struct GamePlayer_{
 	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
 	GamePlayerProperty property;	/**< 角色的各项属性 */
-	SpecialSkill skill;		/**< 角色拥有的特殊技能 */
 	LCUI_Queue skills;		/**< 角色拥有的技能 */
-	int attack_type;		/**< 当前的攻击类型 */
+	char attack_type_name[64];	/**< 当前的攻击类型 */
 	int n_attack;			/**< 被攻击的次数 */
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
 	int t_action_timeout;		/**< 定时器，用于处理动作超时 */
@@ -291,6 +259,9 @@ LCUI_BOOL GamePlayer_IsInLiftState( GamePlayer *player );
 void GamePlayer_SetRestTimeOut(	GamePlayer *player,
 				int n_ms,
 				void (*func)(GamePlayer*) );
+
+/** 设置游戏角色当前的攻击类型名称 */
+void GamePlayer_SetAttackTypeName( GamePlayer *player, const char *attack_type_name );
 
 /** 按百分比变更移动速度，n 取值范围为 0 ~ 100 */
 void GamePlayer_ReduceSpeed( GamePlayer *player, int n );

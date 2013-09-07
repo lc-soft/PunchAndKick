@@ -418,6 +418,13 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 	return 0;
 }
 
+/** 设置游戏角色当前的攻击类型名称 */
+void GamePlayer_SetAttackTypeName( GamePlayer *player, const char *attack_type_name )
+{
+	strncpy( player->attack_type_name, attack_type_name, 64 );
+	player->attack_type_name[63] = 0;
+}
+
 /** 按百分比变更移动速度，n 取值范围为 0 ~ 100 */
 void GamePlayer_ReduceSpeed( GamePlayer *player, int n )
 {
@@ -670,12 +677,6 @@ int GamePlayer_SetTummy( GamePlayer *player )
 	}
 	return 0;
 }
-
-/** 爆裂腿 */
-static void GamePlayer_SetBombKick( GamePlayer *player );
-
-/** 自旋击（翻转击） */
-static void GamePlayer_SetSpinHit( GamePlayer *player );
 
 /** 在跳跃结束时 */
 static void GamePlayer_AtJumpDone( LCUI_Widget *widget )
@@ -1380,7 +1381,7 @@ static void GamePlayer_AtBeLiftAttackDone( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
-	player->attack_type = ATTACK_TYPE_NONE;
+	GamePlayer_SetAttackTypeName( player, ATK_NONE );
 	GamePlayer_ChangeState( player, STATE_BE_LIFT_STANCE );
 }
 
@@ -1390,7 +1391,7 @@ static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GameObject_AtXSpeedToZero( widget, 0, NULL );
-	player->attack_type = ATTACK_TYPE_NONE;
+	GamePlayer_SetAttackTypeName( player, ATK_NONE );
 	GamePlayer_ResetAttackControl( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
@@ -1464,25 +1465,6 @@ LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player, GamePlayer *othe
 		}
 	}
 	return TRUE;
-}
-
-/** 二段自旋击 */
-static void GamePlayer_SetSecondSpinHit( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_SPINHIT );
-	player->attack_type = ATTACK_TYPE_SPIN_HIT2;
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	if( LCUIKey_IsHit(player->ctrlkey.left) ) {
-		GameObject_SetXSpeed( player->object, -40 );
-	} 
-	else if( LCUIKey_IsHit(player->ctrlkey.right) ) {
-		GameObject_SetXSpeed( player->object, 40 );
-	} else {
-		GameObject_SetXSpeed( player->object, 0 );
-	}
-	GameObject_AtLanding( player->object, 80, -20, GamePlayer_AtLandingDone );
 }
 
 void GamePlayer_SetUpMotion( GamePlayer *player )
@@ -1618,121 +1600,8 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 			break;
 		}
 		atk_player = GamePlayer_GetPlayerByWidget( p_info->attacker );
-		switch(atk_player->attack_type) {
-		case ATTACK_TYPE_NONE:break;
-		case ATTACK_TYPE_S_PUNCH:
-		case ATTACK_TYPE_S_KICK:
-			player->n_attack = 0;
-			/* 若对方还处于冲刺+A/B攻击的状态，则减百分之50的移动速度 */
-			if( atk_player->state == STATE_AS_ATTACK
-			 || atk_player->state == STATE_BS_ATTACK ) {
-				GamePlayer_ReduceSpeed( atk_player, 50 );
-			}
-			if( GamePlayer_TryHit(player) == 0 ) {
-				break;
-			}
-			atk_player = GamePlayer_GetPlayerByWidget( p_info->attacker );
-			if( GamePlayer_IsLeftOriented( atk_player ) ) {
-				if( GamePlayer_IsLeftOriented(player) ) {
-					GamePlayer_SetBackSHitFly( player );
-				} else {
-					GamePlayer_SetFrontalSHitFly( player );
-				}
-			} else {
-				if( GamePlayer_IsLeftOriented(player) ) {
-					GamePlayer_SetFrontalSHitFly( player );
-				} else {
-					GamePlayer_SetBackSHitFly( player );
-				}
-			}
-			break;
-		case ATTACK_TYPE_SJUMP_KICK:
-			/* 如果有 龙卷攻击 技能，且左/右键处于按住状态 */
-			if( atk_player->skill.tornado_attack && 
-			 ( LCUIKey_IsHit( atk_player->ctrlkey.left)
-			  || LCUIKey_IsHit( atk_player->ctrlkey.right)) ) {
-				GamePlayer_SetSecondSpinHit( atk_player );
-			}
-		case ATTACK_TYPE_SJUMP_PUNCH:
-			player->n_attack = 0;
-			if( GamePlayer_TryHit(player) == 0 ) {
-				break;
-			}
-			if( GamePlayer_IsLeftOriented( atk_player ) ) {
-				GamePlayer_SetLeftHitFly( player );
-			} else {
-				GamePlayer_SetRightHitFly( player );
-			}
-			break;
-		case ATTACK_TYPE_SPIN_HIT:
-			if( LCUIKey_IsHit( atk_player->ctrlkey.left)
-			 || LCUIKey_IsHit( atk_player->ctrlkey.right) ) {
-				GamePlayer_SetSecondSpinHit( atk_player );
-			} else {
-				/* 减少攻击者百分之50的移动速度 */
-				GamePlayer_ReduceSpeed( atk_player, 50 );
-			}
-		case ATTACK_TYPE_SPIN_HIT2:
-		case ATTACK_TYPE_BOMB_KICK:
-			if( atk_player->attack_type == ATTACK_TYPE_BOMB_KICK ) {
-				GamePlayer_ReduceSpeed( atk_player, 50 );
-			}
-		case ATTACK_TYPE_BIG_ELBOW:
-		case ATTACK_TYPE_GUILLOTINE:
-		case ATTACK_TYPE_FINAL_BLOW:
-		case ATTACK_TYPE_JUMP_SPIN_KICK:
-			if( GamePlayer_TryHit(player) == 0 ) {
-				break;
-			}
-			player->n_attack = 0;
-			/* 根据攻击者和受攻击者所面向的方向，得出受攻击者被击飞的方向 */
-			if( GamePlayer_IsLeftOriented( atk_player ) ) {
-				if( GamePlayer_IsLeftOriented(player) ) {
-					GamePlayer_SetBackXHitFly( player );
-				} else {
-					GamePlayer_SetFrontalXHitFly( player );
-				}
-			} else {
-				if( GamePlayer_IsLeftOriented(player) ) {
-					GamePlayer_SetFrontalXHitFly( player );
-				} else {
-					GamePlayer_SetBackXHitFly( player );
-				}
-			}
-			break;
-		case ATTACK_TYPE_MACH_STOMP:
-		case ATTACK_TYPE_JUMP_KICK:
-		case ATTACK_TYPE_JUMP_PUNCH:
-			if( GamePlayer_TryHit(player) == 0 ) {
-				break;
-			}
-			/* 若当前玩家处于歇息状态，则将其击飞 */
-			if( player->n_attack >= 4
-			 || player->state == STATE_REST ) {
-				player->n_attack = 0;
-				if( GamePlayer_IsLeftOriented( atk_player ) ) {
-					GamePlayer_SetLeftHitFly( player );
-				} else {
-					GamePlayer_SetRightHitFly( player );
-				}
-				break;
-			}
-		case ATTACK_TYPE_PUNCH:
-		case ATTACK_TYPE_KICK:
-		default:
-			/* 累计该角色受到的攻击的次数 */
-			if( player->state == STATE_HIT_FLY
-			 || player->state == STATE_B_ROLL
-			 || player->state == STATE_F_ROLL ) {
-				player->n_attack = 0;
-			} else {
-				++player->n_attack;
-				GamePlayer_SetHit( player );
-			}
-			break;
-		}
 		/* 记录本次攻击的信息 */
-		Game_RecordAttack(	atk_player, atk_player->attack_type,
+		Game_RecordAttack(	atk_player, atk_player->attack_type_name,
 					player, player->state );
 		/* 删除攻击者记录 */
 		Queue_Delete( attacker_info, 0 );
@@ -1788,7 +1657,6 @@ void GamePlayer_Init( GamePlayer *player )
 
 	GamePlayer_InitSkillRecord( player );
 
-	player->attack_type = 0;
 	player->n_attack = 0;
 	player->t_rest_timeout = -1;
 	player->t_action_timeout = -1;
