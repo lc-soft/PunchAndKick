@@ -63,7 +63,7 @@ static void GamePlayer_AtBeLiftAttackDone( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
-	player->attack_type = ATTACK_TYPE_NONE;
+	GamePlayer_SetAttackTypeName( player, ATK_NONE );
 	GamePlayer_ChangeState( player, STATE_BE_LIFT_STANCE );
 }
 
@@ -73,7 +73,7 @@ static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GameObject_AtXSpeedToZero( widget, 0, NULL );
-	player->attack_type = ATTACK_TYPE_NONE;
+	GamePlayer_SetAttackTypeName( player, ATK_NONE );
 	GamePlayer_ResetAttackControl( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
@@ -123,14 +123,14 @@ static void CommonSkill_StartFinalBlow( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_FINAL_BLOW );
 	GameObject_AtActionDone( player->object, ACTION_FINAL_BLOW, func );
 	GameObject_ClearAttack( player->object );
-	player->attack_type = ATTACK_TYPE_FINAL_BLOW;
+	GamePlayer_SetAttackTypeName( player, ATK_FINALBLOW );
 	GamePlayer_StopXWalk( player );
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
 	GamePlayer_LockAction( player );
 }
 
-static void _StartAttack( GamePlayer *player, int state, int action, int attack_type )
+static void _StartAttack( GamePlayer *player, int state, int action, const char *attack_type_name )
 {
 	void (*func)(LCUI_Widget*);
 
@@ -142,7 +142,7 @@ static void _StartAttack( GamePlayer *player, int state, int action, int attack_
 	}
 	GamePlayer_ChangeState( player, state );
 	GameObject_AtActionDone( player->object, action, func );
-	player->attack_type = attack_type;
+	GamePlayer_SetAttackTypeName( player, attack_type_name );
 	GamePlayer_StopXWalk( player );
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
@@ -201,28 +201,28 @@ static LCUI_BOOL CommonSkill_CanUseJumpBAttack( GamePlayer *player )
 static void CommonSkill_StartAAttack( GamePlayer *player )
 {
 	_StartAttack(	player, STATE_A_ATTACK, 
-			ACTION_A_ATTACK, ATTACK_TYPE_PUNCH );
+		ACTION_A_ATTACK, ATK_SPRINT_JUMP_A_ATTACK );
 }
 
 /** 开始发动B普通攻击 */
 static void CommonSkill_StartBAttack( GamePlayer *player )
 {
 	_StartAttack(	player, STATE_B_ATTACK, 
-			ACTION_B_ATTACK, ATTACK_TYPE_KICK );
+			ACTION_B_ATTACK, ATK_SPRINT_JUMP_B_ATTACK );
 }
 
 /** 开始发动高速A攻击 */
 static void CommonSkill_StartMachAAttack( GamePlayer *player )
 {
 	_StartAttack(	player, STATE_MACH_A_ATTACK,
-			ACTION_MACH_A_ATTACK, ATTACK_TYPE_PUNCH );
+			ACTION_MACH_A_ATTACK, ATK_A_ATTACK );
 }
 
 /** 开始发动高速B攻击 */
 static void CommonSkill_StartMachBAttack( GamePlayer *player )
 {
 	_StartAttack(	player, STATE_MACH_B_ATTACK, 
-			ACTION_MACH_B_ATTACK, ATTACK_TYPE_KICK );
+			ACTION_MACH_B_ATTACK, ATK_B_ATTACK );
 }
 
 /** 检测游戏角色在当前状态下是否能够进行冲撞攻击 */
@@ -236,7 +236,7 @@ static LCUI_BOOL GamePlayerStateCanSprintAttack( GamePlayer *player )
 }
 
 /** 开始发动冲撞攻击 */
-static void _StartSprintAttack( GamePlayer *player, int state, int attack_type )
+static void _StartSprintAttack( GamePlayer *player, int state, const char *attack_type_name )
 {
 	double acc, speed;
 	player->control.run = FALSE;
@@ -264,7 +264,7 @@ static void _StartSprintAttack( GamePlayer *player, int state, int attack_type )
 	else if( speed > 0.0 ) {
 		GameObject_SetYAcc( player->object, -acc );
 	}
-	player->attack_type = attack_type;
+	GamePlayer_SetAttackTypeName( player, attack_type_name );
 }
 
 /** 检测是否能够使用冲撞A攻击 */
@@ -282,7 +282,7 @@ static LCUI_BOOL CommonSkill_CanUseASprintAttack( GamePlayer *player )
 /** 开始发动冲撞A攻击 */
 static void CommonSkill_StartSprintAAttack( GamePlayer *player )
 {
-	_StartSprintAttack( player, STATE_AS_ATTACK, ATTACK_TYPE_S_PUNCH );
+	_StartSprintAttack( player, STATE_AS_ATTACK, ATK_SPRINT_JUMP_A_ATTACK );
 }
 
 /** 检测是否能够使用冲撞B攻击 */
@@ -300,7 +300,7 @@ static LCUI_BOOL CommonSkill_CanUseBSprintAttack( GamePlayer *player )
 /** 开始发动冲撞B攻击 */
 static void CommonSkill_StartSprintBAttack( GamePlayer *player )
 {
-	_StartSprintAttack( player, STATE_BS_ATTACK, ATTACK_TYPE_S_KICK );
+	_StartSprintAttack( player, STATE_BS_ATTACK, ATK_SPRINT_JUMP_B_ATTACK );
 }
 
 static LCUI_BOOL CommonSkill_CanUseSprintJumpAAttack( GamePlayer *player )
@@ -323,14 +323,14 @@ static void CommonSkill_StartSprintJumpAAttack( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_ASJ_ATTACK );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_SJUMP_PUNCH;
+	GamePlayer_SetAttackTypeName( player, ATK_SPRINT_JUMP_A_ATTACK );
 }
 
 static void CommonSkill_StartSprintJumpBAttack( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_BSJ_ATTACK );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_SJUMP_KICK;
+	GamePlayer_SetAttackTypeName( player, ATK_SPRINT_JUMP_B_ATTACK );
 }
 
 /** 检测是否可以攻击到躺地玩家 */
@@ -610,7 +610,7 @@ static void CommonSkill_JumpTreadStep2( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP_STOMP );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_TREAD;
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_TREAD );
 	GameObject_AtZeroZSpeed( widget, NULL );
 	GameObject_ClearAttack( player->object );
 }
@@ -652,7 +652,7 @@ static void CommonSkill_JumpElbowStep2( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_ELBOW;
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_ELBOW );
 	GameObject_AtZeroZSpeed( widget, NULL );
 	GameObject_ClearAttack( player->object );
 }
@@ -696,7 +696,7 @@ static void GamePlayer_StopMachStomp( GamePlayer *player )
 static void CommonSkill_StartMachStomp( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_MACH_STOMP );
-	player->attack_type = ATTACK_TYPE_MACH_STOMP;
+	GamePlayer_SetAttackTypeName( player, ATK_MACH_STOMP );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_SetXSpeed( player->object, 0 );
@@ -709,7 +709,7 @@ static void CommonSkill_StartJumpAAttack( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_AJ_ATTACK );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_PUNCH;
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_A_ATTACK );
 }
 
 /** 开始发动跳跃高速A攻击 */
@@ -717,7 +717,7 @@ static void CommonSkill_StartJumpMachAAttack( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_MAJ_ATTACK );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_PUNCH;
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_A_ATTACK );
 }
 
 /** 开始发动跳跃B攻击 */
@@ -725,7 +725,7 @@ static void CommonSkill_StartJumpBAttack( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_BJ_ATTACK );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_KICK;
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_B_ATTACK );
 }
 
 /** 开始发动跳跃高速B攻击 */
@@ -733,7 +733,7 @@ static void CommonSkill_StartJumpMachBAttack( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_MBJ_ATTACK );
 	GamePlayer_LockAction( player );
-	player->attack_type = ATTACK_TYPE_JUMP_KICK;
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_B_ATTACK );
 }
 
 static LCUI_BOOL CommonSkill_CanUseBombKick( GamePlayer *player )
@@ -752,7 +752,7 @@ static void CommonSkill_StartBombKick( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_BOMBKICK );
-	player->attack_type = ATTACK_TYPE_BOMB_KICK;
+	GamePlayer_SetAttackTypeName( player, ATK_BOMBKICK );
 	GameObject_ClearAttack( player->object );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
@@ -788,7 +788,7 @@ static void CommonSkill_StartSpinHit( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SPINHIT );
-	player->attack_type = ATTACK_TYPE_SPIN_HIT;
+	GamePlayer_SetAttackTypeName( player, ATK_SPINHIT );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	if( player->control.left_motion ) {
@@ -869,7 +869,7 @@ static void GamePlayer_LandingBounce( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_ReduceSpeed( player, 75 );
-	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
+	Game_RecordAttack( player->other, ATK_THROW, player, player->state );
 	player->other = NULL;
 	GameObject_AtLanding(
 		widget, ZSPEED_XF_HIT_FLY2, -ZACC_XF_HIT_FLY2,
@@ -902,7 +902,7 @@ static void GamePlayer_ProcThrowUpFlyAttack( LCUI_Widget *self, LCUI_Widget *oth
 	x1 = GameObject_GetX( self );
 	x2 = GameObject_GetX( other );
 	/* 记录攻击 */
-	Game_RecordAttack(	player->other, ATTACK_TYPE_BUMPED,
+	Game_RecordAttack(	player->other, ATK_BUMPED,
 				other_player, other_player->state );
 	/* 根据两者坐标，判断击飞的方向 */
 	if( x1 < x2 ) {
@@ -972,7 +972,7 @@ static void GamePlayer_AtBeThrowDownLanding( LCUI_Widget *widget )
 		GamePlayer_ChangeState( player, STATE_LYING_HIT );
 	}
 	GamePlayer_LockAction( player );
-	Game_RecordAttack( player->other, ATTACK_TYPE_THROW, player, player->state );
+	Game_RecordAttack( player->other, ATK_THROW, player, player->state );
 	player->other = NULL;
 	/* 落地后缩减该角色75%的移动速度 */
 	GamePlayer_ReduceSpeed( player, 75 );
@@ -1330,7 +1330,7 @@ static void CommonSkill_StartRideAAttack( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
 	GamePlayer_LockAction( player );
 	GamePlayer_TryHit( player->other );
-	Game_RecordAttack( player, ATTACK_TYPE_RIDE_ATTACK, player->other, player->other->state );
+	Game_RecordAttack( player, ATK_RIDE_A_ATTACK, player->other, player->other->state );
 	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
 }
 
@@ -1347,7 +1347,7 @@ static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
 	case STATE_TUMMY_HIT:
 	case STATE_LYING:
 	case STATE_LYING_HIT:
-		Game_RecordAttack(	player, ATTACK_TYPE_RIDE_JUMP_ATTACK, 
+		Game_RecordAttack(	player, ATK_RIDE_B_ATTACK, 
 					player->other, player->other->state );
 		CommonSkill_StartRideAAttack( player );
 		break;
@@ -1411,7 +1411,7 @@ static void CommonSkill_StartBigElbow( GamePlayer *player )
 {
 	double z_speed;
 	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
-	player->attack_type = ATTACK_TYPE_BIG_ELBOW;
+	GamePlayer_SetAttackTypeName( player, ATK_BIG_ELBOW );
 	GameObject_ClearAttack( player->object );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
@@ -1983,8 +1983,8 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 		GamePlayer_SetLeftHitFly( other_player );
 	}
 	/* 两个都受到攻击伤害 */
-	Game_RecordAttack( other_player, ATTACK_TYPE_BUMPED, player, player->state );
-	Game_RecordAttack( player, ATTACK_TYPE_BUMPED, other_player, other_player->state );
+	Game_RecordAttack( other_player, ATK_BUMPED, player, player->state );
+	Game_RecordAttack( player, ATK_BUMPED, other_player, other_player->state );
 	GameObject_AtTouch( player->object, NULL );
 	player->n_attack = 0;
 	other_player->n_attack = 0;
@@ -2089,7 +2089,7 @@ static void CommonSkill_StartJumpSpinKick( GamePlayer *player )
 	z_speed += 100;
 	GameObject_SetZSpeed( player->object, z_speed );
 	GameObject_SetZAcc( player->object, -(ZACC_JUMP+50) );
-	player->attack_type = ATTACK_TYPE_JUMP_SPIN_KICK;
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_SPINKICK );
 	GameObject_ClearAttack( player->object );
 	/* 开始翻滚 */
 	GamePlayer_ChangeState( player, STATE_SPINHIT );

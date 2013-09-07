@@ -73,7 +73,7 @@ static void GamePlayer_AtElbowUpdate( LCUI_Widget *widget )
 		break;
 	case 1:
 		/* 记录第一段攻击伤害 */
-		Game_RecordAttack(	player, ATTACK_TYPE_ELBOW1, 
+		Game_RecordAttack(	player, ATK_ELBOW_1, 
 					player->other, player->other->state );
 		break;
 	case 2:
@@ -82,7 +82,7 @@ static void GamePlayer_AtElbowUpdate( LCUI_Widget *widget )
 		break;
 	case 4:
 		/* 记录第二段攻击伤害 */
-		Game_RecordAttack(	player, ATTACK_TYPE_ELBOW1, 
+		Game_RecordAttack(	player, ATK_ELBOW_2,
 					player->other, player->other->state );
 	case 3:
 		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
@@ -135,7 +135,7 @@ static void GamePlayer_AtLandingByAfterKneeHit( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	/* 记录第二段攻击伤害 */
-	Game_RecordAttack(	player->other, ATTACK_TYPE_KNEE_HIT2,
+	Game_RecordAttack(	player->other, ATK_KNEE_HIT_2,
 				player, STATE_LYING
 	);
 	GamePlayer_SetRestTimeOut( 
@@ -158,7 +158,7 @@ static void AtKneeHitUpdate( LCUI_Widget *widget )
 		break;
 	case 1:
 		/* 记录第一段攻击伤害 */
-		Game_RecordAttack(	player, ATTACK_TYPE_KNEE_HIT1, 
+		Game_RecordAttack(	player, ATK_KNEE_HIT_1, 
 					player->other, STATE_LYING_HIT );
 		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
