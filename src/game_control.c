@@ -1551,53 +1551,6 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 	GameObject_SetYSpeed( player->object, speed );
 }
 
-static void GamePlayer_JumpSpinKickStart( LCUI_Widget *widget )
-{
-	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	/* 增加下落的速度 */
-	GameObject_SetZAcc( player->object, -(ZACC_JUMP+100) );
-	/* 根据角色目前面向的方向，设定水平移动方向及速度 */
-	if( GamePlayer_IsLeftOriented( player ) ) {
-		GameObject_SetXSpeed( player->object, -(XSPEED_RUN+100) );
-	} else {
-		GameObject_SetXSpeed( player->object, XSPEED_RUN+100 );
-	}
-	GameObject_AtZeroZSpeed( player->object, NULL );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_ChangeState( player, STATE_KICK );
-	GamePlayer_LockAction( player );
-}
-
-static void GamePlayer_SetJumpSpinKick( GamePlayer *player )
-{
-	double z_speed;
-	if( player->lock_action ) {
-		return;
-	}
-	/* 如果该游戏角色并没处于奔跑后的 跳跃 的状态下 */
-	if( player->state != STATE_SJUMP
-	&& player->state != STATE_SSQUAT ) {
-		return;
-	}
-	/* 增加点在Z轴的移动速度，以增加高度 */
-	z_speed = GameObject_GetZSpeed( player->object );
-	z_speed += 100;
-	GameObject_SetZSpeed( player->object, z_speed );
-	GameObject_SetZAcc( player->object, -(ZACC_JUMP+50) );
-	player->attack_type = ATTACK_TYPE_JUMP_SPIN_KICK;
-	GameObject_ClearAttack( player->object );
-	/* 开始翻滚 */
-	GamePlayer_ChangeState( player, STATE_SPINHIT );
-	/* 锁定动作和移动 */
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	/* 滚了一会后再开始出脚 */
-	GameObject_AtZeroZSpeed( player->object, GamePlayer_JumpSpinKickStart );
-}
-
-
 /** 设置游戏角色的控制键 */
 int GamePlayer_SetControlKey( int player_id, ControlKey *key )
 {
@@ -2058,13 +2011,7 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		GamePlayer_SetUpMotion( player );
 	}
 	else if( player->control.down_motion ) {
-		if( player->state == STATE_SJUMP
-		 || player->state == STATE_SSQUAT ) {
-			 player->control.down_motion = FALSE;
-			GamePlayer_SetJumpSpinKick( player );
-		} else {
-			GamePlayer_SetDownMotion( player );
-		}
+		GamePlayer_SetDownMotion( player );
 	}
 	else {
 		switch( player->state ) {
