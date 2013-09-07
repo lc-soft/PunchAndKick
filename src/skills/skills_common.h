@@ -77,6 +77,7 @@
 #define SKILLNAME_CATCH			"catch"
 #define SKILLNAME_BIG_ELBOW		"big elbow"
 #define SKILLNAME_PUSH			"push"
+#define SKILLNAME_JUMP_SPINKICK		"jump spin kick"
 
 enum SkillPriority_AAttack {
 	SKILLPRIORITY_A_LIFT,
@@ -112,7 +113,8 @@ enum SkillPriority_BAttack {
 };
 
 enum SkillPriority_HorizMotion {
-	SKILLPRIORITY_RIDE
+	SKILLPRIORITY_RIDE,
+	SKILLPRIORITY_JUMP_SPINKICK
 };
 
 enum SkillPriority_VertiMotion {
