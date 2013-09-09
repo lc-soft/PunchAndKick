@@ -5,6 +5,47 @@
 #include "../game.h"
 #include "game_skill.h"
 
+#define ATK_ELBOW_1		"elbow attack step 1"
+#define ATK_ELBOW_2		"elbow attack step 2"
+#define ATK_KNEEHIT_1		"knee hit attack step 1"
+#define ATK_KNEEHIT_2		"knee hit attack step 2"
+
+static int AttackDamage_Elbow1( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	double damage;
+	damage = 20 + attacker->property.punch/5.0;
+	return (int)damage;
+}
+
+static int AttackDamage_Elbow2( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	double damage;
+	damage = attacker->property.max_hp;
+	damage -= attacker->property.cur_hp;
+	damage /= attacker->property.max_hp;
+	damage = attacker->property.punch * damage;
+	damage += attacker->property.punch/3.0;
+	return (int)damage;
+}
+
+static int AttackDamage_KneeHit1( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	double damage;
+	damage = attacker->property.max_hp;
+	damage -= attacker->property.cur_hp;
+	damage /= attacker->property.max_hp;
+	damage = attacker->property.kick * damage;
+	damage += (attacker->property.kick * 0.2);
+	return (int)damage;
+}
+
+static int AttackDamage_KneeHit2( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	double damage;
+	damage = attacker->property.throw * 0.5;
+	return (int)damage;
+}
+
 static LCUI_BOOL CanUseElbow( GamePlayer *player )
 {
 	/* 该技能不能给非拳击家的角色使用 */
@@ -135,7 +176,7 @@ static void GamePlayer_AtLandingByAfterKneeHit( LCUI_Widget *widget )
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
 	/* 记录第二段攻击伤害 */
-	Game_RecordAttack(	player->other, ATK_KNEE_HIT_2,
+	Game_RecordAttack(	player->other, ATK_KNEEHIT_2,
 				player, STATE_LYING
 	);
 	GamePlayer_SetRestTimeOut( 
@@ -158,7 +199,7 @@ static void AtKneeHitUpdate( LCUI_Widget *widget )
 		break;
 	case 1:
 		/* 记录第一段攻击伤害 */
-		Game_RecordAttack(	player, ATK_KNEE_HIT_1, 
+		Game_RecordAttack(	player, ATK_KNEEHIT_1, 
 					player->other, STATE_LYING_HIT );
 		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
@@ -171,6 +212,7 @@ static void AtKneeHitUpdate( LCUI_Widget *widget )
 		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_LYING );
 		GamePlayer_LockAction( player->other );
+		player->other->other = player;
 		GameObject_AtLanding(	player->other->object, -20, 0,
 					GamePlayer_AtLandingByAfterKneeHit );
 	default:
@@ -232,4 +274,8 @@ void MartialArtistSkill_Register(void)
 				CanUseKneeHit,
 				StartKneeHit
 	);
+	AttackLibrary_AddAttack( ATK_ELBOW_1, AttackDamage_Elbow1, NULL );
+	AttackLibrary_AddAttack( ATK_ELBOW_2, AttackDamage_Elbow2, NULL );
+	AttackLibrary_AddAttack( ATK_KNEEHIT_1, AttackDamage_KneeHit1, NULL );
+	AttackLibrary_AddAttack( ATK_KNEEHIT_2, AttackDamage_KneeHit2, NULL );
 }
