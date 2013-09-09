@@ -5,6 +5,560 @@
 #include "../game.h"
 #include "game_skill.h"
 
+/** 计算A攻击的伤害值 */
+static int AttackDamage_AAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.punch/10;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+/** 计算B攻击的伤害值 */
+static int AttackDamage_BAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.kick/10;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+/** 计算A攻击的伤害值 */
+static int AttackDamage_MachAAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.punch/20;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+/** 计算B攻击的伤害值 */
+static int AttackDamage_MachBAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.kick/20;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_SprintAAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.punch/3;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_SprintBAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.kick/3;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_FinalBlow( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.punch/4;
+	damage += attacker->property.kick/4;
+	damage *= 2;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_SprintJumpAAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.punch/3;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_SprintJumpBAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.kick/2;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_MachStomp( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.kick/6;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_JumpTread( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.kick/6;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_JumpElbow( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = attacker->property.punch/6;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_BombKick( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 50 + attacker->property.kick/4;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_SpinHit( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 30 + attacker->property.kick/4;
+	damage += attacker->property.punch/4;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_Throw( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 20 + attacker->property.throw/2;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_RideAAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 10 + attacker->property.punch/8;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_RideBAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 20 + (attacker->property.punch + attacker->property.kick)/8;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_BigElbow( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 20 + attacker->property.punch/3;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_JumpSpinKick( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 40 + attacker->property.kick/4;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+
+static void GamePlayer_AtHitDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	switch( player->state ) {
+	case STATE_LYING_HIT:
+		GamePlayer_SetLying( player );
+		break;
+	case STATE_TUMMY_HIT:
+		GamePlayer_SetTummy( player );
+		break;
+	default:
+		if( player->n_attack >= 4 ) {
+			GamePlayer_SetRest( player );
+		} else {
+			GamePlayer_UnlockAction( player );
+			GamePlayer_SetReady( player );
+		}
+		break;
+	}
+}
+
+/** 重置角色的受攻击次数 */
+static void GamePlayer_ResetCountAttack( GamePlayer *player )
+{
+	player->n_attack = 0;
+}
+
+static int GamePlayer_TryHit( GamePlayer *player )
+{
+	switch( player->state ) {
+	case STATE_LYING:
+	case STATE_LYING_HIT:
+		player->n_attack = 0;
+		GamePlayer_UnlockAction( player );
+		GamePlayer_ChangeState( player, STATE_LYING_HIT );
+		GamePlayer_LockAction( player );
+		GameObject_AtActionDone( player->object, ACTION_LYING_HIT, GamePlayer_AtHitDone );
+		break;
+	case STATE_TUMMY:
+	case STATE_TUMMY_HIT:
+		player->n_attack = 0;
+		GamePlayer_UnlockAction( player );
+		GamePlayer_ChangeState( player, STATE_TUMMY_HIT );
+		GamePlayer_LockAction( player );
+		GameObject_AtActionDone( player->object, ACTION_TUMMY_HIT, GamePlayer_AtHitDone );
+		break;
+	case STATE_B_ROLL:
+	case STATE_F_ROLL:
+	case STATE_HIT_FLY:
+	case STATE_HIT_FLY_FALL:
+		player->n_attack = 0;
+		break;
+	default:
+		return -1;
+	}
+	return 0;
+}
+
+static void GamePlayer_SetHit( GamePlayer *player )
+{
+	if( GamePlayer_TryHit(player) == 0 ) {
+		return;
+	}
+	GamePlayer_UnlockAction( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_StopXMotion( player );
+	GamePlayer_ChangeState( player, STATE_HIT );
+	GamePlayer_LockAction( player );
+	GamePlayer_SetRestTimeOut( player, 2000, GamePlayer_ResetCountAttack );
+	GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtHitDone );
+}
+
+/** 普通攻击产生的效果 */
+static void AttackEffect_Normal( GamePlayer *attacker, GamePlayer *victim )
+{
+	if( victim->state == STATE_HIT_FLY
+	 || victim->state == STATE_B_ROLL
+	 || victim->state == STATE_F_ROLL ) {
+		victim->n_attack = 0;
+	} else {
+		++victim->n_attack;
+		GamePlayer_SetHit( victim );
+	}
+}
+
+static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	/* 停止移动 */
+	GameObject_SetYSpeed( widget, 0 );
+	GameObject_SetXSpeed( widget, 0 );
+	GameObject_SetZSpeed( widget, 0 );
+	
+	if( GamePlayer_SetLying( player ) == 0 ) {
+		_DEBUG_MSG("id: %d, lying\n", player->id);
+		GamePlayer_SetRestTimeOut( 
+			player, SHORT_REST_TIMEOUT,
+			GamePlayer_StartStand 
+		);
+	}
+}
+
+void GamePlayer_AtFrontalHitFlyDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( GamePlayer_IsLeftOriented(player) ) {
+		GameObject_SetXSpeed( player->object, XSPEED_X_HIT_FLY2 );
+	} else {
+		GameObject_SetXSpeed( player->object, -XSPEED_X_HIT_FLY2 );
+	}
+	GameObject_AtLanding(
+		player->object,
+		ZSPEED_XF_HIT_FLY2,
+		-ZACC_XF_HIT_FLY2,
+		GamePlayer_AtHitFlyDone
+	);
+}
+
+static void GamePlayer_AtHitFlyFall( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_HIT_FLY_FALL );
+	GamePlayer_LockAction( player );
+	GameObject_AtZSpeed( widget, 0, NULL );
+}
+
+/** 在接近最大高度时，调整身体为平躺式 */
+static void GamePlayer_AtHitFlyMaxHeight( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_LYING_HIT );
+	GamePlayer_LockAction( player );
+	GameObject_AtZSpeed( widget, -20, GamePlayer_AtHitFlyFall );
+}
+
+static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
+{
+	RangeBox range;
+	double attacker_x, speed;
+	speed = GameObject_GetXSpeed( attacker->object );
+	attacker_x = GameObject_GetX( attacker->object );
+	GameObject_GetHitRange( victim->object, &range );
+	/* 根据攻击者的移动方向，以及受攻击者的位置，对攻击者进行减速 */
+	if( speed < 0 ) {
+		if( attacker_x >= range.x ) {
+			GamePlayer_ReduceSpeed( attacker, 50 );
+		}
+	}
+	else if( speed > 0 ) {
+		if( attacker_x < range.x+range.x_width ) {
+			GamePlayer_ReduceSpeed( attacker, 50 );
+		}
+	}
+	if( GamePlayer_TryHit(victim) == 0 ) {
+		return;
+	}
+	GamePlayer_UnlockAction( victim );
+	GamePlayer_ChangeState( victim, STATE_HIT_FLY );
+	GamePlayer_LockAction( victim );
+	GamePlayer_LockMotion( victim );
+	GameObject_SetXAcc( victim->object, 0 );
+	if( GamePlayer_IsLeftOriented(attacker) ) {
+		GameObject_SetXSpeed( victim->object, -XSPEED_X_HIT_FLY );
+	} else {
+		GameObject_SetXSpeed( victim->object, XSPEED_X_HIT_FLY );
+	}
+	if( GamePlayer_IsLeftOriented( attacker )
+	 == GamePlayer_IsLeftOriented( victim ) ) {
+		GameObject_AtLanding(
+			victim->object,
+			ZSPEED_XB_HIT_FLY, -ZACC_XB_HIT_FLY,
+			GamePlayer_AtHitFlyDone
+		);
+		return;
+	}
+	GameObject_AtZSpeed( victim->object, 20, GamePlayer_AtHitFlyMaxHeight );
+	GameObject_AtLanding(
+		victim->object,
+		ZSPEED_XF_HIT_FLY, -ZACC_XF_HIT_FLY,
+		GamePlayer_AtFrontalHitFlyDone 
+	);
+}
+
+void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
+{
+	RangeBox range;
+	double attacker_x, speed;
+	speed = GameObject_GetXSpeed( attacker->object );
+	attacker_x = GameObject_GetX( attacker->object );
+	GameObject_GetHitRange( victim->object, &range );
+	if( speed < 0 ) {
+		if( attacker_x >= range.x ) {
+			GamePlayer_ReduceSpeed( attacker, 50 );
+		}
+	}
+	else if( speed > 0 ) {
+		if( attacker_x < range.x+range.x_width ) {
+			GamePlayer_ReduceSpeed( attacker, 50 );
+		}
+	}
+	if( GamePlayer_TryHit(victim) == 0 ) {
+		return;
+	}
+	GamePlayer_UnlockAction( victim );
+	GamePlayer_ChangeState( victim, STATE_HIT_FLY );
+	GamePlayer_LockAction( victim );
+	GamePlayer_LockMotion( victim );
+	GameObject_SetXAcc( victim->object, 0 );
+	if( GamePlayer_IsLeftOriented(attacker) ) {
+		GameObject_SetXSpeed( victim->object, -XSPEED_HIT_FLY );
+	} else {
+		GameObject_SetXSpeed( victim->object, XSPEED_HIT_FLY );
+	}
+	GameObject_AtLanding(
+		victim->object,
+		ZSPEED_HIT_FLY, -ZACC_HIT_FLY, 
+		GamePlayer_AtHitFlyDone
+	);
+}
+
+/** 普通攻击产生的效果（若对方处于喘气状态，则击飞对方） */
+static void AttackEffect_Normal2( GamePlayer *attacker, GamePlayer *victim )
+{
+	if( GamePlayer_TryHit(victim) == 0 ) {
+		return;
+	}
+	GamePlayer_SetHit( victim );
+	++victim->n_attack;
+	/* 若当前玩家处于歇息状态，则将其击飞 */
+	if( victim->n_attack >= 4
+	 || victim->state == STATE_REST ) {
+		victim->n_attack = 0;
+		AttackEffect_ShortHitFly( attacker, victim );
+	}
+}
+
+/** 向后翻滚超时后 */
+static void GamePlayer_AtBackwardRollTimeOut( GamePlayer *player )
+{
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_SetYAcc( player->object, 0 );
+	GameObject_SetXAcc( player->object, 0 );
+	if( GamePlayer_SetLying( player ) == 0 ) {
+		GamePlayer_SetRestTimeOut( 
+			player, LONG_REST_TIMEOUT, 
+			GamePlayer_StartStand 
+		);
+	}
+}
+
+/** 向前翻滚超时后 */
+static void GamePlayer_AtForwardRollTimeOut( GamePlayer *player )
+{
+	GameObject_SetXSpeed( player->object, 0 );
+	GameObject_SetYSpeed( player->object, 0 );
+	GameObject_SetYAcc( player->object, 0 );
+	GameObject_SetXAcc( player->object, 0 );
+	if( GamePlayer_SetTummy( player ) == 0 ) {
+		GamePlayer_SetRestTimeOut( 
+			player, LONG_REST_TIMEOUT, 
+			GamePlayer_StartStand 
+		);
+	}
+}
+
+/** 开始朝左边进行前翻滚 */
+static void GamePlayer_StartLeftForwardRoll( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_SetLeftOriented( player );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_F_ROLL );
+	GamePlayer_LockAction( player );
+	/* 一边滚动，一边减速 */
+	GameObject_SetXAcc( player->object, XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtForwardRollTimeOut );
+}
+
+/** 开始朝右边进行前翻滚 */
+static void GamePlayer_StartRightForwardRoll( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_SetRightOriented( player );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_F_ROLL );
+	GamePlayer_LockAction( player );
+	GameObject_SetXAcc( player->object, -XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtForwardRollTimeOut );
+}
+
+/** 开始朝左边进行后翻滚 */
+static void GamePlayer_StartLeftBackwardRoll( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_B_ROLL );
+	GamePlayer_LockAction( player );
+	GameObject_SetXAcc( player->object, XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtBackwardRollTimeOut );
+}
+
+/** 开始朝右边进行后翻滚 */
+static void GamePlayer_StartRightBackwardRoll( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_B_ROLL );
+	GamePlayer_LockAction( player );
+	GameObject_SetXAcc( player->object, -XACC_ROLL );
+	GamePlayer_SetActionTimeOut( player, ROLL_TIMEOUT, GamePlayer_AtBackwardRollTimeOut );
+}
+
+static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
+{
+	RangeBox range;
+	double attacker_x, speed;
+	speed = GameObject_GetXSpeed( attacker->object );
+	attacker_x = GameObject_GetX( attacker->object );
+	GameObject_GetHitRange( victim->object, &range );
+	if( speed < 0 ) {
+		if( attacker_x >= range.x ) {
+			GamePlayer_ReduceSpeed( attacker, 50 );
+		}
+	}
+	else if( speed > 0 ) {
+		if( attacker_x < range.x+range.x_width ) {
+			GamePlayer_ReduceSpeed( attacker, 50 );
+		}
+	}
+	if( GamePlayer_TryHit(victim) == 0 ) {
+		return;
+	}
+	GamePlayer_UnlockAction( victim );
+	GamePlayer_ChangeState( victim, STATE_HIT_FLY );
+	GamePlayer_LockAction( victim );
+	GamePlayer_LockMotion( victim );
+	GameObject_SetXAcc( victim->object, 0 );
+	if( GamePlayer_IsLeftOriented(attacker) ) {
+		GameObject_SetXSpeed( victim->object, -XSPEED_S_HIT_FLY );
+	} else {
+		GameObject_SetXSpeed( victim->object, XSPEED_S_HIT_FLY );
+	}
+	/* 如果两者朝向相同 */
+	if( GamePlayer_IsLeftOriented( attacker )
+	 == GamePlayer_IsLeftOriented( victim ) ) {
+		 /* 如果攻击者朝向左方 */
+		if( GamePlayer_IsLeftOriented(attacker) ) {
+			/* 落地时开始向左边进行 前翻滚 */
+			GameObject_AtLanding(
+				victim->object,
+				ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
+				GamePlayer_StartLeftForwardRoll
+			);
+		} else {
+			/* 落地时开始向右边进行 前翻滚 */
+			GameObject_AtLanding(
+				victim->object,
+				ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
+				GamePlayer_StartRightForwardRoll
+			);
+		}
+		return;
+	}
+	/* 如果攻击者朝向左方 */
+	if( GamePlayer_IsLeftOriented(attacker) ) {
+		/* 落地时开始向左边进行 前翻滚 */
+		GameObject_AtLanding(
+			victim->object,
+			ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
+			GamePlayer_StartLeftBackwardRoll
+		);
+	} else {
+		/* 落地时开始向右边进行 后翻滚 */
+		GameObject_AtLanding(
+			victim->object,
+			ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
+			GamePlayer_StartRightBackwardRoll
+		);
+	}
+}
+
 static LCUI_BOOL GamePlayerStateCanNormalAttack( GamePlayer *player )
 {
 	switch(player->state) {
@@ -215,14 +769,14 @@ static void CommonSkill_StartBAttack( GamePlayer *player )
 static void CommonSkill_StartMachAAttack( GamePlayer *player )
 {
 	_StartAttack(	player, STATE_MACH_A_ATTACK,
-			ACTION_MACH_A_ATTACK, ATK_A_ATTACK );
+			ACTION_MACH_A_ATTACK, ATK_MACH_A_ATTACK );
 }
 
 /** 开始发动高速B攻击 */
 static void CommonSkill_StartMachBAttack( GamePlayer *player )
 {
 	_StartAttack(	player, STATE_MACH_B_ATTACK, 
-			ACTION_MACH_B_ATTACK, ATK_B_ATTACK );
+			ACTION_MACH_B_ATTACK, ATK_MACH_B_ATTACK );
 }
 
 /** 检测游戏角色在当前状态下是否能够进行冲撞攻击 */
@@ -282,7 +836,7 @@ static LCUI_BOOL CommonSkill_CanUseASprintAttack( GamePlayer *player )
 /** 开始发动冲撞A攻击 */
 static void CommonSkill_StartSprintAAttack( GamePlayer *player )
 {
-	_StartSprintAttack( player, STATE_AS_ATTACK, ATK_SPRINT_JUMP_A_ATTACK );
+	_StartSprintAttack( player, STATE_AS_ATTACK, ATK_SPRINT_A_ATTACK );
 }
 
 /** 检测是否能够使用冲撞B攻击 */
@@ -300,7 +854,7 @@ static LCUI_BOOL CommonSkill_CanUseBSprintAttack( GamePlayer *player )
 /** 开始发动冲撞B攻击 */
 static void CommonSkill_StartSprintBAttack( GamePlayer *player )
 {
-	_StartSprintAttack( player, STATE_BS_ATTACK, ATK_SPRINT_JUMP_B_ATTACK );
+	_StartSprintAttack( player, STATE_BS_ATTACK, ATK_SPRINT_B_ATTACK );
 }
 
 static LCUI_BOOL CommonSkill_CanUseSprintJumpAAttack( GamePlayer *player )
@@ -880,7 +1434,6 @@ static void GamePlayer_LandingBounce( LCUI_Widget *widget )
 /** 处理游戏角色在被抛出时与其他角色的碰撞 */
 static void GamePlayer_ProcThrowUpFlyAttack( LCUI_Widget *self, LCUI_Widget *other )
 {
-	double x1, x2;
 	GamePlayer *player, *other_player;
 
 	player = GamePlayer_GetPlayerByWidget( self );
@@ -899,17 +1452,10 @@ static void GamePlayer_ProcThrowUpFlyAttack( LCUI_Widget *self, LCUI_Widget *oth
 	if( GamePlayer_TryHit( other_player ) == 0 ) {
 		return;
 	}
-	x1 = GameObject_GetX( self );
-	x2 = GameObject_GetX( other );
 	/* 记录攻击 */
 	Game_RecordAttack(	player->other, ATK_BUMPED,
 				other_player, other_player->state );
-	/* 根据两者坐标，判断击飞的方向 */
-	if( x1 < x2 ) {
-		GamePlayer_SetRightHitFly( other_player );
-	} else {
-		GamePlayer_SetLeftHitFly( other_player );
-	}
+	AttackEffect_ShortHitFly( player, other_player );
 	other_player->n_attack = 0;
 }
 
@@ -1661,259 +2207,6 @@ static void CommonSkill_StartJump( GamePlayer *player )
 	}
 }
 
-/** 注册A攻击 */
-static void CommonSkill_RegisterAAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_A_ATTACK, 
-				SKILLPRIORITY_A_ATTACK,
-				CommonSkill_CanUseAAttack,
-				CommonSkill_StartAAttack
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_MACH_A_ATTACK, 
-				SKILLPRIORITY_MACH_A_ATTACK,
-				CommonSkill_CanUseAAttack,
-				CommonSkill_StartMachAAttack
-	);
-}
-
-/** 注册B攻击 */
-static void CommonSkill_RegisterBAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_B_ATTACK, 
-				SKILLPRIORITY_B_ATTACK,
-				CommonSkill_CanUseBAttack,
-				CommonSkill_StartBAttack
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_MACH_B_ATTACK, 
-				SKILLPRIORITY_MACH_B_ATTACK,
-				CommonSkill_CanUseBAttack,
-				CommonSkill_StartMachBAttack
-	);
-}
-
-/** 注册跳跃A攻击 */
-static void CommonSkill_RegisterJumpAAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_JUMP_A_ATTACK, 
-				SKILLPRIORITY_JUMP_A_ATTACK,
-				CommonSkill_CanUseJumpAAttack,
-				CommonSkill_StartJumpAAttack
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_JUMP_MACH_A_ATTACK, 
-				SKILLPRIORITY_JUMP_MACH_A_ATTACK,
-				CommonSkill_CanUseJumpAAttack,
-				CommonSkill_StartJumpMachAAttack
-	);
-}
-
-/** 注册跳跃B攻击 */
-static void CommonSkill_RegisterJumpBAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_JUMP_B_ATTACK, 
-				SKILLPRIORITY_JUMP_B_ATTACK,
-				CommonSkill_CanUseJumpBAttack,
-				CommonSkill_StartJumpBAttack
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_JUMP_MACH_B_ATTACK, 
-				SKILLPRIORITY_JUMP_MACH_B_ATTACK,
-				CommonSkill_CanUseJumpBAttack,
-				CommonSkill_StartJumpMachBAttack
-	);
-}
-
-/** 注册冲刺跳跃A攻击 */
-static void CommonSkill_RegisterSprintJumpAAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_JUMP_A_ATTACK, 
-				SKILLPRIORITY_SPRINT_JUMP_A_ATTACK,
-				CommonSkill_CanUseSprintJumpAAttack,
-				CommonSkill_StartSprintJumpAAttack
-	);
-}
-
-/** 注册冲刺跳跃B攻击 */
-static void CommonSkill_RegisterSprintJumpBAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_JUMP_B_ATTACK, 
-				SKILLPRIORITY_SPRINT_JUMP_B_ATTACK,
-				CommonSkill_CanUseSprintJumpBAttack,
-				CommonSkill_StartSprintJumpBAttack
-	);
-}
-
-/** 注册 终结一击 技能 */
-static void CommonSkill_RegisterFinalBlow(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_A_FINALBLOW, 
-				SKILLPRIORITY_A_FINALBLOW,
-				CommonSkill_CanUseFinalBlow,
-				CommonSkill_StartFinalBlow
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_B_FINALBLOW, 
-				SKILLPRIORITY_B_FINALBLOW,
-				CommonSkill_CanUseFinalBlow,
-				CommonSkill_StartFinalBlow
-	);
-}
-
-static void CommonSkill_RegisterSprintAAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_A_ATTACK,
-				SKILLPRIORITY_SPRINT_A_ATTACK,
-				CommonSkill_CanUseASprintAttack,
-				CommonSkill_StartSprintAAttack
-	);
-}
-
-static void CommonSkill_RegisterSprintBAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_B_ATTACK,
-				SKILLPRIORITY_SPRINT_B_ATTACK,
-				CommonSkill_CanUseBSprintAttack,
-				CommonSkill_StartSprintBAttack
-	);
-}
-
-static void CommonSkill_RegisterMachStomp(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_MACH_STOMP,
-				SKILLPRIORITY_MACH_STOMP,
-				CommonSkill_CanAAttackGround,
-				CommonSkill_StartMachStomp
-	);
-}
-
-static void CommonSkill_RegisterJumpElbow(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_JUMP_ELBOW,
-				SKILLPRIORITY_JUMP_ELBOW,
-				CommonSkill_CanAAttackGround,
-				CommonSkill_StartJumpElbow
-	);
-}
-
-static void CommonSkill_RegisterJumpTread(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_JUMP_TREAD,
-				SKILLPRIORITY_JUMP_TREAD,
-				CommonSkill_CanBAttackGround,
-				CommonSkill_StartJumpTread
-	);
-}
-
-static void CommonSkill_RegisterLift(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_A_LIFT,
-				SKILLPRIORITY_A_LIFT,
-				CommonSkill_CanALift,
-				CommonSkill_StartLift
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_B_LIFT,
-				SKILLPRIORITY_B_LIFT,
-				CommonSkill_CanBLift,
-				CommonSkill_StartLift
-	);
-}
-
-/** 注册 爆裂腿技能 */
-static void CommonSkill_RegisterBombKick(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_BOMBKICK,
-				SKILLPRIORITY_BOMBKICK,
-				CommonSkill_CanUseBombKick,
-				CommonSkill_StartBombKick
-	);
-}
-
-/** 注册 爆裂腿技能 */
-static void CommonSkill_RegisterSpinHit(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_SPINHIT,
-				SKILLPRIORITY_SPINHIT,
-				CommonSkill_CanUseSpinHit,
-				CommonSkill_StartSpinHit
-	);
-}
-
-static void CommonSkill_RegisterThrow(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_A_THROW,
-				SKILLPRIORITY_A_THROW,
-				CommonSkill_CanUseAThrow,
-				CommonSkill_StartAThrow
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_B_THROW,
-				SKILLPRIORITY_B_THROW,
-				CommonSkill_CanUseBThrow,
-				CommonSkill_StartBThrow
-	);
-}
-
-static void CommonSkill_RegisterRide(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_RIDE,
-				SKILLPRIORITY_RIDE,
-				CommonSkill_CanUseRide,
-				CommonSkill_StartRide
-	);
-}
-
-static void CommonSkill_RegisterRideAttack(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_RIDE_A_ATTACK,
-				SKILLPRIORITY_RIDE_A_ATTACK,
-				CommonSkill_CanUseRideAAttack,
-				CommonSkill_StartRideAAttack
-	);
-	SkillLibrary_AddSkill(	SKILLNAME_RIDE_B_ATTACK,
-				SKILLPRIORITY_RIDE_B_ATTACK,
-				CommonSkill_CanUseRideBAttack,
-				CommonSkill_StartRideBAttack
-	);
-}
-
-static void CommonSkill_RegisterCatch(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_CATCH,
-				SKILLPRIORITY_CATCH,
-				CommonSkill_CanUseCatch,
-				CommonSkill_StartCatch
-	);
-}
-
-static void CommonSkill_RegisterBigElbow(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_BIG_ELBOW,
-				SKILLPRIORITY_BIG_ELBOW,
-				CommonSkill_CanUseBigElbow,
-				CommonSkill_StartBigElbow
-	);
-}
-
-static void CommonSkill_RegisterJump(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_JUMP,
-				SKILLPRIORITY_JUMP,
-				CommonSkill_CanUseJump,
-				CommonSkill_StartJump
-	);
-}
-
-/** 向前翻滚超时后 */
-static void GamePlayer_AtForwardRollTimeOut( GamePlayer *player )
-{
-	GameObject_SetXSpeed( player->object, 0 );
-	GameObject_SetYSpeed( player->object, 0 );
-	GameObject_SetYAcc( player->object, 0 );
-	GameObject_SetXAcc( player->object, 0 );
-	if( GamePlayer_SetTummy( player ) == 0 ) {
-		GamePlayer_SetRestTimeOut( 
-			player, LONG_REST_TIMEOUT, 
-			GamePlayer_StartStand 
-		);
-	}
-}
-
 static LCUI_BOOL CommonSkill_CanUsePush( GamePlayer *player )
 {
 	if( player->state != STATE_CATCH || !player->other ) {
@@ -1974,14 +2267,20 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 	}
 	x1 = GameObject_GetX( self );
 	x2 = GameObject_GetX( other );
-	/* 根据两者坐标，判断击飞的方向 */
-	if( x1 < x2 ) {
-		GamePlayer_SetLeftHitFly( player );
-		GamePlayer_SetRightHitFly( other_player );
-	} else {
-		GamePlayer_SetRightHitFly( player );
-		GamePlayer_SetLeftHitFly( other_player );
+	/* 如果自己面朝左边 */
+	if( GamePlayer_IsLeftOriented( player ) ) {
+		/* 若对方位置并不在自己左边，则不产生碰撞 */
+		if( x2 > x1-10 ) {
+			return;
+		}
 	}
+	/* 反之，也一样 */
+	else if( x2 < x1+10 ) {
+		return;
+	}
+	AttackEffect_ShortHitFly( player, other_player );
+	_DEBUG_MSG("dump player\n");
+	AttackEffect_ShortHitFly( other_player, player );
 	/* 两个都受到攻击伤害 */
 	Game_RecordAttack( other_player, ATK_BUMPED, player, player->state );
 	Game_RecordAttack( player, ATK_BUMPED, other_player, other_player->state );
@@ -2100,6 +2399,266 @@ static void CommonSkill_StartJumpSpinKick( GamePlayer *player )
 	GameObject_AtZeroZSpeed( player->object, CommonSkill_StartSpinKickDown );
 }
 
+/** 注册A攻击 */
+static void CommonSkill_RegisterAAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_A_ATTACK, 
+				SKILLPRIORITY_A_ATTACK,
+				CommonSkill_CanUseAAttack,
+				CommonSkill_StartAAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_MACH_A_ATTACK, 
+				SKILLPRIORITY_MACH_A_ATTACK,
+				CommonSkill_CanUseAAttack,
+				CommonSkill_StartMachAAttack
+	);
+	AttackLibrary_AddAttack( ATK_A_ATTACK, AttackDamage_AAttack, AttackEffect_Normal );
+	AttackLibrary_AddAttack( ATK_MACH_A_ATTACK, AttackDamage_MachAAttack, AttackEffect_Normal );
+}
+
+/** 注册B攻击 */
+static void CommonSkill_RegisterBAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_B_ATTACK, 
+				SKILLPRIORITY_B_ATTACK,
+				CommonSkill_CanUseBAttack,
+				CommonSkill_StartBAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_MACH_B_ATTACK, 
+				SKILLPRIORITY_MACH_B_ATTACK,
+				CommonSkill_CanUseBAttack,
+				CommonSkill_StartMachBAttack
+	);
+	AttackLibrary_AddAttack( ATK_B_ATTACK, AttackDamage_BAttack, AttackEffect_Normal );
+	AttackLibrary_AddAttack( ATK_MACH_B_ATTACK, AttackDamage_MachBAttack, AttackEffect_Normal );
+}
+
+/** 注册跳跃A攻击 */
+static void CommonSkill_RegisterJumpAAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_A_ATTACK, 
+				SKILLPRIORITY_JUMP_A_ATTACK,
+				CommonSkill_CanUseJumpAAttack,
+				CommonSkill_StartJumpAAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_MACH_A_ATTACK, 
+				SKILLPRIORITY_JUMP_MACH_A_ATTACK,
+				CommonSkill_CanUseJumpAAttack,
+				CommonSkill_StartJumpMachAAttack
+	);
+	AttackLibrary_AddAttack( ATK_JUMP_A_ATTACK, AttackDamage_MachAAttack, AttackEffect_Normal2 );
+	AttackLibrary_AddAttack( ATK_JUMP_MACH_A_ATTACK, AttackDamage_MachAAttack, AttackEffect_Normal2 );
+}
+
+/** 注册跳跃B攻击 */
+static void CommonSkill_RegisterJumpBAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_B_ATTACK, 
+				SKILLPRIORITY_JUMP_B_ATTACK,
+				CommonSkill_CanUseJumpBAttack,
+				CommonSkill_StartJumpBAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_MACH_B_ATTACK, 
+				SKILLPRIORITY_JUMP_MACH_B_ATTACK,
+				CommonSkill_CanUseJumpBAttack,
+				CommonSkill_StartJumpMachBAttack
+	);
+	AttackLibrary_AddAttack( ATK_JUMP_B_ATTACK, AttackDamage_BAttack, AttackEffect_Normal2 );
+	AttackLibrary_AddAttack( ATK_JUMP_MACH_B_ATTACK, AttackDamage_BAttack, AttackEffect_Normal2 );
+}
+
+/** 注册冲刺跳跃A攻击 */
+static void CommonSkill_RegisterSprintJumpAAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_JUMP_A_ATTACK, 
+				SKILLPRIORITY_SPRINT_JUMP_A_ATTACK,
+				CommonSkill_CanUseSprintJumpAAttack,
+				CommonSkill_StartSprintJumpAAttack
+	);
+	AttackLibrary_AddAttack( ATK_SPRINT_JUMP_A_ATTACK, AttackDamage_SprintJumpAAttack, AttackEffect_ShortHitFly );
+}
+
+/** 注册冲刺跳跃B攻击 */
+static void CommonSkill_RegisterSprintJumpBAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_JUMP_B_ATTACK, 
+				SKILLPRIORITY_SPRINT_JUMP_B_ATTACK,
+				CommonSkill_CanUseSprintJumpBAttack,
+				CommonSkill_StartSprintJumpBAttack
+	);
+	AttackLibrary_AddAttack( ATK_SPRINT_JUMP_B_ATTACK, AttackDamage_SprintJumpBAttack, AttackEffect_ShortHitFly );
+}
+
+/** 注册 终结一击 技能 */
+static void CommonSkill_RegisterFinalBlow(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_A_FINALBLOW, 
+				SKILLPRIORITY_A_FINALBLOW,
+				CommonSkill_CanUseFinalBlow,
+				CommonSkill_StartFinalBlow
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_B_FINALBLOW, 
+				SKILLPRIORITY_B_FINALBLOW,
+				CommonSkill_CanUseFinalBlow,
+				CommonSkill_StartFinalBlow
+	);
+	AttackLibrary_AddAttack( ATK_FINALBLOW, AttackDamage_FinalBlow, AttackEffect_LongHitFly );
+}
+
+static void CommonSkill_RegisterSprintAAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_A_ATTACK,
+				SKILLPRIORITY_SPRINT_A_ATTACK,
+				CommonSkill_CanUseASprintAttack,
+				CommonSkill_StartSprintAAttack
+	);
+	AttackLibrary_AddAttack( ATK_SPRINT_A_ATTACK, AttackDamage_SprintAAttack, AttackEffect_BumpToFly );
+}
+
+static void CommonSkill_RegisterSprintBAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPRINT_B_ATTACK,
+				SKILLPRIORITY_SPRINT_B_ATTACK,
+				CommonSkill_CanUseBSprintAttack,
+				CommonSkill_StartSprintBAttack
+	);
+	AttackLibrary_AddAttack( ATK_SPRINT_B_ATTACK, AttackDamage_SprintBAttack, AttackEffect_BumpToFly );
+}
+
+static void CommonSkill_RegisterMachStomp(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_MACH_STOMP,
+				SKILLPRIORITY_MACH_STOMP,
+				CommonSkill_CanAAttackGround,
+				CommonSkill_StartMachStomp
+	);
+	AttackLibrary_AddAttack( ATK_MACH_STOMP, AttackDamage_MachStomp, AttackEffect_Normal2 );
+}
+
+static void CommonSkill_RegisterJumpElbow(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_ELBOW,
+				SKILLPRIORITY_JUMP_ELBOW,
+				CommonSkill_CanAAttackGround,
+				CommonSkill_StartJumpElbow
+	);
+	AttackLibrary_AddAttack( ATK_JUMP_ELBOW, AttackDamage_JumpElbow, AttackEffect_Normal2 );
+}
+
+static void CommonSkill_RegisterJumpTread(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP_TREAD,
+				SKILLPRIORITY_JUMP_TREAD,
+				CommonSkill_CanBAttackGround,
+				CommonSkill_StartJumpTread
+	);
+	AttackLibrary_AddAttack( ATK_JUMP_TREAD, AttackDamage_JumpTread, AttackEffect_Normal2 );
+}
+
+static void CommonSkill_RegisterLift(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_A_LIFT,
+				SKILLPRIORITY_A_LIFT,
+				CommonSkill_CanALift,
+				CommonSkill_StartLift
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_B_LIFT,
+				SKILLPRIORITY_B_LIFT,
+				CommonSkill_CanBLift,
+				CommonSkill_StartLift
+	);
+}
+
+/** 注册 爆裂腿技能 */
+static void CommonSkill_RegisterBombKick(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_BOMBKICK,
+				SKILLPRIORITY_BOMBKICK,
+				CommonSkill_CanUseBombKick,
+				CommonSkill_StartBombKick
+	);
+	AttackLibrary_AddAttack( ATK_BOMBKICK, AttackDamage_BombKick, AttackEffect_LongHitFly );
+}
+
+/** 注册 爆裂腿技能 */
+static void CommonSkill_RegisterSpinHit(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_SPINHIT,
+				SKILLPRIORITY_SPINHIT,
+				CommonSkill_CanUseSpinHit,
+				CommonSkill_StartSpinHit
+	);
+	AttackLibrary_AddAttack( ATK_SPINHIT, AttackDamage_SpinHit, AttackEffect_LongHitFly );
+}
+
+static void CommonSkill_RegisterThrow(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_A_THROW,
+				SKILLPRIORITY_A_THROW,
+				CommonSkill_CanUseAThrow,
+				CommonSkill_StartAThrow
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_B_THROW,
+				SKILLPRIORITY_B_THROW,
+				CommonSkill_CanUseBThrow,
+				CommonSkill_StartBThrow
+	);
+	AttackLibrary_AddAttack( ATK_THROW, AttackDamage_Throw, NULL );
+}
+
+static void CommonSkill_RegisterRide(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_RIDE,
+				SKILLPRIORITY_RIDE,
+				CommonSkill_CanUseRide,
+				CommonSkill_StartRide
+	);
+}
+
+static void CommonSkill_RegisterRideAttack(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_RIDE_A_ATTACK,
+				SKILLPRIORITY_RIDE_A_ATTACK,
+				CommonSkill_CanUseRideAAttack,
+				CommonSkill_StartRideAAttack
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_RIDE_B_ATTACK,
+				SKILLPRIORITY_RIDE_B_ATTACK,
+				CommonSkill_CanUseRideBAttack,
+				CommonSkill_StartRideBAttack
+	);
+	AttackLibrary_AddAttack( ATK_RIDE_A_ATTACK, AttackDamage_RideAAttack, AttackEffect_Normal );
+	AttackLibrary_AddAttack( ATK_RIDE_B_ATTACK, AttackDamage_RideBAttack, AttackEffect_Normal );
+}
+
+static void CommonSkill_RegisterCatch(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_CATCH,
+				SKILLPRIORITY_CATCH,
+				CommonSkill_CanUseCatch,
+				CommonSkill_StartCatch
+	);
+}
+
+static void CommonSkill_RegisterBigElbow(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_BIG_ELBOW,
+				SKILLPRIORITY_BIG_ELBOW,
+				CommonSkill_CanUseBigElbow,
+				CommonSkill_StartBigElbow
+	);
+	AttackLibrary_AddAttack( ATK_BIG_ELBOW, AttackDamage_BigElbow, AttackEffect_LongHitFly );
+}
+
+static void CommonSkill_RegisterJump(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_JUMP,
+				SKILLPRIORITY_JUMP,
+				CommonSkill_CanUseJump,
+				CommonSkill_StartJump
+	);
+}
+
 static void CommonSkill_RegisterJumpSpinKick(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_JUMP_SPINKICK,
@@ -2107,6 +2666,7 @@ static void CommonSkill_RegisterJumpSpinKick(void)
 				CommonSkill_CanUseJumpSpinKick,
 				CommonSkill_StartJumpSpinKick
 	);
+	AttackLibrary_AddAttack( ATK_JUMP_SPINKICK, AttackDamage_JumpSpinKick, AttackEffect_LongHitFly );
 }
 
 /** 注册通用技能 */
