@@ -15,10 +15,10 @@ typedef struct AttackRecord_ {
 } AttackRecord;
 
 typedef struct AttackInfo_ {
-	int attack_type_id;			/**< 攻击标识符 */
-	char attack_type_name[NAME_MAX_LEN];	/**< 攻击名称 */
-	int (*get_damage)(GamePlayer*);		/**< 获取实际伤害值 */
-	void (*set_action)(GamePlayer*);	/**< 设置受攻击者的动作 */
+	int attack_type_id;				/**< 攻击标识符 */
+	char attack_type_name[NAME_MAX_LEN];		/**< 攻击名称 */
+	int (*get_damage)(GamePlayer*,GamePlayer*,int);	/**< 获取实际伤害值 */
+	void (*effect)(GamePlayer*, GamePlayer*);	/**< 实现攻击带来的效果 */
 } AttackInfo;
 
 static LCUI_Queue attack_record;
@@ -49,16 +49,51 @@ static AttackInfo *AttackLibrary_GetInfo( const char *attack_type_name )
 
 /**< 添加攻击数据 */
 int AttackLibrary_AddAttack(	const char *attack_name, 
-				int (*get_damage)(GamePlayer*),
-				void (*set_action)(GamePlayer*) )
+				int (*get_damage)(GamePlayer*,GamePlayer*,int),
+				void (*effect)(GamePlayer*,GamePlayer*) )
 {
 	AttackInfo data;
 	strncpy( data.attack_type_name, attack_name, NAME_MAX_LEN );
 	data.attack_type_name[NAME_MAX_LEN-1] = 0;
 	data.attack_type_id = (int)BKDRHash( data.attack_type_name );
 	data.get_damage = get_damage;
-	data.set_action = set_action;
+	data.effect = effect;
+	Queue_Add( &attack_library, &data );
 	return data.attack_type_id;
+}
+
+/** 根据受害者的防御力及其它情况，获取减免后的实际伤害 */
+int DamageReduce( GamePlayer *victim, int victim_state, int damage )
+{
+	double reduce;
+	/* 根据受害者的防御力，计算伤害的减免比例 */
+	reduce = victim->property.defense + 100.0;
+	reduce = 1.0 - 100.0 / reduce;
+	/* 根据受害者的状态，增加伤害减免比例 */
+	switch( victim_state ) {
+	case STATE_TUMMY:
+	case STATE_TUMMY_HIT:
+	case STATE_LYING:
+	case STATE_LYING_HIT:
+	case STATE_BE_LIFT_TUMMY:
+	case STATE_BE_LIFT_TUMMY_HIT:
+	case STATE_BE_LIFT_LYING:
+	case STATE_BE_LIFT_LYING_HIT:
+		/* 躺着或者趴着，减免20%的伤害 */
+		reduce += 0.20;
+		break;
+	case STATE_F_ROLL:
+	case STATE_B_ROLL:
+		reduce += 0.10;
+		break;
+	default:
+		break;
+	}
+	/* 限制最大伤害减免比例为95% */
+	if( reduce > 0.95 ) {
+		reduce = 0.95;
+	}
+	return damage - (int)(damage*reduce);
 }
 
 /** 记录攻击者对受害者的攻击 */
@@ -94,17 +129,18 @@ void Game_ProcAttack(void)
 		}
 		/* 获取该类型攻击的信息 */
 		p_info = AttackLibrary_GetInfo( p_data->attack_type_name );
+		_DEBUG_MSG("%s, p_info: %p\n", p_data->attack_type_name, p_info);
 		if( !p_info ) {
 			Queue_Delete( &attack_record, 0 );
 			continue;
 		}
-		if( p_info->set_action ) {
-			/* 设置受攻击者的动作 */
-			p_info->set_action( p_data->victim );
+		if( p_info->effect ) {
+			/* 实现攻击产生的效果 */
+			p_info->effect( p_data->attacker, p_data->victim );
 		}
 		if( p_info->get_damage ) {
 			/* 计算真实伤害 */
-			true_damage = p_info->get_damage( p_data->attacker );
+			true_damage = p_info->get_damage( p_data->attacker, p_data->victim, p_data->victim_state );
 		}
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= true_damage;
