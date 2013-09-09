@@ -273,8 +273,6 @@ int GamePlayer_SetTummy( GamePlayer *player );
 /** 开始站起 */
 void GamePlayer_StartStand( GamePlayer *player );
 
-int GamePlayer_TryHit( GamePlayer *player );
-
 void GamePlayer_SetRightHitFly( GamePlayer *player );
 
 void GamePlayer_SetLeftHitFly( GamePlayer *player );
