@@ -12,6 +12,11 @@ typedef struct SkillData_ {
 	void (*run_skill)(GamePlayer*);		/**< 回调函数，用于实现技能 */
 } SkillData;
 
+typedef struct SkillRecord_ {
+	int skill_id;
+	void *data;
+} SkillRecord;
+
 static LCUI_BOOL skill_library_init = FALSE;
 static LCUI_Queue skill_library;
 
@@ -105,10 +110,20 @@ LCUI_BOOL GamePlayer_HaveSkill( GamePlayer *player, const char *skill_name )
 	return _GamePlayer_HaveSkill( player, skill_id );
 }
 
+static void DstroySkillRecord( void *arg )
+{
+	SkillRecord *p_data;
+	p_data = (SkillRecord*)arg;
+	if( p_data->data ) {
+		free( p_data->data );
+		p_data->data = NULL;
+	}
+}
+
 /** 初始化游戏角色拥有的技能的记录 */
 void GamePlayer_InitSkillRecord( GamePlayer *player )
 {
-	Queue_Init( &player->skills, sizeof(int), NULL );
+	Queue_Init( &player->skills, sizeof(SkillRecord), DstroySkillRecord );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_FINALBLOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_FINALBLOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_ATTACK );
@@ -145,13 +160,61 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 /** 为游戏角色启用一个技能 */
 int GamePlayer_EnableSkill( GamePlayer *player, const char *skill_name )
 {
-	int skill_id;
-	skill_id = (int)BKDRHash( skill_name );
-	if( _GamePlayer_HaveSkill( player, skill_id ) ) {
+	SkillRecord rec;
+	rec.skill_id = (int)BKDRHash( skill_name );
+	if( _GamePlayer_HaveSkill( player, rec.skill_id ) ) {
 		return -1;
 	}
-	Queue_Add( &player->skills, &skill_id );
+	rec.data = NULL;
+	Queue_Add( &player->skills, &rec );
 	return 0;
+}
+
+/** 获取已启用的技能 */
+static SkillRecord *GamePlayer_GetEnabledSkill(	GamePlayer *player,
+						const char *skill_name )
+{
+	int n, skill_id;
+	SkillRecord *p_rec;
+
+	skill_id = (int)BKDRHash( skill_name );
+	n = Queue_GetTotal( &player->skills );
+	while(n--) {
+		p_rec = (SkillRecord*)Queue_Get( &player->skills, n );
+		if( p_rec && p_rec->skill_id == skill_id ) {
+			return p_rec;
+		}
+	}
+	return NULL;
+}
+
+/** 设置技能的数据，一些技能需要记录相应数据以在特殊情况下满足发动条件 */
+int GamePlayer_SetSkillData(	GamePlayer *player,
+				const char *skill_name,
+				void *p_data,
+				int data_size )
+{
+	SkillRecord *p_rec;
+	p_rec = GamePlayer_GetEnabledSkill( player, skill_name );
+	if( !p_rec ) {
+		return -1;
+	}
+	if( !p_rec->data ) {
+		p_rec->data = malloc( data_size );
+	}
+	memcpy( p_rec->data, p_data, data_size );
+	return 0;
+}
+
+/** 获取技能的数据 */
+void *GamePlayer_GetSkillData( GamePlayer *player, const char *skill_name )
+{
+	SkillRecord *p_rec;
+	p_rec = GamePlayer_GetEnabledSkill( player, skill_name );
+	if( !p_rec ) {
+		return NULL;
+	}
+	return p_rec->data;
 }
 
 /** 为游戏角色禁用一个技能 */
