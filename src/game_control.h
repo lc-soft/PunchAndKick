@@ -4,7 +4,7 @@
 #include "game_AI.h"
 
 typedef struct ControlKey_ {
-	int up, down, left, right, a_attack, b_attack, jump;
+	int up, down, left, right, a_attack, b_attack, defense, jump;
 } ControlKey;
 
 enum GamePlayerType {
@@ -25,6 +25,7 @@ enum GamePlayerState {
 	STATE_RIGHTRUN,		/**< 向右奔跑 */
 	STATE_A_ATTACK,
 	STATE_B_ATTACK,
+	STATE_DEFENSE,
 	STATE_MACH_A_ATTACK,
 	STATE_MACH_B_ATTACK,
 	STATE_AS_ATTACK,
@@ -93,6 +94,7 @@ enum ActionType {
 	ACTION_RUN,
 	ACTION_A_ATTACK,
 	ACTION_B_ATTACK,
+	ACTION_DEFENSE,
 	ACTION_MACH_A_ATTACK,
 	ACTION_MACH_B_ATTACK,
 	ACTION_JUMP_MACH_A_ATTACK,
@@ -175,6 +177,7 @@ typedef struct ControlState_ {
 	LCUI_BOOL a_attack;		/**< 是否进行A攻击 */
 	LCUI_BOOL b_attack;		/**< 是否进行B攻击 */
 	LCUI_BOOL jump;			/**< 是否进行跳跃 */
+	LCUI_BOOL defense;		/**< 是否进行防御 */
 } ControlState;
 
 typedef struct GamePlayer_ GamePlayer;
