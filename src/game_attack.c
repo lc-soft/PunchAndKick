@@ -71,6 +71,7 @@ int DamageReduce( GamePlayer *victim, int victim_state, int damage )
 	reduce = 1.0 - 100.0 / reduce;
 	/* 根据受害者的状态，增加伤害减免比例 */
 	switch( victim_state ) {
+	case STATE_DEFENSE:
 	case STATE_TUMMY:
 	case STATE_TUMMY_HIT:
 	case STATE_LYING:
@@ -129,7 +130,6 @@ void Game_ProcAttack(void)
 		}
 		/* 获取该类型攻击的信息 */
 		p_info = AttackLibrary_GetInfo( p_data->attack_type_name );
-		_DEBUG_MSG("%s, p_info: %p\n", p_data->attack_type_name, p_info);
 		if( !p_info ) {
 			Queue_Delete( &attack_record, 0 );
 			continue;
@@ -141,6 +141,7 @@ void Game_ProcAttack(void)
 		if( p_info->get_damage ) {
 			/* 计算真实伤害 */
 			true_damage = p_info->get_damage( p_data->attacker, p_data->victim, p_data->victim_state );
+			DEBUG_MSG("attack type: %s, damage: %d\n", p_data->attack_type_name, true_damage);
 		}
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= true_damage;
