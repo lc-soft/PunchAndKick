@@ -19,6 +19,7 @@ static int global_action_list[]={
 	ACTION_STANCE,
 	ACTION_WALK,
 	ACTION_RUN,
+	ACTION_DEFENSE,
 	ACTION_A_ATTACK,
 	ACTION_B_ATTACK,
 	ACTION_MACH_A_ATTACK,
@@ -92,6 +93,7 @@ static void ControlKey_Init( ControlKey *key )
 	key->a_attack = 0;
 	key->b_attack = 0;
 	key->jump = 0;
+	key->defense = 0;
 }
 
 /** 重置攻击控制 */
@@ -124,7 +126,20 @@ LCUI_BOOL GamePlayer_IsLeftOriented( GamePlayer *player )
 /** 通过控制键获取该键控制的角色 */
 GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code )
 {
-	return &player_data[0];
+	int i;
+	for(i=0; i<4; ++i) {
+		if( key_code == player_data[i].ctrlkey.a_attack
+		 || key_code == player_data[i].ctrlkey.b_attack
+		 || key_code == player_data[i].ctrlkey.defense
+		 || key_code == player_data[i].ctrlkey.left
+		 || key_code == player_data[i].ctrlkey.right
+		 || key_code == player_data[i].ctrlkey.up
+		 || key_code == player_data[i].ctrlkey.down
+		 || key_code == player_data[i].ctrlkey.jump ) {
+			 return &player_data[i];
+		}
+	}
+	return NULL;
 }
 
 /** 通过角色ID来获取角色 */
@@ -195,6 +210,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_LEFTRUN:
 	case STATE_RIGHTRUN:
 		action_type = ACTION_RUN;
+		break;
+	case STATE_DEFENSE:
+		action_type = ACTION_DEFENSE;
 		break;
 	case STATE_A_ATTACK:
 		action_type = ACTION_A_ATTACK;
@@ -395,7 +413,6 @@ void GamePlayer_SetRestTimeOut(	GamePlayer *player,
 {
 	GamePlayer_BreakRest( player );
 	player->t_rest_timeout = LCUITimer_Set( n_ms, (void(*)(void*))func, player, FALSE );
-	_DEBUG_MSG("player: %d, timer id: %d\n", player->id, player->t_rest_timeout);
 }
 
 static int GamePlayer_InitAction( GamePlayer *player, int id )
@@ -585,7 +602,6 @@ static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
 void GamePlayer_StartStand( GamePlayer *player )
 {
 	GamePlayer *other_player;
-		_DEBUG_MSG("id: %d\n", player->id);
 	/* 如果已经死了，就不站起来了 */
 	if( player->state == STATE_DIED
 	 || player->state == STATE_LYING_DYING
@@ -911,6 +927,7 @@ static int GamePlayer_SetLeftMotion( GamePlayer *player )
 		break;
 	case STATE_READY:
 	case STATE_STANCE:
+	case STATE_DEFENSE:
 	case STATE_WALK:
 		GamePlayer_SetLeftOriented( player );
 		skill_id = SkillLibrary_GetSkill( player );
@@ -980,6 +997,7 @@ static int GamePlayer_SetRightMotion( GamePlayer *player )
 		break;
 	case STATE_READY:
 	case STATE_STANCE:
+	case STATE_DEFENSE:
 	case STATE_WALK:
 		GamePlayer_SetRightOriented( player );
 		skill_id = SkillLibrary_GetSkill( player );
@@ -1144,6 +1162,7 @@ void GamePlayer_SetUpMotion( GamePlayer *player )
 		break;
 	case STATE_READY:
 	case STATE_STANCE:
+	case STATE_DEFENSE:
 		GamePlayer_ChangeState( player, STATE_WALK );
 		break;
 	case STATE_WALK:
@@ -1178,6 +1197,7 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 		break;
 	case STATE_READY:
 	case STATE_STANCE:
+	case STATE_DEFENSE:
 		GamePlayer_ChangeState( player, STATE_WALK );
 	case STATE_WALK:
 		skill_id = SkillLibrary_GetSkill( player );
@@ -1373,6 +1393,9 @@ static void GameKeyboardProcKeyDown( int key_code )
 	GamePlayer *target;
 
 	target = GamePlayer_GetPlayerByControlKey( key_code );
+	if( target == NULL ) {
+		return;
+	}
 	if( key_code == target->ctrlkey.left ) {
 		if( LCUIKey_IsDoubleHit(target->ctrlkey.left,250) ) {
 			target->control.run = TRUE;
@@ -1437,7 +1460,7 @@ int Game_Init(void)
 	player_data[1].enable = TRUE;
 	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
 	player_data[1].type = PLAYER_TYPE_MARTIAL_ARTIST;
-
+	
 	player_data[0].property.max_hp = 80000;
 	player_data[0].property.cur_hp = 80000;
 	player_data[0].property.defense = 100;
@@ -1445,7 +1468,7 @@ int Game_Init(void)
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
 	player_data[0].property.speed = 80;
-
+	
 	player_data[1].property.max_hp = 80000;
 	player_data[1].property.cur_hp = 80000;
 	player_data[1].property.defense = 100;
@@ -1465,6 +1488,7 @@ int Game_Init(void)
 	ctrlkey.jump = LCUIKEY_SPACE;
 	ctrlkey.a_attack = LCUIKEY_J;
 	ctrlkey.b_attack = LCUIKEY_K;
+	ctrlkey.defense = LCUIKEY_L;
 	/* 设置1号玩家的控制键 */
 	GamePlayer_SetControlKey( 1, &ctrlkey );
 	/* 设置1号玩家的角色 */
@@ -1477,6 +1501,7 @@ int Game_Init(void)
 	ctrlkey.down = LCUIKEY_DOWN;
 	ctrlkey.left = LCUIKEY_LEFT;
 	ctrlkey.right = LCUIKEY_RIGHT;
+	ctrlkey.defense = 0;
 	ctrlkey.jump = 0;
 	ctrlkey.a_attack = 0;
 	ctrlkey.b_attack = 0;
@@ -1507,12 +1532,11 @@ int Game_Init(void)
 /** 同步游戏玩家的按键控制 */
 static void GamePlayer_SyncKeyControl( GamePlayer *player )
 {
-	LCUI_BOOL stop_xmotion=FALSE, stop_ymotion=FALSE;
-
 	player->control.left_motion = LCUIKey_IsHit(player->ctrlkey.left);
 	player->control.right_motion = LCUIKey_IsHit(player->ctrlkey.right);
 	player->control.up_motion = LCUIKey_IsHit(player->ctrlkey.up);
 	player->control.down_motion = LCUIKey_IsHit(player->ctrlkey.down);
+	player->control.defense = LCUIKey_IsHit(player->ctrlkey.defense);
 }
 
 /** 同步游戏玩家的数据 */
@@ -1569,7 +1593,7 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	if( !player->control.a_attack && !player->control.b_attack
 	 && !player->control.jump && !player->control.left_motion 
 	 && !player->control.right_motion && !player->control.up_motion
-	 && !player->control.down_motion ) {
+	 && !player->control.down_motion && !player->control.defense ) {
 		return;
 	}
 	skill_id = SkillLibrary_GetSkill( player );
