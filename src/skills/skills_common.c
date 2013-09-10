@@ -217,6 +217,7 @@ static int GamePlayer_TryHit( GamePlayer *player )
 	case STATE_F_ROLL:
 	case STATE_HIT_FLY:
 	case STATE_HIT_FLY_FALL:
+	case STATE_DEFENSE:
 		player->n_attack = 0;
 		break;
 	default:
@@ -262,7 +263,6 @@ static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
 	GameObject_SetZSpeed( widget, 0 );
 	
 	if( GamePlayer_SetLying( player ) == 0 ) {
-		_DEBUG_MSG("id: %d, lying\n", player->id);
 		GamePlayer_SetRestTimeOut( 
 			player, SHORT_REST_TIMEOUT,
 			GamePlayer_StartStand 
@@ -327,6 +327,14 @@ static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
 		}
 	}
 	if( GamePlayer_TryHit(victim) == 0 ) {
+		if( speed == 0.0 ) {
+			speed = XSPEED_X_HIT_FLY;
+			if( GamePlayer_IsLeftOriented(attacker) ) {
+				speed = 0 - speed;
+			}
+		}
+		GameObject_SetXSpeed( victim->object, speed*0.5 );
+		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, NULL );
 		return;
 	}
 	GamePlayer_UnlockAction( victim );
@@ -374,6 +382,14 @@ void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
 		}
 	}
 	if( GamePlayer_TryHit(victim) == 0 ) {
+		if( speed == 0.0 ) {
+			speed = XSPEED_HIT_FLY;
+			if( GamePlayer_IsLeftOriented(attacker) ) {
+				speed = 0 - speed;
+			}
+		}
+		GameObject_SetXSpeed( victim->object, speed*0.5 );
+		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, NULL );
 		return;
 	}
 	GamePlayer_UnlockAction( victim );
@@ -508,6 +524,16 @@ static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 		}
 	}
 	if( GamePlayer_TryHit(victim) == 0 ) {
+		GamePlayer_LockAction( victim );
+		GamePlayer_LockMotion( victim );
+		if( speed == 0.0 ) {
+			speed = XSPEED_S_HIT_FLY;
+			if( GamePlayer_IsLeftOriented(attacker) ) {
+				speed = 0 - speed;
+			}
+		}
+		GameObject_SetXSpeed( victim->object, speed*0.5 );
+		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, NULL );
 		return;
 	}
 	GamePlayer_UnlockAction( victim );
@@ -565,6 +591,7 @@ static LCUI_BOOL GamePlayerStateCanNormalAttack( GamePlayer *player )
 	case STATE_READY:
 	case STATE_WALK:
 	case STATE_STANCE:
+	case STATE_DEFENSE:
 	case STATE_BE_LIFT_STANCE:
 		return TRUE;
 	default: 
@@ -2669,12 +2696,41 @@ static void CommonSkill_RegisterJumpSpinKick(void)
 	AttackLibrary_AddAttack( ATK_JUMP_SPINKICK, AttackDamage_JumpSpinKick, AttackEffect_LongHitFly );
 }
 
+static LCUI_BOOL CommonSkill_CanUseDefense( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.defense ) {
+		return FALSE;
+	}
+	if( !GamePlayerStateCanNormalAttack(player) ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void CommonSkill_StartDefense( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_DEFENSE );
+}
+
+static void CommonSkill_RegisterDefense(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_DEFENSE,
+				SKILLPRIORITY_DEFENSE,
+				CommonSkill_CanUseDefense,
+				CommonSkill_StartDefense
+	);
+}
+
 /** 注册通用技能 */
 void CommonSkill_Register(void)
 {
 	CommonSkill_RegisterAAttack();
 	CommonSkill_RegisterBAttack();
 	CommonSkill_RegisterJump();
+	CommonSkill_RegisterDefense();
 	CommonSkill_RegisterJumpAAttack();
 	CommonSkill_RegisterJumpBAttack();
 	CommonSkill_RegisterSprintAAttack();
