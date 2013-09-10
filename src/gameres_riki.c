@@ -91,6 +91,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
+	/* 防御动作 */
+	{ ACTION_DEFENSE, FALSE, {
+		{ TRUE, FALSE, FALSE, "defense", 50, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
 	/* A 攻击动作 */
 	{ ACTION_A_ATTACK, FALSE, {
 		{ TRUE, FALSE, FALSE, "A-attack-02", 5, -14, 0,
