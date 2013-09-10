@@ -126,6 +126,7 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	Queue_Init( &player->skills, sizeof(SkillRecord), DstroySkillRecord );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_FINALBLOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_FINALBLOW );
+	GamePlayer_EnableSkill( player, SKILLNAME_DEFENSE );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP );
