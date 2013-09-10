@@ -49,6 +49,7 @@
 
 #define SKILLNAME_A_ATTACK		"A attack"
 #define SKILLNAME_B_ATTACK		"B attack"
+#define SKILLNAME_DEFENSE		"defense"
 #define SKILLNAME_JUMP			"jump"
 #define SKILLNAME_JUMP_A_ATTACK		"jump A attack"
 #define SKILLNAME_JUMP_B_ATTACK		"jump B attack"
@@ -123,6 +124,10 @@ enum SkillPriority_VertiMotion {
 
 enum SkillPriority_Jump {
 	SKILLPRIORITY_JUMP
+};
+
+enum SkillPriority_Defense {
+	SKILLPRIORITY_DEFENSE
 };
 
 /** 注册通用技能 */
