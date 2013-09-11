@@ -1244,7 +1244,6 @@ int GamePlayer_SetRole( int player_id, int role_id )
 	case PLAYER_TYPE_MARTIAL_ARTIST:
 		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
-		_DEBUG_MSG("player id: %d\n", player->id);
 	default:break;
 	}
 
@@ -1510,7 +1509,7 @@ int Game_Init(void)
 	/* 设置2号玩家的角色 */
 	GamePlayer_SetRole( 2, ROLE_RIKI );
 	/* 设置2号玩家由人来控制 */
-	GamePlayer_ControlByHuman( 2, TRUE );
+	GamePlayer_ControlByHuman( 2, FALSE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
@@ -1593,7 +1592,8 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	if( !player->control.a_attack && !player->control.b_attack
 	 && !player->control.jump && !player->control.left_motion 
 	 && !player->control.right_motion && !player->control.up_motion
-	 && !player->control.down_motion && !player->control.defense ) {
+	 && !player->control.down_motion && !player->control.defense
+	 && player->state != STATE_DEFENSE ) {
 		return;
 	}
 	skill_id = SkillLibrary_GetSkill( player );
@@ -1601,7 +1601,21 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		GamePlayer_RunSkill( player, skill_id );
 		player->control.a_attack = FALSE;
 		player->control.b_attack = FALSE;
+		return;
 	}
+	if( player->state != STATE_DEFENSE ) {
+		return;
+	}
+	if( player->lock_action || player->control.defense ) {
+		return;
+	}
+	GamePlayer_UnlockMotion( player );
+	/* 如果处于被举起的状态，则改变状态为STATE_BE_LIFT_STANCE */
+	if( player->other && GamePlayer_IsInLiftState(player->other) )  {
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_STANCE );
+		return;
+	}
+	GamePlayer_SetReady( player );
 }
 
 int Game_Start(void)
