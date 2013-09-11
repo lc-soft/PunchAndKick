@@ -308,6 +308,15 @@ static void GamePlayer_AtHitFlyMaxHeight( LCUI_Widget *widget )
 	GameObject_AtZSpeed( widget, -20, GamePlayer_AtHitFlyFall );
 }
 
+/** 在缓冲完攻击者的碰撞攻击时，解除僵直状态 */
+static void GameObject_AtBumpBufferDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
+}
+
 static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
 {
 	RangeBox range;
@@ -327,14 +336,18 @@ static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
 		}
 	}
 	if( GamePlayer_TryHit(victim) == 0 ) {
+		/* 缓冲对方撞击时，锁住自己的动作及移动 */
+		GamePlayer_LockAction( victim );
+		GamePlayer_LockMotion( victim );
 		if( speed == 0.0 ) {
 			speed = XSPEED_X_HIT_FLY;
 			if( GamePlayer_IsLeftOriented(attacker) ) {
 				speed = 0 - speed;
 			}
 		}
+		/* 设置初速度和加速度，实现缓冲对方撞击效果 */
 		GameObject_SetXSpeed( victim->object, speed*0.5 );
-		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, NULL );
+		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, GameObject_AtBumpBufferDone );
 		return;
 	}
 	GamePlayer_UnlockAction( victim );
@@ -382,6 +395,8 @@ void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
 		}
 	}
 	if( GamePlayer_TryHit(victim) == 0 ) {
+		GamePlayer_LockAction( victim );
+		GamePlayer_LockMotion( victim );
 		if( speed == 0.0 ) {
 			speed = XSPEED_HIT_FLY;
 			if( GamePlayer_IsLeftOriented(attacker) ) {
@@ -389,7 +404,7 @@ void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
 			}
 		}
 		GameObject_SetXSpeed( victim->object, speed*0.5 );
-		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, NULL );
+		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, GameObject_AtBumpBufferDone );
 		return;
 	}
 	GamePlayer_UnlockAction( victim );
@@ -533,7 +548,7 @@ static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 			}
 		}
 		GameObject_SetXSpeed( victim->object, speed*0.5 );
-		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, NULL );
+		GameObject_AtXSpeedToZero( victim->object,-speed*0.4, GameObject_AtBumpBufferDone );
 		return;
 	}
 	GamePlayer_UnlockAction( victim );
@@ -2712,6 +2727,9 @@ static LCUI_BOOL CommonSkill_CanUseDefense( GamePlayer *player )
 
 static void CommonSkill_StartDefense( GamePlayer *player )
 {
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
 	GamePlayer_ChangeState( player, STATE_DEFENSE );
 }
 
