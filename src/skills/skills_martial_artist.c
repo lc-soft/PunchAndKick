@@ -10,6 +10,9 @@
 #define ATK_KNEEHIT_1		"knee hit attack step 1"
 #define ATK_KNEEHIT_2		"knee hit attack step 2"
 
+/** 可擒获范围的水平宽度 */
+#define CATCH_RANGE_X_WIDTH	60
+
 static int AttackDamage_Elbow1( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
 	double damage;
@@ -46,14 +49,67 @@ static int AttackDamage_KneeHit2( GamePlayer *attacker, GamePlayer *victim, int 
 	return (int)damage;
 }
 
+/** 在擒获范围内，获取处于冲撞攻击状态的玩家 */
+static GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
+{
+	RangeBox catch_range;
+	LCUI_Widget *a_attacker, *b_attacker;
+	/* 自己必须处于READY或STANCE状态 */
+	if( self->state != STATE_READY
+	 && self->state != STATE_STANCE ) {
+		 return NULL;
+	}
+	catch_range.x = 0;
+	catch_range.y = 0;
+	catch_range.z = 0;
+	catch_range.x_width = CATCH_RANGE_X_WIDTH;
+	catch_range.y_width = GLOBAL_Y_WIDTH;
+	catch_range.z_width = 40;
+	/* 获取正使用冲撞A/B攻击的游戏对象 */
+	a_attacker = GameObject_GetObjectInRange( 
+				self->object, catch_range,
+				TRUE, ACTION_AS_ATTACK );
+	b_attacker = GameObject_GetObjectInRange( 
+				self->object, catch_range, 
+				TRUE, ACTION_BS_ATTACK );
+	/* 若有两个 */
+	 if( a_attacker && b_attacker ) {
+		 /* 根据自己的朝向，确保a_attacker记录的是离自己最近的攻击者 */
+		if( GamePlayer_IsLeftOriented(self) ) {
+			if(GameObject_GetX(a_attacker)
+			 < GameObject_GetX(b_attacker) ) {
+				 a_attacker = b_attacker;
+			 }
+		} else {
+			if(GameObject_GetX(b_attacker)
+			 < GameObject_GetX(a_attacker) ) {
+				 a_attacker = b_attacker;
+			 }
+		}
+	}
+	else if( b_attacker ) {
+		a_attacker = b_attacker;
+	}
+	if( !a_attacker ) {
+		return NULL;
+	}
+	return GamePlayer_GetPlayerByWidget( a_attacker );
+}
+
 static LCUI_BOOL CanUseElbow( GamePlayer *player )
 {
+	GamePlayer *attacker;
 	/* 该技能不能给非拳击家的角色使用 */
 	if( player->type != PLAYER_TYPE_MARTIAL_ARTIST ) {
 		return FALSE;
 	}
 	if( !player->control.a_attack ) {
 		return FALSE;
+	}
+	attacker = GetSpirntAttackerInCatchRange( player );
+	if( attacker ) {
+		player->other = attacker;
+		return TRUE;
 	}
 	if( player->state != STATE_CATCH || !player->other ) {
 		return FALSE;
@@ -145,6 +201,11 @@ static void GamePlayer_AtElbowUpdate( LCUI_Widget *widget )
 
 static void StartElbow( GamePlayer *player )
 {
+	if( player->state != STATE_CATCH ) {
+		GamePlayer_StopXMotion( player->other );
+		GamePlayer_StopYMotion( player->other );
+		CommonSkill_SetPositionAtCatch( player, player->other );
+	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_ChangeState( player->other, STATE_HIT );
@@ -168,6 +229,7 @@ static void StartElbow( GamePlayer *player )
 	player->other->n_attack = 0;
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
+	GamePlayer_LockMotion( player->other );
 }
 
 /** 在被膝击后落地时 */
