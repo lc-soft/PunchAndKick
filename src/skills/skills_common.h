@@ -130,6 +130,9 @@ enum SkillPriority_Defense {
 	SKILLPRIORITY_DEFENSE
 };
 
+/** 设置自己在擒获住对方时对方的位置 */
+void CommonSkill_SetPositionAtCatch( GamePlayer *self, GamePlayer *other );
+
 /** 注册通用技能 */
 void CommonSkill_Register(void);
 
