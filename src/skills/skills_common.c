@@ -369,6 +369,7 @@ static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
 		);
 		return;
 	}
+	GameObject_AtZeroZSpeed( victim->object, NULL );
 	GameObject_AtZSpeed( victim->object, 20, GamePlayer_AtHitFlyMaxHeight );
 	GameObject_AtLanding(
 		victim->object,
@@ -835,20 +836,13 @@ static LCUI_BOOL GamePlayerStateCanSprintAttack( GamePlayer *player )
 static void _StartSprintAttack( GamePlayer *player, int state, const char *attack_type_name )
 {
 	double acc, speed;
-	player->control.run = FALSE;
-	if( player->state == STATE_RIGHTRUN ) {
-		GameObject_AtXSpeedToZero(
-			player->object, -XACC_DASH, 
-			GamePlayer_AtAttackDone 
-		);
-	} else if(player->state == STATE_LEFTRUN ){
-		GameObject_AtXSpeedToZero(
-			player->object, XACC_DASH, 
-			GamePlayer_AtAttackDone 
-		);
-	} else {
+	if( player->state != STATE_RIGHTRUN
+	 && player->state != STATE_LEFTRUN ){
 		return;
 	}
+	player->control.run = FALSE;
+	speed = GameObject_GetXSpeed( player->object );
+	GameObject_AtXSpeedToZero( player->object, -speed/4,  GamePlayer_AtAttackDone );
 	GamePlayer_ChangeState( player, state );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
@@ -1808,9 +1802,65 @@ static void GamePlayer_AtCatchDone( GamePlayer *player )
 	}
 }
 
-static void CommonSkill_StartCatch( GamePlayer *player )
+/** 设置自己在擒获住对方时对方的位置 */
+void CommonSkill_SetPositionAtCatch( GamePlayer *self, GamePlayer *other )
 {
 	double x, y;
+	
+	if( !self->other ) {
+		return;
+	}
+
+	x = GameObject_GetX( self->object );
+	y = GameObject_GetY( self->object );
+	GameObject_SetY( self->other->object, y );
+
+	if( self->control.left_motion && self->control.right_motion ) {
+		if( GamePlayer_IsLeftOriented(self->other) ) {
+			if( x < GameObject_GetX( self->other->object ) ) {
+				return;
+			}
+			if( GamePlayer_IsLeftOriented(self->other) ) {
+				GamePlayer_ChangeState( self->other, STATE_BACK_BE_CATCH );
+			} else {
+				GamePlayer_ChangeState( self->other, STATE_BE_CATCH );
+			}
+			GameObject_SetX( self->other->object, x-30 );
+			return;
+		}
+		if( x > GameObject_GetX( self->other->object ) ) {
+			return;
+		}
+		if( GamePlayer_IsLeftOriented(self->other) ) {
+			GamePlayer_ChangeState( self->other, STATE_BE_CATCH );
+		} else {
+			GamePlayer_ChangeState( self->other, STATE_BACK_BE_CATCH );
+		}
+		GameObject_SetX( self->other->object, x+30 );
+	}
+
+	if( self->control.left_motion || GamePlayer_IsLeftOriented(self) ) {
+		if( GamePlayer_IsLeftOriented(self->other) ) {
+			GamePlayer_ChangeState( self->other, STATE_BACK_BE_CATCH );
+		} else {
+			GamePlayer_ChangeState( self->other, STATE_BE_CATCH );
+		}
+		GameObject_SetX( self->other->object, x-30 );
+		return;
+	}
+
+	if( self->control.right_motion || !GamePlayer_IsLeftOriented(self) ) {
+		if( GamePlayer_IsLeftOriented(self->other) ) {
+			GamePlayer_ChangeState( self->other, STATE_BE_CATCH );
+		} else {
+			GamePlayer_ChangeState( self->other, STATE_BACK_BE_CATCH );
+		}
+		GameObject_SetX( self->other->object, x+30 );
+	}
+}
+
+static void CommonSkill_StartCatch( GamePlayer *player )
+{
 	if( !player->other ) {
 		return;
 	}
@@ -1818,50 +1868,7 @@ static void CommonSkill_StartCatch( GamePlayer *player )
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
-	x = GameObject_GetX( player->object );
-	y = GameObject_GetY( player->object );
-	GameObject_SetY( player->other->object, y );
-	if( player->control.left_motion && player->control.right_motion ) {
-		if( GamePlayer_IsLeftOriented(player->other) ) {
-			if( x < GameObject_GetX( player->other->object ) ) {
-				return;
-			}
-			if( GamePlayer_IsLeftOriented(player->other) ) {
-				GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-			} else {
-				GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-			}
-			GameObject_SetX( player->other->object, x-30 );
-		} else {
-			if( x > GameObject_GetX( player->other->object ) ) {
-				return;
-			}
-			if( GamePlayer_IsLeftOriented(player->other) ) {
-				GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-			} else {
-				GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-			}
-			GameObject_SetX( player->other->object, x+30 );
-		}
-	}
-	else if( player->control.left_motion && !player->control.right_motion ) {
-		if( GamePlayer_IsLeftOriented(player->other) ) {
-			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-		} else {
-			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-		}
-		GameObject_SetX( player->other->object, x-30 );
-	}
-	else if( player->control.right_motion && !player->control.left_motion ) {
-		if( GamePlayer_IsLeftOriented(player->other) ) {
-			GamePlayer_ChangeState( player->other, STATE_BE_CATCH );
-		} else {
-			GamePlayer_ChangeState( player->other, STATE_BACK_BE_CATCH );
-		}
-		GameObject_SetX( player->other->object, x+30 );
-	} else {
-		return;
-	}
+	CommonSkill_SetPositionAtCatch( player, player->other );
 	GamePlayer_ChangeState( player, STATE_CATCH );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
