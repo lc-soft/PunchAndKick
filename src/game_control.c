@@ -840,10 +840,10 @@ void GamePlayer_StopRun( GamePlayer *player )
 {
 	double speed, acc;
 	if( player->state == STATE_LEFTRUN ) {
-		acc = XACC_STOPRUN;
+		acc = XSPEED_RUN/4;
 	}
 	else if( player->state == STATE_RIGHTRUN ) {
-		acc = -XACC_STOPRUN;
+		acc = -XSPEED_RUN/4;
 	} else {
 		acc = 0.0;
 	}
@@ -1466,7 +1466,7 @@ int Game_Init(void)
 	player_data[0].property.kick = 100;
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
-	player_data[0].property.speed = 80;
+	player_data[0].property.speed = 50;
 	
 	player_data[1].property.max_hp = 80000;
 	player_data[1].property.cur_hp = 80000;
