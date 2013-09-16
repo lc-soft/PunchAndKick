@@ -5,6 +5,10 @@
 #include "../game.h"
 #include "game_skill.h"
 
+#define XSPEED_SPINHIT	80
+#define ZSPEED_SPINHIT	30
+#define ZACC_SPINHIT	10
+
 /** 计算A攻击的伤害值 */
 static int AttackDamage_AAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
@@ -1382,19 +1386,19 @@ static void CommonSkill_StartSpinHit( GamePlayer *player )
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	if( player->control.left_motion ) {
-		GameObject_SetXSpeed( player->object, -100 );
+		GameObject_SetXSpeed( player->object, -XSPEED_SPINHIT );
 		GamePlayer_SetLeftOriented( player );
 	}
 	else if( player->control.right_motion ) {
-		GameObject_SetXSpeed( player->object, 100 );
+		GameObject_SetXSpeed( player->object, XSPEED_SPINHIT );
 		GamePlayer_SetRightOriented( player );
 	}
 	else if( GamePlayer_IsLeftOriented(player) ) {
-		GameObject_SetXSpeed( player->object, -100 );
+		GameObject_SetXSpeed( player->object, -XSPEED_SPINHIT );
 	} else {
-		GameObject_SetXSpeed( player->object, 100 );
+		GameObject_SetXSpeed( player->object, XSPEED_SPINHIT );
 	}
-	GameObject_AtLanding( player->object, 30, -10, GamePlayer_AtLandingDone );
+	GameObject_AtLanding( player->object, ZSPEED_SPINHIT, -ZACC_SPINHIT, GamePlayer_AtLandingDone );
 }
 
 static LCUI_BOOL CommonSkill_CanUseAThrow( GamePlayer *player )
