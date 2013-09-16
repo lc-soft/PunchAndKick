@@ -707,32 +707,68 @@ static void GameObjectStream_Proc( void )
 	}
 }
 
+static int one_sec_total_frame;		/**< 一秒内的总帧数 */
+static int64_t one_sec_start_time;	/**< 该秒的起始时间 */
+static int one_sec_cur_frames;		/**< 该秒内当前已更新的帧数 */
+static int prev_sec_remaining_frames;	/**< 上一秒遗留的未更新的帧数 */
+
+/** 初始化帧数控制 */
+static void FrameControl_Init( int frames_per_sec )
+{
+	one_sec_total_frame = frames_per_sec;
+	one_sec_start_time = LCUI_GetTickCount();
+	one_sec_cur_frames = 0;
+	prev_sec_remaining_frames = 0;
+}
+
+/** 让当前帧停留一段时间 */
+static void FrameControl_RemainFrame(void)
+{
+	int n_ms;
+	int remaining_frames;
+	int64_t one_sec_lost_ms;
+
+	while(1) {
+		one_sec_lost_ms = LCUI_GetTicks( one_sec_start_time );
+		/* 如果本秒内流逝的毫秒小于1000毫秒 */
+		if( one_sec_lost_ms < 1000 ) {
+			break;
+		}
+		/* 否则，切换至下一秒 */
+		one_sec_start_time += 1000;
+		/* 累加上一秒遗留的未更新的帧数 */
+		prev_sec_remaining_frames += one_sec_total_frame;
+		prev_sec_remaining_frames -= one_sec_cur_frames;
+		/* 本秒内当前更新的帧数重置为0 */
+		one_sec_cur_frames = 0;
+	}
+	/* 计算本秒内剩余的时间(毫秒) */
+	n_ms = 1000 - (int)one_sec_lost_ms;
+	/* 计算本秒内剩余的需更新的帧数 */
+	remaining_frames = one_sec_total_frame;
+	remaining_frames-= one_sec_cur_frames;
+	remaining_frames += prev_sec_remaining_frames;
+	/* 计算剩余帧的平均停留时间 */
+	n_ms /= remaining_frames;
+	/* 小于1毫秒就不睡眠了 */
+	if( n_ms < 1 ) {
+		return;
+	}
+	/* 开始睡眠 */
+	LCUI_MSleep( n_ms );
+	/* 增加已经更新的帧数 */
+	++one_sec_cur_frames;
+}
+
 static void GameObjectStream_Thread( void *arg )
 {
-	int64_t lost_time, diff_val, n_ms, one_frame_lost_time;
-	diff_val = 0;
-
+	FrameControl_Init( 1000/MSEC_PER_FRAME );
 	while(LCUI_Active()) {
-		one_frame_lost_time = LCUI_GetTickCount();
-		
 		GameSpace_Step();
 		GameObjectStream_UpdateTime( 10 );
 		GameObjectStream_Proc();
-
-		one_frame_lost_time = LCUI_GetTicks( one_frame_lost_time );
-		n_ms = MSEC_PER_FRAME - one_frame_lost_time;
-		n_ms = n_ms - diff_val;
-		if( n_ms > 0 ) {
-			lost_time = LCUI_GetTickCount();
-			LCUI_MSleep( (unsigned int)n_ms );
-			lost_time = LCUI_GetTicks( lost_time );
-			diff_val = lost_time;
-			diff_val -= n_ms;
-		} else {
-			diff_val = 0 - n_ms;
-		}
+		FrameControl_RemainFrame();
 	}
-
 	LCUIThread_Exit(NULL);
 }
 
