@@ -7,8 +7,8 @@
 
 #include <time.h>
 
-#define PAUSE	0
-#define PLAY	1
+#define ACTION_STATE_PAUSE	0
+#define ACTION_STATE_PLAY	1
 
 enum FuncUse {
 	AT_XSPEED_TO_ZERO,
@@ -41,8 +41,12 @@ typedef struct GameObject_ {
 	
 	ActionRec *current;		/**< 当前动作动画记录 */
 	LCUI_Queue action_list;		/**< 动作列表 */
+	
 	int n_frame;			/**< 记录当前帧动作的序号，帧序号从0开始 */
-	long int remain_time;		/**< 当前帧剩下的停留时间 */
+	int64_t action_start_time;	/**< 开始播放时的时间 */
+	int64_t action_pause_time;	/**< 暂停时的时间 */
+	long int action_total_ms;	/**< 总定时时间（单位：毫秒） */
+	long int action_pause_ms;	/**< 定时器处于暂停状态的时长（单位：毫秒） */
 
 	SpaceObject *space_obj;		/**< 对应的物理对象 */
 	LCUI_Widget *shadow;		/**< 对象的阴影 */
@@ -293,57 +297,6 @@ LCUI_API LCUI_Queue* GameObject_GetAttackerInfo( LCUI_Widget* widget )
 	return &obj->attacker_info;
 }
 
-
-/** 对流中的GameObject按照剩余时间从小到大的顺序排序  */
-static void GameObjectStream_Sort(void)
-{
-	int i, j, total;
-	LCUI_Widget *widget;
-	GameObject *p1, *p2;
-
-	Queue_Lock( &gameobject_stream );
-	total = Queue_GetTotal( &gameobject_stream );
-	for(i=0; i<total; ++i) {
-		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
-		p1 = (GameObject*)Widget_GetPrivData( widget );
-		if( !p1 ) {
-			continue;
-		}
-		for(j=i+1; j<total; ++j) {
-			widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, j );
-			p2 = (GameObject*)Widget_GetPrivData( widget );
-			if( !p2 ) {
-				continue;
-			}
-			if( p1->remain_time > p2->remain_time ) {
-				p1 = p2;
-				Queue_Swap( &gameobject_stream, j, i );
-			}
-		}
-	}
-	Queue_Unlock( &gameobject_stream );
-}
-
-/** 缩减各个动作的当前帧的剩余等待时间 */
-static void GameObjectStream_ShortenTime( int time )
-{
-	int i, total;
-	LCUI_Widget *widget;
-	GameObject *obj;
-
-	Queue_Lock( &gameobject_stream );
-	total = Queue_GetTotal(&gameobject_stream);
-	for(i=0; i<total; ++i) {
-		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
-		obj = (GameObject*)Widget_GetPrivData( widget );
-		if( !obj || obj->state == PAUSE ) {
-			continue;
-		}
-		obj->remain_time -= time;
-	}
-	Queue_Unlock( &gameobject_stream );
-}
-
 /** 检测动作中指定帧是否有新攻击 */
 static LCUI_BOOL Action_IsNewAttack(	ActionData* action,
 					int n_frame )
@@ -369,73 +322,10 @@ static long int Action_GetFrameSleepTime( ActionData *action, int n_frame )
 	return REFRESH_INTERVAL_TIME;
 }
 
-/** 更新流中的动画当前帧的停留时间 */
-static void GameObjectStream_UpdateTime( int sleep_time )
-{
-	int i, n, total;
-	LCUI_BOOL need_draw=FALSE;
-	LCUI_Widget *widget;
-	GameObject *obj;
-	ActionFrameData *frame = NULL;
-	/* 减少所有GameObject当前帧的剩余等待时间 */
-	GameObjectStream_ShortenTime( sleep_time );
-	total = Queue_GetTotal(&gameobject_stream);
-	for(i=0; i<total; ++i){
-		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
-		obj = (GameObject*)Widget_GetPrivData( widget );
-		/* 忽略无效或者未处于播放状态的对象 */
-		if( !obj || obj->state != PLAY) {
-			continue;
-		}
-		/* 忽略没有动作动画的对象 */
-		if( obj->current == NULL ) {
-			continue;
-		}
-		/* 若当前帧的停留时间小于或等于0 */
-		if(obj->remain_time <= 0) {
-			++obj->n_frame;
-			/* 记录新一帧动作的总停留时间 */
-			obj->remain_time = Action_GetFrameSleepTime(
-						obj->current->action,
-						obj->n_frame
-			);
-			/* 标记这个对象需要重绘 */
-			need_draw = TRUE;
-		}
-		n = Queue_GetTotal( &obj->current->action->frame );
-		/* 若当前帧号超出总帧数 */
-		if( obj->n_frame >= n ) {
-			/** 若该动作需要重复播放 */
-			if( obj->current->action->replay ) {
-				obj->n_frame = 0;
-			} else {
-				obj->n_frame = n-1;
-			}
-			obj->remain_time = Action_GetFrameSleepTime(
-						obj->current->action,
-						obj->n_frame
-			);
-			if( obj->current->done ) {
-				obj->current->done( widget );
-			}
-		}
-		if( need_draw ) {
-			if( Action_IsNewAttack( obj->current->action,
-						obj->n_frame ) ) {
-				GameObject_ClearAttack( widget );
-			}
-			if( obj->current->update ) {
-				obj->current->update( widget );
-			}
-			Widget_Draw( widget );
-		}
-	}
-	GameObjectStream_Sort();
-}
-
 /** 获取对象的受攻击范围 */
 LCUI_API int GameObject_GetHitRange( LCUI_Widget *widget, RangeBox *range )
 {
+	int n_frame;
 	GameObject *obj;
 	ActionFrameData *frame;
 
@@ -443,9 +333,13 @@ LCUI_API int GameObject_GetHitRange( LCUI_Widget *widget, RangeBox *range )
 	if( obj == NULL || obj->current == NULL ) {
 		return -1;
 	}
+	n_frame = obj->n_frame;
+	if( obj->n_frame == Queue_GetTotal(&obj->current->action->frame) ) {
+		n_frame -= 1;
+	}
 	frame = (ActionFrameData*)Queue_Get(
 			&obj->current->action->frame,
-			obj->n_frame
+			n_frame
 	);
 	if( frame == NULL ) {
 		return -2;
@@ -473,6 +367,7 @@ LCUI_API int GameObject_GetHitRange( LCUI_Widget *widget, RangeBox *range )
 /** 获取对象的攻击范围 */
 LCUI_API int GameObject_GetAttackRange( LCUI_Widget *widget, RangeBox *range )
 {
+	int n_frame;
 	GameObject *obj;
 	ActionFrameData *frame;
 
@@ -480,9 +375,13 @@ LCUI_API int GameObject_GetAttackRange( LCUI_Widget *widget, RangeBox *range )
 	if( obj == NULL || obj->current == NULL ) {
 		return -1;
 	}
+	n_frame = obj->n_frame;
+	if( obj->n_frame == Queue_GetTotal(&obj->current->action->frame) ) {
+		n_frame -= 1;
+	}
 	frame = (ActionFrameData*)Queue_Get(
 			&obj->current->action->frame,
-			obj->n_frame
+			n_frame
 	);
 	if( frame == NULL ) {
 		return -2;
@@ -625,7 +524,7 @@ static int GameObject_ProcAttack( LCUI_Widget *widget )
 	return 0;
 }
 
-static void GameObjectStream_Proc( void )
+static void GameObjectProc_DispatchEvent( void )
 {
 	int i, n;
 	double z_acc;
@@ -636,7 +535,7 @@ static void GameObjectStream_Proc( void )
 	for(i=0; i<n; ++i) {
 		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
 		obj = (GameObject*)Widget_GetPrivData( widget );
-		if( !obj || obj->state != PLAY ) {
+		if( !obj || obj->state != ACTION_STATE_PLAY ) {
 			continue;
 		}
 		
@@ -655,7 +554,7 @@ static void GameObjectStream_Proc( void )
 				obj->at_xspeed_to_zero( widget );
 			}
 		}
-		z_acc = obj->space_obj->z_acc/MSEC_PER_FRAME;
+		z_acc = obj->space_obj->z_acc/FRAMES_PER_SEC;
 		if( obj->at_zspeed ) {
 			if( obj->space_obj->z_acc > 0 ) {
 				if( obj->space_obj->z_speed >= obj->target_z_speed
@@ -707,6 +606,124 @@ static void GameObjectStream_Proc( void )
 	}
 }
 
+static void GameObjectPorc_UpdateObjectPos( LCUI_Widget *widget )
+{
+	int n, src_i=-1, des_i=-1;
+	int64_t time_left, tmp_time_left;
+	LCUI_Widget *tmp_widget;
+	GameObject *p_obj, *p_tmp_obj;
+
+	p_obj = (GameObject*)Widget_GetPrivData( widget );
+	time_left = LCUI_GetTicks( p_obj->action_start_time );
+	time_left -= p_obj->action_pause_ms;
+	time_left = p_obj->action_total_ms - time_left;
+
+	n = Queue_GetTotal( &gameobject_stream );
+	while(n--) {
+		tmp_widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, n );
+		if( !tmp_widget ) {
+			continue;
+		}
+		if( tmp_widget == widget ) {
+			src_i = n;
+			if( des_i != -1 ) {
+				break;
+			}
+			continue;
+		}
+		p_tmp_obj = (GameObject*)Widget_GetPrivData( tmp_widget );
+		if( p_tmp_obj->state != ACTION_STATE_PLAY ) {
+			continue;
+		}
+		tmp_time_left = LCUI_GetTicks( p_tmp_obj->action_start_time );
+		tmp_time_left -= p_tmp_obj->action_pause_ms;
+		tmp_time_left = p_tmp_obj->action_total_ms - tmp_time_left;
+		if( des_i == -1 && time_left >= tmp_time_left ) {
+			des_i = n;
+			if( src_i != -1 ) {
+				break;
+			}
+		}
+	}
+	if( des_i == -1 ) {
+		des_i = Queue_GetTotal( &gameobject_stream )-1;
+	}
+	/* 若源位置和目标位置有效，则开始移动 */
+	if( src_i != -1 ) {
+		DEBUG_MSG("src: %d, des: %d\n", src_i, des_i );
+		Queue_Move( &gameobject_stream, des_i, src_i );
+	}
+}
+
+static void GameObjectProc_UpdateAction(void)
+{
+	int i, n, total;
+	long int lost_ms, frame_ms;
+	LCUI_BOOL need_draw = FALSE;
+	LCUI_Widget *widget;
+	GameObject *obj;
+	ActionFrameData *frame = NULL;
+
+	Queue_Lock( &gameobject_stream );
+	total = Queue_GetTotal( &gameobject_stream );
+	for(i=0; i<total; ++i) {
+		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		obj = (GameObject*)Widget_GetPrivData( widget );
+		/* 忽略无效或者未处于播放状态的对象 */
+		if( !obj || obj->state != ACTION_STATE_PLAY) {
+			continue;
+		}
+		/* 忽略没有动作动画的对象 */
+		if( obj->current == NULL ) {
+			continue;
+		}
+		n = Queue_GetTotal( &obj->current->action->frame );
+		/* 忽略 已经到最后一帧 且 无需重新播放动作 的对象 */
+		if( obj->n_frame == n && !obj->current->action->replay ) {
+			continue;
+		}
+		/* 获取流逝的时间 */
+		lost_ms = (long int)LCUI_GetTicks( obj->action_start_time );
+		/* 获取该帧的总停留时间 */
+		frame_ms = Action_GetFrameSleepTime(	obj->current->action,
+							obj->n_frame );
+		/* 若已经超出总停留时间 */
+		if( lost_ms >= frame_ms ) {
+			++obj->n_frame;
+			obj->action_start_time = LCUI_GetTickCount();
+			GameObjectPorc_UpdateObjectPos( widget );
+			/* 标记这个对象需要重绘 */
+			need_draw = TRUE;
+		} else {
+			continue;
+		}
+		/* 若当前帧号超出总帧数 */
+		if( obj->n_frame >= n ) {
+			/** 若该动作需要重复播放 */
+			if( obj->current->action->replay ) {
+				obj->n_frame = 0;
+				obj->action_start_time = LCUI_GetTickCount();
+			} else {
+				obj->n_frame = n;
+			}
+			if( obj->current->done ) {
+				obj->current->done( widget );
+			}
+		}
+		if( need_draw ) {
+			if( Action_IsNewAttack( obj->current->action,
+						obj->n_frame ) ) {
+				GameObject_ClearAttack( widget );
+			}
+			if( obj->current->update ) {
+				obj->current->update( widget );
+			}
+			Widget_Draw( widget );
+		}
+	}
+	Queue_Unlock( &gameobject_stream );
+}
+
 static int one_sec_total_frame;		/**< 一秒内的总帧数 */
 static int64_t one_sec_start_time;	/**< 该秒的起始时间 */
 static int one_sec_cur_frames;		/**< 该秒内当前已更新的帧数 */
@@ -726,8 +743,7 @@ static void FrameControl_RemainFrame(void)
 {
 	int n_ms;
 	int remaining_frames;
-	int64_t one_sec_lost_ms;
-
+	int64_t one_sec_lost_ms, ct;
 	while(1) {
 		one_sec_lost_ms = LCUI_GetTicks( one_sec_start_time );
 		/* 如果本秒内流逝的毫秒小于1000毫秒 */
@@ -736,37 +752,50 @@ static void FrameControl_RemainFrame(void)
 		}
 		/* 否则，切换至下一秒 */
 		one_sec_start_time += 1000;
-		/* 累加上一秒遗留的未更新的帧数 */
-		prev_sec_remaining_frames += one_sec_total_frame;
-		prev_sec_remaining_frames -= one_sec_cur_frames;
-		/* 本秒内当前更新的帧数重置为0 */
-		one_sec_cur_frames = 0;
+		if( one_sec_cur_frames < -200 ) {
+			one_sec_cur_frames = -200;
+		} else {
+			one_sec_cur_frames -= one_sec_total_frame;
+		}
 	}
 	/* 计算本秒内剩余的时间(毫秒) */
 	n_ms = 1000 - (int)one_sec_lost_ms;
 	/* 计算本秒内剩余的需更新的帧数 */
 	remaining_frames = one_sec_total_frame;
-	remaining_frames-= one_sec_cur_frames;
-	remaining_frames += prev_sec_remaining_frames;
+	remaining_frames -= one_sec_cur_frames;
 	/* 计算剩余帧的平均停留时间 */
+	
+	//_DEBUG_MSG("cur_frames: %d, remaining_frames: %d, one_sec_lost_ms: %d, n_ms: %d\n", one_sec_cur_frames,remaining_frames, one_sec_lost_ms, n_ms);
 	n_ms /= remaining_frames;
-	/* 小于1毫秒就不睡眠了 */
-	if( n_ms < 1 ) {
+	if( n_ms < 0 ) {
 		return;
 	}
+	ct = LCUI_GetTickCount();
 	/* 开始睡眠 */
 	LCUI_MSleep( n_ms );
+//#define debug
+#ifdef debug
+	{
+		FILE *fp;
+		fp = fopen("debug.txt", "a+");
+		if( !fp ) {
+			return;
+		}
+		fprintf(fp, "frame: %d, n_ms: %d, lost_time: %I64dms\n", one_sec_cur_frames, n_ms, LCUI_GetTicks(ct) );
+		fclose( fp );
+	}
+#endif
 	/* 增加已经更新的帧数 */
 	++one_sec_cur_frames;
 }
 
-static void GameObjectStream_Thread( void *arg )
+static void GameObjectProc_Thread( void *arg )
 {
-	FrameControl_Init( 1000/MSEC_PER_FRAME );
+	FrameControl_Init( FRAMES_PER_SEC );
 	while(LCUI_Active()) {
 		GameSpace_Step();
-		GameObjectStream_UpdateTime( 10 );
-		GameObjectStream_Proc();
+		GameObjectProc_UpdateAction();
+		GameObjectProc_DispatchEvent();
 		FrameControl_RemainFrame();
 	}
 	LCUIThread_Exit(NULL);
@@ -792,12 +821,20 @@ LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 	if( p_rec == NULL ) {
 		return -1;
 	}
+	Queue_Lock( &gameobject_stream );
 	obj->current = p_rec;
 	obj->n_frame = 0;
-	obj->remain_time = Action_GetFrameSleepTime( p_rec->action, 0 );
+	obj->action_start_time = LCUI_GetTickCount();
+	obj->action_total_ms = Action_GetFrameSleepTime( p_rec->action, 0 );
+	obj->action_pause_ms = 0;
+	if( obj->state == ACTION_STATE_PAUSE ) {
+		obj->action_pause_time = LCUI_GetTickCount();
+	}
+	GameObjectPorc_UpdateObjectPos( widget );
 	if( Action_IsNewAttack( obj->current->action, obj->n_frame ) ) {
 		GameObject_ClearAttack( widget );
 	}
+	Queue_Unlock( &gameobject_stream );
 	/* 标记数据为无效，以根据当前动作动画来更新数据 */
 	obj->data_valid = FALSE;
 	Widget_Draw(widget);
@@ -831,7 +868,9 @@ LCUI_API int GameObject_ResetAction( LCUI_Widget *widget )
 		}
 	}
 	obj->n_frame = 0;
-	obj->remain_time = Action_GetFrameSleepTime( obj->current->action, 0 );
+	obj->action_total_ms = Action_GetFrameSleepTime( obj->current->action, 0 );
+	obj->action_start_time = LCUI_GetTickCount();
+	obj->action_pause_ms = 0;
 	Widget_Draw( widget );
 	return 0;
 }
@@ -848,9 +887,16 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
 			return -1;
 		}
 	}
-	obj->state = PLAY;
+	Queue_Lock( &gameobject_stream );
+	if( obj->state != ACTION_STATE_PLAY ) {
+		obj->state = ACTION_STATE_PLAY;
+		obj->action_pause_ms = (long int)LCUI_GetTicks( obj->action_pause_time );
+	}
 	obj->n_frame = 0;
-	obj->remain_time = Action_GetFrameSleepTime( obj->current->action, 0 );
+	obj->action_start_time = LCUI_GetTickCount();
+	obj->action_total_ms = Action_GetFrameSleepTime( obj->current->action, 0 );
+	GameObjectPorc_UpdateObjectPos( widget );
+	Queue_Unlock( &gameobject_stream );
 	Widget_Draw( widget );
 	if( obj->current->update ) {
 		obj->current->update( widget );
@@ -867,7 +913,14 @@ LCUI_API int GameObject_PauseAction( LCUI_Widget *widget )
 	if( obj->current == NULL ) {
 		return -1;
 	}
-	obj->state = PAUSE;
+	Queue_Lock( &gameobject_stream );
+	if( obj->state == ACTION_STATE_PLAY ) {
+		obj->action_pause_time = LCUI_GetTickCount();
+		obj->action_pause_ms = 0;
+		obj->state = ACTION_STATE_PAUSE;
+		GameObjectPorc_UpdateObjectPos( widget );
+	}
+	Queue_Unlock( &gameobject_stream );
 	return 0;
 }
 
@@ -958,9 +1011,12 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->y = 0;
 	obj->w = 0;
 	obj->h = 0;
-	obj->state = PAUSE;
+	obj->state = ACTION_STATE_PAUSE;
+	obj->action_start_time = LCUI_GetTickCount();
+	obj->action_pause_time = LCUI_GetTickCount();
+	obj->action_total_ms = 0;
+	obj->action_pause_ms = 0;
 	obj->n_frame = 0;
-	obj->remain_time = 0;
 	obj->current = NULL;
 	obj->data_valid = FALSE;
 	obj->global_center_x = 0;
@@ -977,7 +1033,7 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	if( frame_proc_thread == -1 ) {
 		Queue_Init( &gameobject_stream, sizeof(LCUI_Widget*), NULL );
 		Queue_UsingPointer( &gameobject_stream );
-		LCUIThread_Create( &frame_proc_thread, GameObjectStream_Thread, NULL );
+		LCUIThread_Create( &frame_proc_thread, GameObjectProc_Thread, NULL );
 	}
 	Queue_AddPointer( &gameobject_stream, widget );
 	obj->at_landing = NULL;
@@ -1175,9 +1231,11 @@ static void GameObject_ExecUpdate( LCUI_Widget *widget )
 
 static void GameObject_ExecDraw( LCUI_Widget *widget )
 {
+	int n_frame;
 	GameObject *obj;
 	LCUI_Pos pos;
 	ActionFrameData *frame;
+	LCUI_Queue *p_queue;
 	LCUI_Graph *graph, img_buff;
 	
 	obj = (GameObject*)Widget_GetPrivData( widget );
@@ -1187,11 +1245,14 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 			return;
 		}
 	}
+	n_frame = obj->n_frame;
+	p_queue = &obj->current->action->frame;
+	if( obj->n_frame == Queue_GetTotal(p_queue) ) {
+		n_frame -= 1;
+	}
+	p_queue = &obj->current->action->frame;
 	/* 获取当前帧动作图像 */
-	frame = (ActionFrameData*)Queue_Get(
-			&obj->current->action->frame,
-			obj->n_frame
-	);
+	frame = (ActionFrameData*)Queue_Get( p_queue, n_frame );
 	if( frame == NULL ) {
 		return;
 	}
