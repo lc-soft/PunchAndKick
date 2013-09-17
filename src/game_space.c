@@ -54,7 +54,7 @@ void GameSpace_Step( void )
 		}
 		/* 更新对象的空间坐标 */
 		if( obj->x_speed < 0.0 ) {
-			obj->x_speed += (obj->x_acc/MSEC_PER_FRAME);
+			obj->x_speed += (obj->x_acc/FRAMES_PER_SEC);
 			if( obj->x_acc > 0.0 ) {
 				if( obj->x_speed > 0.0 ) {
 					obj->x_speed = 0.0;
@@ -62,7 +62,7 @@ void GameSpace_Step( void )
 			}
 		}
 		else if( obj->x_speed > 0.0 ) {
-			obj->x_speed += (obj->x_acc/MSEC_PER_FRAME);
+			obj->x_speed += (obj->x_acc/FRAMES_PER_SEC);
 			if( obj->x_acc < 0.0 ) {
 				if( obj->x_speed < 0.0 ) {
 					obj->x_speed = 0.0;
@@ -70,7 +70,7 @@ void GameSpace_Step( void )
 			}
 		}
 		if( obj->y_speed < 0.0 ) {
-			obj->y_speed += (obj->y_acc/MSEC_PER_FRAME);
+			obj->y_speed += (obj->y_acc/FRAMES_PER_SEC);
 			if( obj->y_acc > 0.0 ) {
 				if( obj->y_speed > 0.0 ) {
 					obj->y_speed = 0.0;
@@ -78,17 +78,17 @@ void GameSpace_Step( void )
 			}
 		}
 		else if( obj->y_speed > 0.0 ) {
-			obj->y_speed += (obj->y_acc/MSEC_PER_FRAME);
+			obj->y_speed += (obj->y_acc/FRAMES_PER_SEC);
 			if( obj->y_acc < 0.0 ) {
 				if( obj->y_speed < 0.0 ) {
 					obj->y_speed = 0.0;
 				}
 			}
 		}
-		obj->z_speed += (obj->z_acc/MSEC_PER_FRAME);
-		obj->x += (obj->x_speed/MSEC_PER_FRAME);
-		obj->y += (obj->y_speed/MSEC_PER_FRAME);
-		obj->z += (obj->z_speed/MSEC_PER_FRAME);
+		obj->z_speed += (obj->z_acc/FRAMES_PER_SEC);
+		obj->x += (obj->x_speed/FRAMES_PER_SEC);
+		obj->y += (obj->y_speed/FRAMES_PER_SEC);
+		obj->z += (obj->z_speed/FRAMES_PER_SEC);
 		if( obj->x < space_x ) {
 			obj->x = space_x;
 		}

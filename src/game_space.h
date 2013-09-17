@@ -1,7 +1,7 @@
 ﻿#ifndef __PHYSICS_SYSTEM_H__
 #define __PHYSICS_SYSTEM_H__
 
-#define MSEC_PER_FRAME 10
+#define FRAMES_PER_SEC	50
 
 /**
 
