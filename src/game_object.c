@@ -198,6 +198,7 @@ LCUI_API int GameObject_GetCurrentActionFrameNumber( LCUI_Widget *widget )
 /** 获取当前帧的顶点相对于底线的距离 */
 LCUI_API int GameObject_GetCurrentFrameTop( LCUI_Widget *widget )
 {
+	int n_frame;
 	GameObject *obj;
 	ActionFrameData *frame;
 
@@ -208,9 +209,13 @@ LCUI_API int GameObject_GetCurrentFrameTop( LCUI_Widget *widget )
 			return 0;
 		}
 	}
+	n_frame = obj->n_frame;
+	if( n_frame == Queue_GetTotal(&obj->current->action->frame) ) {
+		n_frame -= 1;
+	}
 	frame = (ActionFrameData*)Queue_Get(
 			&obj->current->action->frame,
-			obj->n_frame
+			n_frame
 	);
 	if( frame == NULL ) {
 		return 0;
@@ -564,7 +569,7 @@ static void GameObjectProc_DispatchEvent( void )
 			}
 			else if( obj->space_obj->z_acc < 0 ) {
 				if( obj->space_obj->z_speed >= obj->target_z_speed
-				 && obj->space_obj->z_speed + z_acc < obj->target_z_speed) {
+				 && obj->space_obj->z_speed + z_acc <= obj->target_z_speed ) {
 					obj->at_zspeed( widget );
 				}
 			}
@@ -1432,7 +1437,6 @@ LCUI_API double GameObject_GetZSpeed( LCUI_Widget *widget )
 LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z )
 {
 	GameObject *obj;
-
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	obj->space_obj->z = z;
 }
