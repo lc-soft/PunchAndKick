@@ -751,49 +751,6 @@ static void GamePlayer_SetFall( GamePlayer *player )
 	GamePlayer_LockMotion( player );
 }
 
-/** 在被举起的状态下，更新自身的位置 */
-static void GamePlayer_UpdateLiftPosition( LCUI_Widget *widget )
-{
-	double x, y, z;
-	GamePlayer *player, *other_player;
-	LCUI_Widget *other;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
-	other_player = player->other;
-	/* 如果没有举起者，或自己不是被举起者 */
-	if( !player->other ) {
-		GameObject_AtMove( widget, NULL );
-		return;
-	}
-	else if( !player->other->other ) {
-		/* 如果举起者并不处于举起状态 */
-		if( !GamePlayer_IsInLiftState( player ) ) {
-			/* 如果举起者不是要要投掷自己 */
-			if( player->state != STATE_THROW ) {
-				GamePlayer_SetFall( other_player );
-			}
-		}
-		GameObject_AtMove( widget, NULL );
-		return;
-	}
-	if( !GamePlayer_IsInLiftState( player ) ) {
-		if( player->state != STATE_THROW ) {
-			GamePlayer_SetFall( other_player );
-		}
-		GameObject_AtMove( widget, NULL );
-		return;
-	}
-	other = player->other->object;
-	x = GameObject_GetX( widget );
-	y = GameObject_GetY( widget );
-	z = GameObject_GetZ( widget );
-	/* 获取当前帧的顶点相对于底线的距离 */
-	z += GameObject_GetCurrentFrameTop( widget );
-	GameObject_SetZ( other, z );
-	GameObject_SetX( other, x );
-	GameObject_SetY( other, y );
-}
-
 /** 在歇息状态结束后 */
 static void GamePlayer_AtRestTimeOut( GamePlayer *player )
 {
@@ -815,51 +772,30 @@ void GamePlayer_SetRest( GamePlayer *player )
 static void GamePlayer_StopLiftRun( GamePlayer *player )
 {
 	double speed, acc;
-
-	if( GamePlayer_IsLeftOriented(player) ) {
-		acc = XACC_STOPRUN;
-	} else {
-		acc = -XACC_STOPRUN;
-	}
+	acc = 0 - GameObject_GetXSpeed( player->object )*2.0;
+	player->control.run = FALSE;
 	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtRunEnd );
 	speed = GameObject_GetYSpeed( player->object );
-	acc = YSPEED_WALK * XACC_STOPRUN / XSPEED_RUN;
-	if( speed < 0.0 ) {
-		GameObject_SetYAcc( player->object, acc );
-	}
-	else if( speed > 0.0 ) {
-		GameObject_SetYAcc( player->object, -acc );
-	}
+	acc = 0 - GameObject_GetYSpeed(player->object)*2.0;
+	GameObject_SetYAcc( player->object, acc );
 }
 
 /** 停止奔跑 */
 void GamePlayer_StopRun( GamePlayer *player )
 {
 	double speed, acc;
-	if( player->state == STATE_LEFTRUN ) {
-		acc = XSPEED_RUN/4;
-	}
-	else if( player->state == STATE_RIGHTRUN ) {
-		acc = -XSPEED_RUN/4;
-	} else {
-		acc = 0.0;
-	}
+	acc = 0 - GameObject_GetXSpeed( player->object )*3;
 	player->control.run = FALSE;
 	GamePlayer_SetReady( player );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_AtXSpeedToZero( player->object, acc, GamePlayer_AtRunEnd );
 	speed = GameObject_GetYSpeed( player->object );
-	acc = YSPEED_WALK * XACC_STOPRUN / XSPEED_RUN;
-	if( speed < 0.0 ) {
-		GameObject_SetYAcc( player->object, acc );
-	}
-	else if( speed > 0.0 ) {
-		GameObject_SetYAcc( player->object, -acc );
-	}
+	acc = 0 - GameObject_GetYSpeed(player->object)*2.0;
+	GameObject_SetYAcc( player->object, acc );
 }
 
 /** 抓住正处于喘气（歇息）状态下的玩家 */
@@ -1466,7 +1402,7 @@ int Game_Init(void)
 	player_data[0].property.kick = 100;
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
-	player_data[0].property.speed = 50;
+	player_data[0].property.speed = 100;
 	
 	player_data[1].property.max_hp = 80000;
 	player_data[1].property.cur_hp = 80000;
