@@ -251,6 +251,9 @@ static void GamePlayer_AtLandingByAfterKneeHit( LCUI_Widget *widget )
 	player->other = NULL;
 }
 
+#define ZSPEED_KNEEHIT	100
+#define ZACC_KNEEHIT	100
+
 static void AtKneeHitUpdate( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -275,7 +278,8 @@ static void AtKneeHitUpdate( LCUI_Widget *widget )
 		GamePlayer_ChangeState( player->other, STATE_LYING );
 		GamePlayer_LockAction( player->other );
 		player->other->other = player;
-		GameObject_AtLanding(	player->other->object, -20, 0,
+		GameObject_AtLanding(	player->other->object,
+					-ZSPEED_KNEEHIT, -ZACC_KNEEHIT,
 					GamePlayer_AtLandingByAfterKneeHit );
 	default:
 		break;
@@ -307,7 +311,7 @@ static void StartKneeHit( GamePlayer *player )
 	GameObject_SetX( player->other->object, x );
 	GameObject_SetY( player->other->object, y );
 	GameObject_SetZ( player->other->object, 56 );
-	GameObject_AtLanding( player->other->object, -20, 0, NULL );
+	GameObject_AtLanding( player->other->object, -ZSPEED_KNEEHIT, -ZACC_KNEEHIT, NULL );
 	GameObject_AtActionUpdate(
 		player->object, ACTION_CATCH_SKILL_BA, 
 		AtKneeHitUpdate 
