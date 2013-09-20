@@ -2717,7 +2717,7 @@ static void CommonSkill_RegisterBombKick(void)
 	AttackLibrary_AddAttack( ATK_BOMBKICK, AttackDamage_BombKick, AttackEffect_LongHitFly );
 }
 
-/** 注册 爆裂腿技能 */
+/** 注册 自旋击技能 */
 static void CommonSkill_RegisterSpinHit(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_SPINHIT,
@@ -2726,6 +2726,12 @@ static void CommonSkill_RegisterSpinHit(void)
 				CommonSkill_StartSpinHit
 	);
 	AttackLibrary_AddAttack( ATK_SPINHIT, AttackDamage_SpinHit, AttackEffect_LongHitFly );
+}
+
+/** 注册 二段自旋击技能 */
+static void CommonSkill_RegisterSpinHit2(void)
+{
+	AttackLibrary_AddAttack( ATK_SPINHIT_2, AttackDamage_SpinHit, AttackEffect_LongHitFly );
 }
 
 static void CommonSkill_RegisterThrow(void)
@@ -2836,6 +2842,7 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterMachStomp();
 	CommonSkill_RegisterBombKick();
 	CommonSkill_RegisterSpinHit();
+	CommonSkill_RegisterSpinHit2();
 	CommonSkill_RegisterBigElbow();
 	CommonSkill_RegisterRide();
 	CommonSkill_RegisterRideAttack();
