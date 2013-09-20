@@ -442,7 +442,7 @@ void GamePlayer_SetAttackTypeName( GamePlayer *player, const char *attack_type_n
 	player->attack_type_name[63] = 0;
 }
 
-/** 按百分比变更移动速度，n 取值范围为 0 ~ 100 */
+/** 按百分比扣除移动速度，n 取值范围为 0 ~ 100 */
 void GamePlayer_ReduceSpeed( GamePlayer *player, int n )
 {
 	double speed;
@@ -756,6 +756,7 @@ static void GamePlayer_AtRestTimeOut( GamePlayer *player )
 {
 	player->n_attack = 0;
 	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
 	GamePlayer_SetReady( player );
 }
 
@@ -820,7 +821,7 @@ GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 	return GamePlayer_GetPlayerByWidget( obj );
 }
 
-static int GamePlayer_SetLeftMotion( GamePlayer *player )
+static void GamePlayer_SetLeftMotion( GamePlayer *player )
 {
 	int skill_id;
 	double x, y, speed;
@@ -844,10 +845,8 @@ static int GamePlayer_SetLeftMotion( GamePlayer *player )
 		}
 		else if( player->state == STATE_BE_LIFT_STANCE ) {
 			GamePlayer_SetLeftOriented( player );
-		} else {
-			return -1;
 		}
-		return 0;
+		return;
 	}
 	switch(player->state) {
 	case STATE_LIFT_WALK:
@@ -887,10 +886,9 @@ static int GamePlayer_SetLeftMotion( GamePlayer *player )
 		GamePlayer_StopLiftRun( player );
 	default:break;
 	}
-	return 0;
 }
 
-static int GamePlayer_SetRightMotion( GamePlayer *player )
+static void GamePlayer_SetRightMotion( GamePlayer *player )
 {
 	int skill_id;
 	double x, y, speed;
@@ -914,10 +912,8 @@ static int GamePlayer_SetRightMotion( GamePlayer *player )
 		}
 		else if( player->state == STATE_BE_LIFT_STANCE ) {
 			GamePlayer_SetRightOriented( player );
-		} else {
-			return -1;
 		}
-		return 0;
+		return;
 	}
 	switch(player->state) {
 	case STATE_LIFT_WALK:
@@ -957,7 +953,6 @@ static int GamePlayer_SetRightMotion( GamePlayer *player )
 		GamePlayer_StopLiftRun( player );
 	default:break;
 	}
-	return 0;
 }
 
 void GamePlayer_StopXWalk( GamePlayer *player )
@@ -1396,21 +1391,21 @@ int Game_Init(void)
 	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
 	player_data[1].type = PLAYER_TYPE_MARTIAL_ARTIST;
 	
-	player_data[0].property.max_hp = 80000;
-	player_data[0].property.cur_hp = 80000;
+	player_data[0].property.max_hp = 2000;
+	player_data[0].property.cur_hp = 2000;
 	player_data[0].property.defense = 100;
 	player_data[0].property.kick = 100;
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
 	player_data[0].property.speed = 100;
 	
-	player_data[1].property.max_hp = 80000;
-	player_data[1].property.cur_hp = 80000;
-	player_data[1].property.defense = 100;
+	player_data[1].property.max_hp = 2000;
+	player_data[1].property.cur_hp = 2000;
+	player_data[1].property.defense = 300;
 	player_data[1].property.kick = 300;
 	player_data[1].property.punch = 300;
 	player_data[1].property.throw = 300;
-	player_data[1].property.speed = 100;
+	player_data[1].property.speed = 200;
 
 	Graph_Init( &img_shadow );
 	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
@@ -1481,16 +1476,10 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	LCUI_BOOL stop_xmotion=FALSE, stop_ymotion=FALSE;
 
 	if( player->control.left_motion ) {
-		if( GamePlayer_SetLeftMotion( player ) == -1 ) {
-			player->control.left_motion = FALSE;
-			player->control.run = FALSE;
-		}
+		GamePlayer_SetLeftMotion( player );
 	}
 	else if( player->control.right_motion ) {
-		if( GamePlayer_SetRightMotion( player ) == -1 ) {
-			player->control.right_motion = FALSE;
-			player->control.run = FALSE;
-		}
+		GamePlayer_SetRightMotion( player );
 	}
 	else {
 		GamePlayer_StopXWalk( player );
