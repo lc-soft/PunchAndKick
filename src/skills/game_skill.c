@@ -156,6 +156,7 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_CATCH );
 	GamePlayer_EnableSkill( player, SKILLNAME_PUSH );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_SPINKICK );
+	GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
 }
 
 /** 为游戏角色启用一个技能 */
