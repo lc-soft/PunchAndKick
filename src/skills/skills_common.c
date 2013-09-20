@@ -5,7 +5,7 @@
 #include "../game.h"
 #include "game_skill.h"
 
-#define XSPEED_SPINHIT	700
+#define XSPEED_SPINHIT	600
 #define ZSPEED_SPINHIT	200
 #define ZACC_SPINHIT	550
 
@@ -17,6 +17,10 @@
 #define ZACC_BOUNCE	800
 
 #define ROLL_TIMEOUT	200
+
+#define ZSPEED_SPINHIT_2	550
+#define ZACC_SPINHIT_2		1000
+#define XSPEED_SPINHIT_2	300
 
 /** 计算A攻击的伤害值 */
 static int AttackDamage_AAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
@@ -330,6 +334,9 @@ static void GameObject_AtBumpBufferDone( LCUI_Widget *widget )
 	GamePlayer_UnlockMotion( player );
 }
 
+
+static int CommonSkill_StartSecondSpinHit( GamePlayer *player );
+
 static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
 {
 	RangeBox range;
@@ -337,6 +344,12 @@ static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
 	speed = GameObject_GetXSpeed( attacker->object );
 	attacker_x = GameObject_GetX( attacker->object );
 	GameObject_GetHitRange( victim->object, &range );
+	
+	if( strcmp( attacker->attack_type_name, ATK_SPINHIT ) == 0 ) {
+		if( CommonSkill_StartSecondSpinHit( attacker ) == 0 ) {
+			goto skip_speed_reduce;
+		}
+	}
 	/* 根据攻击者的移动方向，以及受攻击者的位置，对攻击者进行减速 */
 	if( speed < 0 ) {
 		if( attacker_x >= range.x ) {
@@ -348,6 +361,7 @@ static void AttackEffect_LongHitFly( GamePlayer *attacker, GamePlayer *victim )
 			GamePlayer_ReduceSpeed( attacker, 50 );
 		}
 	}
+skip_speed_reduce:
 	if( GamePlayer_TryHit(victim) == 0 ) {
 		/* 缓冲对方撞击时，锁住自己的动作及移动 */
 		GamePlayer_LockAction( victim );
@@ -398,6 +412,14 @@ void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
 	speed = GameObject_GetXSpeed( attacker->object );
 	attacker_x = GameObject_GetX( attacker->object );
 	GameObject_GetHitRange( victim->object, &range );
+	/* 检测该游戏角色是否有TORNADO_ATTACK技能 */
+	if( GamePlayer_HaveSkill( attacker, SKILLNAME_TORNADO_ATTACK ) ) {
+		/* 检测攻击类型是否为ATK_SPRINT_JUMP_B_ATTACK */
+		if( strcmp( attacker->attack_type_name, ATK_SPRINT_JUMP_B_ATTACK ) == 0 ) {
+			CommonSkill_StartSecondSpinHit( attacker );
+			goto skip_speed_reduce;
+		}
+	}
 	if( speed < 0 ) {
 		if( attacker_x >= range.x ) {
 			GamePlayer_ReduceSpeed( attacker, 50 );
@@ -408,6 +430,7 @@ void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
 			GamePlayer_ReduceSpeed( attacker, 50 );
 		}
 	}
+skip_speed_reduce:
 	if( GamePlayer_TryHit(victim) == 0 ) {
 		GamePlayer_LockAction( victim );
 		GamePlayer_LockMotion( victim );
@@ -860,7 +883,7 @@ static LCUI_BOOL GamePlayerStateCanSprintAttack( GamePlayer *player )
 /** 开始发动冲撞攻击 */
 static void _StartSprintAttack( GamePlayer *player, int state, const char *attack_type_name )
 {
-	double acc, speed;
+	double speed;
 	if( player->state != STATE_RIGHTRUN
 	 && player->state != STATE_LEFTRUN ){
 		return;
@@ -872,7 +895,7 @@ static void _StartSprintAttack( GamePlayer *player, int state, const char *attac
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	speed = GameObject_GetYSpeed( player->object );
-	acc = 0 - speed * 1.5;
+	GameObject_SetYAcc( player->object, -speed*1.5 );
 	GamePlayer_SetAttackTypeName( player, attack_type_name );
 }
 
@@ -1181,6 +1204,7 @@ static void CommonSkill_StartLift( GamePlayer *player )
 	GamePlayer_StopYMotion( player );
 	player->control.left_motion = FALSE;
 	player->control.right_motion = FALSE;
+	GamePlayer_ResetAttackControl( player );
 	GamePlayer_UnlockAction( player );
 	/* 改为下蹲状态 */
 	GamePlayer_ChangeState( player, STATE_LIFT_SQUAT );
@@ -1395,6 +1419,27 @@ static LCUI_BOOL CommonSkill_CanUseSpinHit( GamePlayer *player )
 	return TRUE;
 }
 
+static int CommonSkill_StartSecondSpinHit( GamePlayer *player )
+{
+	double x_speed;
+	if( player->control.left_motion ) {
+		x_speed = -XSPEED_SPINHIT_2;
+	} else if( player->control.right_motion ) {
+		x_speed = XSPEED_SPINHIT_2;
+	} else {
+		return -1;
+	}
+	GameObject_SetXSpeed( player->object, x_speed );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_SPINHIT );
+	GamePlayer_SetAttackTypeName( player, ATK_SPINHIT_2 );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_AtLanding( player->object, ZSPEED_SPINHIT_2, -ZACC_SPINHIT_2, GamePlayer_AtLandingDone );
+	return 0;
+}
+
+
 /** 开始发动 自旋击（翻转击） 技能 */
 static void CommonSkill_StartSpinHit( GamePlayer *player )
 {
@@ -1572,14 +1617,15 @@ static void GamePlayer_AtBeThrowDownLanding( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	if( player->state == STATE_BE_LIFT_TUMMY ) {
 		GamePlayer_ChangeState( player, STATE_TUMMY_HIT );
+		GameObject_AtActionDone( player->object, ACTION_TUMMY_HIT, NULL );
 	} else {
 		GamePlayer_ChangeState( player, STATE_LYING_HIT );
+		GameObject_AtActionDone( player->object, ACTION_LYING_HIT, NULL );
 	}
 	GamePlayer_LockAction( player );
 	Game_RecordAttack( player->other, ATK_THROW, player, player->state );
 	player->other = NULL;
-	/* 落地后缩减该角色75%的移动速度 */
-	GamePlayer_ReduceSpeed( player, 75 );
+	GamePlayer_ReduceSpeed( player, 80 );
 	GameObject_AtLanding(
 		player->object, ZSPEED_XF_HIT_FLY2,
 		-ZACC_XF_HIT_FLY2, GamePlayer_AtBeThrowDownDone
@@ -2400,6 +2446,28 @@ static void CommonSkill_StartPush( GamePlayer *player )
 	}
 }
 
+static LCUI_BOOL CommonSkill_CanUseDefense( GamePlayer *player )
+{
+	if( player->lock_action ) {
+		return FALSE;
+	}
+	if( !player->control.defense ) {
+		return FALSE;
+	}
+	if( !GamePlayerStateCanNormalAttack(player) ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void CommonSkill_StartDefense( GamePlayer *player )
+{
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_ChangeState( player, STATE_DEFENSE );
+}
+
 static void CommonSkill_RegisterPush(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_PUSH,
@@ -2736,28 +2804,6 @@ static void CommonSkill_RegisterJumpSpinKick(void)
 				CommonSkill_StartJumpSpinKick
 	);
 	AttackLibrary_AddAttack( ATK_JUMP_SPINKICK, AttackDamage_JumpSpinKick, AttackEffect_LongHitFly );
-}
-
-static LCUI_BOOL CommonSkill_CanUseDefense( GamePlayer *player )
-{
-	if( player->lock_action ) {
-		return FALSE;
-	}
-	if( !player->control.defense ) {
-		return FALSE;
-	}
-	if( !GamePlayerStateCanNormalAttack(player) ) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static void CommonSkill_StartDefense( GamePlayer *player )
-{
-	GamePlayer_StopXMotion( player );
-	GamePlayer_StopYMotion( player );
-	GamePlayer_LockMotion( player );
-	GamePlayer_ChangeState( player, STATE_DEFENSE );
 }
 
 static void CommonSkill_RegisterDefense(void)
