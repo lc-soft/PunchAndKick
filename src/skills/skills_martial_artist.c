@@ -11,7 +11,10 @@
 #define ATK_KNEEHIT_2		"knee hit attack step 2"
 
 /** 可擒获范围的水平宽度 */
-#define CATCH_RANGE_X_WIDTH	60
+#define CATCH_RANGE_X_WIDTH	40
+
+#define ZSPEED_KNEEHIT	100
+#define ZACC_KNEEHIT	100
 
 static int AttackDamage_Elbow1( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
@@ -250,9 +253,6 @@ static void GamePlayer_AtLandingByAfterKneeHit( LCUI_Widget *widget )
 	}
 	player->other = NULL;
 }
-
-#define ZSPEED_KNEEHIT	100
-#define ZACC_KNEEHIT	100
 
 static void AtKneeHitUpdate( LCUI_Widget *widget )
 {
