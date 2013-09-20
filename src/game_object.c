@@ -463,7 +463,9 @@ static int GameObject_ProcTouch( LCUI_Widget *widget )
 			continue;
 		}
 		if( RangeBox_IsIntersect(&my_range, &other_range) ) {
-			obj->at_touch( widget, tmp_obj );
+			if( obj->at_touch) {
+				obj->at_touch( widget, tmp_obj );
+			}
 		}
 	}
 	return 0;
