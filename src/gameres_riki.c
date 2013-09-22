@@ -5,27 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-typedef struct ActionFrameInfo_ {
-	LCUI_BOOL enable;
-	LCUI_BOOL new_attack;
-	LCUI_BOOL horiz_flip;
-	char *graph_name;
-	int remain_time;
-	int offset_x, offset_y;
-	RangeBox hit, atk;
-} ActionFrameInfo;
-
-#define MAX_FRAME_NUM	10
-
-typedef struct ActionInfo_ {
-	int action_type;
-	LCUI_BOOL replay;
-	ActionFrameInfo frame[MAX_FRAME_NUM];
-} ActionInfo;
-
 #define MAX_ACTION_NUM	54
-#define END_ACTION_FRAME {FALSE,}
-
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
@@ -809,77 +789,12 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 };
 
-/** 载入角色的动作动画资源 */
-ActionData* ActionRes_LoadRiki( int action_type )
+int ActionRes_Riki_GetActionTotalNum(void)
 {
-	int i, j;
-	ActionData *action;
-	LCUI_Graph *p_graph, graph_buff, tmp_graph;
-
-	action = Action_Create();
-	/* 在动作数据集里查找指定动作的数据 */
-	for(i=0; i<MAX_ACTION_NUM; ++i) {
-		if( action_set[i].action_type == action_type ) {
-			break;
-		}
-	}
-	/* 未找到则退出 */
-	if( i >= MAX_ACTION_NUM ) {
-		return NULL;
-	}
-	/* 设置该动作是否重复播放 */
-	Action_SetReplay( action, action_set[i].replay );
-	for(j=0; j<MAX_FRAME_NUM; ++j) {
-		if( !action_set[i].frame[j].enable ) {
-			break;
-		}
-		Graph_Init( &graph_buff );
-		/* 获取动作图资源 */
-		GameGraphRes_GetGraph(
-			ACTION_RES_CLASS_RIKI, 
-			action_set[i].frame[j].graph_name, 
-			&graph_buff
-		);
-		/* 若需要水平翻转 */
-		if( action_set[i].frame[j].horiz_flip ) {
-			Graph_Init( &tmp_graph );
-			tmp_graph.color_type = graph_buff.color_type;
-			Graph_HorizFlip( &graph_buff, &tmp_graph );
-			p_graph = &tmp_graph;
-		} else {
-			p_graph = &graph_buff;
-		}
-		/* 添加一帧动作 */
-		Action_AddFrame(
-			action, 
-			action_set[i].frame[j].offset_x, 
-			action_set[i].frame[j].offset_y,
-			p_graph,
-			action_set[i].frame[j].remain_time
-		);
-		/* 设置受攻击范围 */
-		Action_SetHitRange(
-			action, j, action_set[i].frame[j].hit 
-		);
-		/* 设置攻击范围 */
-		Action_SetAttackRange(
-			action, j, action_set[i].frame[j].atk
-		);
-		/* 设置该帧动作是否产生新攻击 */
-		Action_SetNewAttack(
-			action, j, action_set[i].frame[j].new_attack
-		);
-	}
-	return action;
+	return MAX_ACTION_NUM;
 }
 
-/** 载入指定角色的动作动画 */
-ActionData* ActionRes_Load( int id, int action_type )
+const ActionInfo *ActionRes_Riki_GetActionSet(void)
 {
-	switch(id) {
-	case ROLE_RIKI: return ActionRes_LoadRiki( action_type );
-	default:
-		break;
-	}
-	return NULL;
+	return action_set;
 }

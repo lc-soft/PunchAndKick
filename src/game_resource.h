@@ -3,9 +3,29 @@
 #define __GAME_RESOURCE_H__
 
 #define ACTION_RES_CLASS_RIKI	"graphics::action::riki"
+#define ACTION_RES_CLASS_TORAJI	"graphics::action::toraji"
 #define MAIN_RES		"graphics::main"
 #define SCENES_RES		"graphics::senes"
 #define FONT_RES		"graphics::font"
+
+#define MAX_FRAME_NUM	10
+#define END_ACTION_FRAME {FALSE,}
+
+typedef struct ActionFrameInfo_ {
+	LCUI_BOOL enable;
+	LCUI_BOOL new_attack;
+	LCUI_BOOL horiz_flip;
+	char *graph_name;
+	int remain_time;
+	int offset_x, offset_y;
+	RangeBox hit, atk;
+} ActionFrameInfo;
+
+typedef struct ActionInfo_ {
+	int action_type;
+	LCUI_BOOL replay;
+	ActionFrameInfo frame[MAX_FRAME_NUM];
+} ActionInfo;
 
 /** 初始化 */
 LCUI_API int GameGraphRes_Init( void );
