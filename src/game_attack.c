@@ -142,6 +142,8 @@ void Game_ProcAttack(void)
 			/* 计算真实伤害 */
 			true_damage = p_info->get_damage( p_data->attacker, p_data->victim, p_data->victim_state );
 			DEBUG_MSG("attack type: %s, damage: %d\n", p_data->attack_type_name, true_damage);
+		} else {
+			true_damage = 0;
 		}
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= true_damage;
