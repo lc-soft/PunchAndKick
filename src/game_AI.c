@@ -483,10 +483,19 @@ static int RandIdea_Select( RandIdea* ideas, int n_idea )
 	double *idea_amount, avg;
 	int i, j, num, total_amount, val;
 	
+	if( n_idea < 1 ) {
+		return -1;
+	}
 	num = rand()%10000;
 	total_amount = 10000;
 	idea_amount = (double*)malloc( n_idea *sizeof(double) );
+	if( !idea_amount ) {
+		return -2;
+	}
 	idea_pos = (int*)malloc( n_idea *sizeof(int) );
+	if( !idea_pos ) {
+		return -3;
+	}
 	for(avg=0,i=0; i<n_idea; ++i) {
 		if( ideas[i].probability > total_amount ) {
 			ideas[i].probability = total_amount;
