@@ -203,6 +203,9 @@ int GamePlayer_SetSkillData(	GamePlayer *player,
 	}
 	if( !p_rec->data ) {
 		p_rec->data = malloc( data_size );
+		if( !p_rec->data ) {
+			return -2;
+		}
 	}
 	memcpy( p_rec->data, p_data, data_size );
 	return 0;
