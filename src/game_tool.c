@@ -4,6 +4,7 @@
 #include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_GRAPH_H
+#include "game_object.h"
 #include "game_resource.h"
 
 static void test_write(void)
@@ -47,9 +48,10 @@ static void test_read(void)
 	}
 }
 
-#define ACTION_FILE_NUM 68
-#define MAIN_FILE_NUM	2
-#define FONT_FILE_NUM	11
+#define RIKI_ACTION_FILE_NUM	67
+#define TORAJI_ACTION_FILE_NUM	48
+#define MAIN_FILE_NUM		2
+#define FONT_FILE_NUM		11
 
 struct fileinfo {
 	char *filepath;
@@ -79,10 +81,9 @@ const struct fileinfo scenes_file_info={
 	"default-scene.png","default"
 };
 
-const struct fileinfo action_file_info[ACTION_FILE_NUM]={
+const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"A-attack-01.png","A-attack-01"},
 	{"A-attack-02.png","A-attack-02"},
-	{"A-attack-03.png","A-attack-03"},
 	{"A-sprint-attack-01.png","A-sprint-attack-01"},
 	{"A-sprint-attack-02.png","A-sprint-attack-02"},
 	{"B-attack-01.png","B-attack-01"},
@@ -150,6 +151,92 @@ const struct fileinfo action_file_info[ACTION_FILE_NUM]={
 	{"ride-attack-02.png","ride-attack-02"}
 };
 
+const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
+	{"pose-01.png", "pose-01"},
+	{"pose-02.png", "pose-02"},
+	{"ready.png","ready"},
+	{"stance.png","stance"},
+	{"walk-01.png","walk-01"},
+	{"walk-02.png","walk-02"},
+	{"walk-03.png","walk-03"},
+	{"walk-04.png","walk-04"},
+	{"run-01.png","run-01"},
+	{"run-02.png","run-02"},
+	{"run-03.png","run-03"},
+	{"run-04.png","run-04"},
+	{"run-05.png","run-05"},
+	{"run-06.png","run-06"},
+	{"A-attack-01.png","A-attack-01"},
+	{"A-attack-02.png","A-attack-02"},
+	{"B-attack-01.png","B-attack-01"},
+	{"B-attack-02.png","B-attack-02"},
+	{"A-sprint-attack-01.png","A-sprint-attack-01"},
+	{"A-sprint-attack-02.png","A-sprint-attack-02"},
+	{"A-sprint-attack-03.png","A-sprint-attack-03"},
+	{"A-sprint-attack-04.png","A-sprint-attack-04"},
+	{"A-sprint-attack-05.png","A-sprint-attack-05"},
+	{"A-sprint-attack-06.png","A-sprint-attack-06"},
+	{"jump.png","jump"},
+	{"squat.png","squat"},
+	{"defense.png","defense"},
+	{"fall.png","fall"},
+	{"final-blow-01.png","final-blow-01"},
+	{"final-blow-02.png","final-blow-02"},
+	{"hit-fly.png","hit-fly"},
+	{"hit.png","hit"},
+	{"lying-hit.png","lying-hit"},
+	{"lying.png","lying"},
+	{"tummy.png","tummy"},
+	{"stomp.png","stomp"},
+	{"kick.png","kick"},
+	{"roll-01.png","roll-01"},
+	{"roll-02.png","roll-02"},
+	{"roll-03.png","roll-03"},
+	{"roll-04.png","roll-04"},
+	{"roll-05.png","roll-05"},
+	{"roll-06.png","roll-06"},
+	{"roll-07.png","roll-07"},
+	{"roll-08.png","roll-08"},
+	{"spin-up-01.png","spin-up-01"},
+	{"spin-up-02.png","spin-up-02"},
+	{"spin-up-03.png","spin-up-03"}
+};
+
+static void ActionRes_Toraji_WirteToFile( void )
+{
+	int i, class_id;
+	LCUI_Graph graph_buff;
+
+	GameGraphRes_Init();
+	class_id = GameGraphRes_AddClass(ACTION_RES_CLASS_TORAJI);
+	for(i=0; i<TORAJI_ACTION_FILE_NUM; ++i) {
+		Graph_Init( &graph_buff );
+		Graph_LoadImage( toraji_action_file_info[i].filepath, &graph_buff );
+		GameGraphRes_AddGraph( class_id, toraji_action_file_info[i].name, &graph_buff );
+	}
+	GameGraphRes_WriteToFile( "action-toraji.data", ACTION_RES_CLASS_TORAJI );
+	GameGraphRes_FreeAll();
+}
+
+static void ActionRes_Toraji_ReadFromFile(void)
+{
+	int i;
+	LCUI_Graph graph_buff;
+
+	GameGraphRes_Init();
+	GameGraphRes_LoadFromFile( "action-toraji.data" );
+	for(i=0; i<TORAJI_ACTION_FILE_NUM; ++i) {
+		Graph_Init( &graph_buff );
+		GameGraphRes_GetGraph( 
+			ACTION_RES_CLASS_TORAJI, 
+			riki_action_file_info[i].name,
+			&graph_buff 
+		);
+		Graph_WritePNG( toraji_action_file_info[i].filepath, &graph_buff );
+		_DEBUG_MSG("[%d/%d]: %s\n", i, TORAJI_ACTION_FILE_NUM, toraji_action_file_info[i].filepath);
+	}
+	GameGraphRes_FreeAll();
+}
 static void ActionRes_Riki_WirteToFile( void )
 {
 	int i, class_id;
@@ -157,10 +244,10 @@ static void ActionRes_Riki_WirteToFile( void )
 
 	GameGraphRes_Init();
 	class_id = GameGraphRes_AddClass(ACTION_RES_CLASS_RIKI);
-	for(i=0; i<ACTION_FILE_NUM; ++i) {
+	for(i=0; i<RIKI_ACTION_FILE_NUM; ++i) {
 		Graph_Init( &graph_buff );
-		Graph_LoadImage( action_file_info[i].filepath, &graph_buff );
-		GameGraphRes_AddGraph( class_id, action_file_info[i].name, &graph_buff );
+		Graph_LoadImage( riki_action_file_info[i].filepath, &graph_buff );
+		GameGraphRes_AddGraph( class_id, riki_action_file_info[i].name, &graph_buff );
 	}
 	GameGraphRes_WriteToFile( "action-riki.data", ACTION_RES_CLASS_RIKI );
 	GameGraphRes_FreeAll();
@@ -221,15 +308,15 @@ static void ActionRes_Riki_ReadFromFile(void)
 
 	GameGraphRes_Init();
 	GameGraphRes_LoadFromFile( "action-riki.data" );
-	for(i=0; i<ACTION_FILE_NUM; ++i) {
+	for(i=0; i<RIKI_ACTION_FILE_NUM; ++i) {
 		Graph_Init( &graph_buff );
 		GameGraphRes_GetGraph( 
 			ACTION_RES_CLASS_RIKI, 
-			action_file_info[i].name,
+			riki_action_file_info[i].name,
 			&graph_buff 
 		);
-		Graph_WritePNG( action_file_info[i].filepath, &graph_buff );
-		_DEBUG_MSG("[%d/%d]: %s\n", i, ACTION_FILE_NUM, action_file_info[i].filepath);
+		Graph_WritePNG( riki_action_file_info[i].filepath, &graph_buff );
+		_DEBUG_MSG("[%d/%d]: %s\n", i, RIKI_ACTION_FILE_NUM, riki_action_file_info[i].filepath);
 	}
 	GameGraphRes_FreeAll();
 }
@@ -244,9 +331,11 @@ int main(int argc, char** argv)
 	}
 #endif
 	if( argc == 2 ) {
-		ActionRes_Riki_ReadFromFile();
+		//ActionRes_Riki_ReadFromFile();
+		ActionRes_Toraji_ReadFromFile();
 	} else {
-		FontGraphRes_WirteToFile();
+		ActionRes_Toraji_WirteToFile();
+		//FontGraphRes_WirteToFile();
 		//ScenesGraphRes_WirteToFile();
 		//ActionRes_Riki_WirteToFile();
 		//MainGraphRes_WirteToFile();
