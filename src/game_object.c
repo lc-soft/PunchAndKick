@@ -1558,7 +1558,7 @@ LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(
 					int action_id )
 {
 	int i, n;
-	ActionRec *p_rec;
+	ActionRec *p_rec = NULL;
 	ActionFrameData *frame;
 	GameObject *obj;
 	RangeBox range;
