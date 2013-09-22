@@ -44,7 +44,7 @@ static void StatusBar_ExecInit( LCUI_Widget *widget )
 	data->max_hp = 2000;
 	wcsncpy( data->player_name, L"匿名", 8 );
 	data->player_name[8] = 0;
-	wcsncpy( data->type_name, L"NONE", 8 );
+	wcsncpy( data->type_name, L"NONE", 5 );
 	data->player_name[5] = 0;
 	/* 创建部件 */
 	data->img_box = Widget_New(NULL);
