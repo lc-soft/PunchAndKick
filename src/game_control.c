@@ -1365,6 +1365,7 @@ int Game_Init(void)
 		return ret;
 	}
 	ret = GameGraphRes_LoadFromFile("action-riki.data");
+	ret |= GameGraphRes_LoadFromFile("action-toraji.data");
 	if( ret != 0 ) {
 		LCUI_MessageBoxW(
 			MB_ICON_ERROR,
@@ -1422,7 +1423,7 @@ int Game_Init(void)
 	/* 设置1号玩家的控制键 */
 	GamePlayer_SetControlKey( 1, &ctrlkey );
 	/* 设置1号玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_RIKI );
+	GamePlayer_SetRole( 1, ROLE_TORAJI );
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
 
@@ -1440,7 +1441,7 @@ int Game_Init(void)
 	/* 设置2号玩家的角色 */
 	GamePlayer_SetRole( 2, ROLE_RIKI );
 	/* 设置2号玩家由人来控制 */
-	GamePlayer_ControlByHuman( 2, FALSE );
+	GamePlayer_ControlByHuman( 2, TRUE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
