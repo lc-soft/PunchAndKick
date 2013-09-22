@@ -213,8 +213,7 @@ static void LifeBar_UpdateFlashBar( void *arg )
 			/* 在血条前面显示一个闪光，表示在之前那个血条里扣除的血量 */
 			Widget_Show( data->flashbar[0] );
 
-			sprintf( scale_str, "100%%", scale );
-			Widget_SetSize( data->flashbar[1], scale_str, "100%" );
+			Widget_SetSize( data->flashbar[1], "100%", "100%" );
 			Widget_SetAlpha( data->flashbar[1], 255 );
 			/* 在本血条后面显示一个闪光，表示在当前血条里扣除的血量 */
 			Widget_Show( data->flashbar[1] );
