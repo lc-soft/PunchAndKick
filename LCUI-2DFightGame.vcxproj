@@ -119,6 +119,7 @@
     <ClCompile Include="src\skills\game_skill.c" />
     <ClCompile Include="src\skills\skills_common.c" />
     <ClCompile Include="src\skills\skills_martial_artist.c" />
+    <ClCompile Include="src\skills\skills_tiger.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h" />
@@ -137,6 +138,7 @@
     <ClInclude Include="src\skills\game_skill.h" />
     <ClInclude Include="src\skills\skills_common.h" />
     <ClInclude Include="src\skills\skills_martial_artist.h" />
+    <ClInclude Include="src\skills\skills_tiger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
