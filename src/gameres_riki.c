@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	54
+#define MAX_ACTION_NUM	56
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
@@ -491,6 +491,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
+	/* 降落 动作 */
+	{ ACTION_FALL, FALSE, {
+		{ TRUE, FALSE, FALSE, "jump-stomp", 100, 0, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 16}
+		},
+		END_ACTION_FRAME
+	}},
 	/* 跳跃肘击 动作 */
 	{ ACTION_JUMP_ELBOW, FALSE, {
 		{ TRUE, FALSE, FALSE, "jump-elbow", 100, 0, 0,
@@ -787,6 +795,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
+	/* 半躺 动作 */
+	{ ACTION_HALF_LYING, FALSE, {
+		{ TRUE, FALSE, FALSE, "half-lying", 50, 0, 0,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}}
 };
 
 int ActionRes_Riki_GetActionTotalNum(void)
