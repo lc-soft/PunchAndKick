@@ -48,12 +48,14 @@ static int global_action_list[]={
 	ACTION_ELBOW,
 	ACTION_JUMP_ELBOW,
 	ACTION_JUMP_STOMP,
+	ACTION_FALL,
 	ACTION_KICK,
 	ACTION_SPINHIT,
 	ACTION_BOMBKICK,
 	ACTION_MACH_STOMP,
 	ACTION_CATCH,
 	ACTION_BE_CATCH,
+	ACTION_HALF_LYING,
 	ACTION_BACK_BE_CATCH,
 	ACTION_CATCH_SKILL_FA,
 	ACTION_CATCH_SKILL_BA,
@@ -265,6 +267,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_SJUMP:
 		action_type = ACTION_JUMP;
 		break;
+	case STATE_FALL:
+		action_type = ACTION_FALL;
+		break;
 	case STATE_HIT:
 		action_type = ACTION_HIT;
 		break;
@@ -326,6 +331,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		break;
 	case STATE_BE_CATCH:
 		action_type = ACTION_BE_CATCH;
+		break;
+	case STATE_HALF_LYING:
+		action_type = ACTION_HALF_LYING;
 		break;
 	case STATE_BACK_BE_CATCH:
 		action_type = ACTION_BACK_BE_CATCH;
@@ -1175,7 +1183,11 @@ int GamePlayer_SetRole( int player_id, int role_id )
 	case PLAYER_TYPE_MARTIAL_ARTIST:
 		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
-	default:break;
+		break;
+	case PLAYER_TYPE_TIGER:
+		GamePlayer_EnableSkill( player, SKILLNAME_SPIN_DRILL );
+	default:
+		break;
 	}
 
 	return 0;
@@ -1389,8 +1401,8 @@ int Game_Init(void)
 	player_data[1].id = 2;
 	player_data[0].enable = TRUE;
 	player_data[1].enable = TRUE;
-	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
-	player_data[1].type = PLAYER_TYPE_MARTIAL_ARTIST;
+	player_data[0].type = PLAYER_TYPE_TIGER;
+	player_data[1].type = PLAYER_TYPE_TIGER;
 	
 	player_data[0].property.max_hp = 2000;
 	player_data[0].property.cur_hp = 2000;
@@ -1439,7 +1451,7 @@ int Game_Init(void)
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
 	/* 设置2号玩家的角色 */
-	GamePlayer_SetRole( 2, ROLE_RIKI );
+	GamePlayer_SetRole( 2, ROLE_TORAJI );
 	/* 设置2号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 2, TRUE );
 	/* 设置响应游戏角色的受攻击信号 */
