@@ -6,8 +6,7 @@
 #include LC_CHARSET_H
 #include <stdio.h>
 
-#include "game_lifebar.h"
-#include "game_resource.h"
+#include "game.h"
 
 #define TYPE_NAME	"GamePlayerStatusBar"
 
