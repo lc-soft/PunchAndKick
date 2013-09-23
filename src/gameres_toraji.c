@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	55
+#define MAX_ACTION_NUM	45
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
@@ -488,6 +488,210 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		{ TRUE, FALSE, FALSE, "final-blow-02", 10, -2, 0,
 			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
 			{-12, -GLOBAL_Y_WIDTH/2, 0, 55, GLOBAL_Y_WIDTH, 64},
+		},
+		END_ACTION_FRAME
+	}},
+	/* B 冲刺攻击动作 */
+	{ ACTION_BS_ATTACK, FALSE, {
+		{ TRUE, TRUE, FALSE, "B-sprint-attack", 50, 0, 0,
+			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 擒住 动作 */
+	{ ACTION_CATCH, FALSE, {
+		{ TRUE, FALSE, FALSE, "catch", 5, 0, 0,
+			{-19, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 正面压制技能B（拉推） 动作 */
+	{ ACTION_CATCH_SKILL_FB, FALSE, {
+		{ TRUE, FALSE, FALSE, "pull", 10, 12, 0,
+			{13, -GLOBAL_Y_WIDTH/2, 0, 54, GLOBAL_Y_WIDTH, 58},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "push", 10, -12, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 背面压制技能B（推） 动作 */
+	{ ACTION_CATCH_SKILL_BB, FALSE, {
+		{ TRUE, FALSE, FALSE, "rest-01", 10, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "push", 10, -12, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 喘气/歇息 动作 */
+	{ ACTION_REST, TRUE, {
+		{ TRUE, FALSE, FALSE, "rest-01", 25, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "rest-02", 25, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 被擒住 动作 */
+	{ ACTION_BE_CATCH, FALSE, {
+		{ TRUE, FALSE, FALSE, "rest-01", 5, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 背面被擒住 动作 */
+	{ ACTION_BACK_BE_CATCH, FALSE, {
+		{ TRUE, FALSE, FALSE, "back-be-catch", 5, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 正面压制技能（A） 动作 */
+	{ ACTION_CATCH_SKILL_FA, TRUE, {
+		{ TRUE, FALSE, FALSE, "spin-up-01", 3, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 50, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "spin-up-02", 3, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 54, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, TRUE, "spin-up-01", 3, 0, 0,
+			{-15, -GLOBAL_Y_WIDTH/2, 8, 64, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "spin-up-03", 3, 0, 0,
+			{-30, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 虚弱奔跑 动作 */
+	{ ACTION_WEAK_RUN, TRUE, {
+		{ TRUE, FALSE, FALSE, "weak-walk", 10, -6, 2,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "rest-01", 10, -6, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 投掷/抛 动作 */
+	{ ACTION_THROW, FALSE, {
+		{ TRUE, FALSE, FALSE, "push", 10, -11, 0,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 被击中 动作 */
+	{ ACTION_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "hit", 10, 0, 0,
+			{-23, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 62},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 被击飞 动作 */
+	{ ACTION_HIT_FLY, FALSE, {
+		{ TRUE, FALSE, FALSE, "hit-fly", 100, -6, 0,
+			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, GLOBAL_Y_WIDTH, 64},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 被击飞（头朝地坠落） 动作 */
+	{ ACTION_HIT_FLY_FALL, FALSE, {
+		{ TRUE, FALSE, FALSE, "hit-fly-fall", 100, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 降落 动作 */
+	{ ACTION_FALL, FALSE, {
+		{ TRUE, FALSE, FALSE, "fall", 100, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 躺地动作 */
+	{ ACTION_LYING, FALSE, {
+		{ TRUE, FALSE, FALSE, "lying", 100, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 躺着被击中 动作 */
+	{ ACTION_LYING_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "lying-hit", 10, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 趴地动作 */
+	{ ACTION_TUMMY, FALSE, {
+		{ TRUE, FALSE, FALSE, "tummy", 100, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 趴着被击中 动作 */
+	{ ACTION_TUMMY_HIT, FALSE, {
+		{ TRUE, FALSE, FALSE, "tummy-hit", 10, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 躺着濒死 动作 */
+	{ ACTION_LYING_DYING, TRUE, {
+		{ TRUE, FALSE, FALSE, "lying", 5, 0, 0,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lying-hit", 5, 0, 0,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 趴着濒死 动作 */
+	{ ACTION_TUMMY_DYING, TRUE, {
+		{ TRUE, FALSE, FALSE, "tummy", 5, 0, 0,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "tummy-hit", 5, 0, 0,
+			{0,0,0,0},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 半躺 动作 */
+	{ ACTION_HALF_LYING, FALSE, {
+		{ TRUE, FALSE, FALSE, "half-lying", 50, 0, 0,
+			{0,0,0,0},
+			{0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}}
