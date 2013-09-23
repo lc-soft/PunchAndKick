@@ -49,7 +49,7 @@ static void test_read(void)
 }
 
 #define RIKI_ACTION_FILE_NUM	67
-#define TORAJI_ACTION_FILE_NUM	48
+#define TORAJI_ACTION_FILE_NUM	58
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
 
@@ -156,6 +156,7 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"pose-02.png", "pose-02"},
 	{"ready.png","ready"},
 	{"stance.png","stance"},
+	{"half-lying.png","half-lying"},
 	{"walk-01.png","walk-01"},
 	{"walk-02.png","walk-02"},
 	{"walk-03.png","walk-03"},
@@ -179,7 +180,7 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"jump.png","jump"},
 	{"squat.png","squat"},
 	{"defense.png","defense"},
-	{"fall.png","fall"},
+	{"hit-fly-fall.png","hit-fly-fall"},
 	{"final-blow-01.png","final-blow-01"},
 	{"final-blow-02.png","final-blow-02"},
 	{"hit-fly.png","hit-fly"},
@@ -199,7 +200,16 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"roll-08.png","roll-08"},
 	{"spin-up-01.png","spin-up-01"},
 	{"spin-up-02.png","spin-up-02"},
-	{"spin-up-03.png","spin-up-03"}
+	{"spin-up-03.png","spin-up-03"},
+	{"catch.png","catch"},
+	{"B-sprint-attack.png","B-sprint-attack"},
+	{"rest-01.png","rest-01"},
+	{"rest-02.png","rest-02"},
+	{"push.png","push"},
+	{"pull.png","pull"},
+	{"back-be-catch.png","back-be-catch"},
+	{"weak-walk.png","weak-walk"},
+	{"fall.png","fall"}
 };
 
 static void ActionRes_Toraji_WirteToFile( void )
@@ -331,8 +341,8 @@ int main(int argc, char** argv)
 	}
 #endif
 	if( argc == 2 ) {
-		//ActionRes_Riki_ReadFromFile();
-		ActionRes_Toraji_ReadFromFile();
+		ActionRes_Riki_ReadFromFile();
+		//ActionRes_Toraji_ReadFromFile();
 	} else {
 		ActionRes_Toraji_WirteToFile();
 		//FontGraphRes_WirteToFile();
