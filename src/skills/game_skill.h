@@ -3,6 +3,7 @@
 
 #include "skills_common.h"
 #include "skills_martial_artist.h"
+#include "skills_tiger.h"
 
 /** 初始化技能库 */
 void SkillLibrary_Init(void);

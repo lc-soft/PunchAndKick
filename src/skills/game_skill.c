@@ -27,6 +27,7 @@ void SkillLibrary_Init(void)
 	skill_library_init = TRUE;
 	CommonSkill_Register();
 	MartialArtistSkill_Register();
+	TigerSkill_Register();
 }
 
 /** 向技能库中添加新技能信息 */
