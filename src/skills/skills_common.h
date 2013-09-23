@@ -133,4 +133,7 @@ void CommonSkill_SetPositionAtCatch( GamePlayer *self, GamePlayer *other );
 /** 注册通用技能 */
 void CommonSkill_Register(void);
 
+/** 在擒获范围内，获取处于冲撞攻击状态的玩家 */
+GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self );
+
 #endif

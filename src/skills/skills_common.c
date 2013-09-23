@@ -22,6 +22,9 @@
 #define ZACC_SPINHIT_2		1000
 #define XSPEED_SPINHIT_2	300
 
+/** 可擒获范围的水平宽度 */
+#define CATCH_RANGE_X_WIDTH	40
+
 /** 计算A攻击的伤害值 */
 static int AttackDamage_AAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
@@ -2849,4 +2852,51 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterCatch();
 	CommonSkill_RegisterPush();
 	CommonSkill_RegisterJumpSpinKick();
+}
+
+/** 在擒获范围内，获取处于冲撞攻击状态的玩家 */
+GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
+{
+	RangeBox catch_range;
+	LCUI_Widget *a_attacker, *b_attacker;
+	/* 自己必须处于READY或STANCE状态 */
+	if( self->state != STATE_READY
+	 && self->state != STATE_STANCE ) {
+		 return NULL;
+	}
+	catch_range.x = 0;
+	catch_range.y = 0;
+	catch_range.z = 0;
+	catch_range.x_width = CATCH_RANGE_X_WIDTH;
+	catch_range.y_width = GLOBAL_Y_WIDTH;
+	catch_range.z_width = 40;
+	/* 获取正使用冲撞A/B攻击的游戏对象 */
+	a_attacker = GameObject_GetObjectInRange( 
+				self->object, catch_range,
+				TRUE, ACTION_AS_ATTACK );
+	b_attacker = GameObject_GetObjectInRange( 
+				self->object, catch_range, 
+				TRUE, ACTION_BS_ATTACK );
+	/* 若有两个 */
+	 if( a_attacker && b_attacker ) {
+		 /* 根据自己的朝向，确保a_attacker记录的是离自己最近的攻击者 */
+		if( GamePlayer_IsLeftOriented(self) ) {
+			if(GameObject_GetX(a_attacker)
+			 < GameObject_GetX(b_attacker) ) {
+				 a_attacker = b_attacker;
+			 }
+		} else {
+			if(GameObject_GetX(b_attacker)
+			 < GameObject_GetX(a_attacker) ) {
+				 a_attacker = b_attacker;
+			 }
+		}
+	}
+	else if( b_attacker ) {
+		a_attacker = b_attacker;
+	}
+	if( !a_attacker ) {
+		return NULL;
+	}
+	return GamePlayer_GetPlayerByWidget( a_attacker );
 }
