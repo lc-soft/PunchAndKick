@@ -15,8 +15,13 @@
 static int AttackDamage_SpinDrill( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
 	double damage;
-	damage = 20 + attacker->property.punch/5.0;
-	return (int)1000;
+	damage = victim->property.cur_hp * 0.5;
+	if( damage > 800 ) {
+		damage = 800;
+	} else if( damage < 100 ) {
+		damage = 100;
+	}
+	return DamageReduce( victim, victim_state, (int)damage );
 }
 
 static LCUI_BOOL CanUseSpinDrill( GamePlayer *player )
@@ -62,6 +67,7 @@ static void StartBounce( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_FALL );
 	GamePlayer_LockAction( player );
+	Game_RecordAttack( player, ATK_SPIN_DRILL, player->other, STATE_HALF_LYING );
 	player->other = NULL;
 	GameObject_AtLanding(
 		player->object, ZSPEED_BOUNCE,
