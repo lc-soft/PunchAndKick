@@ -1401,7 +1401,7 @@ int Game_Init(void)
 	player_data[1].id = 2;
 	player_data[0].enable = TRUE;
 	player_data[1].enable = TRUE;
-	player_data[0].type = PLAYER_TYPE_TIGER;
+	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
 	player_data[1].type = PLAYER_TYPE_TIGER;
 	
 	player_data[0].property.max_hp = 2000;
@@ -1410,7 +1410,7 @@ int Game_Init(void)
 	player_data[0].property.kick = 100;
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
-	player_data[0].property.speed = 100;
+	player_data[0].property.speed = 150;
 	
 	player_data[1].property.max_hp = 2000;
 	player_data[1].property.cur_hp = 2000;
@@ -1418,7 +1418,7 @@ int Game_Init(void)
 	player_data[1].property.kick = 300;
 	player_data[1].property.punch = 300;
 	player_data[1].property.throw = 300;
-	player_data[1].property.speed = 200;
+	player_data[1].property.speed = 150;
 
 	Graph_Init( &img_shadow );
 	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
@@ -1435,7 +1435,7 @@ int Game_Init(void)
 	/* 设置1号玩家的控制键 */
 	GamePlayer_SetControlKey( 1, &ctrlkey );
 	/* 设置1号玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_TORAJI );
+	GamePlayer_SetRole( 1, ROLE_RIKI );
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
 
@@ -1453,7 +1453,7 @@ int Game_Init(void)
 	/* 设置2号玩家的角色 */
 	GamePlayer_SetRole( 2, ROLE_TORAJI );
 	/* 设置2号玩家由人来控制 */
-	GamePlayer_ControlByHuman( 2, TRUE );
+	GamePlayer_ControlByHuman( 2, FALSE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
