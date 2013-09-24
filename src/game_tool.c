@@ -48,8 +48,8 @@ static void test_read(void)
 	}
 }
 
-#define RIKI_ACTION_FILE_NUM	67
-#define TORAJI_ACTION_FILE_NUM	58
+#define RIKI_ACTION_FILE_NUM	68
+#define TORAJI_ACTION_FILE_NUM	59
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
 
@@ -117,6 +117,7 @@ const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"lift.png","lift"},
 	{"lying-hit.png","lying-hit"},
 	{"lying.png","lying"},
+	{"half-lying.png","half-lying"},
 	{"pull.png","pull"},
 	{"push.png","push"},
 	{"ready-01.png","ready-01"},
@@ -188,6 +189,7 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"lying-hit.png","lying-hit"},
 	{"lying.png","lying"},
 	{"tummy.png","tummy"},
+	{"tummy-hit.png","tummy-hit"},
 	{"stomp.png","stomp"},
 	{"kick.png","kick"},
 	{"roll-01.png","roll-01"},
@@ -239,7 +241,7 @@ static void ActionRes_Toraji_ReadFromFile(void)
 		Graph_Init( &graph_buff );
 		GameGraphRes_GetGraph( 
 			ACTION_RES_CLASS_TORAJI, 
-			riki_action_file_info[i].name,
+			toraji_action_file_info[i].name,
 			&graph_buff 
 		);
 		Graph_WritePNG( toraji_action_file_info[i].filepath, &graph_buff );
@@ -341,13 +343,13 @@ int main(int argc, char** argv)
 	}
 #endif
 	if( argc == 2 ) {
-		ActionRes_Riki_ReadFromFile();
-		//ActionRes_Toraji_ReadFromFile();
+		//ActionRes_Riki_ReadFromFile();
+		ActionRes_Toraji_ReadFromFile();
 	} else {
-		ActionRes_Toraji_WirteToFile();
+		//ActionRes_Toraji_WirteToFile();
 		//FontGraphRes_WirteToFile();
 		//ScenesGraphRes_WirteToFile();
-		//ActionRes_Riki_WirteToFile();
+		ActionRes_Riki_WirteToFile();
 		//MainGraphRes_WirteToFile();
 	}
 	return 0;
