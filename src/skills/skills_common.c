@@ -202,6 +202,7 @@ static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 			GamePlayer_SetRest( player );
 		} else {
 			GamePlayer_UnlockAction( player );
+			GamePlayer_UnlockMotion( player );
 			GamePlayer_SetReady( player );
 		}
 		break;
