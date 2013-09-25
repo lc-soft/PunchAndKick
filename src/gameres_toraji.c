@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	45
+#define MAX_ACTION_NUM	53
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
@@ -607,11 +607,95 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
-	/* 降落z 动作 */
+	/* 降落 动作 */
 	{ ACTION_FALL, FALSE, {
 		{ TRUE, FALSE, FALSE, "fall", 100, 0, 0,
 			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
 			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 跳跃踩踏 动作 */
+	{ ACTION_JUMP_STOMP, FALSE, {
+		{ TRUE, FALSE, FALSE, "fall", 100, 0, 0,
+			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并站立 动作 */
+	{ ACTION_LIFT_STANCE, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并行走 动作 */
+	{ ACTION_LIFT_WALK, TRUE, {
+		{ TRUE, FALSE, FALSE, "lift-walk-01", 10, 0, -2,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-walk-02", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-walk-03", 10, 0, -2,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-walk-02", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并奔跑 动作 */
+	{ ACTION_LIFT_RUN, TRUE, {
+		{ TRUE, FALSE, FALSE, "lift-run-01", 10, 0, 10,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "lift-walk-02", 5, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并跳跃 动作 */
+	{ ACTION_LIFT_JUMP, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift-jump", 10, 0, 10,
+			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 举着并下落 动作 */
+	{ ACTION_LIFT_FALL, FALSE, {
+		{ TRUE, FALSE, FALSE, "lift-fall", 10, 0, 10,
+			{-21, -GLOBAL_Y_WIDTH/2, 0, 42, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 骑乘 动作 */
+	{ ACTION_RIDE, FALSE, {
+		{ TRUE, FALSE, FALSE, "ride", 100, 0, 5,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 骑乘攻击 动作 */
+	{ ACTION_RIDE_ATTACK, FALSE, {
+		{ TRUE, FALSE, FALSE, "ride-attack-01", 5, 0, 5,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
+			{0,0,0,0}
+		},
+		{ TRUE, FALSE, FALSE, "ride-attack-02", 5, 0, 5,
+			{-12, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 48},
+			{0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
