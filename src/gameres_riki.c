@@ -277,14 +277,6 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, -GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -14, 0,
-			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, -GLOBAL_Y_WIDTH, 62},
-			{0,0,0,0,0,0} 
-		},
-		{ TRUE, FALSE, FALSE, "A-attack-02", 100, -14, 0,
-			{-18, -GLOBAL_Y_WIDTH/2, 0, 38, -GLOBAL_Y_WIDTH, 62},
-			{-13, -GLOBAL_Y_WIDTH/2, 31, 36, GLOBAL_Y_WIDTH, 18},
-		},
 		END_ACTION_FRAME
 	}},
 	/* B 冲刺跳跃攻击动作 */
