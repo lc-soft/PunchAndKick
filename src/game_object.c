@@ -771,10 +771,15 @@ static void FrameControl_RemainFrame(void)
 	remaining_frames = one_sec_total_frame;
 	remaining_frames -= one_sec_cur_frames;
 	/* 计算剩余帧的平均停留时间 */
-	
+	if( remaining_frames == 0 ) {
+		/* 增加已经更新的帧数 */
+		++one_sec_cur_frames;
+		return;
+	}
 	//_DEBUG_MSG("cur_frames: %d, remaining_frames: %d, one_sec_lost_ms: %d, n_ms: %d\n", one_sec_cur_frames,remaining_frames, one_sec_lost_ms, n_ms);
 	n_ms /= remaining_frames;
 	if( n_ms < 0 ) {
+		++one_sec_cur_frames;
 		return;
 	}
 	ct = LCUI_GetTickCount();
@@ -792,7 +797,6 @@ static void FrameControl_RemainFrame(void)
 		fclose( fp );
 	}
 #endif
-	/* 增加已经更新的帧数 */
 	++one_sec_cur_frames;
 }
 
