@@ -311,6 +311,8 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		action_type = ACTION_JUMP_ELBOW;
 		break;
 	case STATE_RIDE_JUMP:
+		action_type = ACTION_FALL;
+		break;
 	case STATE_JUMP_STOMP:
 		action_type = ACTION_JUMP_STOMP;
 		break;
