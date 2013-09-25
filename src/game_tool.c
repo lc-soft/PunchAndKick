@@ -49,7 +49,7 @@ static void test_read(void)
 }
 
 #define RIKI_ACTION_FILE_NUM	68
-#define TORAJI_ACTION_FILE_NUM	59
+#define TORAJI_ACTION_FILE_NUM	73
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
 
@@ -211,7 +211,21 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"pull.png","pull"},
 	{"back-be-catch.png","back-be-catch"},
 	{"weak-walk.png","weak-walk"},
-	{"fall.png","fall"}
+	{"fall.png","fall"},
+	{"defense++.png","defense++"},
+	{"ride.png","ride"},
+	{"ride-attack-01.png","ride-attack-01"},
+	{"ride-attack-02.png","ride-attack-02"},
+	{"lift-fall.png","lift-fall"},
+	{"lift.png","lift"},
+	{"lift-jump.png","lift-jump"},
+	{"lift-run-01.png","lift-run-01"},
+	{"lift-walk-01.png","lift-walk-01"},
+	{"lift-walk-02.png","lift-walk-02"},
+	{"lift-walk-03.png","lift-walk-03"},
+	{"sit.png","sit"},
+	{"jump-elbow.png","jump-elbow"},
+	{"be-push.png","be-push"}
 };
 
 static void ActionRes_Toraji_WirteToFile( void )
@@ -346,10 +360,10 @@ int main(int argc, char** argv)
 		//ActionRes_Riki_ReadFromFile();
 		ActionRes_Toraji_ReadFromFile();
 	} else {
-		//ActionRes_Toraji_WirteToFile();
+		ActionRes_Toraji_WirteToFile();
 		//FontGraphRes_WirteToFile();
 		//ScenesGraphRes_WirteToFile();
-		ActionRes_Riki_WirteToFile();
+		//ActionRes_Riki_WirteToFile();
 		//MainGraphRes_WirteToFile();
 	}
 	return 0;
