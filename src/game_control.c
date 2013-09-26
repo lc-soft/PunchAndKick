@@ -1176,6 +1176,15 @@ int GamePlayer_SetRole( int player_id, int role_id )
 	if( player == NULL ){
 		return -1;
 	}
+	switch( role_id ) {
+	case ROLE_RIKI:
+		 player->type = PLAYER_TYPE_MARTIAL_ARTIST;
+		 break;
+	case ROLE_TORAJI:
+		player->type = PLAYER_TYPE_TIGER;
+	default:
+		break;
+	}
 	player->role_id = role_id;
 	/* 初始化角色动作动画 */
 	GamePlayer_InitAction( player, role_id );
@@ -1403,9 +1412,7 @@ int Game_Init(void)
 	player_data[1].id = 2;
 	player_data[0].enable = TRUE;
 	player_data[1].enable = TRUE;
-	player_data[0].type = PLAYER_TYPE_MARTIAL_ARTIST;
-	player_data[1].type = PLAYER_TYPE_TIGER;
-	
+
 	player_data[0].property.max_hp = 2000;
 	player_data[0].property.cur_hp = 2000;
 	player_data[0].property.defense = 100;
@@ -1437,7 +1444,7 @@ int Game_Init(void)
 	/* 设置1号玩家的控制键 */
 	GamePlayer_SetControlKey( 1, &ctrlkey );
 	/* 设置1号玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_RIKI );
+	GamePlayer_SetRole( 1, ROLE_TORAJI );
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
 
@@ -1453,7 +1460,7 @@ int Game_Init(void)
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
 	/* 设置2号玩家的角色 */
-	GamePlayer_SetRole( 2, ROLE_TORAJI );
+	GamePlayer_SetRole( 2, ROLE_RIKI );
 	/* 设置2号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 2, FALSE );
 	/* 设置响应游戏角色的受攻击信号 */
