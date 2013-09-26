@@ -1164,6 +1164,7 @@ static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GameObject_SetZ( player->other->object, LIFT_HEIGHT );
 	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
 	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 	/* 在举起者的位置变化时更新被举起者的位置 */
 	GameObject_AtMove( widget, GamePlayer_UpdateLiftPosition );
@@ -1213,6 +1214,7 @@ static void CommonSkill_StartLift( GamePlayer *player )
 	/* 改为下蹲状态 */
 	GamePlayer_ChangeState( player, STATE_LIFT_SQUAT );
 	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtLiftDone );
 	GamePlayer_SetRestTimeOut(
 		other_player, 
@@ -1952,6 +1954,15 @@ static LCUI_BOOL CommonSkill_CanUseRideAAttack( GamePlayer *player )
 		return FALSE;
 	}
 	if( player->state != STATE_RIDE ) {
+		return FALSE;
+	}
+	if( !player->other ) {
+		return FALSE;
+	}
+	if( player->other->state != STATE_LYING
+	&& player->other->state != STATE_LYING_HIT
+	&& player->other->state != STATE_TUMMY
+	&& player->other->state != STATE_TUMMY_HIT ) {
 		return FALSE;
 	}
 	return TRUE;
