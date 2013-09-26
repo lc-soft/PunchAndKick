@@ -59,7 +59,7 @@ static void AtLandingDone( LCUI_Widget *widget )
 	GamePlayer_StartStand( player );
 }
 
-static void StartBounce( LCUI_Widget *widget )
+static void StartLeftBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
@@ -73,11 +73,26 @@ static void StartBounce( LCUI_Widget *widget )
 		player->object, ZSPEED_BOUNCE,
 		-ZACC_BOUNCE, AtLandingDone
 	);
-	if( GamePlayer_IsLeftOriented(player) ) {
-		GameObject_SetXSpeed( player->object, XSPEED_BOUNCE );
-	} else {
-		GameObject_SetXSpeed( player->object, -XSPEED_BOUNCE );
-	}
+	GamePlayer_SetRightOriented( player );
+	GameObject_SetXSpeed( player->object, -XSPEED_BOUNCE );
+}
+
+static void StartRightBounce( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_FALL );
+	GamePlayer_LockAction( player );
+	Game_RecordAttack( player, ATK_SPIN_DRILL, player->other, STATE_HALF_LYING );
+	player->other = NULL;
+	GameObject_AtLanding(
+		player->object, ZSPEED_BOUNCE,
+		-ZACC_BOUNCE, AtLandingDone
+	);
+	GamePlayer_SetLeftOriented( player );
+	GameObject_SetXSpeed( player->object, XSPEED_BOUNCE );
 }
 
 static void AtTargetLandingDone( LCUI_Widget *widget )
@@ -147,11 +162,12 @@ static void StartSpinDrill( GamePlayer *player )
 	GamePlayer_LockAction( player );
 	z_index = Widget_GetZIndex( player->other->object );
 	Widget_SetZIndex( player->object, z_index+1 );
-	GameObject_AtLanding( player->object, ZSPEED_SPIN_DRILL, -ZACC_SPIN_DRILL, StartBounce );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		GameObject_AtLanding( player->other->object, ZSPEED_SPIN_DRILL, -ZACC_SPIN_DRILL, StartTargetLeftBounce );
+		GameObject_AtLanding( player->object, ZSPEED_SPIN_DRILL, -ZACC_SPIN_DRILL, StartRightBounce );
 	} else {
 		GameObject_AtLanding( player->other->object, ZSPEED_SPIN_DRILL, -ZACC_SPIN_DRILL, StartTargetRightBounce );
+		GameObject_AtLanding( player->object, ZSPEED_SPIN_DRILL, -ZACC_SPIN_DRILL, StartLeftBounce );
 	}
 }
 
