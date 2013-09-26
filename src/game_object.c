@@ -731,78 +731,36 @@ static void GameObjectProc_UpdateAction(void)
 	Queue_Unlock( &gameobject_stream );
 }
 
-static int one_sec_total_frame;		/**< 一秒内的总帧数 */
-static int64_t one_sec_start_time;	/**< 该秒的起始时间 */
-static int one_sec_cur_frames;		/**< 该秒内当前已更新的帧数 */
-static int prev_sec_remaining_frames;	/**< 上一秒遗留的未更新的帧数 */
+static int one_frame_remain_time;
+static int64_t prev_frame_start_time;
 
 /** 初始化帧数控制 */
-static void FrameControl_Init( int frames_per_sec )
+static void FrameControl_Init( int ms_per_frame )
 {
-	one_sec_total_frame = frames_per_sec;
-	one_sec_start_time = LCUI_GetTickCount();
-	one_sec_cur_frames = 0;
-	prev_sec_remaining_frames = 0;
+	one_frame_remain_time = ms_per_frame;
+	prev_frame_start_time = LCUI_GetTickCount();
 }
 
 /** 让当前帧停留一段时间 */
 static void FrameControl_RemainFrame(void)
 {
 	int n_ms;
-	int remaining_frames;
-	int64_t one_sec_lost_ms, ct;
-	while(1) {
-		one_sec_lost_ms = LCUI_GetTicks( one_sec_start_time );
-		/* 如果本秒内流逝的毫秒小于1000毫秒 */
-		if( one_sec_lost_ms < 1000 ) {
-			break;
-		}
-		/* 否则，切换至下一秒 */
-		one_sec_start_time += 1000;
-		if( one_sec_cur_frames < -200 ) {
-			one_sec_cur_frames = -200;
-		} else {
-			one_sec_cur_frames -= one_sec_total_frame;
+	int64_t current_time;
+
+	current_time = LCUI_GetTickCount();
+	n_ms = (int)(current_time - prev_frame_start_time);
+	if( n_ms < one_frame_remain_time ) {
+		n_ms = one_frame_remain_time - n_ms;
+		if( n_ms > 0 ) {
+			LCUI_MSleep( n_ms );
 		}
 	}
-	/* 计算本秒内剩余的时间(毫秒) */
-	n_ms = 1000 - (int)one_sec_lost_ms;
-	/* 计算本秒内剩余的需更新的帧数 */
-	remaining_frames = one_sec_total_frame;
-	remaining_frames -= one_sec_cur_frames;
-	/* 计算剩余帧的平均停留时间 */
-	if( remaining_frames == 0 ) {
-		/* 增加已经更新的帧数 */
-		++one_sec_cur_frames;
-		return;
-	}
-	//_DEBUG_MSG("cur_frames: %d, remaining_frames: %d, one_sec_lost_ms: %d, n_ms: %d\n", one_sec_cur_frames,remaining_frames, one_sec_lost_ms, n_ms);
-	n_ms /= remaining_frames;
-	if( n_ms < 0 ) {
-		++one_sec_cur_frames;
-		return;
-	}
-	ct = LCUI_GetTickCount();
-	/* 开始睡眠 */
-	LCUI_MSleep( n_ms );
-//#define debug
-#ifdef debug
-	{
-		FILE *fp;
-		fp = fopen("debug.txt", "a+");
-		if( !fp ) {
-			return;
-		}
-		fprintf(fp, "frame: %d, n_ms: %d, lost_time: %I64dms\n", one_sec_cur_frames, n_ms, LCUI_GetTicks(ct) );
-		fclose( fp );
-	}
-#endif
-	++one_sec_cur_frames;
+	prev_frame_start_time += one_frame_remain_time;
 }
 
 static void GameObjectProc_Thread( void *arg )
 {
-	FrameControl_Init( FRAMES_PER_SEC );
+	FrameControl_Init( 1000/FRAMES_PER_SEC );
 	while(LCUI_Active()) {
 		GameSpace_Step();
 		GameObjectProc_UpdateAction();
