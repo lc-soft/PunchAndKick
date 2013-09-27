@@ -20,6 +20,7 @@ static int global_action_list[]={
 	ACTION_WALK,
 	ACTION_RUN,
 	ACTION_DEFENSE,
+	ACTION_SOLID_DEFENSE,
 	ACTION_A_ATTACK,
 	ACTION_B_ATTACK,
 	ACTION_MACH_A_ATTACK,
@@ -55,6 +56,7 @@ static int global_action_list[]={
 	ACTION_MACH_STOMP,
 	ACTION_CATCH,
 	ACTION_BE_CATCH,
+	ACTION_BE_PUSH,
 	ACTION_HALF_LYING,
 	ACTION_BACK_BE_CATCH,
 	ACTION_CATCH_SKILL_FA,
@@ -216,6 +218,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_DEFENSE:
 		action_type = ACTION_DEFENSE;
 		break;
+	case STATE_SOLID_DEFENSE:
+		action_type = ACTION_SOLID_DEFENSE;
+		break;
 	case STATE_A_ATTACK:
 		action_type = ACTION_A_ATTACK;
 		break;
@@ -351,6 +356,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		break;
 	case STATE_CATCH_SKILL_FB:
 		action_type = ACTION_CATCH_SKILL_FB;
+		break;
+	case STATE_BE_PUSH:
+		action_type = ACTION_BE_PUSH;
 		break;
 	case STATE_WEAK_RUN:
 	case STATE_WEAK_RUN_ATTACK:
@@ -1540,7 +1548,8 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	 && !player->control.jump && !player->control.left_motion 
 	 && !player->control.right_motion && !player->control.up_motion
 	 && !player->control.down_motion && !player->control.defense
-	 && player->state != STATE_DEFENSE ) {
+	 && player->state != STATE_DEFENSE
+	 && player->state != STATE_SOLID_DEFENSE ) {
 		return;
 	}
 	skill_id = SkillLibrary_GetSkill( player );
@@ -1550,7 +1559,8 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		player->control.b_attack = FALSE;
 		return;
 	}
-	if( player->state != STATE_DEFENSE ) {
+	if( player->state != STATE_DEFENSE
+	 && player->state != STATE_SOLID_DEFENSE ) {
 		return;
 	}
 	if( player->lock_action || player->control.defense ) {
