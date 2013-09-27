@@ -107,6 +107,16 @@ static int AttackDamage_SprintJumpBAttack( GamePlayer *attacker, GamePlayer *vic
 	return damage;
 }
 
+static int AttackDamage_Bumped( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 50;
+	if( attacker ) {
+		damage += attacker->property.defense/2;
+	}
+	return DamageReduce( victim, victim_state, damage );;
+}
+
 static int AttackDamage_MachStomp( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
 	int damage;
@@ -176,6 +186,14 @@ static int AttackDamage_BigElbow( GamePlayer *attacker, GamePlayer *victim, int 
 {
 	int damage;
 	damage = 20 + attacker->property.punch/3;
+	damage = DamageReduce( victim, victim_state, damage );
+	return damage;
+}
+
+static int AttackDamage_Guillotine( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	int damage;
+	damage = 20 + attacker->property.kick/3;
 	damage = DamageReduce( victim, victim_state, damage );
 	return damage;
 }
@@ -2142,6 +2160,25 @@ static LCUI_BOOL CommonSkill_CanUseBigElbow( GamePlayer *player )
 	return FALSE;
 }
 
+static LCUI_BOOL CommonSkill_CanUseGuillotine( GamePlayer *player )
+{
+	double speed;
+	if( !player->control.b_attack ) {
+		return FALSE;
+	}
+	switch( player->state ) {
+	case STATE_JUMP:
+	case STATE_JSQUAT:
+		speed = GameObject_GetZSpeed( player->object );
+		if( speed < 0 ) {
+			return TRUE;
+		}
+	default:
+		break;
+	}
+	return FALSE;
+}
+
 static void GamePlayer_AtBigElbowStep2( LCUI_Widget *widget )
 {
 	GamePlayer *player;
@@ -2164,8 +2201,20 @@ static void GamePlayer_AtBigElbowStep1( LCUI_Widget *widget )
 static void CommonSkill_StartBigElbow( GamePlayer *player )
 {
 	double z_speed;
-	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
+	GamePlayer_ChangeState( player, STATE_BIG_ELBOW );
 	GamePlayer_SetAttackTypeName( player, ATK_BIG_ELBOW );
+	GameObject_ClearAttack( player->object );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	z_speed = GameObject_GetZSpeed( player->object );
+	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtBigElbowStep1 );
+}
+
+static void CommonSkill_StartGuillotine( GamePlayer *player )
+{
+	double z_speed;
+	GamePlayer_ChangeState( player, STATE_GUILLOTINE );
+	GamePlayer_SetAttackTypeName( player, ATK_GUILLOTINE );
 	GameObject_ClearAttack( player->object );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
@@ -2583,15 +2632,6 @@ static void CommonSkill_StartDefense( GamePlayer *player )
 	}
 }
 
-static void CommonSkill_RegisterPush(void)
-{
-	SkillLibrary_AddSkill(	SKILLNAME_PUSH,
-				SKILLPRIORITY_PUSH,
-				CommonSkill_CanUsePush,
-				CommonSkill_StartPush
-	);
-}
-
 static LCUI_BOOL CommonSkill_CanUseJumpSpinKick( GamePlayer *player )
 {
 	if( player->lock_action ) {
@@ -2777,6 +2817,16 @@ static void CommonSkill_RegisterSprintBAttack(void)
 	AttackLibrary_AddAttack( ATK_SPRINT_B_ATTACK, AttackDamage_SprintBAttack, AttackEffect_BumpToFly );
 }
 
+static void CommonSkill_RegisterPush(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_PUSH,
+				SKILLPRIORITY_PUSH,
+				CommonSkill_CanUsePush,
+				CommonSkill_StartPush
+	);
+	AttackLibrary_AddAttack( ATK_BUMPED, AttackDamage_Bumped, NULL );
+}
+
 static void CommonSkill_RegisterMachStomp(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_MACH_STOMP,
@@ -2908,6 +2958,16 @@ static void CommonSkill_RegisterBigElbow(void)
 	AttackLibrary_AddAttack( ATK_BIG_ELBOW, AttackDamage_BigElbow, AttackEffect_LongHitFly );
 }
 
+static void CommonSkill_RegisterGuillotine(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_GUILLOTINE,
+				SKILLPRIORITY_GUILLOTINE,
+				CommonSkill_CanUseGuillotine,
+				CommonSkill_StartGuillotine
+	);
+	AttackLibrary_AddAttack( ATK_GUILLOTINE, AttackDamage_Guillotine, AttackEffect_LongHitFly );
+}
+
 static void CommonSkill_RegisterJump(void)
 {
 	SkillLibrary_AddSkill(	SKILLNAME_JUMP,
@@ -2959,6 +3019,7 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterSpinHit();
 	CommonSkill_RegisterSpinHit2();
 	CommonSkill_RegisterBigElbow();
+	CommonSkill_RegisterGuillotine();
 	CommonSkill_RegisterRide();
 	CommonSkill_RegisterRideAttack();
 	CommonSkill_RegisterCatch();

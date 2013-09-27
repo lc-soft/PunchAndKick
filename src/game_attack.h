@@ -27,6 +27,7 @@
 #define ATK_SPINHIT			"spin hit attack"
 #define ATK_SPINHIT_2			"second spin hit attack"
 #define ATK_BIG_ELBOW			"big elbow attack"
+#define ATK_GUILLOTINE			"guillotine attack"
 #define ATK_JUMP_SPINKICK		"jump spin kick attack"
 
 
