@@ -25,6 +25,10 @@
 /** 可擒获范围的水平宽度 */
 #define CATCH_RANGE_X_WIDTH	40
 
+#define XSPEED_BE_PUSH	100
+#define YSPEED_BE_PUSH	60
+#define YACC_BE_PUSH	400
+
 /** 计算A攻击的伤害值 */
 static int AttackDamage_AAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
@@ -239,6 +243,8 @@ static int GamePlayer_TryHit( GamePlayer *player )
 	case STATE_HIT_FLY:
 	case STATE_HIT_FLY_FALL:
 	case STATE_DEFENSE:
+	case STATE_SOLID_DEFENSE:
+	case STATE_BE_PUSH:
 		player->n_attack = 0;
 		break;
 	default:
@@ -261,6 +267,8 @@ static void GamePlayer_SetHit( GamePlayer *player )
 	GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtHitDone );
 }
 
+static void AttackEffect_BePushed( GamePlayer *player );
+
 /** 普通攻击产生的效果 */
 static void AttackEffect_Normal( GamePlayer *attacker, GamePlayer *victim )
 {
@@ -268,6 +276,15 @@ static void AttackEffect_Normal( GamePlayer *attacker, GamePlayer *victim )
 	 || victim->state == STATE_B_ROLL
 	 || victim->state == STATE_F_ROLL ) {
 		victim->n_attack = 0;
+	} 
+	else if( (victim->state == STATE_A_ATTACK 
+		|| victim->state == STATE_B_ATTACK
+		|| victim->state ==  STATE_MACH_A_ATTACK
+		|| victim->state ==  STATE_MACH_B_ATTACK)
+		&& GamePlayer_IsLeftOriented(attacker)
+		== GamePlayer_IsLeftOriented(victim) ) {
+		victim->n_attack = 0;
+		AttackEffect_BePushed( victim );
 	} else {
 		++victim->n_attack;
 		GamePlayer_SetHit( victim );
@@ -409,6 +426,36 @@ skip_speed_reduce:
 	);
 }
 
+static void AttackEffect_LeftShortHitFly( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_HIT_FLY );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_SetXAcc( player->object, 0 );
+	GameObject_SetXSpeed( player->object, -XSPEED_HIT_FLY );
+	GameObject_AtLanding(
+		player->object,
+		ZSPEED_HIT_FLY, -ZACC_HIT_FLY, 
+		GamePlayer_AtHitFlyDone
+	);
+}
+
+static void AttackEffect_RightShortHitFly( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_HIT_FLY );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_SetXAcc( player->object, 0 );
+	GameObject_SetXSpeed( player->object, XSPEED_HIT_FLY );
+	GameObject_AtLanding(
+		player->object,
+		ZSPEED_HIT_FLY, -ZACC_HIT_FLY, 
+		GamePlayer_AtHitFlyDone
+	);
+}
+
 void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
 {
 	RangeBox range;
@@ -448,21 +495,11 @@ skip_speed_reduce:
 		GameObject_AtXSpeedToZero( victim->object,-speed*5, GameObject_AtBumpBufferDone );
 		return;
 	}
-	GamePlayer_UnlockAction( victim );
-	GamePlayer_ChangeState( victim, STATE_HIT_FLY );
-	GamePlayer_LockAction( victim );
-	GamePlayer_LockMotion( victim );
-	GameObject_SetXAcc( victim->object, 0 );
 	if( GamePlayer_IsLeftOriented(attacker) ) {
-		GameObject_SetXSpeed( victim->object, -XSPEED_HIT_FLY );
+		AttackEffect_LeftShortHitFly( victim );
 	} else {
-		GameObject_SetXSpeed( victim->object, XSPEED_HIT_FLY );
+		AttackEffect_RightShortHitFly( victim );
 	}
-	GameObject_AtLanding(
-		victim->object,
-		ZSPEED_HIT_FLY, -ZACC_HIT_FLY, 
-		GamePlayer_AtHitFlyDone
-	);
 }
 
 /** 普通攻击产生的效果（若对方处于喘气状态，则击飞对方） */
@@ -650,6 +687,51 @@ static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 			ZSPEED_S_HIT_FLY, -ZACC_S_HIT_FLY,
 			GamePlayer_StartRightBackwardRoll
 		);
+	}
+}
+
+static void AttackEffect_BePushedToLeft2( LCUI_Widget *widget )
+{
+	GameObject_AtLanding( widget, YSPEED_BE_PUSH, -YACC_BE_PUSH, GamePlayer_StartLeftForwardRoll );
+}
+
+static void AttackEffect_BePushedToLeft1( LCUI_Widget *widget )
+{
+	GameObject_AtLanding( widget, YSPEED_BE_PUSH, -YACC_BE_PUSH, AttackEffect_BePushedToLeft2 );
+}
+
+static void AttackEffect_BePushedToLeft( GamePlayer *player )
+{
+	GameObject_SetXSpeed( player->object, -XSPEED_BE_PUSH );
+	GameObject_AtLanding( player->object, YSPEED_BE_PUSH, -YACC_BE_PUSH, AttackEffect_BePushedToLeft1 );
+}
+
+static void AttackEffect_BePushedToRight2( LCUI_Widget *widget )
+{
+	GameObject_AtLanding( widget, YSPEED_BE_PUSH, -YACC_BE_PUSH, GamePlayer_StartRightForwardRoll );
+}
+
+static void AttackEffect_BePushedToRight1( LCUI_Widget *widget )
+{
+	GameObject_AtLanding( widget, YSPEED_BE_PUSH, -YACC_BE_PUSH, AttackEffect_BePushedToRight2 );
+}
+
+static void AttackEffect_BePushedToRight( GamePlayer *player )
+{
+	GameObject_SetXSpeed( player->object, XSPEED_BE_PUSH );
+	GameObject_AtLanding( player->object, YSPEED_BE_PUSH, -YACC_BE_PUSH, AttackEffect_BePushedToRight1 );
+}
+
+static void AttackEffect_BePushed( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_BE_PUSH );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	if( GamePlayer_IsLeftOriented(player) ) {
+		AttackEffect_BePushedToLeft( player );
+	} else {
+		AttackEffect_BePushedToRight( player );
 	}
 }
 
@@ -2407,9 +2489,23 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 	else if( x2 < x1+10 ) {
 		return;
 	}
-	AttackEffect_ShortHitFly( player, other_player );
-	_DEBUG_MSG("dump player\n");
-	AttackEffect_ShortHitFly( other_player, player );
+	if( GamePlayer_IsLeftOriented( player ) ) {
+		AttackEffect_RightShortHitFly( player );
+	} else {
+		AttackEffect_LeftShortHitFly( player );
+	}
+	/* 如果对方是背对着自己，则对方会被推走 */
+	if( GamePlayer_IsLeftOriented(player)
+	 == GamePlayer_IsLeftOriented(other_player) ) {
+		 AttackEffect_BePushed( other_player );
+	} else {
+		/* 否则是面对自己，将对方短距离击飞 */
+		if( GamePlayer_IsLeftOriented(player) ) {
+			AttackEffect_RightShortHitFly( other_player );
+		} else {
+			AttackEffect_RightShortHitFly( other_player );
+		}
+	}
 	/* 两个都受到攻击伤害 */
 	Game_RecordAttack( other_player, ATK_BUMPED, player, player->state );
 	Game_RecordAttack( player, ATK_BUMPED, other_player, other_player->state );
@@ -2480,7 +2576,11 @@ static void CommonSkill_StartDefense( GamePlayer *player )
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
-	GamePlayer_ChangeState( player, STATE_DEFENSE );
+	if( GamePlayer_HaveSkill( player, SKILLNAME_SOLID_DEFENSE ) ) {
+		GamePlayer_ChangeState( player, STATE_SOLID_DEFENSE );
+	} else {
+		GamePlayer_ChangeState( player, STATE_DEFENSE );
+	}
 }
 
 static void CommonSkill_RegisterPush(void)
