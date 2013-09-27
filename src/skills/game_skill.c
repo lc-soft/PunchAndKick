@@ -134,6 +134,7 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_BIG_ELBOW );
+	GamePlayer_EnableSkill( player, SKILLNAME_GUILLOTINE );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
