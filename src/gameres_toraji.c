@@ -5,8 +5,32 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	58
+#define MAX_ACTION_NUM	59
 static const ActionInfo action_set[MAX_ACTION_NUM]={
+	/* 开打 动作 */
+	{ ACTION_START, FALSE, {
+		{ TRUE, FALSE, FALSE, "start-01", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-02", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-01", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-02", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-01", 20, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
 		{ TRUE, FALSE, FALSE, "walk-01", 5, 0, 2,
@@ -51,7 +75,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
-	/* 防御++ 动作 */
+	/* 固实防御 动作 */
 	{ ACTION_SOLID_DEFENSE, FALSE, {
 		{ TRUE, FALSE, FALSE, "defense++", 50, 0, 0,
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
