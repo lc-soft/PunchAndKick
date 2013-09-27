@@ -46,6 +46,7 @@
 #define SKILLNAME_A_ATTACK		"A attack"
 #define SKILLNAME_B_ATTACK		"B attack"
 #define SKILLNAME_DEFENSE		"defense"
+#define SKILLNAME_SOLID_DEFENSE		"solid defense"
 #define SKILLNAME_JUMP			"jump"
 #define SKILLNAME_JUMP_A_ATTACK		"jump A attack"
 #define SKILLNAME_JUMP_B_ATTACK		"jump B attack"
