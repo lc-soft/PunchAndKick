@@ -46,11 +46,11 @@ static int global_action_list[]={
 	ACTION_JUMP,
 	ACTION_F_ROLL,
 	ACTION_B_ROLL,
-	ACTION_ELBOW,
 	ACTION_JUMP_ELBOW,
 	ACTION_JUMP_STOMP,
 	ACTION_FALL,
 	ACTION_KICK,
+	ACTION_GUILLOTINE,
 	ACTION_SPINHIT,
 	ACTION_BOMBKICK,
 	ACTION_MACH_STOMP,
@@ -309,9 +309,10 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	case STATE_B_ROLL:
 		action_type = ACTION_B_ROLL;
 		break;
-	case STATE_ELBOW:
-		action_type = ACTION_ELBOW;
+	case STATE_GUILLOTINE:
+		action_type = ACTION_GUILLOTINE;
 		break;
+	case STATE_BIG_ELBOW:
 	case STATE_JUMP_ELBOW:
 		action_type = ACTION_JUMP_ELBOW;
 		break;
@@ -1559,6 +1560,8 @@ static void GamePlayer_SyncData( GamePlayer *player )
 		player->control.b_attack = FALSE;
 		return;
 	}
+	player->control.a_attack = FALSE;
+	player->control.b_attack = FALSE;
 	if( player->state != STATE_DEFENSE
 	 && player->state != STATE_SOLID_DEFENSE ) {
 		return;
