@@ -71,6 +71,9 @@ int DamageReduce( GamePlayer *victim, int victim_state, int damage )
 	reduce = 1.0 - 100.0 / reduce;
 	/* 根据受害者的状态，增加伤害减免比例 */
 	switch( victim_state ) {
+	case STATE_SOLID_DEFENSE:
+		reduce += 0.40;
+		break;
 	case STATE_DEFENSE:
 	case STATE_TUMMY:
 	case STATE_TUMMY_HIT:
