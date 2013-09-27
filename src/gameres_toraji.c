@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	53
+#define MAX_ACTION_NUM	57
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
@@ -40,6 +40,22 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		{ TRUE, FALSE, FALSE, "ready", 50, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 防御动作 */
+	{ ACTION_DEFENSE, FALSE, {
+		{ TRUE, FALSE, FALSE, "defense", 50, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 防御++ 动作 */
+	{ ACTION_SOLID_DEFENSE, FALSE, {
+		{ TRUE, FALSE, FALSE, "defense++", 50, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
+			{0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
@@ -323,35 +339,35 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	{ ACTION_F_ROLL, TRUE, {
 		{ TRUE, FALSE, FALSE, "roll-01", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-02", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-03", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-04", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-05", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-06", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-07", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-08", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
@@ -359,35 +375,35 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	{ ACTION_B_ROLL, TRUE, {
 		{ TRUE, FALSE, FALSE, "roll-08", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-07", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-06", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-05", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-04", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-03", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-02", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "roll-01", 2, 0, 0,
 			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
-			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34}
+			{0,0,0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
@@ -543,6 +559,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
+	/** 被推走 动作 */
+	{ ACTION_BE_PUSH, FALSE, {
+		{ TRUE, FALSE, FALSE, "be-push", 5, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
 	/** 正面压制技能（A） 动作 */
 	{ ACTION_CATCH_SKILL_FA, TRUE, {
 		{ TRUE, FALSE, FALSE, "spin-up-01", 3, 0, 0,
@@ -620,6 +644,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		{ TRUE, FALSE, FALSE, "fall", 100, 0, 0,
 			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
 			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 跳跃肘击 动作 */
+	{ ACTION_JUMP_ELBOW, FALSE, {
+		{ TRUE, FALSE, FALSE, "jump-elbow", 100, 0, 0,
+			{-31, -GLOBAL_Y_WIDTH/2, 0, 62, GLOBAL_Y_WIDTH, 48},
+			{-11, -GLOBAL_Y_WIDTH/2, -2, 42, GLOBAL_Y_WIDTH, 20}
 		},
 		END_ACTION_FRAME
 	}},
