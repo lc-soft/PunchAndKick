@@ -620,7 +620,7 @@ int FilterStrategy( int *strategy_buff, int max_num, int self_state, int target_
 			continue;
 		}
 		if( global_strategy_set[i].range.max_y_width != RANGE_MAX ) {
-			if( y_width >= global_strategy_set[i].range.max_y_width ) {
+			if( y_width > global_strategy_set[i].range.max_y_width ) {
 				continue;
 			}
 		}
