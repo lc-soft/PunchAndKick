@@ -48,7 +48,7 @@ static void test_read(void)
 	}
 }
 
-#define RIKI_ACTION_FILE_NUM	68
+#define RIKI_ACTION_FILE_NUM	73
 #define TORAJI_ACTION_FILE_NUM	73
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
@@ -82,6 +82,8 @@ const struct fileinfo scenes_file_info={
 };
 
 const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
+	{"start-01.png", "start-01"},
+	{"start-02.png", "start-02"},
 	{"A-attack-01.png","A-attack-01"},
 	{"A-attack-02.png","A-attack-02"},
 	{"A-sprint-attack-01.png","A-sprint-attack-01"},
@@ -149,12 +151,15 @@ const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"weak-walk-02.png","weak-walk-02"},
 	{"ride.png","ride"},
 	{"ride-attack-01.png","ride-attack-01"},
-	{"ride-attack-02.png","ride-attack-02"}
+	{"ride-attack-02.png","ride-attack-02"},
+	{"be-push.png", "be-push"},
+	{"sit.png", "sit"},
+	{"defense++.png","defense++"}
 };
 
 const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
-	{"pose-01.png", "pose-01"},
-	{"pose-02.png", "pose-02"},
+	{"start-01.png", "start-01"},
+	{"start-02.png", "start-02"},
 	{"ready.png","ready"},
 	{"stance.png","stance"},
 	{"half-lying.png","half-lying"},
@@ -360,10 +365,10 @@ int main(int argc, char** argv)
 		//ActionRes_Riki_ReadFromFile();
 		ActionRes_Toraji_ReadFromFile();
 	} else {
-		ActionRes_Toraji_WirteToFile();
+		//ActionRes_Toraji_WirteToFile();
 		//FontGraphRes_WirteToFile();
 		//ScenesGraphRes_WirteToFile();
-		//ActionRes_Riki_WirteToFile();
+		ActionRes_Riki_WirteToFile();
 		//MainGraphRes_WirteToFile();
 	}
 	return 0;
