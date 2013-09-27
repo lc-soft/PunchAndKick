@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	57
+#define MAX_ACTION_NUM	58
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
@@ -650,6 +650,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 跳跃肘击 动作 */
 	{ ACTION_JUMP_ELBOW, FALSE, {
 		{ TRUE, FALSE, FALSE, "jump-elbow", 100, 0, 0,
+			{-31, -GLOBAL_Y_WIDTH/2, 0, 62, GLOBAL_Y_WIDTH, 48},
+			{-11, -GLOBAL_Y_WIDTH/2, -2, 42, GLOBAL_Y_WIDTH, 20}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 跳跃断头台 动作 */
+	{ ACTION_GUILLOTINE, FALSE, {
+		{ TRUE, FALSE, FALSE, "sit", 100, 0, 0,
 			{-31, -GLOBAL_Y_WIDTH/2, 0, 62, GLOBAL_Y_WIDTH, 48},
 			{-11, -GLOBAL_Y_WIDTH/2, -2, 42, GLOBAL_Y_WIDTH, 20}
 		},
