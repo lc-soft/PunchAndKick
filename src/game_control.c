@@ -15,6 +15,7 @@ static LCUI_Widget *player_status_area;
 
 static GamePlayer player_data[4];
 static int global_action_list[]={
+	ACTION_START,
 	ACTION_READY,
 	ACTION_STANCE,
 	ACTION_WALK,
@@ -195,6 +196,9 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 		}
 	}
 	switch(state) {
+	case STATE_START:
+		action_type = ACTION_START;
+		break;
 	case STATE_LYING_DYING:
 		action_type = ACTION_LYING_DYING;
 		break;
@@ -1453,7 +1457,7 @@ int Game_Init(void)
 	/* 设置1号玩家的控制键 */
 	GamePlayer_SetControlKey( 1, &ctrlkey );
 	/* 设置1号玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_TORAJI );
+	GamePlayer_SetRole( 1, ROLE_RIKI );
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
 
@@ -1469,7 +1473,7 @@ int Game_Init(void)
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
 	/* 设置2号玩家的角色 */
-	GamePlayer_SetRole( 2, ROLE_RIKI );
+	GamePlayer_SetRole( 2, ROLE_TORAJI );
 	/* 设置2号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 2, FALSE );
 	/* 设置响应游戏角色的受攻击信号 */
@@ -1578,6 +1582,21 @@ static void GamePlayer_SyncData( GamePlayer *player )
 	GamePlayer_SetReady( player );
 }
 
+static void GamePlayer_SetToReady( LCUI_Widget* widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
+	GamePlayer_SetReady( player );
+}
+
+static void GamePlayer_SetStart( GamePlayer *player )
+{
+	GamePlayer_ChangeState( player, STATE_START );
+	GameObject_AtActionDone( player->object, ACTION_START, GamePlayer_SetToReady );
+}
+
 int Game_Start(void)
 {
 	int i;
@@ -1600,8 +1619,8 @@ int Game_Start(void)
 	GamePlayer_SetRightOriented( &player_data[0] );
 	GamePlayer_SetLeftOriented( &player_data[1] );
 	/* 设置游戏角色的初始状态 */
-	GamePlayer_SetReady( &player_data[0] );
-	GamePlayer_SetReady( &player_data[1] );
+	GamePlayer_SetStart( &player_data[0] );
+	GamePlayer_SetStart( &player_data[1] );
 	/* 播放动作动画，并显示游戏角色 */
 	for(i=0; i<4; ++i) {
 		if( !player_data[i].enable ) {

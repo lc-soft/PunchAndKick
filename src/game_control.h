@@ -16,6 +16,7 @@ enum GamePlayerType {
 };
 
 enum GamePlayerState {
+	STATE_START,
 	STATE_DIED,		/**< 已经死亡 */
 	STATE_LYING_DYING,	/**< 躺着，快死了 */
 	STATE_TUMMY_DYING,	/**< 趴着，快死了 */
@@ -95,6 +96,7 @@ enum GamePlayerState {
 };
 
 enum ActionType {
+	ACTION_START,
 	ACTION_READY,
 	ACTION_STANCE,
 	ACTION_WALK,
