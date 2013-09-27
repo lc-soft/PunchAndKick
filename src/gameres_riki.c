@@ -5,8 +5,32 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	56
+#define MAX_ACTION_NUM	60
 static const ActionInfo action_set[MAX_ACTION_NUM]={
+	/* 开打 动作 */
+	{ ACTION_START, FALSE, {
+		{ TRUE, FALSE, FALSE, "start-01", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-02", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-01", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-02", 10, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "start-01", 20, -6, 0,
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
 	/* 步行动作 */
 	{ ACTION_WALK, TRUE, {
 		{ TRUE, FALSE, FALSE, "walk-01", 5, 0, 2,
@@ -74,6 +98,14 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 防御动作 */
 	{ ACTION_DEFENSE, FALSE, {
 		{ TRUE, FALSE, FALSE, "defense", 50, 0, 0,
+			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
+			{0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	/* 固实防御 动作 */
+	{ ACTION_SOLID_DEFENSE, FALSE, {
+		{ TRUE, FALSE, FALSE, "defense++", 50, 0, 0,
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
 			{0,0,0,0}
 		},
@@ -520,6 +552,22 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		{ TRUE, FALSE, FALSE, "rest-02", 5, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 被推走 动作 */
+	{ ACTION_BE_PUSH, FALSE, {
+		{ TRUE, FALSE, FALSE, "be-push", 5, -6, 0,
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/* 跳跃断头台 动作 */
+	{ ACTION_GUILLOTINE, FALSE, {
+		{ TRUE, FALSE, FALSE, "sit", 100, 0, 0,
+			{-31, -GLOBAL_Y_WIDTH/2, 0, 62, GLOBAL_Y_WIDTH, 48},
+			{-11, -GLOBAL_Y_WIDTH/2, -2, 42, GLOBAL_Y_WIDTH, 20}
 		},
 		END_ACTION_FRAME
 	}},
