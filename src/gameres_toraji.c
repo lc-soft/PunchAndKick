@@ -78,7 +78,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 固实防御 动作 */
 	{ ACTION_SOLID_DEFENSE, FALSE, {
 		{ TRUE, FALSE, FALSE, "defense++", 50, 0, 0,
-			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
+			{-17, -GLOBAL_Y_WIDTH/2, 0, 35, GLOBAL_Y_WIDTH, 32},
 			{0,0,0,0}
 		},
 		END_ACTION_FRAME
@@ -666,8 +666,8 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 跳跃踩踏 动作 */
 	{ ACTION_JUMP_STOMP, FALSE, {
 		{ TRUE, FALSE, FALSE, "fall", 100, 0, 0,
-			{-24, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 50},
-			{0,0,0,0,0,0} 
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
+			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 16}
 		},
 		END_ACTION_FRAME
 	}},
@@ -810,20 +810,20 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 趴着濒死 动作 */
 	{ ACTION_TUMMY_DYING, TRUE, {
 		{ TRUE, FALSE, FALSE, "tummy", 5, 0, 0,
-			{0,0,0,0},
-			{0,0,0,0}
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0}
 		},
 		{ TRUE, FALSE, FALSE, "tummy-hit", 5, 0, 0,
-			{0,0,0,0},
-			{0,0,0,0}
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}},
 	/* 半躺 动作 */
 	{ ACTION_HALF_LYING, FALSE, {
-		{ TRUE, FALSE, FALSE, "half-lying", 50, 0, 0,
-			{0,0,0,0},
-			{0,0,0,0}
+		{ TRUE, FALSE, FALSE, "half-lying", 50, 5, 0,
+			{-16,-GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 35},
+			{0,0,0,0,0,0}
 		},
 		END_ACTION_FRAME
 	}}
