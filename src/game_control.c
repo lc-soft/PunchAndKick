@@ -1276,10 +1276,16 @@ static int Game_InitPlayerStatusArea(void)
 	/* 创建状态栏 */
 	player_data[0].statusbar = StatusBar_New();
 	player_data[1].statusbar = StatusBar_New();
+	player_data[2].statusbar = StatusBar_New();
+	player_data[3].statusbar = StatusBar_New();
 	Widget_Container_Add( player_status_area, player_data[0].statusbar );
 	Widget_Container_Add( player_status_area, player_data[1].statusbar );
+	Widget_Container_Add( player_status_area, player_data[2].statusbar );
+	Widget_Container_Add( player_status_area, player_data[3].statusbar );
 	Widget_SetAlign( player_data[0].statusbar, ALIGN_TOP_LEFT, Pos(5,5) );
 	Widget_SetAlign( player_data[1].statusbar, ALIGN_TOP_LEFT, Pos(5+200,5) );
+	Widget_SetAlign( player_data[2].statusbar, ALIGN_TOP_LEFT, Pos(5+400,5) );
+	Widget_SetAlign( player_data[3].statusbar, ALIGN_TOP_LEFT, Pos(5+600,5) );
 	return 0;
 }
 
@@ -1420,11 +1426,18 @@ int Game_Init(void)
 	/* 初始化角色信息 */
 	GamePlayer_Init( &player_data[0] );
 	GamePlayer_Init( &player_data[1] );
+	GamePlayer_Init( &player_data[2] );
+	GamePlayer_Init( &player_data[3] );
 	/* 记录玩家ID */
 	player_data[0].id = 1;
 	player_data[1].id = 2;
+	player_data[2].id = 3;
+	player_data[3].id = 4;
+
 	player_data[0].enable = TRUE;
 	player_data[1].enable = TRUE;
+	player_data[2].enable = TRUE;
+	player_data[3].enable = TRUE;
 
 	player_data[0].property.max_hp = 2000;
 	player_data[0].property.cur_hp = 2000;
@@ -1433,14 +1446,30 @@ int Game_Init(void)
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
 	player_data[0].property.speed = 150;
-	
-	player_data[1].property.max_hp = 2000;
-	player_data[1].property.cur_hp = 2000;
+
+	player_data[1].property.max_hp = 4000;
+	player_data[1].property.cur_hp = 4000;
 	player_data[1].property.defense = 300;
-	player_data[1].property.kick = 300;
-	player_data[1].property.punch = 300;
-	player_data[1].property.throw = 300;
-	player_data[1].property.speed = 150;
+	player_data[1].property.kick = 100;
+	player_data[1].property.punch = 100;
+	player_data[1].property.throw = 100;
+	player_data[1].property.speed = 100;
+	
+	player_data[2].property.max_hp = 2000;
+	player_data[2].property.cur_hp = 2000;
+	player_data[2].property.defense = 50;
+	player_data[2].property.kick = 300;
+	player_data[2].property.punch = 100;
+	player_data[2].property.throw = 100;
+	player_data[2].property.speed = 150;
+	
+	player_data[3].property.max_hp = 3000;
+	player_data[3].property.cur_hp = 3000;
+	player_data[3].property.defense = 200;
+	player_data[3].property.kick = 100;
+	player_data[3].property.punch = 300;
+	player_data[3].property.throw = 100;
+	player_data[3].property.speed = 150;
 
 	Graph_Init( &img_shadow );
 	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
@@ -1472,16 +1501,24 @@ int Game_Init(void)
 	ctrlkey.b_attack = 0;
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
-	/* 设置2号玩家的角色 */
-	GamePlayer_SetRole( 2, ROLE_TORAJI );
-	/* 设置2号玩家由人来控制 */
+	/* 设置玩家的角色 */
+	GamePlayer_SetRole( 2, ROLE_RIKI );
+	GamePlayer_SetRole( 3, ROLE_TORAJI );
+	GamePlayer_SetRole( 4, ROLE_TORAJI );
+	/* 设置玩家由人来控制 */
 	GamePlayer_ControlByHuman( 2, FALSE );
+	GamePlayer_ControlByHuman( 3, FALSE );
+	GamePlayer_ControlByHuman( 4, FALSE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
+	GameObject_AtUnderAttack( player_data[2].object, GamePlayer_ResponseAttack );
+	GameObject_AtUnderAttack( player_data[3].object, GamePlayer_ResponseAttack );
 	/* 将游戏对象放入战斗场景内 */
 	GameObject_AddToContainer( player_data[0].object, game_scene );
 	GameObject_AddToContainer( player_data[1].object, game_scene );
+	GameObject_AddToContainer( player_data[2].object, game_scene );
+	GameObject_AddToContainer( player_data[3].object, game_scene );
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
@@ -1609,38 +1646,50 @@ int Game_Start(void)
 	/* 计算并设置游戏角色的位置 */
 	x = scene_size.w/2 - 150;
 	GameObject_SetX( player_data[0].object, start_x+x );
+	GameObject_SetX( player_data[1].object, start_x+x-50 );
 	x = scene_size.w/2 + 150;
-	GameObject_SetX( player_data[1].object, start_x+x );
+	GameObject_SetX( player_data[2].object, start_x+x );
+	GameObject_SetX( player_data[3].object, start_x+x+50 );
 	y = scene_size.h/2;
-	GameObject_SetY( player_data[0].object, start_y+y );
-	GameObject_SetY( player_data[1].object, start_y+y );
+	GameObject_SetY( player_data[0].object, start_y+y-50 );
+	GameObject_SetY( player_data[1].object, start_y+y+50 );
+	GameObject_SetY( player_data[2].object, start_y+y-50 );
+	GameObject_SetY( player_data[3].object, start_y+y+50 );
 
 	/* 改变游戏角色的朝向 */
 	GamePlayer_SetRightOriented( &player_data[0] );
-	GamePlayer_SetLeftOriented( &player_data[1] );
+	GamePlayer_SetRightOriented( &player_data[1] );
+	GamePlayer_SetLeftOriented( &player_data[2] );
+	GamePlayer_SetLeftOriented( &player_data[3] );
 	/* 设置游戏角色的初始状态 */
 	GamePlayer_SetStart( &player_data[0] );
 	GamePlayer_SetStart( &player_data[1] );
+	GamePlayer_SetStart( &player_data[2] );
+	GamePlayer_SetStart( &player_data[3] );
 	/* 播放动作动画，并显示游戏角色 */
 	for(i=0; i<4; ++i) {
 		if( !player_data[i].enable ) {
 			continue;
 		}
 		GameObject_PlayAction( player_data[i].object );
+		StatusBar_SetHealth( player_data[i].statusbar, player_data[i].property.cur_hp );
+		StatusBar_SetMaxHealth( player_data[i].statusbar, player_data[i].property.max_hp );
 		Widget_Show( player_data[i].object );
 	}
 	/* 设置状态栏里的信息 */
 	StatusBar_SetPlayerNameW( player_data[0].statusbar, GetPlayerName() );
 	StatusBar_SetPlayerNameW( player_data[1].statusbar, GetPlayerName() );
+	StatusBar_SetPlayerNameW( player_data[2].statusbar, GetPlayerName() );
+	StatusBar_SetPlayerNameW( player_data[3].statusbar, GetPlayerName() );
 	StatusBar_SetPlayerTypeNameW( player_data[0].statusbar, L"1P" );
 	StatusBar_SetPlayerTypeNameW( player_data[1].statusbar, L"CPU" );
-	StatusBar_SetHealth( player_data[0].statusbar, player_data[0].property.cur_hp );
-	StatusBar_SetHealth( player_data[1].statusbar, player_data[1].property.cur_hp );
-	StatusBar_SetMaxHealth( player_data[0].statusbar, player_data[0].property.max_hp );
-	StatusBar_SetMaxHealth( player_data[1].statusbar, player_data[1].property.max_hp );
+	StatusBar_SetPlayerTypeNameW( player_data[2].statusbar, L"CPU" );
+	StatusBar_SetPlayerTypeNameW( player_data[3].statusbar, L"CPU" );
 	/* 显示状态栏 */
 	Widget_Show( player_data[0].statusbar );
 	Widget_Show( player_data[1].statusbar );
+	Widget_Show( player_data[2].statusbar );
+	Widget_Show( player_data[3].statusbar );
 	Widget_Show( player_status_area );
 	return 0;
 }
