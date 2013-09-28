@@ -6,7 +6,7 @@
 #include "game.h"
 
 #define RANGE_MAX		-1
-#define MAX_STRATEGY_NUM	32
+#define MAX_STRATEGY_NUM	33
 #define MAX_ACTION_NUM		5
 
 enum AIActionType {
@@ -184,6 +184,14 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
+		0,
+		/* 距离在20-30的范围内，目标躺地，对目标进行A攻击 */
+		ICanAction, TargetIsLying, {25,40,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 200, ai_action_type_a_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	},{ 
 		0,
 		/* 距离在10-55的范围内，对目标进行B攻击 */
 		ICanAction, NULL, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
