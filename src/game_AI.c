@@ -450,10 +450,24 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 /** 获取自己的攻击目标 */
 static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 {
-	if( self->id == 1 ) {
-		return GamePlayer_GetByID( 2 );
+	int id;
+	GamePlayer *player = NULL;
+
+	id = self->id + 1;
+	if( id >= 5 ) {
+		id = 1;
 	}
-	return GamePlayer_GetByID( 1 );
+	for( ; id<5; ++id ) {
+		player = GamePlayer_GetByID( id );
+		if( !player
+		 || !player->enable
+		 || id == self->id
+		 || player->state == STATE_DIED ) {
+			continue;
+		}
+		break;
+	}
+	return player;
 }
 
 /** 获取自己与对方的距离 */
@@ -676,10 +690,13 @@ void ExecuteStrategy( GamePlayer *player )
 	int x_width, y_width;
 
 	target = GamePlayer_GetTarget( player );
-	GamePlayer_GetDistance( player, target, &x_width, &y_width );
-	p_strategy = &global_strategy_set[player->ai_data.strategy_id];
-	action_type = p_strategy->action[player->ai_data.action_num].action_type;
-
+	if( target == NULL ) {
+		action_type = ai_action_type_none;
+	} else {
+		GamePlayer_GetDistance( player, target, &x_width, &y_width );
+		p_strategy = &global_strategy_set[player->ai_data.strategy_id];
+		action_type = p_strategy->action[player->ai_data.action_num].action_type;
+	}
 	switch( action_type ) {
 	case ai_action_type_wait:
 		break;
