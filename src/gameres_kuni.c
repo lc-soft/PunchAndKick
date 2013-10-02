@@ -113,16 +113,16 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 攻击动作 */
 	{ ACTION_A_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -5, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 5, -10, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 4, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -5, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
 		END_ACTION_FRAME
@@ -203,7 +203,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 5, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
@@ -219,7 +219,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 5, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		END_ACTION_FRAME
 	}},
@@ -231,7 +231,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
@@ -239,7 +239,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
@@ -247,7 +247,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
@@ -263,7 +263,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
@@ -271,7 +271,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
@@ -279,7 +279,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
-			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
+			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
 		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
