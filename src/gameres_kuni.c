@@ -113,15 +113,15 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 攻击动作 */
 	{ ACTION_A_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -5, 0,
 			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 5, -22, 0,
+		{ TRUE, TRUE, FALSE, "A-attack-02", 5, -10, 0,
 			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
 			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -5, 0,
 			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
@@ -129,171 +129,162 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 跳跃攻击动作 */
 	{ ACTION_AJ_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 5, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
-		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{0,0,0,0,0,0} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
 		END_ACTION_FRAME
 	}},
 	/* 高速A攻击 动作 */
 	{ ACTION_MACH_A_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
 		END_ACTION_FRAME
 	}},
 	/* 跳跃高速A攻击 动作 */
 	{ ACTION_JUMP_MACH_A_ATTACK, TRUE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -8, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -22, 0,
-			{-8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{25, -GLOBAL_Y_WIDTH/2, 28, 40, GLOBAL_Y_WIDTH, 20} 
+		{ TRUE, TRUE, FALSE, "A-attack-02", 3, -14, 0,
+			{-11, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
+			{12, -GLOBAL_Y_WIDTH/2, 28, 32, GLOBAL_Y_WIDTH, 20} 
 		},
 		END_ACTION_FRAME
 	}},
 	/* B攻击 动作 */
 	{ ACTION_B_ATTACK, FALSE, {
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 5, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
+		{ TRUE, TRUE, FALSE, "B-attack-02", 5, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
 		END_ACTION_FRAME
 	}},
 	/* B 跳跃攻击动作 */
 	{ ACTION_BJ_ATTACK, FALSE, {
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 5, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
-		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{0,0,0,0,0,0} 
+		{ TRUE, TRUE, FALSE, "B-attack-02", 5, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
 		END_ACTION_FRAME
 	}},
 	/* 高速B攻击 动作 */
 	{ ACTION_MACH_B_ATTACK, FALSE, {
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 3, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
+		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 3, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
+		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 3, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
+		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
 		END_ACTION_FRAME
 	}},
 	/* 跳跃高速B攻击 动作 */
 	{ ACTION_JUMP_MACH_B_ATTACK, TRUE, {
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 3, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
+		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 3, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
+		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-02", 3, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
-			{18, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 30}
+		{ TRUE, TRUE, FALSE, "B-attack-02", 3, -28, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
+			{26, -GLOBAL_Y_WIDTH/2, 48, 30, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, TRUE, FALSE, "B-attack-01", 2, -23, 0, 
-			{8, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 62},
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -23, 0, 
+			{6, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
-		END_ACTION_FRAME
 	}},
 	/* A 冲刺攻击动作 */
 	{ ACTION_AS_ATTACK, TRUE, {
@@ -305,25 +296,25 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* B 冲刺攻击动作 */
 	{ ACTION_BS_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "B-sprint-attack", 100, 0, 0,
-			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
-			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44},
+		{ TRUE, TRUE, FALSE, "B-sprint-attack", 100, 0, 0,
+			{-15, -GLOBAL_Y_WIDTH/2, 0, 26, GLOBAL_Y_WIDTH, 64},
+			{0, -GLOBAL_Y_WIDTH/2, 0, 24, GLOBAL_Y_WIDTH, 36},
 		},
 		END_ACTION_FRAME
 	}},
 	/* A 冲刺跳跃攻击动作 */
-	{ ACTION_ASJ_ATTACK, TRUE, {
+	{ ACTION_ASJ_ATTACK, FALSE, {
 		{ TRUE, TRUE, FALSE, "A-sprint-jump-attack", 2, 0, 0,
-			{-15, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 62},
-			{-17, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 52}
+			{-32, -GLOBAL_Y_WIDTH/2, 4, 64, GLOBAL_Y_WIDTH, 30},
+			{-32, -GLOBAL_Y_WIDTH/2, 4, 64, GLOBAL_Y_WIDTH, 20}
 		},
 		END_ACTION_FRAME
 	}},
 	/* B 冲刺跳跃攻击动作 */
-	{ ACTION_BSJ_ATTACK, TRUE, {
-		{ TRUE, TRUE, FALSE, "kick", 10, 0, 0,
-			{-10,-GLOBAL_Y_WIDTH/2, 16, 32, GLOBAL_Y_WIDTH, 48},
-			{-22,-GLOBAL_Y_WIDTH/2, 4, 54, GLOBAL_Y_WIDTH, 30} 
+	{ ACTION_BSJ_ATTACK, FALSE, {
+		{ TRUE, TRUE, FALSE, "kick", -10, 0, 0,
+			{-13,-GLOBAL_Y_WIDTH/2, 4, 40, GLOBAL_Y_WIDTH, 56},
+			{-13,-GLOBAL_Y_WIDTH/2, 4, 54, GLOBAL_Y_WIDTH, 24} 
 		},
 		END_ACTION_FRAME
 	}},
@@ -345,9 +336,9 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/** 踢 动作 */
 	{ ACTION_KICK, FALSE, {
-		{ TRUE, FALSE, FALSE, "kick", 5, -11, 0,
-			{-10,-GLOBAL_Y_WIDTH/2, 16, 32, GLOBAL_Y_WIDTH, 48},
-			{-22,-GLOBAL_Y_WIDTH/2, 4, 54, GLOBAL_Y_WIDTH, 30} 
+		{ TRUE, TRUE, FALSE, "kick", -10, 0, 0,
+			{-13,-GLOBAL_Y_WIDTH/2, 4, 40, GLOBAL_Y_WIDTH, 56},
+			{-13,-GLOBAL_Y_WIDTH/2, 4, 54, GLOBAL_Y_WIDTH, 24} 
 		},
 		END_ACTION_FRAME
 	}},
@@ -473,7 +464,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
 			{0,0,0,0}
 		},
-		{ TRUE, TRUE, FALSE, "stomp", 3, 0, 0,
+		{ TRUE, TRUE, FALSE, "fall", 3, 0, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51}
 		},
@@ -481,7 +472,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51},
 			{0,0,0,0}
 		},
-		{ TRUE, TRUE, TRUE, "stomp", 3, 0, 0,
+		{ TRUE, TRUE, TRUE, "fall", 3, 0, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 32, GLOBAL_Y_WIDTH, 60},
 			{-22, -GLOBAL_Y_WIDTH/2, 0, 44, GLOBAL_Y_WIDTH, 51}
 		},
@@ -489,21 +480,21 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* 终结一击 动作 */
 	{ ACTION_FINAL_BLOW, FALSE, {
-		{ TRUE, FALSE, FALSE, "final-blow-01", 3, -2, 0,
-			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
+		{ TRUE, FALSE, FALSE, "final-blow-01", 3, -26, 0,
+			{-8, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 58},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, TRUE, "final-blow-02", 3, -2, 0,
-			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
-			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
+		{ TRUE, FALSE, FALSE, "final-blow-02", 3, -26, 0,
+			{-8, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 58},
+			{8, -GLOBAL_Y_WIDTH/2, 0, 52, GLOBAL_Y_WIDTH, 30},
 		},
-		{ TRUE, FALSE, FALSE, "final-blow-03", 20, -2, 0,
-			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
-			{-12, -GLOBAL_Y_WIDTH/2, 0, 55, GLOBAL_Y_WIDTH, 64},
+		{ TRUE, FALSE, FALSE, "final-blow-03", 20, -26, 0,
+			{-8, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 58},
+			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "final-blow-04", 5, -2, 0,
-			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
-			{-12, -GLOBAL_Y_WIDTH/2, 0, 55, GLOBAL_Y_WIDTH, 64},
+		{ TRUE, FALSE, FALSE, "final-blow-04", 5, -26, 0,
+			{-8, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 58},
+			{0,0,0,0,0,0} 
 		},
 		END_ACTION_FRAME
 	}},
