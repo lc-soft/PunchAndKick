@@ -128,38 +128,26 @@ void GamePlayer_InitSkillRecord( GamePlayer *player )
 	GamePlayer_EnableSkill( player, SKILLNAME_A_FINALBLOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_FINALBLOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_DEFENSE );
-	GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_A_ATTACK );
-	GamePlayer_EnableSkill( player, SKILLNAME_BIG_ELBOW );
-	GamePlayer_EnableSkill( player, SKILLNAME_GUILLOTINE );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_B_ATTACK );
-	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
-	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_JUMP_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_SPRINT_JUMP_B_ATTACK );
-	GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
-	GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_LIFT );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_LIFT );
 	GamePlayer_EnableSkill( player, SKILLNAME_A_THROW );
 	GamePlayer_EnableSkill( player, SKILLNAME_B_THROW );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_ELBOW );
 	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_TREAD );
-	GamePlayer_EnableSkill( player, SKILLNAME_MACH_STOMP );
-	GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
-	GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
 	GamePlayer_EnableSkill( player, SKILLNAME_RIDE );
 	GamePlayer_EnableSkill( player, SKILLNAME_RIDE_A_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_RIDE_B_ATTACK );
 	GamePlayer_EnableSkill( player, SKILLNAME_CATCH );
 	GamePlayer_EnableSkill( player, SKILLNAME_PUSH );
-	GamePlayer_EnableSkill( player, SKILLNAME_JUMP_SPINKICK );
-	GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
 }
 
 /** 为游戏角色启用一个技能 */
