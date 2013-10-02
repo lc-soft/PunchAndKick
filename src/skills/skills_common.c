@@ -26,8 +26,8 @@
 #define CATCH_RANGE_X_WIDTH	40
 
 #define XSPEED_BE_PUSH	100
-#define YSPEED_BE_PUSH	60
-#define YACC_BE_PUSH	400
+#define YSPEED_BE_PUSH	100
+#define YACC_BE_PUSH	1000
 
 /** 计算A攻击的伤害值 */
 static int AttackDamage_AAttack( GamePlayer *attacker, GamePlayer *victim, int victim_state )
@@ -235,6 +235,28 @@ static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 static void GamePlayer_ResetCountAttack( GamePlayer *player )
 {
 	player->n_attack = 0;
+}
+
+/** 检测目标游戏角色是否能够应用攻击效果 */
+static LCUI_BOOL GamePlayer_CanUseAttackEffect( GamePlayer *player )
+{
+	switch( player->state ) {
+	case STATE_LYING:
+	case STATE_LYING_HIT:
+	case STATE_TUMMY:
+	case STATE_TUMMY_HIT:
+	case STATE_B_ROLL:
+	case STATE_F_ROLL:
+	case STATE_HIT_FLY:
+	case STATE_HIT_FLY_FALL:
+	case STATE_DEFENSE:
+	case STATE_SOLID_DEFENSE:
+	case STATE_BE_PUSH:
+		break;
+	default:
+		return TRUE;
+	}
+	return FALSE;
 }
 
 static int GamePlayer_TryHit( GamePlayer *player )
@@ -446,6 +468,13 @@ skip_speed_reduce:
 
 static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 {
+	if( GamePlayer_TryHit(player) == 0 ) {
+		GamePlayer_LockAction( player );
+		GamePlayer_LockMotion( player );
+		GameObject_SetXSpeed( player->object, -XSPEED_HIT_FLY );
+		GameObject_AtXSpeedToZero( player->object, XSPEED_HIT_FLY*5, GameObject_AtBumpBufferDone );
+		return;
+	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -461,6 +490,13 @@ static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 
 static void AttackEffect_RightShortHitFly( GamePlayer *player )
 {
+	if( GamePlayer_TryHit(player) == 0 ) {
+		GamePlayer_LockAction( player );
+		GamePlayer_LockMotion( player );
+		GameObject_SetXSpeed( player->object, XSPEED_HIT_FLY );
+		GameObject_AtXSpeedToZero( player->object,-XSPEED_HIT_FLY*5, GameObject_AtBumpBufferDone );
+		return;
+	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -2543,14 +2579,15 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 	} else {
 		AttackEffect_LeftShortHitFly( player );
 	}
-	/* 如果对方是背对着自己，则对方会被推走 */
+	/* 如果对方是背对着自己，且可以应用攻击效果，则对方会被推走 */
 	if( GamePlayer_IsLeftOriented(player)
-	 == GamePlayer_IsLeftOriented(other_player) ) {
-		 AttackEffect_BePushed( other_player );
+	 == GamePlayer_IsLeftOriented(other_player)
+	 && GamePlayer_CanUseAttackEffect(other_player) ) {
+		AttackEffect_BePushed( other_player );
 	} else {
-		/* 否则是面对自己，将对方短距离击飞 */
+		/* 根据自己面向的方向，判定短距离击飞的方向 */
 		if( GamePlayer_IsLeftOriented(player) ) {
-			AttackEffect_RightShortHitFly( other_player );
+			AttackEffect_LeftShortHitFly( other_player );
 		} else {
 			AttackEffect_RightShortHitFly( other_player );
 		}
