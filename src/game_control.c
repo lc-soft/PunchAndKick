@@ -1192,12 +1192,35 @@ int GamePlayer_SetRole( int player_id, int role_id )
 	switch( role_id ) {
 	case ROLE_KUNI:
 		player->type = PLAYER_TYPE_FIGHTER;
+		GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
+		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
+		StatusBar_SetPlayerNameW( player->statusbar, L"国夫" );
 		break;
 	case ROLE_RIKI:
-		 player->type = PLAYER_TYPE_MARTIAL_ARTIST;
-		 break;
+		player->type = PLAYER_TYPE_MARTIAL_ARTIST;
+		GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
+		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
+		StatusBar_SetPlayerNameW( player->statusbar, L"力" );
+		break;
 	case ROLE_TORAJI:
 		player->type = PLAYER_TYPE_TIGER;
+		GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
+		GamePlayer_EnableSkill( player, SKILLNAME_BIG_ELBOW );
+		GamePlayer_EnableSkill( player, SKILLNAME_GUILLOTINE );
+		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_MACH_STOMP );
+		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
+		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
+		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_SPINKICK );
+		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
+		StatusBar_SetPlayerNameW( player->statusbar, L"虎王" );
 	default:
 		break;
 	}
@@ -1434,6 +1457,9 @@ int Game_Init(void)
 	GamePlayer_Init( &player_data[1] );
 	GamePlayer_Init( &player_data[2] );
 	GamePlayer_Init( &player_data[3] );
+	/* 初始化角色状态信息区域 */
+	ret |= Game_InitPlayerStatusArea();
+
 	/* 记录玩家ID */
 	player_data[0].id = 1;
 	player_data[1].id = 2;
@@ -1445,12 +1471,12 @@ int Game_Init(void)
 	player_data[2].enable = TRUE;
 	player_data[3].enable = TRUE;
 
-	player_data[0].property.max_hp = 2000;
-	player_data[0].property.cur_hp = 2000;
-	player_data[0].property.defense = 100;
-	player_data[0].property.kick = 100;
-	player_data[0].property.punch = 100;
-	player_data[0].property.throw = 100;
+	player_data[0].property.max_hp = 2500;
+	player_data[0].property.cur_hp = 2500;
+	player_data[0].property.defense = 250;
+	player_data[0].property.kick = 300;
+	player_data[0].property.punch = 50;
+	player_data[0].property.throw = 200;
 	player_data[0].property.speed = 150;
 
 	player_data[1].property.max_hp = 4000;
@@ -1464,7 +1490,7 @@ int Game_Init(void)
 	player_data[2].property.max_hp = 2000;
 	player_data[2].property.cur_hp = 2000;
 	player_data[2].property.defense = 50;
-	player_data[2].property.kick = 300;
+	player_data[2].property.kick = 200;
 	player_data[2].property.punch = 100;
 	player_data[2].property.throw = 100;
 	player_data[2].property.speed = 150;
@@ -1473,7 +1499,7 @@ int Game_Init(void)
 	player_data[3].property.cur_hp = 3000;
 	player_data[3].property.defense = 200;
 	player_data[3].property.kick = 100;
-	player_data[3].property.punch = 300;
+	player_data[3].property.punch = 200;
 	player_data[3].property.throw = 100;
 	player_data[3].property.speed = 150;
 
@@ -1532,8 +1558,6 @@ int Game_Init(void)
 	InitSceneText( game_scene );
 	/* 显示场景 */
 	Widget_Show( game_scene );
-	/* 初始化角色状态信息区域 */
-	ret |= Game_InitPlayerStatusArea();
 	return ret;
 }
 
@@ -1683,10 +1707,10 @@ int Game_Start(void)
 		Widget_Show( player_data[i].object );
 	}
 	/* 设置状态栏里的信息 */
-	StatusBar_SetPlayerNameW( player_data[0].statusbar, GetPlayerName() );
-	StatusBar_SetPlayerNameW( player_data[1].statusbar, GetPlayerName() );
-	StatusBar_SetPlayerNameW( player_data[2].statusbar, GetPlayerName() );
-	StatusBar_SetPlayerNameW( player_data[3].statusbar, GetPlayerName() );
+	//StatusBar_SetPlayerNameW( player_data[0].statusbar, GetPlayerName() );
+	//StatusBar_SetPlayerNameW( player_data[1].statusbar, GetPlayerName() );
+	//StatusBar_SetPlayerNameW( player_data[2].statusbar, GetPlayerName() );
+	//StatusBar_SetPlayerNameW( player_data[3].statusbar, GetPlayerName() );
 	StatusBar_SetPlayerTypeNameW( player_data[0].statusbar, L"1P" );
 	StatusBar_SetPlayerTypeNameW( player_data[1].statusbar, L"CPU" );
 	StatusBar_SetPlayerTypeNameW( player_data[2].statusbar, L"CPU" );
