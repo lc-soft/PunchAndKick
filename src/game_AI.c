@@ -453,9 +453,9 @@ static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 	int id;
 	GamePlayer *player = NULL;
 
-	id = self->id + 1;
-	if( id >= 5 ) {
-		id = 1;
+	id = self->id + 2;
+	if( id > 4 ) {
+		id = id % 4;
 	}
 	for( ; id<5; ++id ) {
 		player = GamePlayer_GetByID( id );
