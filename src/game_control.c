@@ -874,7 +874,9 @@ static void GamePlayer_SetLeftMotion( GamePlayer *player )
 	switch(player->state) {
 	case STATE_LIFT_WALK:
 	case STATE_LIFT_STANCE:
-		GamePlayer_SetLeftOriented( player );
+		if( !player->lock_action ) {
+			GamePlayer_SetLeftOriented( player );
+		}
 		if( player->control.run ) {
 			speed = -XSPEED_RUN * player->property.speed / 100;
 			GameObject_SetXSpeed( player->object, speed );
@@ -887,7 +889,9 @@ static void GamePlayer_SetLeftMotion( GamePlayer *player )
 	case STATE_STANCE:
 	case STATE_DEFENSE:
 	case STATE_WALK:
-		GamePlayer_SetLeftOriented( player );
+		if( !player->lock_action ) {
+			GamePlayer_SetLeftOriented( player );
+		}
 		skill_id = SkillLibrary_GetSkill( player );
 		if( skill_id > 0 ) {
 			GamePlayer_RunSkill( player, skill_id );
@@ -941,7 +945,9 @@ static void GamePlayer_SetRightMotion( GamePlayer *player )
 	switch(player->state) {
 	case STATE_LIFT_WALK:
 	case STATE_LIFT_STANCE:
-		GamePlayer_SetRightOriented( player );
+		if( !player->lock_action ) {
+			GamePlayer_SetRightOriented( player );
+		}
 		if( player->control.run ) {
 			speed = XSPEED_RUN * player->property.speed / 100;
 			GameObject_SetXSpeed( player->object, speed );
@@ -954,7 +960,9 @@ static void GamePlayer_SetRightMotion( GamePlayer *player )
 	case STATE_STANCE:
 	case STATE_DEFENSE:
 	case STATE_WALK:
-		GamePlayer_SetRightOriented( player );
+		if( !player->lock_action ) {
+			GamePlayer_SetRightOriented( player );
+		}
 		skill_id = SkillLibrary_GetSkill( player );
 		if( skill_id > 0 ) {
 			GamePlayer_RunSkill( player, skill_id );
