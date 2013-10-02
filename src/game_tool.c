@@ -48,6 +48,7 @@ static void test_read(void)
 	}
 }
 
+#define KUNI_ACTION_FILE_NUM	63
 #define RIKI_ACTION_FILE_NUM	73
 #define TORAJI_ACTION_FILE_NUM	73
 #define MAIN_FILE_NUM		2
@@ -79,6 +80,72 @@ const struct fileinfo main_file_info[2]={
 
 const struct fileinfo scenes_file_info={
 	"default-scene.png","default"
+};
+
+const struct fileinfo kuni_action_file_info[RIKI_ACTION_FILE_NUM]={
+	{"start-01.png", "start-01"},
+	{"start-02.png", "start-02"},
+	{"ready.png","ready"},
+	{"stance.png","stance"},
+	{"A-attack-01.png","A-attack-01"},
+	{"A-attack-02.png","A-attack-02"},
+	{"A-sprint-attack.png","A-sprint-attack"},
+	{"A-sprint-jump-attack.png","A-sprint-jump-attack"},
+	{"B-attack-01.png","B-attack-01"},
+	{"B-attack-02.png","B-attack-02"},
+	{"B-sprint-attack.png","B-sprint-attack"},
+	{"back-be-catch.png","back-be-catch"},
+	{"kick.png","kick"},
+	{"catch.png","catch"},
+	{"defense.png","defense"},
+	{"defense++.png","defense++"},
+	{"fall.png","fall"},
+	{"final-blow-01.png","final-blow-01"},
+	{"final-blow-02.png","final-blow-02"},
+	{"final-blow-03.png","final-blow-03"},
+	{"final-blow-04.png","final-blow-04"},
+	{"hit.png","hit"},
+	{"hit-fly.png","hit-fly"},
+	{"jump-elbow.png","jump-elbow"},
+	{"squat.png","squat"},
+	{"jump.png","jump"},
+	{"lift-fall.png","lift-fall"},
+	{"lift-jump.png","lift-jump"},
+	{"lift-run.png","lift-run"},
+	{"lift-walk-01.png","lift-walk-01"},
+	{"lift-walk-02.png","lift-walk-02"},
+	{"lift.png","lift"},
+	{"tummy.png","tummy"},
+	{"tummy-hit.png","tummy-hit"},
+	{"lying.png","lying"},
+	{"lying-hit.png","lying-hit"},
+	{"half-lying.png","half-lying"},
+	{"pull.png","pull"},
+	{"push.png","push"},
+	{"rest-01.png","rest-01"},
+	{"rest-02.png","rest-02"},
+	{"roll-01.png","roll-01"},
+	{"roll-02.png","roll-02"},
+	{"roll-03.png","roll-03"},
+	{"roll-04.png","roll-04"},
+	{"roll-05.png","roll-05"},
+	{"roll-06.png","roll-06"},
+	{"roll-07.png","roll-07"},
+	{"roll-08.png","roll-08"},
+	{"run-01.png","run-01"},
+	{"run-02.png","run-02"},
+	{"run-03.png","run-03"},
+	{"run-04.png","run-04"},
+	{"run-05.png","run-05"},
+	{"run-06.png","run-06"},
+	{"walk-01.png","walk-01"},
+	{"walk-03.png","walk-03"},
+	{"weak-walk.png","weak-walk"},
+	{"ride.png","ride"},
+	{"ride-attack-01.png","ride-attack-01"},
+	{"ride-attack-02.png","ride-attack-02"},
+	{"be-push.png", "be-push"},
+	{"sit.png", "sit"}
 };
 
 const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
@@ -268,6 +335,23 @@ static void ActionRes_Toraji_ReadFromFile(void)
 	}
 	GameGraphRes_FreeAll();
 }
+
+static void ActionRes_Kuni_WirteToFile( void )
+{
+	int i, class_id;
+	LCUI_Graph graph_buff;
+
+	GameGraphRes_Init();
+	class_id = GameGraphRes_AddClass(ACTION_RES_CLASS_KUNI);
+	for(i=0; i<KUNI_ACTION_FILE_NUM; ++i) {
+		Graph_Init( &graph_buff );
+		Graph_LoadImage( kuni_action_file_info[i].filepath, &graph_buff );
+		GameGraphRes_AddGraph( class_id, kuni_action_file_info[i].name, &graph_buff );
+	}
+	GameGraphRes_WriteToFile( "action-kuni.data", ACTION_RES_CLASS_KUNI );
+	GameGraphRes_FreeAll();
+}
+
 static void ActionRes_Riki_WirteToFile( void )
 {
 	int i, class_id;
@@ -362,13 +446,15 @@ int main(int argc, char** argv)
 	}
 #endif
 	if( argc == 2 ) {
+		//ActionRes_Kuni_ReadFromFile();
 		//ActionRes_Riki_ReadFromFile();
-		ActionRes_Toraji_ReadFromFile();
+		//ActionRes_Toraji_ReadFromFile();
 	} else {
 		//ActionRes_Toraji_WirteToFile();
 		//FontGraphRes_WirteToFile();
 		//ScenesGraphRes_WirteToFile();
-		ActionRes_Riki_WirteToFile();
+		ActionRes_Kuni_WirteToFile();
+		//ActionRes_Riki_WirteToFile();
 		//MainGraphRes_WirteToFile();
 	}
 	return 0;
