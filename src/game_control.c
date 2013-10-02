@@ -1190,6 +1190,9 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		return -1;
 	}
 	switch( role_id ) {
+	case ROLE_KUNI:
+		player->type = PLAYER_TYPE_FIGHTER;
+		break;
 	case ROLE_RIKI:
 		 player->type = PLAYER_TYPE_MARTIAL_ARTIST;
 		 break;
@@ -1204,6 +1207,8 @@ int GamePlayer_SetRole( int player_id, int role_id )
 	GameObject_SetShadow( player->object, img_shadow );
 	/* 根据职业来选择需要启用的特殊技能 */
 	switch( player->type ) {
+	case PLAYER_TYPE_FIGHTER:
+		break;
 	case PLAYER_TYPE_MARTIAL_ARTIST:
 		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
@@ -1407,6 +1412,7 @@ int Game_Init(void)
 		return ret;
 	}
 	ret = GameGraphRes_LoadFromFile("action-riki.data");
+	ret |= GameGraphRes_LoadFromFile("action-kuni.data");
 	ret |= GameGraphRes_LoadFromFile("action-toraji.data");
 	if( ret != 0 ) {
 		LCUI_MessageBoxW(
@@ -1486,7 +1492,7 @@ int Game_Init(void)
 	/* 设置1号玩家的控制键 */
 	GamePlayer_SetControlKey( 1, &ctrlkey );
 	/* 设置1号玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_RIKI );
+	GamePlayer_SetRole( 1, ROLE_KUNI );
 	/* 设置1号玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
 
