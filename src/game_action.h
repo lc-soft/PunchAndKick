@@ -1,11 +1,15 @@
 ﻿#ifndef __GAME_ACTION_H__
 #define __GAME_ACTION_H__
 enum RoleID {
+	ROLE_KUNI,
 	ROLE_RIKI,
 	ROLE_TORAJI
 };
 
 #define GLOBAL_Y_WIDTH	12
+
+int ActionRes_Kuni_GetActionTotalNum(void);
+const ActionInfo *ActionRes_Kuni_GetActionSet(void);
 
 int ActionRes_Riki_GetActionTotalNum(void);
 const ActionInfo *ActionRes_Riki_GetActionSet(void);

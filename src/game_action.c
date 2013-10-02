@@ -75,6 +75,11 @@ ActionData* ActionRes_Load( int role_id, int action_type )
 	char *class_name;
 
 	switch(role_id) {
+	case ROLE_KUNI:
+		total_action = ActionRes_Kuni_GetActionTotalNum();
+		action_set = ActionRes_Kuni_GetActionSet();
+		class_name = ACTION_RES_CLASS_KUNI;
+		break;
 	case ROLE_RIKI: 
 		total_action = ActionRes_Riki_GetActionTotalNum();
 		action_set = ActionRes_Riki_GetActionSet();
