@@ -48,7 +48,7 @@ static void test_read(void)
 	}
 }
 
-#define KUNI_ACTION_FILE_NUM	63
+#define KUNI_ACTION_FILE_NUM	64
 #define RIKI_ACTION_FILE_NUM	73
 #define TORAJI_ACTION_FILE_NUM	73
 #define MAIN_FILE_NUM		2
@@ -106,6 +106,7 @@ const struct fileinfo kuni_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"final-blow-04.png","final-blow-04"},
 	{"hit.png","hit"},
 	{"hit-fly.png","hit-fly"},
+	{"hit-fly-fall.png","hit-fly-fall"},
 	{"jump-elbow.png","jump-elbow"},
 	{"squat.png","squat"},
 	{"jump.png","jump"},
