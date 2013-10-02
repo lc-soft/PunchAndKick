@@ -879,7 +879,7 @@ static void CommonSkill_StartFinalBlow( GamePlayer *player )
 	GamePlayer_LockAction( player );
 }
 
-static void _StartAttack( GamePlayer *player, int state, int action, const char *attack_type_name )
+static void _StartNormalAttack( GamePlayer *player, int state, int action, const char *attack_type_name )
 {
 	void (*func)(LCUI_Widget*);
 
@@ -949,28 +949,28 @@ static LCUI_BOOL CommonSkill_CanUseJumpBAttack( GamePlayer *player )
 /** 开始发动A普通攻击 */
 static void CommonSkill_StartAAttack( GamePlayer *player )
 {
-	_StartAttack(	player, STATE_A_ATTACK, 
-		ACTION_A_ATTACK, ATK_SPRINT_JUMP_A_ATTACK );
+	_StartNormalAttack(	player, STATE_A_ATTACK, 
+				ACTION_A_ATTACK, ATK_A_ATTACK );
 }
 
 /** 开始发动B普通攻击 */
 static void CommonSkill_StartBAttack( GamePlayer *player )
 {
-	_StartAttack(	player, STATE_B_ATTACK, 
-			ACTION_B_ATTACK, ATK_SPRINT_JUMP_B_ATTACK );
+	_StartNormalAttack(	player, STATE_B_ATTACK, 
+				ACTION_B_ATTACK, ATK_B_ATTACK );
 }
 
 /** 开始发动高速A攻击 */
 static void CommonSkill_StartMachAAttack( GamePlayer *player )
 {
-	_StartAttack(	player, STATE_MACH_A_ATTACK,
+	_StartNormalAttack(	player, STATE_MACH_A_ATTACK,
 			ACTION_MACH_A_ATTACK, ATK_MACH_A_ATTACK );
 }
 
 /** 开始发动高速B攻击 */
 static void CommonSkill_StartMachBAttack( GamePlayer *player )
 {
-	_StartAttack(	player, STATE_MACH_B_ATTACK, 
+	_StartNormalAttack(	player, STATE_MACH_B_ATTACK, 
 			ACTION_MACH_B_ATTACK, ATK_MACH_B_ATTACK );
 }
 
