@@ -465,9 +465,19 @@ static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 		 || player->state == STATE_DIED ) {
 			continue;
 		}
-		break;
+		return player;
 	}
-	return player;
+	for( id=1; id<5; ++id ) {
+		player = GamePlayer_GetByID( id );
+		if( !player
+		 || !player->enable
+		 || id == self->id
+		 || player->state == STATE_DIED ) {
+			continue;
+		}
+		return player;
+	}
+	return NULL;
 }
 
 /** 获取自己与对方的距离 */
