@@ -811,10 +811,13 @@ void ExecuteStrategy( GamePlayer *player )
 		player->control.right_motion = FALSE;
 		player->control.up_motion = FALSE;
 		player->control.down_motion = FALSE;
-		if( x_width < 0 ) {
-			GamePlayer_SetRightOriented( player );
-		} else {
-			GamePlayer_SetLeftOriented( player );
+		if( !player->lock_action ) {
+			if( x_width < 0 ) {
+				GamePlayer_SetRightOriented( player );
+			} 
+			else if( x_width > 0 ) {
+				GamePlayer_SetLeftOriented( player );
+			}
 		}
 		GamePlayer_SetReady( player );
 		DEBUG_MSG("ai_action_type_observe\n");
