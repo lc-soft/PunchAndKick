@@ -1523,12 +1523,8 @@ int Game_Init(void)
 	ctrlkey.a_attack = LCUIKEY_J;
 	ctrlkey.b_attack = LCUIKEY_K;
 	ctrlkey.defense = LCUIKEY_L;
-	/* 设置1号玩家的控制键 */
+	/* 设置3号玩家的控制键 */
 	GamePlayer_SetControlKey( 1, &ctrlkey );
-	/* 设置1号玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_KUNI );
-	/* 设置1号玩家由人来控制 */
-	GamePlayer_ControlByHuman( 1, TRUE );
 
 	/* 记录2号角色的控制键 */
 	ctrlkey.up = LCUIKEY_UP;
@@ -1542,10 +1538,12 @@ int Game_Init(void)
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
 	/* 设置玩家的角色 */
+	GamePlayer_SetRole( 1, ROLE_KUNI );
 	GamePlayer_SetRole( 2, ROLE_RIKI );
 	GamePlayer_SetRole( 3, ROLE_TORAJI );
 	GamePlayer_SetRole( 4, ROLE_TORAJI );
 	/* 设置玩家由人来控制 */
+	GamePlayer_ControlByHuman( 1, TRUE );
 	GamePlayer_ControlByHuman( 2, FALSE );
 	GamePlayer_ControlByHuman( 3, FALSE );
 	GamePlayer_ControlByHuman( 4, FALSE );
