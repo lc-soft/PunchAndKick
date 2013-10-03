@@ -471,32 +471,59 @@ static int GameObject_ProcTouch( LCUI_Widget *widget )
 	return 0;
 }
 
-static int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
+/** 检测指定游戏对象是否已经成为另一游戏对象的受攻击者 */
+LCUI_API LCUI_BOOL GameObject_HaveVictim(	LCUI_Widget *attacker, 
+						LCUI_Widget *victim )
 {
 	int i, n;
-	AttackerInfo info;
 	LCUI_Widget *tmp;
-	GameObject *atk_obj, *hit_obj;
+	GameObject *atk_obj;
 
 	atk_obj = (GameObject*)Widget_GetPrivData( attacker );
-	hit_obj = (GameObject*)Widget_GetPrivData( victim );
 	n = Queue_GetTotal( &atk_obj->victim );
 	/* 在攻击者的受害者记录中查找 */
 	for(i=0; i<n; ++i) {
 		tmp = (LCUI_Widget*)Queue_Get( &atk_obj->victim, i );
 		/* 若当前受害者已经在记录中 */
 		if( tmp == victim ) {
-			return -1;
+			return TRUE;
 		}
 	}
+	return FALSE;
+}
+
+/** 直接为攻击者添加受害者记录 */
+LCUI_API int GameObject_DirectAddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
+{
+	AttackerInfo info;
+	GameObject *atk_obj, *hit_obj;
+	
+	atk_obj = (GameObject*)Widget_GetPrivData( attacker );
+	hit_obj = (GameObject*)Widget_GetPrivData( victim );
+	/* 准备攻击者的相关信息 */
 	info.attacker = attacker;
 	info.attacker_action = GameObject_GetCurrentActionID( attacker );
+	/* 为攻击者添加受害者记录 */
 	Queue_AddPointer( &atk_obj->victim, victim );
-	Queue_Add( &hit_obj->attacker_info, &info );
+	/* 为受害者记录攻击者的信息 */
+	if( Queue_Add( &hit_obj->attacker_info, &info )< 0 ) {
+		return -1;
+	}
+	/* 若设置了攻击响应 */
 	if( hit_obj->at_under_attack ) {
 		hit_obj->at_under_attack( victim );
 	}
 	return 0;
+}
+
+/** 为攻击者添加受害者记录，若已存在，则不添加 */
+LCUI_API int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim )
+{	
+	/* 如果已经成为了受害者，则退出 */
+	if( GameObject_HaveVictim( attacker, victim ) ) {
+		return -1;
+	}
+	return GameObject_DirectAddVictim( attacker, victim );
 }
 
 /** 处理攻击当前对象受到的攻击 */

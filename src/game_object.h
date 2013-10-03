@@ -152,6 +152,16 @@ LCUI_API int GameObject_GetAttackRange( LCUI_Widget *widget, RangeBox *range );
 /** 判断两个范围是否相交 */
 LCUI_API LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 );
 
+/** 检测指定游戏对象是否已经成为另一游戏对象的受攻击者 */
+LCUI_API LCUI_BOOL GameObject_HaveVictim(	LCUI_Widget *attacker, 
+						LCUI_Widget *victim );
+
+/** 直接为攻击者添加受害者记录 */
+LCUI_API int GameObject_DirectAddVictim( LCUI_Widget *attacker, LCUI_Widget *victim );
+
+/** 为攻击者添加受害者记录，若已存在，则不添加 */
+LCUI_API int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim );
+
 /**
  * 切换对象的动作
  * @param widget
