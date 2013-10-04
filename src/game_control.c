@@ -581,10 +581,6 @@ void GamePlayer_SetReady( GamePlayer *player )
 	if( player->lock_action ) {
 		return;
 	}
-	/* 如果处于举起状态，则不能切换为READY状态 */
-	if( GamePlayer_IsInLiftState(player) ) {
-		return;
-	}
 	GamePlayer_ChangeState( player, STATE_READY );
 	/* 设置响应动作超时信号 */
 	GamePlayer_SetActionTimeOut( player, 1000, GamePlayer_AtReadyTimeOut );
@@ -855,7 +851,9 @@ static void GamePlayer_SetLeftMotion( GamePlayer *player )
 		 || player->state == STATE_SQUAT
 		 || player->state == STATE_LIFT_JUMP
 		 || player->state == STATE_LIFT_FALL ) {
-			GamePlayer_SetLeftOriented( player );
+			if( !player->lock_action ) {
+				GamePlayer_SetLeftOriented( player );
+			}
 		}
 		else if( player->state == STATE_CATCH && player->other
 		 && player->other->state == STATE_BACK_BE_CATCH ) {
@@ -926,7 +924,9 @@ static void GamePlayer_SetRightMotion( GamePlayer *player )
 		 || player->state == STATE_SQUAT
 		 || player->state == STATE_LIFT_JUMP
 		 || player->state == STATE_LIFT_FALL ) {
-			GamePlayer_SetRightOriented( player );
+			if( !player->lock_action ) {
+				GamePlayer_SetRightOriented( player );
+			}
 		}
 		else if( player->state == STATE_CATCH && player->other
 		 && player->other->state == STATE_BACK_BE_CATCH ) {
@@ -1495,8 +1495,8 @@ int Game_Init(void)
 	player_data[1].property.throw = 100;
 	player_data[1].property.speed = 100;
 	
-	player_data[2].property.max_hp = 2000;
-	player_data[2].property.cur_hp = 2000;
+	player_data[2].property.max_hp = 20;
+	player_data[2].property.cur_hp = 20;
 	player_data[2].property.defense = 50;
 	player_data[2].property.kick = 200;
 	player_data[2].property.punch = 100;
