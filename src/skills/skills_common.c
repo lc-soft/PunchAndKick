@@ -376,6 +376,8 @@ static void GamePlayer_CancelStateAtBeLift( GamePlayer *player )
 	}
 	z_speed = GameObject_GetZSpeed( other_player->object );
 	z_acc = GameObject_GetZAcc( other_player->object );
+	player->other = NULL;
+	other_player->other = NULL;
 	/* 根据举起者当前的状态，切换至相应的普通状态 */
 	switch(other_player->state) {
 	case STATE_LIFT_FALL:
@@ -398,7 +400,7 @@ static void GamePlayer_CancelStateAtBeLift( GamePlayer *player )
 		}
 		break;
 	case STATE_LIFT_SQUAT:
-		CommonSkill_StartNormalJump( player );
+		GamePlayer_StartStand( player );
 		break;
 	case STATE_LIFT_STANCE:
 		GamePlayer_UnlockAction( other_player );
@@ -409,8 +411,6 @@ static void GamePlayer_CancelStateAtBeLift( GamePlayer *player )
 		GamePlayer_ChangeState( other_player, STATE_WALK );
 	default:break;
 	}
-	player->other = NULL;
-	other_player->other = NULL;
 }
 
 static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
@@ -1432,6 +1432,9 @@ static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
+	if( !player->other ) {
+		return;
+	}
 	GameObject_SetZ( player->other->object, LIFT_HEIGHT );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
@@ -2767,8 +2770,8 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 		}
 	}
 	/* 两个都受到攻击伤害 */
-	Game_RecordAttack( other_player, ATK_BUMPED, player, player->state );
-	Game_RecordAttack( player, ATK_BUMPED, other_player, other_player->state );
+	Game_RecordAttack( other_player, ATK_BUMPED2, player, player->state );
+	Game_RecordAttack( player, ATK_BUMPED2, other_player, other_player->state );
 	GameObject_AtTouch( player->object, NULL );
 	player->n_attack = 0;
 	other_player->n_attack = 0;
@@ -3035,7 +3038,7 @@ static void CommonSkill_RegisterPush(void)
 				CommonSkill_CanUsePush,
 				CommonSkill_StartPush
 	);
-	AttackLibrary_AddAttack( ATK_BUMPED, AttackDamage_Bumped, AttackEffect_TouchHitFly );
+	AttackLibrary_AddAttack( ATK_BUMPED2, AttackDamage_Bumped, NULL );
 }
 
 static void CommonSkill_RegisterMachStomp(void)
@@ -3123,6 +3126,7 @@ static void CommonSkill_RegisterThrow(void)
 				CommonSkill_StartBThrow
 	);
 	AttackLibrary_AddAttack( ATK_THROW, AttackDamage_Throw, NULL );
+	AttackLibrary_AddAttack( ATK_BUMPED, AttackDamage_Bumped, AttackEffect_TouchHitFly );
 }
 
 static void CommonSkill_RegisterRide(void)
