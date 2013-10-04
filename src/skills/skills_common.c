@@ -1347,8 +1347,8 @@ static void GamePlayer_AtLandingSuqatDone( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP_DONE );
-	GamePlayer_LockAction( player );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtJumpDone );
+	GamePlayer_LockAction( player );
 }
 
 /** 在着陆完成时 */
@@ -1365,12 +1365,12 @@ static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 	else if( player->control.right_motion ) {
 		GamePlayer_SetRightOriented( player );
 	}
+	/* 撤销在动作完成时的响应 */
+	GameObject_AtActionDone( player->object, ACTION_SQUAT, NULL );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GamePlayer_LockAction( player );
 	GameObject_SetXSpeed( player->object, 0 );
 	GameObject_SetYSpeed( player->object, 0 );
-	/* 撤销在动作完成时的响应 */
-	GameObject_AtActionDone( player->object, ACTION_SQUAT, NULL );
 	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_AtLandingSuqatDone );
 }
 

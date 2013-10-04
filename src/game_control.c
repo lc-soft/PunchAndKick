@@ -187,14 +187,11 @@ void GamePlayer_SetActionTimeOut(	GamePlayer *player,
 void GamePlayer_ChangeState( GamePlayer *player, int state )
 {
 	int action_type;
+
 	if( player->lock_action ) {
 		return;
 	}
-	if( player->state == STATE_LIFT_WALK ) {
-		if( state == STATE_STANCE ) {
-			abort();
-		}
-	}
+
 	switch(state) {
 	case STATE_START:
 		action_type = ACTION_START;
@@ -578,7 +575,7 @@ LCUI_BOOL GamePlayer_IsInLiftState( GamePlayer *player )
 
 void GamePlayer_SetReady( GamePlayer *player )
 {
-	if( player->lock_action ) {
+	if( player->lock_action || player->lock_motion ) {
 		return;
 	}
 	GamePlayer_ChangeState( player, STATE_READY );
