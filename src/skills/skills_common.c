@@ -278,6 +278,22 @@ static int GamePlayer_TryHit( GamePlayer *player )
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, ACTION_TUMMY_HIT, GamePlayer_AtHitDone );
 		break;
+	case STATE_BE_LIFT_LYING:
+	case STATE_BE_LIFT_LYING_HIT:
+		player->n_attack = 0;
+		GamePlayer_UnlockAction( player );
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_LYING_HIT );
+		GamePlayer_LockAction( player );
+		GameObject_AtActionDone( player->object, ACTION_LYING_HIT, GamePlayer_AtHitDone );
+		break;
+	case STATE_BE_LIFT_TUMMY:
+	case STATE_BE_LIFT_TUMMY_HIT:
+		player->n_attack = 0;
+		GamePlayer_UnlockAction( player );
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_TUMMY_HIT );
+		GamePlayer_LockAction( player );
+		GameObject_AtActionDone( player->object, ACTION_TUMMY_HIT, GamePlayer_AtHitDone );
+		break;
 	case STATE_B_ROLL:
 	case STATE_F_ROLL:
 	case STATE_HIT_FLY:
@@ -329,6 +345,72 @@ static void AttackEffect_Normal( GamePlayer *attacker, GamePlayer *victim )
 		++victim->n_attack;
 		GamePlayer_SetHit( victim );
 	}
+}
+
+static void GamePlayer_SetFall( GamePlayer *player );
+static void GamePlayer_AtLandingDone( LCUI_Widget *widget );
+static void CommonSkill_StartNormalJump( GamePlayer *player );
+
+/** 若指定游戏角色被举起，则撤销被举起状态 */
+static void GamePlayer_CancelStateAtBeLift( GamePlayer *player )
+{
+	double z_speed, z_acc;
+	GamePlayer *other_player;
+
+	switch(player->state) {
+	case STATE_BE_LIFT_LYING:
+	case STATE_BE_LIFT_LYING_HIT:
+	case STATE_BE_LIFT_TUMMY:
+	case STATE_BE_LIFT_TUMMY_HIT:
+	case STATE_BE_LIFT_SQUAT:
+	case STATE_BE_LIFT_STANCE:
+		break;
+	default:return;
+	}
+
+	other_player = player->other;
+	/* 如果没有举起者的记录 */
+	if( !other_player ) {
+		GamePlayer_SetFall( player );
+		return;
+	}
+	z_speed = GameObject_GetZSpeed( other_player->object );
+	z_acc = GameObject_GetZAcc( other_player->object );
+	/* 根据举起者当前的状态，切换至相应的普通状态 */
+	switch(other_player->state) {
+	case STATE_LIFT_FALL:
+		GamePlayer_UnlockAction( other_player );
+		GamePlayer_ChangeState( other_player, STATE_FALL );
+		GamePlayer_LockAction( other_player );
+		GameObject_AtLanding( other_player->object, z_speed, z_acc, GamePlayer_AtLandingDone );
+		break;
+	case STATE_LIFT_JUMP:
+		GamePlayer_UnlockAction( other_player );
+		GamePlayer_ChangeState( other_player, STATE_JUMP );
+		GamePlayer_LockAction( other_player );
+		GameObject_AtLanding( other_player->object, z_speed, z_acc, GamePlayer_AtLandingDone );
+		break;
+	case STATE_LIFT_RUN:
+		if( GamePlayer_IsLeftOriented(other_player) ) {
+			GamePlayer_ChangeState( other_player, STATE_LEFTRUN );
+		} else {
+			GamePlayer_ChangeState( other_player, STATE_RIGHTRUN );
+		}
+		break;
+	case STATE_LIFT_SQUAT:
+		CommonSkill_StartNormalJump( player );
+		break;
+	case STATE_LIFT_STANCE:
+		GamePlayer_UnlockAction( other_player );
+		GamePlayer_SetReady( other_player );
+		break;
+	case STATE_LIFT_WALK:
+		GamePlayer_UnlockAction( other_player );
+		GamePlayer_ChangeState( other_player, STATE_WALK );
+	default:break;
+	}
+	player->other = NULL;
+	other_player->other = NULL;
 }
 
 static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
@@ -399,8 +481,9 @@ static void GameObject_AtBumpBufferDone( LCUI_Widget *widget )
 /** 向左远距离击飞 */
 static void AttackEffect_LeftLongHitFly( GamePlayer *player )
 {
-	double speed;
-	if( GamePlayer_TryHit(player) == 0 ) {
+	if( !GamePlayer_CanUseAttackEffect(player) ) {
+		double speed;
+		GamePlayer_TryHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = -XSPEED_X_HIT_FLY * 0.5;
@@ -409,6 +492,7 @@ static void AttackEffect_LeftLongHitFly( GamePlayer *player )
 		GameObject_AtXSpeedToZero( player->object,-speed*5, GameObject_AtBumpBufferDone );
 		return;
 	}
+	GamePlayer_CancelStateAtBeLift( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -436,8 +520,9 @@ static void AttackEffect_LeftLongHitFly( GamePlayer *player )
 /** 向右远距离击飞 */
 static void AttackEffect_RightLongHitFly( GamePlayer *player )
 {
-	double speed;
-	if( GamePlayer_TryHit(player) == 0 ) {
+	if( !GamePlayer_CanUseAttackEffect(player) ) {
+		double speed;
+		GamePlayer_TryHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = XSPEED_X_HIT_FLY * 0.5;
@@ -446,6 +531,7 @@ static void AttackEffect_RightLongHitFly( GamePlayer *player )
 		GameObject_AtXSpeedToZero( player->object,-speed*5, GameObject_AtBumpBufferDone );
 		return;
 	}
+	GamePlayer_CancelStateAtBeLift( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -503,8 +589,9 @@ skip_speed_reduce:
 /** 向左短距离击飞 */
 static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 {
-	double speed;
-	if( GamePlayer_TryHit(player) == 0 ) {
+	if( !GamePlayer_CanUseAttackEffect( player ) ) {
+		double speed;
+		GamePlayer_TryHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = -XSPEED_HIT_FLY * 0.5;
@@ -513,6 +600,7 @@ static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 		GameObject_AtXSpeedToZero( player->object,-speed*5, GameObject_AtBumpBufferDone );
 		return;
 	}
+	GamePlayer_CancelStateAtBeLift( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -529,8 +617,9 @@ static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 /** 向右短距离击飞 */
 static void AttackEffect_RightShortHitFly( GamePlayer *player )
 {
-	double speed;
-	if( GamePlayer_TryHit(player) == 0 ) {
+	if( !GamePlayer_CanUseAttackEffect( player ) ) {
+		double speed;
+		GamePlayer_TryHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = XSPEED_HIT_FLY * 0.5;
@@ -539,6 +628,7 @@ static void AttackEffect_RightShortHitFly( GamePlayer *player )
 		GameObject_AtXSpeedToZero( player->object,-speed*5, GameObject_AtBumpBufferDone );
 		return;
 	}
+	GamePlayer_CancelStateAtBeLift( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -728,7 +818,9 @@ static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 	 || (attacker_speed < 0 && GamePlayer_IsLeftOriented(attacker))) {
 		 GamePlayer_ReduceSpeed( attacker, 50 );
 	}
-	if( GamePlayer_TryHit(victim) == 0 ) {
+
+	if( !GamePlayer_CanUseAttackEffect(victim) ) {
+		GamePlayer_TryHit(victim);
 		GamePlayer_LockAction( victim );
 		GamePlayer_LockMotion( victim );
 		victim_speed = GameObject_GetXSpeed( victim->object );
@@ -1709,7 +1801,7 @@ static void GamePlayer_LandingBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
-	GamePlayer_ReduceSpeed( player, 75 );
+	GamePlayer_ReduceSpeed( player, 50 );
 	Game_RecordAttack( player->other, ATK_THROW, player, player->state );
 	player->other = NULL;
 	GameObject_AtLanding(
@@ -2517,9 +2609,9 @@ static void GamePlayer_AtLiftLanding( LCUI_Widget *widget )
 	}
 	else if( player->state == STATE_LIFT_JUMP
 	 || player->state == STATE_LIFT_FALL ) {
-		GamePlayer_UnlockMotion( player );
 		GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 	}
+	GamePlayer_UnlockMotion( player );
 }
 
 /** 举着，起跳 */
