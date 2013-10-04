@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCUI-2DFightGame", "LCUI-2D
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCUI-GameResTool", "LCUI-GameResTool.vcxproj", "{06AF81B5-F303-45EF-883A-B2E241F50081}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EditColor", "..\EditColor\EditColor.vcxproj", "{1FB56007-7D63-4D64-B9B4-BAA9BCE5A111}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{06AF81B5-F303-45EF-883A-B2E241F50081}.Debug|Win32.Build.0 = Debug|Win32
 		{06AF81B5-F303-45EF-883A-B2E241F50081}.Release|Win32.ActiveCfg = Release|Win32
 		{06AF81B5-F303-45EF-883A-B2E241F50081}.Release|Win32.Build.0 = Release|Win32
+		{1FB56007-7D63-4D64-B9B4-BAA9BCE5A111}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1FB56007-7D63-4D64-B9B4-BAA9BCE5A111}.Debug|Win32.Build.0 = Debug|Win32
+		{1FB56007-7D63-4D64-B9B4-BAA9BCE5A111}.Release|Win32.ActiveCfg = Release|Win32
+		{1FB56007-7D63-4D64-B9B4-BAA9BCE5A111}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

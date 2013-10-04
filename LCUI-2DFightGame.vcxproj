@@ -28,7 +28,8 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v110_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -99,6 +100,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\gameres_kuni.c" />
     <ClCompile Include="src\gameres_riki.c" />
     <ClCompile Include="src\gameres_toraji.c" />
     <ClCompile Include="src\game_action.c" />
@@ -122,6 +124,7 @@
     <ClCompile Include="src\skills\skills_tiger.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\game.h" />
     <ClInclude Include="src\game_action.h" />
     <ClInclude Include="src\game_AI.h" />
@@ -139,6 +142,13 @@
     <ClInclude Include="src\skills\skills_common.h" />
     <ClInclude Include="src\skills\skills_martial_artist.h" />
     <ClInclude Include="src\skills\skills_tiger.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LCUI-2DFightGame.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="game-icon.ico" />
+    <Image Include="icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
