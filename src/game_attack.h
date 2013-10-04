@@ -7,6 +7,7 @@
 #define ATK_RIDE_A_ATTACK		"ride A attack"
 #define ATK_RIDE_B_ATTACK		"ride B attack"
 #define ATK_BUMPED			"bumped attack"
+#define ATK_BUMPED2			"bumped attack, no effcet"
 #define ATK_FINALBLOW			"final blow attack"
 #define ATK_SPRINT_JUMP_A_ATTACK	"sprint jump A attack"
 #define ATK_SPRINT_JUMP_B_ATTACK	"sprint jump B attack"
