@@ -832,7 +832,7 @@ void ExecuteStrategy( GamePlayer *player )
 	case ai_action_type_a_attack:
 		if( x_width < 0 ) {
 			GamePlayer_SetRightOriented( player );
-		} else {
+		} else if( x_width > 0 ) {
 			GamePlayer_SetLeftOriented( player );
 		}
 		player->control.a_attack = TRUE;
@@ -841,7 +841,7 @@ void ExecuteStrategy( GamePlayer *player )
 	case ai_action_type_b_attack:
 		if( x_width < 0 ) {
 			GamePlayer_SetRightOriented( player );
-		} else {
+		} else if( x_width > 0 ) {
 			GamePlayer_SetLeftOriented( player );
 		}
 		player->control.b_attack = TRUE;

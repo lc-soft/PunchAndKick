@@ -206,6 +206,9 @@ static int AttackDamage_JumpSpinKick( GamePlayer *attacker, GamePlayer *victim, 
 	return damage;
 }
 
+static void GamePlayer_SetFall( GamePlayer *player );
+static void GamePlayer_AtLandingDone( LCUI_Widget *widget );
+static void CommonSkill_StartNormalJump( GamePlayer *player );
 
 static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 {
@@ -259,7 +262,40 @@ static LCUI_BOOL GamePlayer_CanUseAttackEffect( GamePlayer *player )
 	return FALSE;
 }
 
-static int GamePlayer_TryHit( GamePlayer *player )
+/** 打断技能的效果 */
+static void GamePlayer_BreakSkillEffect( GamePlayer *player )
+{
+	GameObject_AtZeroZSpeed( player->object, NULL );
+	GameObject_AtZSpeed( player->object, 0, NULL );
+}
+
+/** 若指定游戏角色被擒住，则撤销被擒住状态 */
+static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
+{
+	GamePlayer *other_player;
+
+	switch(player->state) {
+	case STATE_BE_CATCH:
+	case STATE_BACK_BE_CATCH:
+		break;
+	default:return;
+	}
+	other_player = player->other;
+	if( !other_player ) {
+		return;
+	}
+	GamePlayer_SetReady( other_player );
+	other_player->other = NULL;
+}
+
+/** 在空中受到攻击后 */
+static void GamePlayer_AtAirHitDone( LCUI_Widget *widget )
+{
+	GamePlayer_SetFall( GamePlayer_GetPlayerByWidget( widget ) );
+}
+
+/** 设置游戏角色被攻击命中 */
+static void GamePlayer_SetHit( GamePlayer *player )
 {
 	switch( player->state ) {
 	case STATE_LYING:
@@ -269,7 +305,7 @@ static int GamePlayer_TryHit( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_LYING_HIT );
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, ACTION_LYING_HIT, GamePlayer_AtHitDone );
-		break;
+		return;
 	case STATE_TUMMY:
 	case STATE_TUMMY_HIT:
 		player->n_attack = 0;
@@ -277,7 +313,7 @@ static int GamePlayer_TryHit( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_TUMMY_HIT );
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, ACTION_TUMMY_HIT, GamePlayer_AtHitDone );
-		break;
+		return;
 	case STATE_BE_LIFT_LYING:
 	case STATE_BE_LIFT_LYING_HIT:
 		player->n_attack = 0;
@@ -285,7 +321,7 @@ static int GamePlayer_TryHit( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_BE_LIFT_LYING_HIT );
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, ACTION_LYING_HIT, GamePlayer_AtHitDone );
-		break;
+		return;
 	case STATE_BE_LIFT_TUMMY:
 	case STATE_BE_LIFT_TUMMY_HIT:
 		player->n_attack = 0;
@@ -293,7 +329,7 @@ static int GamePlayer_TryHit( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_BE_LIFT_TUMMY_HIT );
 		GamePlayer_LockAction( player );
 		GameObject_AtActionDone( player->object, ACTION_TUMMY_HIT, GamePlayer_AtHitDone );
-		break;
+		return;
 	case STATE_B_ROLL:
 	case STATE_F_ROLL:
 	case STATE_HIT_FLY:
@@ -302,25 +338,23 @@ static int GamePlayer_TryHit( GamePlayer *player )
 	case STATE_SOLID_DEFENSE:
 	case STATE_BE_PUSH:
 		player->n_attack = 0;
-		break;
-	default:
-		return -1;
-	}
-	return 0;
-}
-
-static void GamePlayer_SetHit( GamePlayer *player )
-{
-	if( GamePlayer_TryHit(player) == 0 ) {
 		return;
+	default:break;
 	}
-	GamePlayer_UnlockAction( player );
 	GamePlayer_StopYMotion( player );
 	GamePlayer_StopXMotion( player );
+	GamePlayer_CancelStateAtBeCatch( player );
+	GamePlayer_BreakSkillEffect( player );
+	GamePlayer_UnlockAction( player );
+	/* 如果Z轴坐标大于0，说明在空中 */
+	if( GameObject_GetZ(player->object) > 0 ) {
+		GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtAirHitDone );
+	} else {
+		GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtHitDone );
+	}
 	GamePlayer_ChangeState( player, STATE_HIT );
 	GamePlayer_LockAction( player );
 	GamePlayer_SetRestTimeOut( player, 2000, GamePlayer_ResetCountAttack );
-	GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtHitDone );
 }
 
 static void AttackEffect_BePushed( GamePlayer *player );
@@ -328,28 +362,19 @@ static void AttackEffect_BePushed( GamePlayer *player );
 /** 普通攻击产生的效果 */
 static void AttackEffect_Normal( GamePlayer *attacker, GamePlayer *victim )
 {
-	if( victim->state == STATE_HIT_FLY
-	 || victim->state == STATE_B_ROLL
-	 || victim->state == STATE_F_ROLL ) {
-		victim->n_attack = 0;
-	} 
-	else if( (victim->state == STATE_A_ATTACK 
-		|| victim->state == STATE_B_ATTACK
-		|| victim->state ==  STATE_MACH_A_ATTACK
-		|| victim->state ==  STATE_MACH_B_ATTACK)
-		&& GamePlayer_IsLeftOriented(attacker)
-		== GamePlayer_IsLeftOriented(victim) ) {
+	if( (victim->state == STATE_A_ATTACK 
+	 || victim->state == STATE_B_ATTACK
+	 || victim->state ==  STATE_MACH_A_ATTACK
+	 || victim->state ==  STATE_MACH_B_ATTACK)
+	 && GamePlayer_IsLeftOriented(attacker)
+	 == GamePlayer_IsLeftOriented(victim) ) {
 		victim->n_attack = 0;
 		AttackEffect_BePushed( victim );
-	} else {
-		++victim->n_attack;
-		GamePlayer_SetHit( victim );
+		return;
 	}
+	++victim->n_attack;
+	GamePlayer_SetHit( victim );
 }
-
-static void GamePlayer_SetFall( GamePlayer *player );
-static void GamePlayer_AtLandingDone( LCUI_Widget *widget );
-static void CommonSkill_StartNormalJump( GamePlayer *player );
 
 /** 若指定游戏角色被举起，则撤销被举起状态 */
 static void GamePlayer_CancelStateAtBeLift( GamePlayer *player )
@@ -439,12 +464,8 @@ void GamePlayer_AtFrontalHitFlyDone( LCUI_Widget *widget )
 	} else {
 		GameObject_SetXSpeed( player->object, -XSPEED_X_HIT_FLY2 );
 	}
-	GameObject_AtLanding(
-		player->object,
-		ZSPEED_XF_HIT_FLY2,
-		-ZACC_XF_HIT_FLY2,
-		GamePlayer_AtHitFlyDone
-	);
+	GameObject_AtLanding(	player->object, ZSPEED_XF_HIT_FLY2,
+				-ZACC_XF_HIT_FLY2, GamePlayer_AtHitFlyDone );
 }
 
 static void GamePlayer_AtHitFlyFall( LCUI_Widget *widget )
@@ -477,13 +498,12 @@ static void GameObject_AtBumpBufferDone( LCUI_Widget *widget )
 	GamePlayer_UnlockMotion( player );
 }
 
-
 /** 向左远距离击飞 */
 static void AttackEffect_LeftLongHitFly( GamePlayer *player )
 {
 	if( !GamePlayer_CanUseAttackEffect(player) ) {
 		double speed;
-		GamePlayer_TryHit( player );
+		GamePlayer_SetHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = -XSPEED_X_HIT_FLY * 0.5;
@@ -493,6 +513,7 @@ static void AttackEffect_LeftLongHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtBeCatch( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -522,7 +543,7 @@ static void AttackEffect_RightLongHitFly( GamePlayer *player )
 {
 	if( !GamePlayer_CanUseAttackEffect(player) ) {
 		double speed;
-		GamePlayer_TryHit( player );
+		GamePlayer_SetHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = XSPEED_X_HIT_FLY * 0.5;
@@ -532,6 +553,7 @@ static void AttackEffect_RightLongHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtBeCatch( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -591,7 +613,7 @@ static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 {
 	if( !GamePlayer_CanUseAttackEffect( player ) ) {
 		double speed;
-		GamePlayer_TryHit( player );
+		GamePlayer_SetHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = -XSPEED_HIT_FLY * 0.5;
@@ -601,6 +623,7 @@ static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtBeCatch( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -619,7 +642,7 @@ static void AttackEffect_RightShortHitFly( GamePlayer *player )
 {
 	if( !GamePlayer_CanUseAttackEffect( player ) ) {
 		double speed;
-		GamePlayer_TryHit( player );
+		GamePlayer_SetHit( player );
 		GamePlayer_LockAction( player );
 		GamePlayer_LockMotion( player );
 		speed = XSPEED_HIT_FLY * 0.5;
@@ -629,6 +652,7 @@ static void AttackEffect_RightShortHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtBeCatch( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -703,10 +727,10 @@ skip_speed_reduce:
 /** 普通攻击产生的效果（若对方处于喘气状态，则击飞对方） */
 static void AttackEffect_Normal2( GamePlayer *attacker, GamePlayer *victim )
 {
-	if( GamePlayer_TryHit(victim) == 0 ) {
+	GamePlayer_SetHit( victim );
+	if( !GamePlayer_CanUseAttackEffect(victim) ) {
 		return;
 	}
-	GamePlayer_SetHit( victim );
 	++victim->n_attack;
 	/* 若当前玩家处于歇息状态，则将其击飞 */
 	if( victim->n_attack >= 4
@@ -820,7 +844,7 @@ static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 	}
 
 	if( !GamePlayer_CanUseAttackEffect(victim) ) {
-		GamePlayer_TryHit(victim);
+		GamePlayer_SetHit(victim);
 		GamePlayer_LockAction( victim );
 		GamePlayer_LockMotion( victim );
 		victim_speed = GameObject_GetXSpeed( victim->object );
@@ -1464,7 +1488,7 @@ static void GamePlayer_SetFall( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
-	GamePlayer_ChangeState( player, STATE_JUMP );
+	GamePlayer_ChangeState( player, STATE_FALL );
 	GamePlayer_BreakRest( player );
 	GameObject_AtLanding( player->object, 0, -ZACC_JUMP, GamePlayer_AtLandingDone );
 	GamePlayer_LockAction( player );
@@ -1518,12 +1542,13 @@ static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
 	if( !player->other ) {
+		GamePlayer_SetReady( player );
 		return;
 	}
 	GameObject_SetZ( player->other->object, LIFT_HEIGHT );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockMotion( player );
 	GamePlayer_ChangeState( player, STATE_LIFT_STANCE );
 	/* 在举起者的位置变化时更新被举起者的位置 */
 	GameObject_AtMove( widget, GamePlayer_UpdateLiftPosition );
@@ -2400,7 +2425,7 @@ static void CommonSkill_StartRideAAttack( GamePlayer *player )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_RIDE_ATTACK );
 	GamePlayer_LockAction( player );
-	GamePlayer_TryHit( player->other );
+	GamePlayer_SetHit( player->other );
 	Game_RecordAttack( player, ATK_RIDE_A_ATTACK, player->other, player->other->state );
 	GameObject_AtActionDone( player->object, ACTION_RIDE_ATTACK, GamePlayer_AtRideAttackDone );
 }
