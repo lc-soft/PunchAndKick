@@ -14,68 +14,7 @@ static LCUI_Widget *game_scene;
 static LCUI_Widget *player_status_area;
 
 static GamePlayer player_data[4];
-static int global_action_list[]={
-	ACTION_START,
-	ACTION_READY,
-	ACTION_STANCE,
-	ACTION_WALK,
-	ACTION_RUN,
-	ACTION_DEFENSE,
-	ACTION_SOLID_DEFENSE,
-	ACTION_A_ATTACK,
-	ACTION_B_ATTACK,
-	ACTION_MACH_A_ATTACK,
-	ACTION_MACH_B_ATTACK,
-	ACTION_JUMP_MACH_A_ATTACK,
-	ACTION_JUMP_MACH_B_ATTACK,
-	ACTION_AS_ATTACK,
-	ACTION_BS_ATTACK,
-	ACTION_AJ_ATTACK,
-	ACTION_BJ_ATTACK,
-	ACTION_ASJ_ATTACK,
-	ACTION_BSJ_ATTACK,
-	ACTION_FINAL_BLOW,
-	ACTION_HIT,
-	ACTION_HIT_FLY,
-	ACTION_HIT_FLY_FALL,
-	ACTION_LYING,
-	ACTION_LYING_HIT,
-	ACTION_TUMMY,
-	ACTION_TUMMY_HIT,
-	ACTION_REST,
-	ACTION_SQUAT,
-	ACTION_JUMP,
-	ACTION_F_ROLL,
-	ACTION_B_ROLL,
-	ACTION_JUMP_ELBOW,
-	ACTION_JUMP_STOMP,
-	ACTION_FALL,
-	ACTION_KICK,
-	ACTION_GUILLOTINE,
-	ACTION_SPINHIT,
-	ACTION_BOMBKICK,
-	ACTION_MACH_STOMP,
-	ACTION_CATCH,
-	ACTION_BE_CATCH,
-	ACTION_BE_PUSH,
-	ACTION_HALF_LYING,
-	ACTION_BACK_BE_CATCH,
-	ACTION_CATCH_SKILL_FA,
-	ACTION_CATCH_SKILL_BA,
-	ACTION_CATCH_SKILL_BB,
-	ACTION_CATCH_SKILL_FB,
-	ACTION_WEAK_RUN,
-	ACTION_LIFT_STANCE,
-	ACTION_LIFT_WALK,
-	ACTION_LIFT_RUN,
-	ACTION_LIFT_JUMP,
-	ACTION_LIFT_FALL,
-	ACTION_THROW,
-	ACTION_RIDE,
-	ACTION_RIDE_ATTACK,
-	ACTION_LYING_DYING,
-	ACTION_TUMMY_DYING,
-};
+static int state_action_map[TOTAL_STATE_NUM];
 
 /** 通过部件获取游戏玩家数据 */
 GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
@@ -184,218 +123,99 @@ void GamePlayer_SetActionTimeOut(	GamePlayer *player,
 	player->t_action_timeout = LCUITimer_Set( n_ms, (void(*)(void*))func, player, FALSE );
 }
 
+/** 初始化状态与动作的映射表 */
+static void Game_InitStateActionMap(void)
+{
+	state_action_map[STATE_START] = ACTION_START;
+	state_action_map[STATE_LYING_DYING] = ACTION_LYING_DYING;
+	state_action_map[STATE_TUMMY_DYING] = ACTION_TUMMY_DYING;
+	state_action_map[STATE_READY] = ACTION_READY;
+	state_action_map[STATE_STANCE] =
+	state_action_map[STATE_BE_LIFT_STANCE] = ACTION_STANCE; 
+	state_action_map[STATE_WALK] = ACTION_WALK;
+	state_action_map[STATE_LEFTRUN] = 
+	state_action_map[STATE_RIGHTRUN] = ACTION_RUN;
+	state_action_map[STATE_DEFENSE] = ACTION_DEFENSE;
+	state_action_map[STATE_SOLID_DEFENSE] = ACTION_SOLID_DEFENSE;
+	state_action_map[STATE_A_ATTACK] = ACTION_A_ATTACK;
+	state_action_map[STATE_B_ATTACK] = ACTION_B_ATTACK;
+	state_action_map[STATE_MAJ_ATTACK] = ACTION_JUMP_MACH_A_ATTACK;
+	state_action_map[STATE_MACH_A_ATTACK] = ACTION_MACH_A_ATTACK;
+	state_action_map[STATE_MBJ_ATTACK] = ACTION_JUMP_MACH_B_ATTACK;
+	state_action_map[STATE_MACH_B_ATTACK] = ACTION_MACH_B_ATTACK;
+	state_action_map[STATE_AS_ATTACK] = ACTION_AS_ATTACK;
+	state_action_map[STATE_BS_ATTACK] = ACTION_BS_ATTACK;
+	state_action_map[STATE_ASJ_ATTACK] = ACTION_ASJ_ATTACK;
+	state_action_map[STATE_BSJ_ATTACK] = ACTION_BSJ_ATTACK;
+	state_action_map[STATE_AJ_ATTACK] = ACTION_AJ_ATTACK;
+	state_action_map[STATE_BJ_ATTACK] = ACTION_BJ_ATTACK;
+	state_action_map[STATE_FINAL_BLOW] = ACTION_FINAL_BLOW;
+	state_action_map[STATE_JUMP_DONE] =
+	state_action_map[STATE_BE_LIFT_SQUAT] =
+	state_action_map[STATE_LIFT_SQUAT] =
+	state_action_map[STATE_JSQUAT] =
+	state_action_map[STATE_SSQUAT] =
+	state_action_map[STATE_SQUAT] = ACTION_SQUAT;
+	state_action_map[STATE_JUMP] =
+	state_action_map[STATE_SJUMP] = ACTION_JUMP;
+	state_action_map[STATE_FALL] = ACTION_FALL;
+	state_action_map[STATE_HIT] = ACTION_HIT;
+	state_action_map[STATE_HIT_FLY] = ACTION_HIT_FLY;
+	state_action_map[STATE_HIT_FLY_FALL] = ACTION_HIT_FLY_FALL;
+	state_action_map[STATE_LYING] =
+	state_action_map[STATE_BE_LIFT_LYING] = ACTION_LYING;
+	state_action_map[STATE_LYING_HIT] =
+	state_action_map[STATE_BE_LIFT_LYING_HIT] = ACTION_LYING_HIT;
+	state_action_map[STATE_TUMMY] = 
+	state_action_map[STATE_BE_LIFT_TUMMY] = ACTION_TUMMY;
+	state_action_map[STATE_TUMMY_HIT] = 
+	state_action_map[STATE_BE_LIFT_TUMMY_HIT] = ACTION_TUMMY_HIT;
+	state_action_map[STATE_REST] = ACTION_REST;
+	state_action_map[STATE_F_ROLL] = ACTION_F_ROLL;
+	state_action_map[STATE_B_ROLL] = ACTION_B_ROLL;
+	state_action_map[STATE_GUILLOTINE] = ACTION_GUILLOTINE;
+	state_action_map[STATE_BIG_ELBOW] =
+	state_action_map[STATE_JUMP_ELBOW] = ACTION_JUMP_ELBOW;
+	state_action_map[STATE_RIDE_JUMP] = ACTION_FALL;
+	state_action_map[STATE_JUMP_STOMP] = ACTION_JUMP_STOMP;
+	state_action_map[STATE_KICK] = ACTION_KICK;
+	state_action_map[STATE_SPINHIT] = ACTION_SPINHIT;
+	state_action_map[STATE_BOMBKICK] = ACTION_BOMBKICK;
+	state_action_map[STATE_MACH_STOMP] = ACTION_MACH_STOMP;
+	state_action_map[STATE_CATCH] = ACTION_CATCH;
+	state_action_map[STATE_BE_CATCH] = ACTION_BE_CATCH;
+	state_action_map[STATE_HALF_LYING] = ACTION_HALF_LYING;
+	state_action_map[STATE_BACK_BE_CATCH] = ACTION_BACK_BE_CATCH;
+	state_action_map[STATE_CATCH_SKILL_FA] = ACTION_CATCH_SKILL_FA;
+	state_action_map[STATE_CATCH_SKILL_BA] = ACTION_CATCH_SKILL_BA;
+	state_action_map[STATE_CATCH_SKILL_BB] = ACTION_CATCH_SKILL_BB;
+	state_action_map[STATE_CATCH_SKILL_FB] = ACTION_CATCH_SKILL_FB;
+	state_action_map[STATE_BE_PUSH] = ACTION_BE_PUSH;
+	state_action_map[STATE_WEAK_RUN] =
+	state_action_map[STATE_WEAK_RUN_ATTACK] = ACTION_WEAK_RUN;
+	state_action_map[STATE_LIFT_STANCE] = ACTION_LIFT_STANCE;
+	state_action_map[STATE_LIFT_WALK] = ACTION_LIFT_WALK;
+	state_action_map[STATE_LIFT_RUN] = ACTION_LIFT_RUN;
+	state_action_map[STATE_LIFT_JUMP] = ACTION_LIFT_JUMP;
+	state_action_map[STATE_LIFT_FALL] = ACTION_LIFT_FALL;
+	state_action_map[STATE_THROW] = ACTION_THROW;
+	state_action_map[STATE_RIDE] = ACTION_RIDE;
+	state_action_map[STATE_RIDE_ATTACK] = ACTION_RIDE_ATTACK;
+}
+
+/** 改变游戏角色的当前状态 */
 void GamePlayer_ChangeState( GamePlayer *player, int state )
 {
-	int action_type;
-
 	if( player->lock_action ) {
 		return;
 	}
-
-	switch(state) {
-	case STATE_START:
-		action_type = ACTION_START;
-		break;
-	case STATE_LYING_DYING:
-		action_type = ACTION_LYING_DYING;
-		break;
-	case STATE_TUMMY_DYING:
-		action_type = ACTION_TUMMY_DYING;
-		break;
-	case STATE_READY:
-		action_type = ACTION_READY;
-		break;
-	case STATE_STANCE: 
-	case STATE_BE_LIFT_STANCE:
-		action_type = ACTION_STANCE; 
-		break;
-	case STATE_WALK:
-		action_type = ACTION_WALK;
-		break;
-	case STATE_LEFTRUN:
-	case STATE_RIGHTRUN:
-		action_type = ACTION_RUN;
-		break;
-	case STATE_DEFENSE:
-		action_type = ACTION_DEFENSE;
-		break;
-	case STATE_SOLID_DEFENSE:
-		action_type = ACTION_SOLID_DEFENSE;
-		break;
-	case STATE_A_ATTACK:
-		action_type = ACTION_A_ATTACK;
-		break;
-	case STATE_B_ATTACK:
-		action_type = ACTION_B_ATTACK;
-		break;
-	case STATE_MAJ_ATTACK:
-		action_type = ACTION_JUMP_MACH_A_ATTACK;
-		break;
-	case STATE_MACH_A_ATTACK:
-		action_type = ACTION_MACH_A_ATTACK;
-		break;
-	case STATE_MBJ_ATTACK:
-		action_type = ACTION_JUMP_MACH_B_ATTACK;
-		break;
-	case STATE_MACH_B_ATTACK:
-		action_type = ACTION_MACH_B_ATTACK;
-		break;
-	case STATE_AS_ATTACK:
-		action_type = ACTION_AS_ATTACK;
-		break;
-	case STATE_BS_ATTACK:
-		action_type = ACTION_BS_ATTACK;
-		break;
-	case STATE_ASJ_ATTACK:
-		action_type = ACTION_ASJ_ATTACK;
-		break;
-	case STATE_BSJ_ATTACK:
-		action_type = ACTION_BSJ_ATTACK;
-		break;
-	case STATE_AJ_ATTACK:
-		action_type = ACTION_AJ_ATTACK;
-		break;
-	case STATE_BJ_ATTACK:
-		action_type = ACTION_BJ_ATTACK;
-		break;
-	case STATE_FINAL_BLOW:
-		action_type = ACTION_FINAL_BLOW;
-		break;
-	case STATE_JUMP_DONE:
-	case STATE_BE_LIFT_SQUAT:
-	case STATE_LIFT_SQUAT:
-	case STATE_JSQUAT:
-	case STATE_SSQUAT:
-	case STATE_SQUAT:
-		action_type = ACTION_SQUAT;
-		break;
-	case STATE_JUMP:
-	case STATE_SJUMP:
-		action_type = ACTION_JUMP;
-		break;
-	case STATE_FALL:
-		action_type = ACTION_FALL;
-		break;
-	case STATE_HIT:
-		action_type = ACTION_HIT;
-		break;
-	case STATE_HIT_FLY:
-		action_type = ACTION_HIT_FLY;
-		break;
-	case STATE_HIT_FLY_FALL:
-		action_type = ACTION_HIT_FLY_FALL;
-		break;
-	case STATE_LYING:
-	case STATE_BE_LIFT_LYING:
-		action_type = ACTION_LYING;
-		break;
-	case STATE_LYING_HIT:
-	case STATE_BE_LIFT_LYING_HIT:
-		action_type = ACTION_LYING_HIT;
-		break;
-	case STATE_TUMMY:
-	case STATE_BE_LIFT_TUMMY:
-		action_type = ACTION_TUMMY;
-		break;
-	case STATE_TUMMY_HIT:
-	case STATE_BE_LIFT_TUMMY_HIT:
-		action_type = ACTION_TUMMY_HIT;
-		break;
-	case STATE_REST:
-		action_type = ACTION_REST;
-		break;
-	case STATE_F_ROLL:
-		action_type = ACTION_F_ROLL;
-		break;
-	case STATE_B_ROLL:
-		action_type = ACTION_B_ROLL;
-		break;
-	case STATE_GUILLOTINE:
-		action_type = ACTION_GUILLOTINE;
-		break;
-	case STATE_BIG_ELBOW:
-	case STATE_JUMP_ELBOW:
-		action_type = ACTION_JUMP_ELBOW;
-		break;
-	case STATE_RIDE_JUMP:
-		action_type = ACTION_FALL;
-		break;
-	case STATE_JUMP_STOMP:
-		action_type = ACTION_JUMP_STOMP;
-		break;
-	case STATE_KICK:
-		action_type = ACTION_KICK;
-		break;
-	case STATE_SPINHIT:
-		action_type = ACTION_SPINHIT;
-		break;
-	case STATE_BOMBKICK:
-		action_type = ACTION_BOMBKICK;
-		break;
-	case STATE_MACH_STOMP:
-		action_type = ACTION_MACH_STOMP;
-		break;
-	case STATE_CATCH:
-		action_type = ACTION_CATCH;
-		break;
-	case STATE_BE_CATCH:
-		action_type = ACTION_BE_CATCH;
-		break;
-	case STATE_HALF_LYING:
-		action_type = ACTION_HALF_LYING;
-		break;
-	case STATE_BACK_BE_CATCH:
-		action_type = ACTION_BACK_BE_CATCH;
-		break;
-	case STATE_CATCH_SKILL_FA:
-		action_type = ACTION_CATCH_SKILL_FA;
-		break;
-	case STATE_CATCH_SKILL_BA:
-		action_type = ACTION_CATCH_SKILL_BA;
-		break;
-	case STATE_CATCH_SKILL_BB:
-		action_type = ACTION_CATCH_SKILL_BB;
-		break;
-	case STATE_CATCH_SKILL_FB:
-		action_type = ACTION_CATCH_SKILL_FB;
-		break;
-	case STATE_BE_PUSH:
-		action_type = ACTION_BE_PUSH;
-		break;
-	case STATE_WEAK_RUN:
-	case STATE_WEAK_RUN_ATTACK:
-		action_type = ACTION_WEAK_RUN;
-		break;
-	case STATE_LIFT_STANCE:
-		action_type = ACTION_LIFT_STANCE;
-		break;
-	case STATE_LIFT_WALK:
-		action_type = ACTION_LIFT_WALK;
-		break;
-	case STATE_LIFT_RUN:
-		action_type = ACTION_LIFT_RUN;
-		break;
-	case STATE_LIFT_JUMP:
-		action_type = ACTION_LIFT_JUMP;
-		break;
-	case STATE_LIFT_FALL:
-		action_type = ACTION_LIFT_FALL;
-		break;
-	case STATE_THROW:
-		action_type = ACTION_THROW;
-		break;
-	case STATE_RIDE:
-		action_type = ACTION_RIDE;
-		break;
-	case STATE_RIDE_ATTACK:
-		action_type = ACTION_RIDE_ATTACK;
-		break;
-	default:return;
+	if( state >= TOTAL_STATE_NUM ) {
+		return;
 	}
-	player->state = state;
+	player->state = state;;
 	/* 在切换动作时，撤销动作超时的响应 */
 	GamePlayer_BreakActionTiming( player );
-	GamePlayer_ChangeAction( player, action_type );
+	GamePlayer_ChangeAction( player, state_action_map[state] );
 }
 
 void GamePlayer_LockAction( GamePlayer *player )
@@ -444,11 +264,11 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 	/* 创建GameObject部件 */
 	player->object = GameObject_New();
 
-	for(i=0; i<sizeof(global_action_list)/sizeof(int); ++i) {
+	for(i=0; i<TOTAL_ACTION_NUM; ++i) {
 		/* 载入游戏角色资源 */
-		action = ActionRes_Load( id, global_action_list[i] );
+		action = ActionRes_Load( id, i );
 		/* 将动作集添加至游戏对象 */
-		GameObject_AddAction( player->object, action, global_action_list[i] );
+		GameObject_AddAction( player->object, action, i );
 	}
 	
 	//Widget_SetBorder( player->object, Border(1,BORDER_STYLE_SOLID, RGB(0,0,0)) );
@@ -575,7 +395,7 @@ LCUI_BOOL GamePlayer_IsInLiftState( GamePlayer *player )
 
 void GamePlayer_SetReady( GamePlayer *player )
 {
-	if( player->lock_action || player->lock_motion ) {
+	if( player->lock_action ) {
 		return;
 	}
 	GamePlayer_ChangeState( player, STATE_READY );
@@ -1363,6 +1183,8 @@ int Game_Init(void)
 	LifeBar_Regiser();
 	/* 初始化攻击记录 */
 	Game_InitAttackRecord();
+	/* 初始化状态与动作的映射表 */
+	Game_InitStateActionMap();
 	/** 初始化技能库 */
 	SkillLibrary_Init();
 	/* 初始化角色信息 */

@@ -16,7 +16,7 @@ enum GamePlayerType {
 };
 
 enum GamePlayerState {
-	STATE_START,
+	STATE_START = 0,
 	STATE_DIED,		/**< 已经死亡 */
 	STATE_LYING_DYING,	/**< 躺着，快死了 */
 	STATE_TUMMY_DYING,	/**< 趴着，快死了 */
@@ -92,11 +92,12 @@ enum GamePlayerState {
 	STATE_THROW,
 	STATE_RIDE,
 	STATE_RIDE_ATTACK,
-	STATE_RIDE_JUMP
+	STATE_RIDE_JUMP,
+	TOTAL_STATE_NUM			/**< 状态的总数量 */
 };
 
 enum ActionType {
-	ACTION_START,
+	ACTION_START = 0,
 	ACTION_READY,
 	ACTION_STANCE,
 	ACTION_WALK,
@@ -156,6 +157,7 @@ enum ActionType {
 	ACTION_RIDE_ATTACK,
 	ACTION_LYING_DYING,	/**< 躺着，快死了 */
 	ACTION_TUMMY_DYING,	/**< 趴着，快死了 */
+	TOTAL_ACTION_NUM	/** 动作的总数量 */
 };
 
 typedef struct GamePlayerProperty_ {
