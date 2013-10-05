@@ -209,6 +209,7 @@ static int AttackDamage_JumpSpinKick( GamePlayer *attacker, GamePlayer *victim, 
 static void GamePlayer_SetFall( GamePlayer *player );
 static void GamePlayer_AtLandingDone( LCUI_Widget *widget );
 static void CommonSkill_StartNormalJump( GamePlayer *player );
+static void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim );
 
 static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 {
@@ -269,6 +270,28 @@ static void GamePlayer_BreakSkillEffect( GamePlayer *player )
 	GameObject_AtZSpeed( player->object, 0, NULL );
 }
 
+/** 若指定游戏角色擒住了另一角色，则撤销擒住状态 */
+static void GamePlayer_CancelStateAtCatch( GamePlayer *player )
+{
+	GamePlayer *other_player;
+	
+	other_player = player->other;
+	if( !other_player ) {
+		return;
+	}
+	switch(player->state) {
+	case STATE_CATCH:
+		GamePlayer_SetRest( other_player );
+		break;
+	case STATE_CATCH_SKILL_BA:
+	case STATE_CATCH_SKILL_FA:
+		AttackEffect_ShortHitFly( player, other_player );
+		break;
+	default:return;
+	}
+	other_player->other = NULL;
+}
+
 /** 若指定游戏角色被擒住，则撤销被擒住状态 */
 static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
 {
@@ -284,7 +307,15 @@ static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
 	if( !other_player ) {
 		return;
 	}
-	GamePlayer_SetReady( other_player );
+	switch(other_player->state) {
+	case STATE_CATCH:
+		GamePlayer_SetReady( other_player );
+		break;
+	case STATE_CATCH_SKILL_BA:
+	case STATE_CATCH_SKILL_FA:
+		AttackEffect_ShortHitFly( other_player, player );
+	default:break;
+	}
 	other_player->other = NULL;
 }
 
@@ -343,12 +374,16 @@ static void GamePlayer_SetHit( GamePlayer *player )
 	}
 	GamePlayer_StopYMotion( player );
 	GamePlayer_StopXMotion( player );
+	GamePlayer_CancelStateAtCatch( player );
 	GamePlayer_CancelStateAtBeCatch( player );
 	GamePlayer_BreakSkillEffect( player );
 	GamePlayer_UnlockAction( player );
 	/* 如果Z轴坐标大于0，说明在空中 */
 	if( GameObject_GetZ(player->object) > 0 ) {
+		double z_speed;
+		z_speed = GameObject_GetZSpeed( player->object );
 		GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtAirHitDone );
+		GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtLandingDone );
 	} else {
 		GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtHitDone );
 	}
@@ -513,7 +548,9 @@ static void AttackEffect_LeftLongHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtCatch( player );
 	GamePlayer_CancelStateAtBeCatch( player );
+	GamePlayer_BreakSkillEffect( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -553,7 +590,9 @@ static void AttackEffect_RightLongHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtCatch( player );
 	GamePlayer_CancelStateAtBeCatch( player );
+	GamePlayer_BreakSkillEffect( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -623,7 +662,9 @@ static void AttackEffect_LeftShortHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtCatch( player );
 	GamePlayer_CancelStateAtBeCatch( player );
+	GamePlayer_BreakSkillEffect( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -652,7 +693,9 @@ static void AttackEffect_RightShortHitFly( GamePlayer *player )
 		return;
 	}
 	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtCatch( player );
 	GamePlayer_CancelStateAtBeCatch( player );
+	GamePlayer_BreakSkillEffect( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY );
 	GamePlayer_LockAction( player );
@@ -1486,11 +1529,13 @@ static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 
 static void GamePlayer_SetFall( GamePlayer *player )
 {
+	double z_speed;
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_ChangeState( player, STATE_FALL );
 	GamePlayer_BreakRest( player );
-	GameObject_AtLanding( player->object, 0, -ZACC_JUMP, GamePlayer_AtLandingDone );
+	z_speed = GameObject_GetZ( player->object );
+	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtLandingDone );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 }
