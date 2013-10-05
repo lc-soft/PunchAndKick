@@ -1239,17 +1239,66 @@ static void CommonSkill_StartSprintJumpBAttack( GamePlayer *player )
 	GamePlayer_SetAttackTypeName( player, ATK_SPRINT_JUMP_B_ATTACK );
 }
 
+/** 获取当前角色附近躺地的角色 */
+static GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
+{
+	RangeBox range;
+	LCUI_Widget *widget;
+
+	range.x = -5;
+	range.x_width = 10;
+	range.y = -GLOBAL_Y_WIDTH/2;
+	range.y_width = GLOBAL_Y_WIDTH;
+	range.z = 0;
+	range.z_width = 20;
+
+	/* 检测当前角色是否站在躺地角色的头和脚的位置上 */
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_LYING );
+	if( widget ) {
+		return GamePlayer_GetPlayerByWidget( widget );;
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_TUMMY );
+	if( widget ) {
+		return GamePlayer_GetPlayerByWidget( widget );
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_LYING_HIT );
+	if( widget ) {
+		return GamePlayer_GetPlayerByWidget( widget );
+	}
+	widget = GameObject_GetObjectInRange(	player->object, range,
+						TRUE, ACTION_TUMMY_HIT );
+	if( widget ) {
+		return GamePlayer_GetPlayerByWidget( widget );
+	}
+	return NULL;
+}
+
 /** 检测是否可以攻击到躺地玩家 */
 static LCUI_BOOL CommonSkill_CanAttackGround( GamePlayer *player )
 {
+	double x1, x2;
 	GamePlayer *other_player;
+
 	other_player = GamePlayer_GetGroundPlayer( player );
-	if( other_player ) {
-		if( GamePlayer_CanAttackGroundPlayer(player, other_player) ) {
-			return TRUE;
+	if( !other_player ) {
+		return FALSE;
+	}
+	x1 = GameObject_GetX( player->object );
+	x2 = GameObject_GetX( other_player->object );
+	/* 游戏角色必须面向躺地的角色的中心位置 */
+	if( GamePlayer_IsLeftOriented( player ) ) {
+		if( x1 <= x2 ) {
+			return FALSE;
+		}
+	} else {
+		if( x1 > x2 ) {
+			return FALSE;
 		}
 	}
-	return FALSE;
+	return TRUE;
 }
 
 static LCUI_BOOL CommonSkill_CanAAttackGround( GamePlayer *player )
@@ -1272,6 +1321,43 @@ static LCUI_BOOL CommonSkill_CanBAttackGround( GamePlayer *player )
 		return FALSE;
 	}
 	return CommonSkill_CanAttackGround( player );
+}
+
+/** 检测当前角色是否能够举起另一个角色 */
+LCUI_BOOL GamePlayer_CanLiftPlayer( GamePlayer *player, GamePlayer *other_player )
+{
+	double x1, x2, z1, z2;
+	x1 = GameObject_GetX( player->object );
+	x2 = GameObject_GetX( other_player->object );
+	/* 如果不在中间位置附近 */
+	if( x1 <= x2-15 || x1 >= x2+15 ) {
+		return FALSE;
+	}
+	z1 = GameObject_GetZ( player->object );
+	z2 = GameObject_GetZ( other_player->object );
+	/* 两者高度差距不能太大 */
+	if( z1 <= z2-15 || z1 >= z2+15 ) {
+		return FALSE;
+	}
+	/* 如果有其它游戏角色 */
+	if( other_player->other ) {
+		/* 如果其它游戏角色已经骑在该游戏角色身上，
+		 * 或者举起了该游戏角色，则不能再次被其它游
+		 * 戏角色举起或骑乘 */
+		switch(other_player->other->state) {
+		case STATE_RIDE:
+		case STATE_RIDE_ATTACK:
+		case STATE_LIFT_SQUAT:
+		case STATE_RIDE_JUMP:
+		case STATE_LIFT_FALL:
+		case STATE_LIFT_WALK:
+		case STATE_LIFT_STANCE:
+		case STATE_LIFT_RUN:
+			return FALSE;
+		default: break;
+		}
+	}
+	return TRUE;
 }
 
 /** 检测是否能够举起躺地玩家 */
