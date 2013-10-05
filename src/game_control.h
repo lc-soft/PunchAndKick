@@ -251,15 +251,6 @@ GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code );
 /** 通过角色ID来获取角色 */
 GamePlayer *GamePlayer_GetByID( int player_id );
 
-/** 获取当前角色附近躺地的角色 */
-GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player );
-
-/** 检测当前角色是否能够举起另一个角色 */
-LCUI_BOOL GamePlayer_CanLiftPlayer( GamePlayer *player, GamePlayer *other_player );
-
-/** 检测玩家是否能够攻击躺在地上的玩家 */
-LCUI_BOOL GamePlayer_CanAttackGroundPlayer( GamePlayer *player, GamePlayer *other_player );
-
 /** 为游戏角色的动作设置时限，并在超时后进行响应 */
 void GamePlayer_SetActionTimeOut(	GamePlayer *player,
 					int n_ms,
