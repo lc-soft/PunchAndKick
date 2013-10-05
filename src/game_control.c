@@ -937,7 +937,7 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
 		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
-		StatusBar_SetPlayerNameW( player->statusbar, L"力" );
+		StatusBar_SetPlayerNameW( player->statusbar, L"阿力" );
 		break;
 	case ROLE_TORAJI:
 		player->type = PLAYER_TYPE_TIGER;
@@ -953,7 +953,7 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_SPINKICK );
 		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
-		StatusBar_SetPlayerNameW( player->statusbar, L"虎王" );
+		StatusBar_SetPlayerNameW( player->statusbar, L"虎哥" );
 	default:
 		break;
 	}
@@ -1222,9 +1222,9 @@ int Game_Init(void)
 	player_data[1].property.throw = 100;
 	player_data[1].property.speed = 100;
 	
-	player_data[2].property.max_hp = 20;
-	player_data[2].property.cur_hp = 20;
-	player_data[2].property.defense = 50;
+	player_data[2].property.max_hp = 3000;
+	player_data[2].property.cur_hp = 3000;
+	player_data[2].property.defense = 80;
 	player_data[2].property.kick = 200;
 	player_data[2].property.punch = 100;
 	player_data[2].property.throw = 100;
