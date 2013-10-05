@@ -75,6 +75,7 @@ static LCUI_BOOL TargetCanAction( int state )
 	case STATE_SJUMP:
 	case STATE_SQUAT:
 	case STATE_SSQUAT:
+	case STATE_JUMP_DONE:
 		return FALSE;
 	default:break;
 	}
@@ -819,7 +820,10 @@ void ExecuteStrategy( GamePlayer *player )
 				GamePlayer_SetLeftOriented( player );
 			}
 		}
-		GamePlayer_SetReady( player );
+		/* 如果能够自主活动 */
+		if( ICanAction(player->state) ) {
+			GamePlayer_SetReady( player );
+		}
 		DEBUG_MSG("ai_action_type_observe\n");
 		break;
 	case ai_action_type_stop_run:
