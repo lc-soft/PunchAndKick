@@ -4,6 +4,7 @@
 
 #define ACTION_RES_CLASS_RIKI	"graphics::action::riki"
 #define ACTION_RES_CLASS_KUNI	"graphics::action::kuni"
+#define ACTION_RES_CLASS_MIKE	"graphics::action::mike"
 #define ACTION_RES_CLASS_TORAJI	"graphics::action::toraji"
 #define MAIN_RES		"graphics::main"
 #define SCENES_RES		"graphics::senes"
