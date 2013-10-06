@@ -27,6 +27,7 @@ void SkillLibrary_Init(void)
 	skill_library_init = TRUE;
 	CommonSkill_Register();
 	MartialArtistSkill_Register();
+	KungFuSkill_Register();
 	TigerSkill_Register();
 }
 
