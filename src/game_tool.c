@@ -50,6 +50,7 @@ static void test_read(void)
 
 #define KUNI_ACTION_FILE_NUM	64
 #define RIKI_ACTION_FILE_NUM	73
+#define MIKE_ACTION_FILE_NUM	66
 #define TORAJI_ACTION_FILE_NUM	73
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
@@ -225,6 +226,75 @@ const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"defense++.png","defense++"}
 };
 
+const struct fileinfo mike_action_file_info[MIKE_ACTION_FILE_NUM]={
+	{"start-01.png", "start-01"},
+	{"start-02.png", "start-02"},
+	{"ready.png","ready"},
+	{"stance.png","stance"},
+	{"A-attack-01.png","A-attack-01"},
+	{"A-attack-02.png","A-attack-02"},
+	{"A-sprint-attack-01.png","A-sprint-attack-01"},
+	{"A-sprint-attack-02.png","A-sprint-attack-02"},
+	{"B-attack-01.png","B-attack-01"},
+	{"B-attack-02.png","B-attack-02"},
+	{"B-sprint-attack-01.png","B-sprint-attack-01"},
+	{"B-sprint-attack-02.png","B-sprint-attack-02"},
+	{"back-be-catch.png","back-be-catch"},
+	{"kick.png","kick"},
+	{"catch.png","catch"},
+	{"defense.png","defense"},
+	{"defense++.png","defense++"},
+	{"fall.png","fall"},
+	{"final-blow-01.png","final-blow-01"},
+	{"final-blow-02.png","final-blow-02"},
+	{"final-blow-03.png","final-blow-03"},
+	{"final-blow-04.png","final-blow-04"},
+	{"final-blow-05.png","final-blow-05"},
+	{"hit.png","hit"},
+	{"hit-fly.png","hit-fly"},
+	{"hit-fly-fall.png","hit-fly-fall"},
+	{"jump-elbow.png","jump-elbow"},
+	{"squat.png","squat"},
+	{"jump.png","jump"},
+	{"lift-fall.png","lift-fall"},
+	{"lift-jump.png","lift-jump"},
+	{"lift-run.png","lift-run"},
+	{"lift-walk-01.png","lift-walk-01"},
+	{"lift-walk-02.png","lift-walk-02"},
+	{"lift.png","lift"},
+	{"tummy.png","tummy"},
+	{"tummy-hit.png","tummy-hit"},
+	{"lying.png","lying"},
+	{"lying-hit.png","lying-hit"},
+	{"half-lying.png","half-lying"},
+	{"pull.png","pull"},
+	{"push.png","push"},
+	{"rest-01.png","rest-01"},
+	{"rest-02.png","rest-02"},
+	{"roll-01.png","roll-01"},
+	{"roll-02.png","roll-02"},
+	{"roll-03.png","roll-03"},
+	{"roll-04.png","roll-04"},
+	{"roll-05.png","roll-05"},
+	{"roll-06.png","roll-06"},
+	{"roll-07.png","roll-07"},
+	{"roll-08.png","roll-08"},
+	{"run-01.png","run-01"},
+	{"run-02.png","run-02"},
+	{"run-03.png","run-03"},
+	{"run-04.png","run-04"},
+	{"run-05.png","run-05"},
+	{"run-06.png","run-06"},
+	{"walk-01.png","walk-01"},
+	{"walk-02.png","walk-02"},
+	{"weak-walk.png","weak-walk"},
+	{"ride.png","ride"},
+	{"ride-attack-01.png","ride-attack-01"},
+	{"ride-attack-02.png","ride-attack-02"},
+	{"be-push.png", "be-push"},
+	{"sit.png", "sit"}
+};
+
 const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"start-01.png", "start-01"},
 	{"start-02.png", "start-02"},
@@ -301,21 +371,25 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"be-push.png","be-push"}
 };
 
-static void ActionRes_Toraji_WirteToFile( void )
+static void ActionRes_WirteToFile(	const char *class_name,
+					const struct fileinfo *filelist,
+					int n_file,
+					const char *outputfile )
 {
 	int i, class_id;
 	LCUI_Graph graph_buff;
 
 	GameGraphRes_Init();
-	class_id = GameGraphRes_AddClass(ACTION_RES_CLASS_TORAJI);
-	for(i=0; i<TORAJI_ACTION_FILE_NUM; ++i) {
+	class_id = GameGraphRes_AddClass(class_name);
+	for(i=0; i<n_file; ++i) {
 		Graph_Init( &graph_buff );
-		Graph_LoadImage( toraji_action_file_info[i].filepath, &graph_buff );
-		GameGraphRes_AddGraph( class_id, toraji_action_file_info[i].name, &graph_buff );
+		Graph_LoadImage( filelist[i].filepath, &graph_buff );
+		GameGraphRes_AddGraph( class_id, filelist[i].name, &graph_buff );
 	}
-	GameGraphRes_WriteToFile( "action-toraji.data", ACTION_RES_CLASS_TORAJI );
+	GameGraphRes_WriteToFile( outputfile, class_name );
 	GameGraphRes_FreeAll();
 }
+
 
 static void ActionRes_Toraji_ReadFromFile(void)
 {
@@ -337,22 +411,6 @@ static void ActionRes_Toraji_ReadFromFile(void)
 	GameGraphRes_FreeAll();
 }
 
-static void ActionRes_Kuni_WirteToFile( void )
-{
-	int i, class_id;
-	LCUI_Graph graph_buff;
-
-	GameGraphRes_Init();
-	class_id = GameGraphRes_AddClass(ACTION_RES_CLASS_KUNI);
-	for(i=0; i<KUNI_ACTION_FILE_NUM; ++i) {
-		Graph_Init( &graph_buff );
-		Graph_LoadImage( kuni_action_file_info[i].filepath, &graph_buff );
-		GameGraphRes_AddGraph( class_id, kuni_action_file_info[i].name, &graph_buff );
-	}
-	GameGraphRes_WriteToFile( "action-kuni.data", ACTION_RES_CLASS_KUNI );
-	GameGraphRes_FreeAll();
-}
-
 static void ActionRes_Riki_WirteToFile( void )
 {
 	int i, class_id;
@@ -366,22 +424,6 @@ static void ActionRes_Riki_WirteToFile( void )
 		GameGraphRes_AddGraph( class_id, riki_action_file_info[i].name, &graph_buff );
 	}
 	GameGraphRes_WriteToFile( "action-riki.data", ACTION_RES_CLASS_RIKI );
-	GameGraphRes_FreeAll();
-}
-
-static void MainGraphRes_WirteToFile( void )
-{
-	int i, class_id;
-	LCUI_Graph graph_buff;
-
-	GameGraphRes_Init();
-	class_id = GameGraphRes_AddClass( MAIN_RES );
-	for(i=0; i<MAIN_FILE_NUM; ++i) {
-		Graph_Init( &graph_buff );
-		Graph_LoadImage( main_file_info[i].filepath, &graph_buff );
-		GameGraphRes_AddGraph( class_id, main_file_info[i].name, &graph_buff );
-	}
-	GameGraphRes_WriteToFile( "main.data", MAIN_RES );
 	GameGraphRes_FreeAll();
 }
 
@@ -450,13 +492,32 @@ int main(int argc, char** argv)
 		//ActionRes_Kuni_ReadFromFile();
 		//ActionRes_Riki_ReadFromFile();
 		//ActionRes_Toraji_ReadFromFile();
-	} else {
-		//ActionRes_Toraji_WirteToFile();
-		//FontGraphRes_WirteToFile();
-		//ScenesGraphRes_WirteToFile();
-		ActionRes_Kuni_WirteToFile();
-		//ActionRes_Riki_WirteToFile();
-		//MainGraphRes_WirteToFile();
+		return 0;
 	}
+	//FontGraphRes_WirteToFile();
+	//ScenesGraphRes_WirteToFile();
+	//MainGraphRes_WirteToFile();
+#define need_mike
+#ifdef need_kuni
+	ActionRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
+				kuni_action_file_info,
+				KUNI_ACTION_FILE_NUM, 
+				"action-kuni.data" );
+#elif defined(need_riki)
+	ActionRes_WirteToFile(	ACTION_RES_CLASS_RIKI,
+				riki_action_file_info,
+				RIKI_ACTION_FILE_NUM, 
+				"action-riki.data" );
+#elif defined(need_toraji)
+	ActionRes_WirteToFile(	ACTION_RES_CLASS_TORAJI,
+				toraji_action_file_info,
+				TORAJI_ACTION_FILE_NUM, 
+				"action-toraji.data" );
+#elif defined(need_mike)
+	ActionRes_WirteToFile(	ACTION_RES_CLASS_MIKE,
+				mike_action_file_info,
+				MIKE_ACTION_FILE_NUM, 
+				"action-mike.data" );
+#endif
 	return 0;
 }
