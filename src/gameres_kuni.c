@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	59
+#define MAX_ACTION_NUM	60
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 开打 动作 */
 	{ ACTION_START, FALSE, {
@@ -341,6 +341,13 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-13,-GLOBAL_Y_WIDTH/2, 4, 54, GLOBAL_Y_WIDTH, 24} 
 		},
 		END_ACTION_FRAME
+	}},
+	/* 面朝下卷曲 */
+	{ ACTION_ROLL_DOWN, FALSE, {
+		{ TRUE, FALSE, FALSE, "roll-03", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0}
+		},
 	}},
 	/* 向前翻滚 动作 */
 	{ ACTION_F_ROLL, TRUE, {
