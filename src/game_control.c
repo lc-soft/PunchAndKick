@@ -171,6 +171,8 @@ static void Game_InitStateActionMap(void)
 	state_action_map[STATE_TUMMY_HIT] = 
 	state_action_map[STATE_BE_LIFT_TUMMY_HIT] = ACTION_TUMMY_HIT;
 	state_action_map[STATE_REST] = ACTION_REST;
+	state_action_map[STATE_ROLL_DOWN] = ACTION_ROLL_DOWN;
+	state_action_map[STATE_ROLL_UP] = ACTION_ROLL_UP;
 	state_action_map[STATE_F_ROLL] = ACTION_F_ROLL;
 	state_action_map[STATE_B_ROLL] = ACTION_B_ROLL;
 	state_action_map[STATE_GUILLOTINE] = ACTION_GUILLOTINE;
@@ -975,6 +977,9 @@ int GamePlayer_SetRole( int player_id, int role_id )
 	case PLAYER_TYPE_MARTIAL_ARTIST:
 		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
+		break;
+	case PLAYER_TYPE_KUNG_FU:
+		GamePlayer_EnableSkill( player, SKILLNAME_HUG_JUMP );
 		break;
 	case PLAYER_TYPE_TIGER:
 		GamePlayer_EnableSkill( player, SKILLNAME_SPIN_DRILL );
