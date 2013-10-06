@@ -50,7 +50,7 @@ static void test_read(void)
 
 #define KUNI_ACTION_FILE_NUM	64
 #define RIKI_ACTION_FILE_NUM	73
-#define MIKE_ACTION_FILE_NUM	66
+#define MIKE_ACTION_FILE_NUM	70
 #define TORAJI_ACTION_FILE_NUM	73
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
@@ -292,7 +292,11 @@ const struct fileinfo mike_action_file_info[MIKE_ACTION_FILE_NUM]={
 	{"ride-attack-01.png","ride-attack-01"},
 	{"ride-attack-02.png","ride-attack-02"},
 	{"be-push.png", "be-push"},
-	{"sit.png", "sit"}
+	{"sit.png", "sit"},
+	{"hug-jump-01.png", "hug-jump-01"},
+	{"hug-jump-02.png", "hug-jump-02"},
+	{"hug-jump-03.png", "hug-jump-03"},
+	{"hug-jump-04.png", "hug-jump-04"}
 };
 
 const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
