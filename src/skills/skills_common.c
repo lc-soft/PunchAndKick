@@ -896,6 +896,10 @@ static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 		GameObject_AtXSpeedToZero( victim->object,-victim_speed*5, GameObject_AtBumpBufferDone );
 		return;
 	}
+	GamePlayer_CancelStateAtBeLift( victim );
+	GamePlayer_CancelStateAtCatch( victim );
+	GamePlayer_CancelStateAtBeCatch( victim );
+	GamePlayer_BreakSkillEffect( victim );
 	GamePlayer_UnlockAction( victim );
 	GamePlayer_ChangeState( victim, STATE_HIT_FLY );
 	GamePlayer_LockAction( victim );
@@ -2122,7 +2126,7 @@ static void CommonSkill_StartAThrow( GamePlayer *player )
 		} else {
 			x_speed = XSPEED_RUN/2;
 		}
-		x_speed += GameObject_GetXSpeed( player->object )/4;
+		x_speed += GameObject_GetXSpeed( player->object )/2;
 		GamePlayer_LockMotion( player->other );
 		GameObject_SetXSpeed( player->other->object, x_speed );
 		GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
