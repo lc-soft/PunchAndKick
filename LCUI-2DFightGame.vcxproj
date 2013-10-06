@@ -101,6 +101,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\gameres_kuni.c" />
+    <ClCompile Include="src\gameres_mike.c" />
     <ClCompile Include="src\gameres_riki.c" />
     <ClCompile Include="src\gameres_toraji.c" />
     <ClCompile Include="src\game_action.c" />
