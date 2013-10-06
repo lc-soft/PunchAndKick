@@ -3,6 +3,7 @@
 enum RoleID {
 	ROLE_KUNI,
 	ROLE_RIKI,
+	ROLE_MIKE,
 	ROLE_TORAJI
 };
 
@@ -13,6 +14,9 @@ const ActionInfo *ActionRes_Kuni_GetActionSet(void);
 
 int ActionRes_Riki_GetActionTotalNum(void);
 const ActionInfo *ActionRes_Riki_GetActionSet(void);
+
+int ActionRes_Mike_GetActionTotalNum(void);
+const ActionInfo *ActionRes_Mike_GetActionSet(void);
 
 int ActionRes_Toraji_GetActionTotalNum(void);
 const ActionInfo *ActionRes_Toraji_GetActionSet(void);

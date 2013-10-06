@@ -939,6 +939,13 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
 		StatusBar_SetPlayerNameW( player->statusbar, L"阿力" );
 		break;
+	case ROLE_MIKE:
+		player->type = PLAYER_TYPE_KUNG_FU;
+		GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
+		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
+		StatusBar_SetPlayerNameW( player->statusbar, L"姬山" );
+		break;
 	case ROLE_TORAJI:
 		player->type = PLAYER_TYPE_TIGER;
 		GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
@@ -953,7 +960,7 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_SPINKICK );
 		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
-		StatusBar_SetPlayerNameW( player->statusbar, L"虎哥" );
+		StatusBar_SetPlayerNameW( player->statusbar, L"寅" );
 	default:
 		break;
 	}
@@ -1169,6 +1176,7 @@ int Game_Init(void)
 	}
 	ret = GameGraphRes_LoadFromFile("action-riki.data");
 	ret |= GameGraphRes_LoadFromFile("action-kuni.data");
+	ret |= GameGraphRes_LoadFromFile("action-mike.data");
 	ret |= GameGraphRes_LoadFromFile("action-toraji.data");
 	if( ret != 0 ) {
 		LCUI_MessageBoxW(
@@ -1265,9 +1273,9 @@ int Game_Init(void)
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
 	/* 设置玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_KUNI );
+	GamePlayer_SetRole( 1, ROLE_MIKE );
 	GamePlayer_SetRole( 2, ROLE_RIKI );
-	GamePlayer_SetRole( 3, ROLE_TORAJI );
+	GamePlayer_SetRole( 3, ROLE_KUNI );
 	GamePlayer_SetRole( 4, ROLE_TORAJI );
 	/* 设置玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );

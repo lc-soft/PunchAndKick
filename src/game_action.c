@@ -85,6 +85,11 @@ ActionData* ActionRes_Load( int role_id, int action_type )
 		action_set = ActionRes_Riki_GetActionSet();
 		class_name = ACTION_RES_CLASS_RIKI;
 		break;
+	case ROLE_MIKE:
+		total_action = ActionRes_Mike_GetActionTotalNum();
+		action_set = ActionRes_Mike_GetActionSet();
+		class_name = ACTION_RES_CLASS_MIKE;
+		break;
 	case ROLE_TORAJI:
 		total_action = ActionRes_Toraji_GetActionTotalNum();
 		action_set = ActionRes_Toraji_GetActionSet();
