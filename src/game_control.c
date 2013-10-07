@@ -578,17 +578,6 @@ static void GamePlayer_BeLiftStartStand( GamePlayer *player )
 	GamePlayer_LockAction( player );
 }
 
-static void GamePlayer_SetFall( GamePlayer *player )
-{
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockMotion( player );
-	GamePlayer_ChangeState( player, STATE_JUMP );
-	GamePlayer_BreakRest( player );
-	GameObject_AtLanding( player->object, 0, -ZACC_JUMP, GamePlayer_AtJumpDone );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-}
-
 /** 在歇息状态结束后 */
 static void GamePlayer_AtRestTimeOut( GamePlayer *player )
 {
@@ -1100,6 +1089,7 @@ void GamePlayer_Init( GamePlayer *player )
 	player->control.up_motion = FALSE;
 	player->control.down_motion = FALSE;
 	player->control.jump = FALSE;
+	player->ai_data.target_update_time = 0;
 	ControlKey_Init( &player->ctrlkey );
 }
 
@@ -1220,36 +1210,36 @@ int Game_Init(void)
 	player_data[2].enable = TRUE;
 	player_data[3].enable = TRUE;
 
-	player_data[0].property.max_hp = 2500;
-	player_data[0].property.cur_hp = 2500;
-	player_data[0].property.defense = 250;
-	player_data[0].property.kick = 300;
-	player_data[0].property.punch = 50;
-	player_data[0].property.throw = 200;
+	player_data[0].property.max_hp = 3200;
+	player_data[0].property.cur_hp = 3200;
+	player_data[0].property.defense = 150;
+	player_data[0].property.kick = 150;
+	player_data[0].property.punch = 100;
+	player_data[0].property.throw = 100;
 	player_data[0].property.speed = 150;
 
-	player_data[1].property.max_hp = 4000;
-	player_data[1].property.cur_hp = 4000;
-	player_data[1].property.defense = 300;
+	player_data[1].property.max_hp = 3200;
+	player_data[1].property.cur_hp = 3200;
+	player_data[1].property.defense = 130;
 	player_data[1].property.kick = 100;
-	player_data[1].property.punch = 100;
+	player_data[1].property.punch = 200;
 	player_data[1].property.throw = 100;
 	player_data[1].property.speed = 100;
 	
-	player_data[2].property.max_hp = 3000;
-	player_data[2].property.cur_hp = 3000;
-	player_data[2].property.defense = 80;
+	player_data[2].property.max_hp = 3200;
+	player_data[2].property.cur_hp = 3200;
+	player_data[2].property.defense = 200;
 	player_data[2].property.kick = 200;
 	player_data[2].property.punch = 100;
-	player_data[2].property.throw = 100;
+	player_data[2].property.throw = 110;
 	player_data[2].property.speed = 150;
 	
-	player_data[3].property.max_hp = 3000;
-	player_data[3].property.cur_hp = 3000;
-	player_data[3].property.defense = 200;
-	player_data[3].property.kick = 100;
+	player_data[3].property.max_hp = 4000;
+	player_data[3].property.cur_hp = 4000;
+	player_data[3].property.defense = 250;
+	player_data[3].property.kick = 250;
 	player_data[3].property.punch = 200;
-	player_data[3].property.throw = 100;
+	player_data[3].property.throw = 200;
 	player_data[3].property.speed = 150;
 
 	Graph_Init( &img_shadow );
@@ -1279,9 +1269,9 @@ int Game_Init(void)
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
 	/* 设置玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_MIKE );
+	GamePlayer_SetRole( 1, ROLE_KUNI );
 	GamePlayer_SetRole( 2, ROLE_RIKI );
-	GamePlayer_SetRole( 3, ROLE_KUNI );
+	GamePlayer_SetRole( 3, ROLE_MIKE );
 	GamePlayer_SetRole( 4, ROLE_TORAJI );
 	/* 设置玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
