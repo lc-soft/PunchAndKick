@@ -5,9 +5,8 @@
 #include "../game.h"
 #include "game_skill.h"
 
-#define SKILLNAME_HUG_JUMP	"hug jump"
-#define SKILLPRIORITY_HUG_JUMP	SKILLPRIORITY_MACH_A_ATTACK
-#define ATK_HUG_JUMP		"hug jump attack"
+#define ATK_HUG_JUMP			"hug jump attack"
+#define ATK_LIFT_JUMP			"lift jump attack"
 
 #define ZSPEED_HUG_JUMP	400
 #define ZACC_HUG_JUMP	1000
@@ -20,6 +19,15 @@ static int AttackDamage_HugJump( GamePlayer *attacker, GamePlayer *victim, int v
 	double damage;
 	damage = victim->property.defense;
 	damage += (victim->property.max_hp*0.05);
+	return DamageReduce( victim, victim_state, (int)damage );
+}
+
+static int AttackDamage_LiftJump( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	double damage;
+	damage = victim->property.defense;
+	damage += (victim->property.max_hp*0.05);
+	damage += attacker->property.throw;
 	return DamageReduce( victim, victim_state, (int)damage );
 }
 
@@ -171,6 +179,95 @@ static void StartHugJump( GamePlayer *player )
 	GamePlayer_LockMotion( player->other );
 }
 
+static LCUI_BOOL CanUseLiftJump( GamePlayer *player )
+{
+	if( player->type != PLAYER_TYPE_KUNG_FU ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	if( player->state != STATE_CATCH || !player->other ) {
+		return FALSE;
+	}
+	/* 对方需要是背面被擒住状态 */
+	if( player->other->state != STATE_BACK_BE_CATCH ) {
+		return FALSE;
+	}
+	/* 需要是面朝同一方向 */
+	if( GamePlayer_IsLeftOriented(player)
+	 != GamePlayer_IsLeftOriented(player->other) ) {
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static void ChangeSelfActionToLiftFall( GamePlayer *player )
+{
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_LIFT_FALL );
+	GamePlayer_LockAction( player );
+}
+
+/** 在技能结束时 */
+static void SelfAtLiftJumpDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_StartStand );
+	Game_RecordAttack( player, ATK_LIFT_JUMP, player->other, STATE_LYING );
+	GamePlayer_SetHit( player->other );
+}
+
+/** 在技能发动者达到最高处时降落 */
+static void SelfStartFall( LCUI_Widget *widget )
+{
+	double z;
+	int z_index, h1, h2;
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_HALF_LYING );
+	GamePlayer_LockAction( player );
+	h1 = GameObject_GetFrameTop( player->object, ACTION_LIFT_JUMP, 0 );
+	h2 = GameObject_GetFrameTop( player->other->object, ACTION_LYING, 0 );
+	z = GameObject_GetZ( player->object );
+	GameObject_SetZ( player->object, z+h1/2 );
+	GameObject_SetZ( player->other->object, z+h1/2-h2 );
+	z_index = Widget_GetZIndex( player->object );
+	/* 被攻击者需要显示在攻击者后面 */
+	Widget_SetZIndex( player->other->object, z_index-1 );
+	GameObject_AtZeroZSpeed( player->object, NULL );
+	GameObject_AtLanding( player->object, -ZSPEED_JUMP, -5*ZACC_JUMP, SelfAtLiftJumpDone );
+	GameObject_AtLanding( player->other->object, -ZSPEED_JUMP, -5*ZACC_JUMP, NULL );
+}
+
+/* 开始发动技能 */
+static void StartLiftJump( GamePlayer *player )
+{
+	double x, y, z;
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player->other, STATE_LYING );
+	GamePlayer_ChangeState( player, STATE_LIFT_JUMP );
+	GamePlayer_LockAction( player->other );
+	GamePlayer_LockAction( player );
+	GamePlayer_SetRestTimeOut( player->other, SHORT_REST_TIMEOUT, GamePlayer_StartStand );
+	x = GameObject_GetX( player->object );
+	y = GameObject_GetY( player->object );
+	z = GameObject_GetZ( player->object );
+	z += GameObject_GetFrameTop( player->object, ACTION_LIFT_JUMP, 0 );
+	GameObject_SetX( player->other->object, x );
+	GameObject_SetY( player->other->object, y );
+	GameObject_SetZ( player->other->object, z );
+	GameObject_AtLanding( player->object, ZSPEED_JUMP, -ZACC_JUMP, NULL );
+	GameObject_AtLanding( player->other->object, ZSPEED_JUMP, -ZACC_JUMP, NULL );
+	GamePlayer_SetActionTimeOut( player, 100, ChangeSelfActionToLiftFall );
+	GameObject_AtZeroZSpeed( player->object, SelfStartFall );
+}
+
 /** 注册功夫家特有的技能 */
 void KungFuSkill_Register(void)
 {
@@ -179,5 +276,11 @@ void KungFuSkill_Register(void)
 				CanUseHugJump,
 				StartHugJump
 	);
+	SkillLibrary_AddSkill(	SKILLNAME_LIFT_JUMP,
+				SKILLPRIORITY_LIFT_JUMP,
+				CanUseLiftJump,
+				StartLiftJump
+	);
 	AttackLibrary_AddAttack( ATK_HUG_JUMP, AttackDamage_HugJump, NULL );
+	AttackLibrary_AddAttack( ATK_LIFT_JUMP, AttackDamage_LiftJump, NULL );
 }
