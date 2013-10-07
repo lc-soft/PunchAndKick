@@ -979,6 +979,7 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
 		break;
 	case PLAYER_TYPE_KUNG_FU:
+		GamePlayer_EnableSkill( player, SKILLNAME_LIFT_JUMP );
 		GamePlayer_EnableSkill( player, SKILLNAME_HUG_JUMP );
 		break;
 	case PLAYER_TYPE_TIGER:
