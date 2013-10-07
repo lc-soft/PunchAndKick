@@ -451,32 +451,26 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 /** 获取自己的攻击目标 */
 static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 {
-	int id;
-	GamePlayer *player = NULL;
-
-	id = self->id + 2;
-	if( id > 4 ) {
-		id = id % 4;
+	int id, i;
+	GamePlayer *player;
+	if( LCUI_GetTickCount() < self->ai_data.target_update_time ) {
+		return GamePlayer_GetByID( self->ai_data.target_id );
 	}
-	for( ; id<5; ++id ) {
-		player = GamePlayer_GetByID( id );
-		if( !player
-		 || !player->enable
-		 || id == self->id
-		 || player->state == STATE_DIED ) {
-			continue;
+	self->ai_data.target_update_time = LCUI_GetTickCount() + 10000;
+	/* 最多重选10次目标 */
+	for(i=0; i<10; ++i) {
+		id = rand()%4+1;
+		if( id != self->id ) {
+			self->ai_data.target_id = id;
+			player = GamePlayer_GetByID( id );
+			if( !player->enable
+			|| player->state == STATE_DIED
+			|| player->state == STATE_LYING_DYING
+			|| player->state == STATE_TUMMY_DYING ) {
+				continue;
+			}
+			return player;
 		}
-		return player;
-	}
-	for( id=1; id<5; ++id ) {
-		player = GamePlayer_GetByID( id );
-		if( !player
-		 || !player->enable
-		 || id == self->id
-		 || player->state == STATE_DIED ) {
-			continue;
-		}
-		return player;
 	}
 	return NULL;
 }
@@ -902,6 +896,9 @@ void GameAI_Control( int player_id )
 	self = GamePlayer_GetByID( player_id );
 	/* 获取自己的目标 */
 	target = GamePlayer_GetTarget( self );
+	if( !target ) {
+		return;
+	}
 	/* 检测与目标的距离 */
 	GamePlayer_GetDistance( self, target, &x_width, &y_width );
 	DEBUG_MSG("x_width: %d\n", x_width);
