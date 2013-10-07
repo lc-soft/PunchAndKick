@@ -326,7 +326,7 @@ static void GamePlayer_AtAirHitDone( LCUI_Widget *widget )
 }
 
 /** 设置游戏角色被攻击命中 */
-static void GamePlayer_SetHit( GamePlayer *player )
+void GamePlayer_SetHit( GamePlayer *player )
 {
 	switch( player->state ) {
 	case STATE_LYING:
@@ -1603,7 +1603,7 @@ static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 	GameObject_AtMove( widget, GamePlayer_UpdateLiftPosition );
 }
 
-/** 设置举起另一个角色 */
+/** 开始举起另一个角色 */
 static void CommonSkill_StartLift( GamePlayer *player )
 {
 	double x, y;

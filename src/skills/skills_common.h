@@ -139,4 +139,7 @@ void CommonSkill_Register(void);
 /** 在擒获范围内，获取处于冲撞攻击状态的玩家 */
 GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self );
 
+/** 设置游戏角色被攻击命中 */
+void GamePlayer_SetHit( GamePlayer *player );
+
 #endif
