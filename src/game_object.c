@@ -195,6 +195,30 @@ LCUI_API int GameObject_GetCurrentActionFrameNumber( LCUI_Widget *widget )
 	return obj->n_frame;
 }
 
+/** 获取指定动作帧的顶点相对于底线的距离 */
+LCUI_API int GameObject_GetFrameTop( LCUI_Widget *widget, int action_id, int n_frame )
+{
+	int tmp;
+	GameObject *obj;
+	ActionFrameData *frame;
+	ActionRec *p_rec;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	p_rec = GameObject_FindActionRec( obj, action_id );
+	if( !p_rec ) {
+		return 0;
+	}
+	tmp = Queue_GetTotal( &p_rec->action->frame );
+	if( n_frame >= tmp ) {
+		n_frame = tmp-1;
+	}
+	frame = (ActionFrameData*)Queue_Get( &p_rec->action->frame, n_frame );
+	if( frame == NULL ) {
+		return 0;
+	}
+	return frame->graph.h + frame->offset.y;
+}
+
 /** 获取当前帧的顶点相对于底线的距离 */
 LCUI_API int GameObject_GetCurrentFrameTop( LCUI_Widget *widget )
 {
@@ -1362,7 +1386,6 @@ LCUI_API double GameObject_GetZAcc( LCUI_Widget *widget )
 LCUI_API void GameObject_SetXSpeed( LCUI_Widget *widget, double x_speed )
 {
 	GameObject *obj;
-
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	obj->space_obj->x_speed = x_speed;
 	Widget_Update( widget );

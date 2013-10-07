@@ -106,6 +106,9 @@ LCUI_API int GameObject_AtActionUpdate(	LCUI_Widget *widget,
 /** 获取当前动作帧的序号 */
 LCUI_API int GameObject_GetCurrentActionFrameNumber( LCUI_Widget *widget );
 
+/** 获取指定动作帧的顶点相对于底线的距离 */
+LCUI_API int GameObject_GetFrameTop( LCUI_Widget *widget, int action_id, int n_frame );
+
 /** 获取当前帧的顶点相对于底线的距离 */
 LCUI_API int GameObject_GetCurrentFrameTop( LCUI_Widget *widget );
 
