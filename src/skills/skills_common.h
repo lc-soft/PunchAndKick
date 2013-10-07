@@ -142,4 +142,6 @@ GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self );
 /** 设置游戏角色被攻击命中 */
 void GamePlayer_SetHit( GamePlayer *player );
 
+/** 设置游戏角色为下落状态 */
+void GamePlayer_SetFall( GamePlayer *player );
 #endif

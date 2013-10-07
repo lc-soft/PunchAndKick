@@ -206,7 +206,6 @@ static int AttackDamage_JumpSpinKick( GamePlayer *attacker, GamePlayer *victim, 
 	return damage;
 }
 
-static void GamePlayer_SetFall( GamePlayer *player );
 static void GamePlayer_AtLandingDone( LCUI_Widget *widget );
 static void CommonSkill_StartNormalJump( GamePlayer *player );
 static void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim );
@@ -1531,7 +1530,8 @@ static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_AtLandingSuqatDone );
 }
 
-static void GamePlayer_SetFall( GamePlayer *player )
+/** 设置游戏角色为下落状态 */
+void GamePlayer_SetFall( GamePlayer *player )
 {
 	double z_speed;
 	GamePlayer_UnlockAction( player );
