@@ -216,8 +216,10 @@ static void SelfAtLiftJumpDone( LCUI_Widget *widget )
 
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_StartStand );
-	Game_RecordAttack( player, ATK_LIFT_JUMP, player->other, STATE_LYING );
-	GamePlayer_SetHit( player->other );
+	if( player->other ) {
+		Game_RecordAttack( player, ATK_LIFT_JUMP, player->other, STATE_LYING );
+		GamePlayer_SetHit( player->other );
+	}
 }
 
 /** 在技能发动者达到最高处时降落 */
@@ -228,6 +230,9 @@ static void SelfStartFall( LCUI_Widget *widget )
 	GamePlayer *player;
 
 	player = GamePlayer_GetPlayerByWidget( widget );
+	if( !player->other ) {
+		GamePlayer_SetFall( player );
+	}
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HALF_LYING );
 	GamePlayer_LockAction( player );
