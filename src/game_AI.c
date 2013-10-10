@@ -454,7 +454,13 @@ static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 	int id, i;
 	GamePlayer *player;
 	if( LCUI_GetTickCount() < self->ai_data.target_update_time ) {
-		return GamePlayer_GetByID( self->ai_data.target_id );
+		player = GamePlayer_GetByID( self->ai_data.target_id );
+		if( player && player->enable
+		&& player->state != STATE_DIED
+		&& player->state != STATE_LYING_DYING
+		&& player->state != STATE_TUMMY_DYING ) {
+			return player;
+		}
 	}
 	self->ai_data.target_update_time = LCUI_GetTickCount() + 10000;
 	/* 最多重选10次目标 */
@@ -476,12 +482,16 @@ static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 }
 
 /** 获取自己与对方的距离 */
-static void GamePlayer_GetDistance( GamePlayer *self, GamePlayer *target, int *x_width, int *y_width )
+static LCUI_BOOL GamePlayer_GetDistance( GamePlayer *self, GamePlayer *target, int *x_width, int *y_width )
 {
+	if( !self || !target || !self->object || !target->object ) {
+		return FALSE;
+	}
 	*x_width = (int)GameObject_GetX( self->object );
 	*x_width -= (int)GameObject_GetX( target->object );
 	*y_width = (int)GameObject_GetY( self->object );
 	*y_width -= (int)GameObject_GetY( target->object );
+	return TRUE;
 }
 
 /*******************************************************************************
@@ -867,6 +877,9 @@ LCUI_BOOL CanCloseTarget( GamePlayer *player )
 		return TRUE;
 	}
 	target = GamePlayer_GetTarget( player );
+	if( !target ) {
+		return FALSE;
+	}
 	GamePlayer_GetDistance( player, target, &x_width, &y_width );
 	p_strategy = &global_strategy_set[player->ai_data.strategy_id];
 	if( player->state == STATE_LEFTRUN ) {
@@ -892,7 +905,7 @@ void GameAI_Control( int player_id )
 	GamePlayer *self, *target;
 	int x_width, y_width;
 	int n, strategy_buff[10];
-
+	
 	self = GamePlayer_GetByID( player_id );
 	/* 获取自己的目标 */
 	target = GamePlayer_GetTarget( self );
@@ -900,7 +913,9 @@ void GameAI_Control( int player_id )
 		return;
 	}
 	/* 检测与目标的距离 */
-	GamePlayer_GetDistance( self, target, &x_width, &y_width );
+	if( !GamePlayer_GetDistance( self, target, &x_width, &y_width ) ) {
+		return;
+	}
 	DEBUG_MSG("x_width: %d\n", x_width);
 	/*如果当前条件不满足当前策略 */
 	if( StrategyIsValid(&self->ai_data, target->state, x_width, y_width)
