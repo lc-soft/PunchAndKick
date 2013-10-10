@@ -10,7 +10,6 @@
 #include "skills/game_skill.h"
 
 static LCUI_Graph img_shadow;
-static LCUI_Widget *game_scene;
 static LCUI_Widget *player_status_area;
 
 static GamePlayer player_data[4];
@@ -89,10 +88,13 @@ GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code )
 /** 通过角色ID来获取角色 */
 GamePlayer *GamePlayer_GetByID( int player_id )
 {
-	if( player_id > 4 ) {
-		return NULL;
+	int i;
+	for(i=0; i<4; ++i) {
+		if( player_data[i].id == player_id ) {
+			return &player_data[i];
+		}
 	}
-	return &player_data[player_id-1];
+	return NULL;
 }
 
 /** 改变角色的动作动画  */
@@ -1165,8 +1167,7 @@ int Game_Init(void)
 	int ret;
 	ControlKey ctrlkey;
 
-	game_scene = Widget_New(NULL);
-	ret = GameScene_Init( game_scene );
+	ret = GameScene_Init();
 	if( ret != 0 ) {
 		return ret;
 	}
@@ -1284,17 +1285,17 @@ int Game_Init(void)
 	GameObject_AtUnderAttack( player_data[2].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[3].object, GamePlayer_ResponseAttack );
 	/* 将游戏对象放入战斗场景内 */
-	GameObject_AddToContainer( player_data[0].object, game_scene );
-	GameObject_AddToContainer( player_data[1].object, game_scene );
-	GameObject_AddToContainer( player_data[2].object, game_scene );
-	GameObject_AddToContainer( player_data[3].object, game_scene );
+	GameObject_AddToContainer( player_data[0].object, GetGameScene() );
+	GameObject_AddToContainer( player_data[1].object, GetGameScene() );
+	GameObject_AddToContainer( player_data[2].object, GetGameScene() );
+	GameObject_AddToContainer( player_data[3].object, GetGameScene() );
 	/* 响应按键输入 */
 	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 	ret |= GameMsgLoopStart();
 	/* 初始化在场景上显示的文本 */
-	InitSceneText( game_scene );
+	InitSceneText( GetGameScene() );
 	/* 显示场景 */
-	Widget_Show( game_scene );
+	Widget_Show( GetGameScene() );
 	return ret;
 }
 
@@ -1407,9 +1408,9 @@ int Game_Start(void)
 	int x, y, start_x, start_y;
 	LCUI_Size scene_size;
 
-	GameScene_GetLandSize( game_scene, &scene_size );
-	GameScene_GetLandStartX( game_scene, &start_x );
-	GameScene_GetLandStartY( game_scene, &start_y );
+	GameScene_GetLandSize( &scene_size );
+	GameScene_GetLandStartX( &start_x );
+	GameScene_GetLandStartY( &start_y );
 	/* 计算并设置游戏角色的位置 */
 	x = scene_size.w/2 - 150;
 	GameObject_SetX( player_data[0].object, start_x+x );
@@ -1466,6 +1467,7 @@ int Game_Loop(void)
 	int i;
 	/* 初始化游戏AI */
 	GameAI_Init();
+
 	/* 循环更新游戏数据 */
 	while(1) {
 		for(i=0; i<4; ++i) {
@@ -1481,9 +1483,10 @@ int Game_Loop(void)
 			}
 			GamePlayer_SyncData( &player_data[i] );
 			Widget_Update( player_data[i].object );
+			GameScene_SetCameraTarget( player_data[0].object );
 		}
 		/* 更新镜头 */
-		GameScene_UpdateCamera( game_scene, player_data[0].object );
+		GameScene_UpdateCamera();
 		/* 处理攻击 */
 		Game_ProcAttack();
 		LCUI_MSleep( 10 );
