@@ -1464,17 +1464,18 @@ int Game_Start(void)
 
 int Game_Loop(void)
 {
-	int i;
+	int i, n_found;
 	/* 初始化游戏AI */
 	GameAI_Init();
 
 	/* 循环更新游戏数据 */
 	while(1) {
-		for(i=0; i<4; ++i) {
+		for(n_found=0,i=0; i<4; ++i) {
 			if( !player_data[i].enable
 			 || !player_data[i].local_control ) {
 				continue;
 			}
+			++n_found;
 			/* 如果该游戏玩家不是由人类控制的 */
 			if( !player_data[i].human_control ) {
 				GameAI_Control( player_data[i].id );
@@ -1483,7 +1484,10 @@ int Game_Loop(void)
 			}
 			GamePlayer_SyncData( &player_data[i] );
 			Widget_Update( player_data[i].object );
-			GameScene_SetCameraTarget( player_data[0].object );
+			/* 将第一个有效的游戏角色设置为镜头焦点 */
+			if( n_found == 1 ) {
+				GameScene_SetCameraTarget( player_data[i].object );
+			}
 		}
 		/* 更新镜头 */
 		GameScene_UpdateCamera();
