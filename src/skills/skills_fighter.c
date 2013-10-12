@@ -26,7 +26,13 @@ static int AttackDamage_HugFrontPut( GamePlayer *attacker, GamePlayer *victim, i
 
 static int AttackDamage_HugBackPut( GamePlayer *attacker, GamePlayer *victim, int victim_state )
 {
-	return 0;
+	double damage, percent;
+	damage = attacker->property.throw;
+	damage += (victim->property.max_hp*0.05);
+	percent = attacker->property.max_hp - attacker->property.cur_hp;
+	percent /= attacker->property.max_hp;
+	damage += (damage*percent);
+	return DamageReduce( victim, victim_state, (int)damage );
 }
 
 static LCUI_BOOL CanUseHugFrontPut( GamePlayer *player )
@@ -97,6 +103,19 @@ static void TargetAtHugFrontPutDone( LCUI_Widget *widget )
 	}
 }
 
+static void TargetStartLying( GamePlayer *player )
+{
+	int ret;
+
+	GamePlayer_UnlockAction( player );
+	ret = GamePlayer_SetLying( player );
+	GamePlayer_LockAction( player );
+	GamePlayer_StopXMotion( player );
+	if( ret == 0 ) {
+		GamePlayer_SetRestTimeOut( player, 1000, GamePlayer_StartStand );
+	}
+}
+
 static void TargetStartBounce( LCUI_Widget *widget )
 {
 	double x_speed;
@@ -109,6 +128,10 @@ static void TargetStartBounce( LCUI_Widget *widget )
 	}
 	GameObject_SetXSpeed( widget, x_speed );
 	Game_RecordAttack( player->other, ATK_HUG_FRONT_PUT, player, STATE_HALF_LYING );
+	if( player->other ) {
+		player->other->other = NULL;
+	}
+	player->other = NULL;
 	GameObject_AtLanding( widget, ZSPEED_BOUNCE, -ZACC_BOUNCE, TargetAtHugFrontPutDone );
 }
 
@@ -144,6 +167,9 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_HIT_FLY_FALL );
 		GamePlayer_LockAction( player->other );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
+		GameObject_SetZ( player->other->object, z+20 );
 		z_index = Widget_GetZIndex( player->object );
 		Widget_SetZIndex( player->other->object, z_index-1 );
 		break;
@@ -237,6 +263,69 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 	}
 }
 
+static void HugBackPut_AtActionUpdate( LCUI_Widget *widget )
+{
+	int z_index;
+	GamePlayer *player;
+	double x, y, z;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( !player->other ) {
+		return;
+	}
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index-1 );
+
+	switch( GameObject_GetCurrentActionFrameNumber(widget) ) {
+	//case 1:break;
+	case 2:
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		z = GameObject_GetZ( player->object );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetLeftOriented( player->other );
+			x += 30;
+		} else {
+			GamePlayer_SetRightOriented( player->other );
+			x -= 30;
+		}
+		GamePlayer_UnlockAction( player->other );
+		GameObject_AtActionDone( player->other->object, ACTION_LYING_HIT, NULL );
+		GamePlayer_ChangeState( player->other, STATE_LYING_HIT );
+		GamePlayer_LockAction( player->other );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
+		GameObject_SetZ( player->other->object, z+30 );
+		break;
+	case 4:
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		z = GameObject_GetZ( player->object );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetLeftOriented( player->other );
+			x += 35;
+		} else {
+			GamePlayer_SetRightOriented( player->other );
+			x -= 35;
+		}
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_ChangeState( player->other, STATE_HALF_LYING );
+		GamePlayer_LockAction( player->other );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
+		GameObject_SetZ( player->other->object, z );
+		Game_RecordAttack( player, ATK_HUG_BACK_PUT, player->other, STATE_HALF_LYING );
+		GameObject_AtLanding( player->other->object, -100, -ZACC_JUMP, NULL );
+		GamePlayer_SetActionTimeOut( player->other, 1000, TargetStartLying );
+		if( player->other ) {
+			player->other->other = NULL;
+		}
+		player->other = NULL;
+	default:
+		break;
+	}
+}
+
 static void StartHugFrontPut( GamePlayer *player )
 {
 	int z_index;
@@ -270,7 +359,16 @@ static void StartHugFrontPut( GamePlayer *player )
 
 static void StartHugBackPut( GamePlayer *player )
 {
+	int z_index;
 
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index-1 );
+	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_BA, HugBackPut_AtActionUpdate );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BA );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_BA, SelfAtSkillDone );
 }
 
 /** 注册格斗家特有的技能 */
