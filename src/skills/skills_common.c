@@ -308,6 +308,8 @@ static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
 	}
 	switch(other_player->state) {
 	case STATE_CATCH:
+		GamePlayer_UnlockAction( other_player );
+		GamePlayer_UnlockMotion( other_player );
 		GamePlayer_SetReady( other_player );
 		break;
 	case STATE_CATCH_SKILL_BA:
@@ -983,6 +985,10 @@ static void AttackEffect_BePushedToRight( GamePlayer *player )
 static void AttackEffect_BePushed( GamePlayer *player )
 {
 	GamePlayer_UnlockAction( player );
+	GamePlayer_CancelStateAtBeLift( player );
+	GamePlayer_CancelStateAtCatch( player );
+	GamePlayer_CancelStateAtBeCatch( player );
+	GamePlayer_BreakSkillEffect( player );
 	GamePlayer_ChangeState( player, STATE_BE_PUSH );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
@@ -2324,7 +2330,9 @@ static LCUI_BOOL CommonSkill_CanUseCatch( GamePlayer *player )
 	case STATE_WALK:
 		other_player = GamePlayer_CatchGaspingPlayer( player );
 		if( other_player ) {
+			/* 记录擒获者和被擒者 */
 			player->other = other_player;
+			other_player->other = player;
 			return TRUE;
 		}
 	default:
@@ -2432,6 +2440,9 @@ static LCUI_BOOL CommonSkill_CanUseRideAAttack( GamePlayer *player )
 	if( !player->other ) {
 		return FALSE;
 	}
+	if( player->other->other != player ) {
+		return FALSE;
+	}
 	if( player->other->state != STATE_LYING
 	&& player->other->state != STATE_LYING_HIT
 	&& player->other->state != STATE_TUMMY
@@ -2449,7 +2460,19 @@ static LCUI_BOOL CommonSkill_CanUseRideBAttack( GamePlayer *player )
 	if( !player->control.b_attack ) {
 		return FALSE;
 	}
-	if( !player->state == STATE_RIDE ) {
+	if( player->state != STATE_RIDE ) {
+		return FALSE;
+	}
+	if( !player->other ) {
+		return FALSE;
+	}
+	if( player->other->other != player ) {
+		return FALSE;
+	}
+	if( player->other->state != STATE_LYING
+	&& player->other->state != STATE_LYING_HIT
+	&& player->other->state != STATE_TUMMY
+	&& player->other->state != STATE_TUMMY_HIT ) {
 		return FALSE;
 	}
 	return TRUE;
