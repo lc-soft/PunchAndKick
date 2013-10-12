@@ -598,15 +598,15 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-32, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 34},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "hug-front-put-01", 6, 0, 0,
-			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
-			{0,0,0,0,0,0} 
-		},
 		{ TRUE, FALSE, FALSE, "hug-front-put-02", 6, 0, 0,
 			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "hug-front-put-01", 6, 0, 0,
+		{ TRUE, FALSE, FALSE, "hug-front-put-01", 15, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-02", 6, 0, 0,
 			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
 		},
