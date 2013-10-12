@@ -189,6 +189,7 @@ static void Game_InitStateActionMap(void)
 	state_action_map[STATE_CATCH] = ACTION_CATCH;
 	state_action_map[STATE_BE_CATCH] = ACTION_BE_CATCH;
 	state_action_map[STATE_HALF_LYING] = ACTION_HALF_LYING;
+	state_action_map[STATE_HALF_STANCE] = ACTION_HALF_STANCE;
 	state_action_map[STATE_BACK_BE_CATCH] = ACTION_BACK_BE_CATCH;
 	state_action_map[STATE_CATCH_SKILL_FA] = ACTION_CATCH_SKILL_FA;
 	state_action_map[STATE_CATCH_SKILL_BA] = ACTION_CATCH_SKILL_BA;
@@ -964,6 +965,8 @@ int GamePlayer_SetRole( int player_id, int role_id )
 	/* 根据职业来选择需要启用的特殊技能 */
 	switch( player->type ) {
 	case PLAYER_TYPE_FIGHTER:
+		GamePlayer_EnableSkill( player, SKILLNAME_HUG_FRONT_PUT );
+		GamePlayer_EnableSkill( player, SKILLNAME_HUG_BACK_PUT );
 		break;
 	case PLAYER_TYPE_MARTIAL_ARTIST:
 		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
