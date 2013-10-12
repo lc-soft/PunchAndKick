@@ -26,6 +26,7 @@ void SkillLibrary_Init(void)
 	Queue_Init( &skill_library, sizeof(SkillData), NULL );
 	skill_library_init = TRUE;
 	CommonSkill_Register();
+	FighterSkill_Register();
 	MartialArtistSkill_Register();
 	KungFuSkill_Register();
 	TigerSkill_Register();
