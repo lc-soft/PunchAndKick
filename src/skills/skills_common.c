@@ -2316,7 +2316,6 @@ static void CommonSkill_StartRide( GamePlayer *player )
 
 static LCUI_BOOL CommonSkill_CanUseCatch( GamePlayer *player )
 {
-	GamePlayer *other_player;
 	double  z1, z2;
 
 	if( player->lock_motion ) {
@@ -2327,7 +2326,7 @@ static LCUI_BOOL CommonSkill_CanUseCatch( GamePlayer *player )
 		 return FALSE;
 	}
 	z1 = GameObject_GetZ( player->object );
-	z2 = GameObject_GetZ( other_player->object );
+	z2 = GameObject_GetZ( player->other->object );
 	/* 两者高度差距不能太大 */
 	if( z1 <= z2-15 || z1 >= z2+15 ) {
 		return FALSE;
