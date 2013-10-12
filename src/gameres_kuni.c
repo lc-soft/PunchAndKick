@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	62
+#define MAX_ACTION_NUM	63
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 开打 动作 */
 	{ ACTION_START, FALSE, {
@@ -580,7 +580,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
-	/** 正面压制技能（A） 动作 */
+	/** 正面压制技能 动作 */
 	{ ACTION_CATCH_SKILL_FA, FALSE, {
 		{ TRUE, FALSE, FALSE, "hug-front-put-01", 5, 0, 0,
 			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
@@ -608,6 +608,38 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, FALSE, FALSE, "hug-front-put-01", 6, 0, 0,
 			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	/** 背面面压制技能 动作 */
+	{ ACTION_CATCH_SKILL_BA, FALSE, {
+		{ TRUE, FALSE, FALSE, "hug-front-put-01", 3, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-02", 3, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-03", 5, 15, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-04", 5, 20, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-04", 5, 20, -3,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-04", 20, 20, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "squat", 10, 0, 0,
+			{0,0,0,0,0,0},
 			{0,0,0,0,0,0} 
 		},
 		END_ACTION_FRAME
