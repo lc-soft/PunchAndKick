@@ -48,10 +48,10 @@ static void test_read(void)
 	}
 }
 
-#define KUNI_ACTION_FILE_NUM	64
-#define RIKI_ACTION_FILE_NUM	73
-#define MIKE_ACTION_FILE_NUM	70
-#define TORAJI_ACTION_FILE_NUM	73
+#define KUNI_ACTION_FILE_NUM	68
+#define RIKI_ACTION_FILE_NUM	74
+#define MIKE_ACTION_FILE_NUM	71
+#define TORAJI_ACTION_FILE_NUM	74
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
 
@@ -83,7 +83,7 @@ const struct fileinfo scenes_file_info={
 	"default-scene.png","default"
 };
 
-const struct fileinfo kuni_action_file_info[RIKI_ACTION_FILE_NUM]={
+const struct fileinfo kuni_action_file_info[KUNI_ACTION_FILE_NUM]={
 	{"start-01.png", "start-01"},
 	{"start-02.png", "start-02"},
 	{"ready.png","ready"},
@@ -147,6 +147,10 @@ const struct fileinfo kuni_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"ride-attack-01.png","ride-attack-01"},
 	{"ride-attack-02.png","ride-attack-02"},
 	{"be-push.png", "be-push"},
+	{"hug-front-put-01.png", "hug-front-put-01"},
+	{"hug-front-put-02.png", "hug-front-put-02"},
+	{"hug-front-put-03.png", "hug-front-put-03"},
+	{"half-stance.png", "half-stance"},
 	{"sit.png", "sit"}
 };
 
@@ -222,8 +226,9 @@ const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"ride-attack-01.png","ride-attack-01"},
 	{"ride-attack-02.png","ride-attack-02"},
 	{"be-push.png", "be-push"},
-	{"sit.png", "sit"},
-	{"defense++.png","defense++"}
+	{"defense++.png","defense++"},
+	{"half-stance.png", "half-stance"},
+	{"sit.png", "sit"}
 };
 
 const struct fileinfo mike_action_file_info[MIKE_ACTION_FILE_NUM]={
@@ -292,11 +297,12 @@ const struct fileinfo mike_action_file_info[MIKE_ACTION_FILE_NUM]={
 	{"ride-attack-01.png","ride-attack-01"},
 	{"ride-attack-02.png","ride-attack-02"},
 	{"be-push.png", "be-push"},
-	{"sit.png", "sit"},
+	{"half-stance.png", "half-stance"},
 	{"hug-jump-01.png", "hug-jump-01"},
 	{"hug-jump-02.png", "hug-jump-02"},
 	{"hug-jump-03.png", "hug-jump-03"},
-	{"hug-jump-04.png", "hug-jump-04"}
+	{"hug-jump-04.png", "hug-jump-04"},
+	{"sit.png", "sit"}
 };
 
 const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
@@ -372,6 +378,7 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"lift-walk-03.png","lift-walk-03"},
 	{"sit.png","sit"},
 	{"jump-elbow.png","jump-elbow"},
+	{"half-stance.png", "half-stance"},
 	{"be-push.png","be-push"}
 };
 
@@ -501,7 +508,7 @@ int main(int argc, char** argv)
 	//FontGraphRes_WirteToFile();
 	//ScenesGraphRes_WirteToFile();
 	//MainGraphRes_WirteToFile();
-#define need_mike
+#define need_kuni
 #ifdef need_kuni
 	ActionRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
 				kuni_action_file_info,
