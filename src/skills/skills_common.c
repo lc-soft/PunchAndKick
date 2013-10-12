@@ -2317,6 +2317,7 @@ static void CommonSkill_StartRide( GamePlayer *player )
 static LCUI_BOOL CommonSkill_CanUseCatch( GamePlayer *player )
 {
 	double  z1, z2;
+	GamePlayer *other_player;
 
 	if( player->lock_motion ) {
 		return FALSE;
