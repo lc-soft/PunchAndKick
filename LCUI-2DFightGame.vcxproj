@@ -26,7 +26,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v110_xp</PlatformToolset>
+    <PlatformToolset>v110</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>NotSet</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
@@ -50,6 +50,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(SolutionDir)bin\$(Configuration)\</IntDir>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -89,6 +90,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <StringPooling>true</StringPooling>
       <CompileAs>CompileAsC</CompileAs>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,9 +120,10 @@
     <ClCompile Include="src\main_menu.c" />
     <ClCompile Include="src\game_msg.c" />
     <ClCompile Include="src\game_space.c" />
-    <ClCompile Include="src\name_db.c" />
     <ClCompile Include="src\skills\game_skill.c" />
     <ClCompile Include="src\skills\skills_common.c" />
+    <ClCompile Include="src\skills\skills_fighter.c" />
+    <ClCompile Include="src\skills\skills_kung_fu.c" />
     <ClCompile Include="src\skills\skills_martial_artist.c" />
     <ClCompile Include="src\skills\skills_tiger.c" />
   </ItemGroup>
@@ -141,6 +144,8 @@
     <ClInclude Include="src\game_space.h" />
     <ClInclude Include="src\skills\game_skill.h" />
     <ClInclude Include="src\skills\skills_common.h" />
+    <ClInclude Include="src\skills\skills_fighter.h" />
+    <ClInclude Include="src\skills\skills_kung_fu.h" />
     <ClInclude Include="src\skills\skills_martial_artist.h" />
     <ClInclude Include="src\skills\skills_tiger.h" />
   </ItemGroup>
