@@ -48,7 +48,7 @@ static void test_read(void)
 	}
 }
 
-#define KUNI_ACTION_FILE_NUM	68
+#define KUNI_ACTION_FILE_NUM	69
 #define RIKI_ACTION_FILE_NUM	74
 #define MIKE_ACTION_FILE_NUM	71
 #define TORAJI_ACTION_FILE_NUM	74
@@ -150,6 +150,7 @@ const struct fileinfo kuni_action_file_info[KUNI_ACTION_FILE_NUM]={
 	{"hug-front-put-01.png", "hug-front-put-01"},
 	{"hug-front-put-02.png", "hug-front-put-02"},
 	{"hug-front-put-03.png", "hug-front-put-03"},
+	{"hug-front-put-04.png", "hug-front-put-04"},
 	{"half-stance.png", "half-stance"},
 	{"sit.png", "sit"}
 };
