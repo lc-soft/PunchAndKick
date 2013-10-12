@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	60
+#define MAX_ACTION_NUM	62
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 开打 动作 */
 	{ ACTION_START, FALSE, {
@@ -349,6 +349,13 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{0,0,0,0,0,0}
 		},
 	}},
+	/* 面朝上卷曲 */
+	{ ACTION_ROLL_UP, FALSE, {
+		{ TRUE, FALSE, FALSE, "roll-07", 10, 0, 0,
+			{-17, -GLOBAL_Y_WIDTH/2, 14, 34, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0}
+		},
+	}},
 	/* 向前翻滚 动作 */
 	{ ACTION_F_ROLL, TRUE, {
 		{ TRUE, FALSE, FALSE, "roll-01", 2, 0, 0,
@@ -574,7 +581,35 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/** 正面压制技能（A） 动作 */
-	{ ACTION_CATCH_SKILL_FA, TRUE, {
+	{ ACTION_CATCH_SKILL_FA, FALSE, {
+		{ TRUE, FALSE, FALSE, "hug-front-put-01", 5, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-02", 5, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-03", 8, 15, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-03", 8, 15, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 46, GLOBAL_Y_WIDTH, 34},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-01", 6, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-02", 6, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "hug-front-put-01", 6, 0, 0,
+			{-14, -GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 56},
+			{0,0,0,0,0,0} 
+		},
 		END_ACTION_FRAME
 	}},
 	/* 虚弱奔跑 动作 */
@@ -788,6 +823,13 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 半躺 动作 */
 	{ ACTION_HALF_LYING, FALSE, {
 		{ TRUE, FALSE, FALSE, "half-lying", 50, 5, 0,
+			{-16,-GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 35},
+			{0,0,0,0,0,0}
+		},
+		END_ACTION_FRAME
+	}},
+	{ ACTION_HALF_STANCE, FALSE, {
+		{ TRUE, FALSE, FALSE, "half-stance", 50, 0, 0,
 			{-16,-GLOBAL_Y_WIDTH/2, 0, 28, GLOBAL_Y_WIDTH, 35},
 			{0,0,0,0,0,0}
 		},
