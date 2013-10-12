@@ -654,7 +654,7 @@ GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 static void GamePlayer_SetLeftMotion( GamePlayer *player )
 {
 	int skill_id;
-	double x, y, speed;
+	double speed;
 
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
@@ -670,10 +670,7 @@ static void GamePlayer_SetLeftMotion( GamePlayer *player )
 		 && player->other->state == STATE_BACK_BE_CATCH ) {
 			GamePlayer_SetLeftOriented( player );
 			GamePlayer_SetLeftOriented( player->other );
-			x = GameObject_GetX( player->object );
-			y = GameObject_GetY( player->object );
-			GameObject_SetX( player->other->object, x-30 );
-			GameObject_SetY( player->other->object, y );
+			CommonSkill_SetPositionAtCatch( player, player->other );
 		}
 		else if( player->state == STATE_BE_LIFT_STANCE ) {
 			GamePlayer_SetLeftOriented( player );
@@ -727,7 +724,7 @@ static void GamePlayer_SetLeftMotion( GamePlayer *player )
 static void GamePlayer_SetRightMotion( GamePlayer *player )
 {
 	int skill_id;
-	double x, y, speed;
+	double speed;
 
 	if( player->lock_motion ) {
 		if( player->state == STATE_JUMP
@@ -743,10 +740,7 @@ static void GamePlayer_SetRightMotion( GamePlayer *player )
 		 && player->other->state == STATE_BACK_BE_CATCH ) {
 			GamePlayer_SetRightOriented( player );
 			GamePlayer_SetRightOriented( player->other );
-			x = GameObject_GetX( player->object );
-			y = GameObject_GetY( player->object );
-			GameObject_SetX( player->other->object, x+30 );
-			GameObject_SetY( player->other->object, y );
+			CommonSkill_SetPositionAtCatch( player, player->other );
 		}
 		else if( player->state == STATE_BE_LIFT_STANCE ) {
 			GamePlayer_SetRightOriented( player );
@@ -1214,32 +1208,32 @@ int Game_Init(void)
 	player_data[2].enable = TRUE;
 	player_data[3].enable = TRUE;
 
-	player_data[0].property.max_hp = 3200;
-	player_data[0].property.cur_hp = 3200;
+	player_data[0].property.max_hp = 1600;
+	player_data[0].property.cur_hp = 1600;
 	player_data[0].property.defense = 150;
 	player_data[0].property.kick = 150;
 	player_data[0].property.punch = 100;
 	player_data[0].property.throw = 100;
 	player_data[0].property.speed = 150;
 
-	player_data[1].property.max_hp = 3200;
-	player_data[1].property.cur_hp = 3200;
+	player_data[1].property.max_hp = 1600;
+	player_data[1].property.cur_hp = 1600;
 	player_data[1].property.defense = 130;
 	player_data[1].property.kick = 100;
 	player_data[1].property.punch = 200;
 	player_data[1].property.throw = 100;
 	player_data[1].property.speed = 100;
 	
-	player_data[2].property.max_hp = 3200;
-	player_data[2].property.cur_hp = 3200;
+	player_data[2].property.max_hp = 1600;
+	player_data[2].property.cur_hp = 1600;
 	player_data[2].property.defense = 200;
 	player_data[2].property.kick = 200;
 	player_data[2].property.punch = 100;
 	player_data[2].property.throw = 110;
 	player_data[2].property.speed = 150;
 	
-	player_data[3].property.max_hp = 4000;
-	player_data[3].property.cur_hp = 4000;
+	player_data[3].property.max_hp = 2000;
+	player_data[3].property.cur_hp = 2000;
 	player_data[3].property.defense = 250;
 	player_data[3].property.kick = 250;
 	player_data[3].property.punch = 200;
@@ -1279,9 +1273,9 @@ int Game_Init(void)
 	GamePlayer_SetRole( 4, ROLE_TORAJI );
 	/* 设置玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
-	GamePlayer_ControlByHuman( 2, FALSE );
-	GamePlayer_ControlByHuman( 3, FALSE );
-	GamePlayer_ControlByHuman( 4, FALSE );
+	GamePlayer_ControlByHuman( 2, TRUE );
+	GamePlayer_ControlByHuman( 3, TRUE );
+	GamePlayer_ControlByHuman( 4, TRUE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
