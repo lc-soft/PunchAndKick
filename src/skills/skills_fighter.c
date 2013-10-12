@@ -1,0 +1,291 @@
+﻿// 格斗家特有技能
+#include <LCUI_Build.h>
+#include LC_LCUI_H
+#include LC_WIDGET_H
+#include "../game.h"
+#include "game_skill.h"
+
+#define ATK_HUG_FRONT_PUT		"hug front put attack"
+#define ATK_HUG_BACK_PUT		"hug back put attack"
+
+#define XSPEED_FRONT_PUT	100
+#define ZSPEED_FRONT_PUT	100
+#define ZACC_FRONT_PUT		100
+
+#define XSPEED_BOUNCE	100
+#define ZSPEED_BOUNCE	100
+#define ZACC_BOUNCE	500
+
+static int AttackDamage_HugFrontPut( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	double damage;
+	damage = attacker->property.throw;
+	damage += (victim->property.max_hp*0.05);
+	return DamageReduce( victim, victim_state, (int)damage );
+}
+
+static int AttackDamage_HugBackPut( GamePlayer *attacker, GamePlayer *victim, int victim_state )
+{
+	return 0;
+}
+
+static LCUI_BOOL CanUseHugFrontPut( GamePlayer *player )
+{
+	GamePlayer *attacker;
+	/* 该技能不能给非格斗家的角色使用 */
+	if( player->type != PLAYER_TYPE_FIGHTER ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	attacker = GetSpirntAttackerInCatchRange( player );
+	if( attacker ) {
+		player->other = attacker;
+		return TRUE;
+	}
+	if( player->state != STATE_CATCH || !player->other ) {
+		return FALSE;
+	}
+	/* 对方需要是被擒住状态 */
+	if( player->other->state != STATE_BE_CATCH ) {
+		return FALSE;
+	}
+	/* 需要是面对面 */
+	if( GamePlayer_IsLeftOriented(player)
+	 == GamePlayer_IsLeftOriented(player->other) ) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static LCUI_BOOL CanUseHugBackPut( GamePlayer *player )
+{
+	if( player->type != PLAYER_TYPE_FIGHTER ) {
+		return FALSE;
+	}
+	if( !player->control.a_attack ) {
+		return FALSE;
+	}
+	if( player->state != STATE_CATCH || !player->other ) {
+		return FALSE;
+	}
+	/* 对方需要是背面被擒住状态 */
+	if( player->other->state != STATE_BACK_BE_CATCH ) {
+		return FALSE;
+	}
+	/* 需要是面朝同一方向 */
+	if( GamePlayer_IsLeftOriented(player)
+	 != GamePlayer_IsLeftOriented(player->other) ) {
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static void TargetAtHugFrontPutDone( LCUI_Widget *widget )
+{
+	int ret = 0;
+	GamePlayer *player;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	ret = GamePlayer_SetLying( player );
+	GamePlayer_LockAction( player );
+	GamePlayer_StopXMotion( player );
+	if( ret == 0 ) {
+		GamePlayer_SetRestTimeOut( player, SHORT_REST_TIMEOUT, GamePlayer_StartStand );
+	}
+}
+
+static void TargetStartBounce( LCUI_Widget *widget )
+{
+	double x_speed;
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	if( GamePlayer_IsLeftOriented(player) ) {
+		x_speed = XSPEED_BOUNCE;
+	} else {
+		x_speed = -XSPEED_BOUNCE;
+	}
+	GameObject_SetXSpeed( widget, x_speed );
+	Game_RecordAttack( player->other, ATK_HUG_FRONT_PUT, player, STATE_HALF_LYING );
+	GameObject_AtLanding( widget, ZSPEED_BOUNCE, -ZACC_BOUNCE, TargetAtHugFrontPutDone );
+}
+
+static void SelfAtSkillDone( LCUI_Widget *widget )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetPlayerByWidget( widget );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockMotion( player );
+	GamePlayer_SetReady( player );
+}
+
+static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
+{
+	int z_index;
+	GamePlayer *player;
+	double x, y, z, x_speed;
+
+	player = GamePlayer_GetPlayerByWidget( widget );
+	switch( GameObject_GetCurrentActionFrameNumber(widget) ) {
+	//case 1:break;
+	case 1:
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		z = GameObject_GetZ( player->object );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetLeftOriented( player->other );
+			x -= 30;
+		} else {
+			GamePlayer_SetRightOriented( player->other );
+			x += 30;
+		}
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_ChangeState( player->other, STATE_HIT_FLY_FALL );
+		GamePlayer_LockAction( player->other );
+		z_index = Widget_GetZIndex( player->object );
+		Widget_SetZIndex( player->other->object, z_index-1 );
+		break;
+	case 2:
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		z = GameObject_GetZ( player->object );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetRightOriented( player->other );
+			x += 15;
+		} else {
+			GamePlayer_SetLeftOriented( player->other );
+			x -= 15;
+		}
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_ChangeState( player->other, STATE_ROLL_UP );
+		GamePlayer_LockAction( player->other );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
+		GameObject_SetZ( player->other->object, z+25 );
+		z_index = Widget_GetZIndex( player->object );
+		Widget_SetZIndex( player->other->object, z_index-1 );
+		break;
+	case 3:
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		z = GameObject_GetZ( player->object );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetRightOriented( player->other );
+			x += 25;
+		} else {
+			GamePlayer_SetLeftOriented( player->other );
+			x -= 25;
+		}
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_ChangeState( player->other, STATE_HALF_STANCE );
+		GamePlayer_LockAction( player->other );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
+		GameObject_SetZ( player->other->object, z+20 );
+		z_index = Widget_GetZIndex( player->object );
+		Widget_SetZIndex( player->other->object, z_index-1 );
+		break;
+	case 4:
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		z = GameObject_GetZ( player->object );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetLeftOriented( player->other );
+			x -= 25;
+		} else {
+			GamePlayer_SetRightOriented( player->other );
+			x += 25;
+		}
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_ChangeState( player->other, STATE_ROLL_UP );
+		GamePlayer_LockAction( player->other );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
+		GameObject_SetZ( player->other->object, z+15 );
+		z_index = Widget_GetZIndex( player->object );
+		Widget_SetZIndex( player->other->object, z_index-1 );
+		break;
+	case 5:
+		x = GameObject_GetX( player->object );
+		y = GameObject_GetY( player->object );
+		z = GameObject_GetZ( player->object );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			x_speed = -XSPEED_FRONT_PUT;
+			GamePlayer_SetRightOriented( player->other );
+			x -= 40;
+		} else {
+			GamePlayer_SetLeftOriented( player->other );
+			x_speed = XSPEED_FRONT_PUT;
+			x += 40;
+		}
+		GamePlayer_UnlockAction( player->other );
+		GamePlayer_ChangeState( player->other, STATE_HALF_LYING );
+		GamePlayer_LockAction( player->other );
+		GameObject_SetX( player->other->object, x );
+		GameObject_SetY( player->other->object, y );
+		GameObject_SetZ( player->other->object, z+10 );
+		z_index = Widget_GetZIndex( player->object );
+		Widget_SetZIndex( player->other->object, z_index-1 );
+
+		GameObject_SetXSpeed( player->other->object, x_speed );
+		GameObject_AtLanding(	player->other->object,
+					-ZSPEED_FRONT_PUT, -ZACC_FRONT_PUT, 
+					TargetStartBounce );
+		break;
+	}
+}
+
+static void StartHugFrontPut( GamePlayer *player )
+{
+	int z_index;
+	double x, y, z;
+
+	x = GameObject_GetX( player->object );
+	y = GameObject_GetY( player->object );
+	z = GameObject_GetZ( player->object );
+	if( GamePlayer_IsLeftOriented(player) ) {
+		GamePlayer_SetRightOriented( player->other );
+		x -= 30;
+	} else {
+		GamePlayer_SetLeftOriented( player->other );
+		x += 30;
+	}
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index-1 );
+	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_FA, HugFrontPut_AtActionUpdate );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
+	GamePlayer_ChangeState( player->other, STATE_ROLL_DOWN );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player->other );
+	GameObject_SetX( player->other->object, x );
+	GameObject_SetY( player->other->object, y );
+	GameObject_SetZ( player->other->object, z );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FA, SelfAtSkillDone );
+}
+
+static void StartHugBackPut( GamePlayer *player )
+{
+
+}
+
+/** 注册格斗家特有的技能 */
+void FighterSkill_Register(void)
+{
+	SkillLibrary_AddSkill(	SKILLNAME_HUG_FRONT_PUT,
+				SKILLPRIORITY_HUG_FRONT_PUT,
+				CanUseHugFrontPut,
+				StartHugFrontPut
+	);
+	SkillLibrary_AddSkill(	SKILLNAME_HUG_BACK_PUT,
+				SKILLPRIORITY_HUG_BACK_PUT,
+				CanUseHugBackPut,
+				StartHugBackPut
+	);
+	AttackLibrary_AddAttack( ATK_HUG_FRONT_PUT, AttackDamage_HugFrontPut, NULL );
+	AttackLibrary_AddAttack( ATK_HUG_BACK_PUT, AttackDamage_HugBackPut, NULL );
+}
