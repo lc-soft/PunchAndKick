@@ -278,14 +278,16 @@ static void GamePlayer_CancelStateAtCatch( GamePlayer *player )
 	if( !other_player ) {
 		return;
 	}
-	other_player->other = NULL;
-	player->other = NULL;
 	switch(player->state) {
 	case STATE_CATCH:
+		other_player->other = NULL;
+		player->other = NULL;
 		GamePlayer_SetRest( other_player );
 		break;
 	case STATE_CATCH_SKILL_BA:
 	case STATE_CATCH_SKILL_FA:
+		other_player->other = NULL;
+		player->other = NULL;
 		AttackEffect_ShortHitFly( player, other_player );
 		break;
 	default:return;
@@ -307,16 +309,18 @@ static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
 	if( !other_player ) {
 		return;
 	}
-	other_player->other = NULL;
-	player->other = NULL;
 	switch(other_player->state) {
 	case STATE_CATCH:
+		other_player->other = NULL;
+		player->other = NULL;
 		GamePlayer_UnlockAction( other_player );
 		GamePlayer_UnlockMotion( other_player );
 		GamePlayer_SetReady( other_player );
 		break;
 	case STATE_CATCH_SKILL_BA:
 	case STATE_CATCH_SKILL_FA:
+		other_player->other = NULL;
+		player->other = NULL;
 		AttackEffect_ShortHitFly( other_player, player );
 	default:break;
 	}
