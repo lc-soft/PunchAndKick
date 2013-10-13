@@ -934,6 +934,13 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
 		StatusBar_SetPlayerNameW( player->statusbar, L"姬山" );
 		break;
+	case ROLE_BEN:
+		player->type = PLAYER_TYPE_JUDO_MASTER;
+		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
+		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
+		GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
+		StatusBar_SetPlayerNameW( player->statusbar, L"本" );
+		break;
 	case ROLE_TORAJI:
 		player->type = PLAYER_TYPE_TIGER;
 		GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
@@ -1171,6 +1178,7 @@ int Game_Init(void)
 	ret = GameGraphRes_LoadFromFile("action-riki.data");
 	ret |= GameGraphRes_LoadFromFile("action-kuni.data");
 	ret |= GameGraphRes_LoadFromFile("action-mike.data");
+	ret |= GameGraphRes_LoadFromFile("action-ben.data");
 	ret |= GameGraphRes_LoadFromFile("action-toraji.data");
 	if( ret != 0 ) {
 		LCUI_MessageBoxW(
@@ -1267,15 +1275,15 @@ int Game_Init(void)
 	/* 设置2号玩家的控制键 */
 	GamePlayer_SetControlKey( 2, &ctrlkey );
 	/* 设置玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_KUNI );
-	GamePlayer_SetRole( 2, ROLE_RIKI );
+	GamePlayer_SetRole( 1, ROLE_BEN );
+	GamePlayer_SetRole( 2, ROLE_KUNI );
 	GamePlayer_SetRole( 3, ROLE_MIKE );
 	GamePlayer_SetRole( 4, ROLE_TORAJI );
 	/* 设置玩家由人来控制 */
 	GamePlayer_ControlByHuman( 1, TRUE );
-	GamePlayer_ControlByHuman( 2, TRUE );
-	GamePlayer_ControlByHuman( 3, TRUE );
-	GamePlayer_ControlByHuman( 4, TRUE );
+	GamePlayer_ControlByHuman( 2, FALSE );
+	GamePlayer_ControlByHuman( 3, FALSE );
+	GamePlayer_ControlByHuman( 4, FALSE );
 	/* 设置响应游戏角色的受攻击信号 */
 	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
 	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );

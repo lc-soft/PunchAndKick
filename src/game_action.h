@@ -4,6 +4,7 @@ enum RoleID {
 	ROLE_KUNI,
 	ROLE_RIKI,
 	ROLE_MIKE,
+	ROLE_BEN,
 	ROLE_TORAJI
 };
 
@@ -20,6 +21,9 @@ const ActionInfo *ActionRes_Mike_GetActionSet(void);
 
 int ActionRes_Toraji_GetActionTotalNum(void);
 const ActionInfo *ActionRes_Toraji_GetActionSet(void);
+
+int ActionRes_Ben_GetActionTotalNum(void);
+const ActionInfo *ActionRes_Ben_GetActionSet(void);
 
 /** 载入指定角色的动作动画 */
 ActionData* ActionRes_Load( int id, int action_type );

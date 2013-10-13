@@ -90,6 +90,11 @@ ActionData* ActionRes_Load( int role_id, int action_type )
 		action_set = ActionRes_Mike_GetActionSet();
 		class_name = ACTION_RES_CLASS_MIKE;
 		break;
+	case ROLE_BEN:
+		total_action = ActionRes_Ben_GetActionTotalNum();
+		action_set = ActionRes_Ben_GetActionSet();
+		class_name = ACTION_RES_CLASS_BEN;
+		break;
 	case ROLE_TORAJI:
 		total_action = ActionRes_Toraji_GetActionTotalNum();
 		action_set = ActionRes_Toraji_GetActionSet();
