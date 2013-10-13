@@ -7,6 +7,19 @@
 #include "game_object.h"
 #include "game_resource.h"
 
+#define KUNI_ACTION_FILE_NUM	69
+#define RIKI_ACTION_FILE_NUM	74
+#define MIKE_ACTION_FILE_NUM	71
+#define BEN_ACTION_FILE_NUM	66
+#define TORAJI_ACTION_FILE_NUM	74
+#define MAIN_FILE_NUM		2
+#define FONT_FILE_NUM		11
+
+struct fileinfo {
+	char *filepath;
+	char *name;
+};
+
 static void test_write(void)
 {
 	int i,class_id;
@@ -47,18 +60,6 @@ static void test_read(void)
 		Graph_WritePNG( filename, &graph[i] );
 	}
 }
-
-#define KUNI_ACTION_FILE_NUM	69
-#define RIKI_ACTION_FILE_NUM	74
-#define MIKE_ACTION_FILE_NUM	71
-#define TORAJI_ACTION_FILE_NUM	74
-#define MAIN_FILE_NUM		2
-#define FONT_FILE_NUM		11
-
-struct fileinfo {
-	char *filepath;
-	char *name;
-};
 
 const struct fileinfo font_file_info[FONT_FILE_NUM]={
 	{"font-0.png","0"},
@@ -383,6 +384,75 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"be-push.png","be-push"}
 };
 
+const struct fileinfo ben_action_file_info[BEN_ACTION_FILE_NUM]={
+	{"start-01.png", "start-01"},
+	{"start-02.png", "start-02"},
+	{"ready.png","ready"},
+	{"stance.png","stance"},
+	{"A-attack-01.png","A-attack-01"},
+	{"A-attack-02.png","A-attack-02"},
+	{"B-attack-01.png","B-attack-01"},
+	{"B-attack-02.png","B-attack-02"},
+	{"B-attack-03.png","B-attack-03"},
+	{"back-be-catch-01.png","back-be-catch-01"},
+	{"back-be-catch-02.png","back-be-catch-02"},
+	{"kick.png","kick"},
+	{"catch.png","catch"},
+	{"defense.png","defense"},
+	{"defense++.png","defense++"},
+	{"final-blow-01.png","final-blow-01"},
+	{"final-blow-02.png","final-blow-02"},
+	{"final-blow-03.png","final-blow-03"},
+	{"final-blow-04.png","final-blow-04"},
+	{"final-blow-05.png","final-blow-05"},
+	{"final-blow-06.png","final-blow-06"},
+	{"hit.png","hit"},
+	{"hit-fly.png","hit-fly"},
+	{"hit-fly-fall.png","hit-fly-fall"},
+	{"jump-elbow.png","jump-elbow"},
+	{"squat.png","squat"},
+	{"jump.png","jump"},
+	{"fall.png","fall"},
+	{"lift-fall.png","lift-fall"},
+	{"lift-jump.png","lift-jump"},
+	{"lift-run.png","lift-run"},
+	{"lift-walk-01.png","lift-walk-01"},
+	{"lift-walk-02.png","lift-walk-02"},
+	{"lift.png","lift"},
+	{"tummy.png","tummy"},
+	{"tummy-hit.png","tummy-hit"},
+	{"lying.png","lying"},
+	{"lying-hit.png","lying-hit"},
+	{"half-lying.png","half-lying"},
+	{"half-stance.png", "half-stance"},
+	{"pull.png","pull"},
+	{"push.png","push"},
+	{"rest-01.png","rest-01"},
+	{"rest-02.png","rest-02"},
+	{"roll-01.png","roll-01"},
+	{"roll-02.png","roll-02"},
+	{"roll-03.png","roll-03"},
+	{"roll-04.png","roll-04"},
+	{"roll-05.png","roll-05"},
+	{"roll-06.png","roll-06"},
+	{"roll-07.png","roll-07"},
+	{"roll-08.png","roll-08"},
+	{"run-01.png","run-01"},
+	{"run-02.png","run-02"},
+	{"run-03.png","run-03"},
+	{"run-04.png","run-04"},
+	{"run-05.png","run-05"},
+	{"run-06.png","run-06"},
+	{"walk-01.png","walk-01"},
+	{"walk-02.png","walk-02"},
+	{"weak-walk.png","weak-walk"},
+	{"ride.png","ride"},
+	{"ride-attack-01.png","ride-attack-01"},
+	{"ride-attack-02.png","ride-attack-02"},
+	{"be-push.png", "be-push"},
+	{"sit.png", "sit"}
+};
+
 static void ActionRes_WirteToFile(	const char *class_name,
 					const struct fileinfo *filelist,
 					int n_file,
@@ -509,7 +579,7 @@ int main(int argc, char** argv)
 	//FontGraphRes_WirteToFile();
 	//ScenesGraphRes_WirteToFile();
 	//MainGraphRes_WirteToFile();
-#define need_kuni
+#define need_ben
 #ifdef need_kuni
 	ActionRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
 				kuni_action_file_info,
@@ -530,6 +600,11 @@ int main(int argc, char** argv)
 				mike_action_file_info,
 				MIKE_ACTION_FILE_NUM, 
 				"action-mike.data" );
+#elif defined(need_ben)
+	ActionRes_WirteToFile(	ACTION_RES_CLASS_BEN,
+				ben_action_file_info,
+				BEN_ACTION_FILE_NUM, 
+				"action-ben.data" );
 #endif
 	return 0;
 }
