@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\gameres_ben.c" />
     <ClCompile Include="src\gameres_kuni.c" />
     <ClCompile Include="src\gameres_mike.c" />
     <ClCompile Include="src\gameres_riki.c" />
