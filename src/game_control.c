@@ -939,7 +939,7 @@ int GamePlayer_SetRole( int player_id, int role_id )
 		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
 		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
 		GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
-		StatusBar_SetPlayerNameW( player->statusbar, L"本" );
+		StatusBar_SetPlayerNameW( player->statusbar, L"御堂" );
 		break;
 	case ROLE_TORAJI:
 		player->type = PLAYER_TYPE_TIGER;
