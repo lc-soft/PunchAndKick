@@ -781,12 +781,13 @@ static void AttackEffect_Normal2( GamePlayer *attacker, GamePlayer *victim )
 	if( !GamePlayer_CanUseAttackEffect(victim) ) {
 		return;
 	}
-	++victim->n_attack;
 	/* 若当前玩家处于歇息状态，则将其击飞 */
 	if( victim->n_attack >= 4
 	 || victim->state == STATE_REST ) {
 		victim->n_attack = 0;
 		AttackEffect_ShortHitFly( attacker, victim );
+	} else {
+		++victim->n_attack;
 	}
 }
 
