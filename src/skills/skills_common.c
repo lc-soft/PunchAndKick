@@ -278,6 +278,8 @@ static void GamePlayer_CancelStateAtCatch( GamePlayer *player )
 	if( !other_player ) {
 		return;
 	}
+	other_player->other = NULL;
+	player->other = NULL;
 	switch(player->state) {
 	case STATE_CATCH:
 		GamePlayer_SetRest( other_player );
@@ -288,7 +290,6 @@ static void GamePlayer_CancelStateAtCatch( GamePlayer *player )
 		break;
 	default:return;
 	}
-	other_player->other = NULL;
 }
 
 /** 若指定游戏角色被擒住，则撤销被擒住状态 */
@@ -306,6 +307,8 @@ static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
 	if( !other_player ) {
 		return;
 	}
+	other_player->other = NULL;
+	player->other = NULL;
 	switch(other_player->state) {
 	case STATE_CATCH:
 		GamePlayer_UnlockAction( other_player );
@@ -317,7 +320,6 @@ static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
 		AttackEffect_ShortHitFly( other_player, player );
 	default:break;
 	}
-	other_player->other = NULL;
 }
 
 /** 在空中受到攻击后 */
