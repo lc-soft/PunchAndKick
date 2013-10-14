@@ -9,10 +9,8 @@
 #include "game.h"
 #include "skills/game_skill.h"
 
-static LCUI_Graph img_shadow;
-static LCUI_Widget *player_status_area;
-
 static GamePlayer player_data[4];
+static LCUI_Widget *player_status_area;
 static int state_action_map[TOTAL_STATE_NUM];
 
 /** 通过部件获取游戏玩家数据 */
@@ -266,8 +264,6 @@ static int GamePlayer_InitAction( GamePlayer *player, int id )
 	ActionData* action;
 
 	player->state = STATE_STANCE;
-	/* 创建GameObject部件 */
-	player->object = GameObject_New();
 
 	for(i=0; i<TOTAL_ACTION_NUM; ++i) {
 		/* 载入游戏角色资源 */
@@ -902,102 +898,6 @@ int GamePlayer_SetControlKey( int player_id, ControlKey *key )
 	return 0;
 }
 
-/** 设置游戏角色的角色ID */
-int GamePlayer_SetRole( int player_id, int role_id )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetByID( player_id );
-	if( player == NULL ){
-		return -1;
-	}
-	switch( role_id ) {
-	case ROLE_KUNI:
-		player->type = PLAYER_TYPE_FIGHTER;
-		GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
-		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
-		StatusBar_SetPlayerNameW( player->statusbar, L"国夫" );
-		break;
-	case ROLE_RIKI:
-		player->type = PLAYER_TYPE_MARTIAL_ARTIST;
-		GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
-		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
-		StatusBar_SetPlayerNameW( player->statusbar, L"阿力" );
-		break;
-	case ROLE_MIKE:
-		player->type = PLAYER_TYPE_KUNG_FU;
-		GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
-		StatusBar_SetPlayerNameW( player->statusbar, L"姬山" );
-		break;
-	case ROLE_BEN:
-		player->type = PLAYER_TYPE_JUDO_MASTER;
-		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
-		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
-		GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
-		StatusBar_SetPlayerNameW( player->statusbar, L"御堂" );
-		break;
-	case ROLE_TORAJI:
-		player->type = PLAYER_TYPE_TIGER;
-		GamePlayer_EnableSkill( player, SKILLNAME_SOLID_DEFENSE );
-		GamePlayer_EnableSkill( player, SKILLNAME_BIG_ELBOW );
-		GamePlayer_EnableSkill( player, SKILLNAME_GUILLOTINE );
-		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_MACH_A_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_MACH_B_ATTACK );
-		GamePlayer_EnableSkill( player, SKILLNAME_MACH_STOMP );
-		GamePlayer_EnableSkill( player, SKILLNAME_BOMBKICK );
-		GamePlayer_EnableSkill( player, SKILLNAME_SPINHIT );
-		GamePlayer_EnableSkill( player, SKILLNAME_JUMP_SPINKICK );
-		GamePlayer_EnableSkill( player, SKILLNAME_TORNADO_ATTACK );
-		StatusBar_SetPlayerNameW( player->statusbar, L"寅" );
-	default:
-		break;
-	}
-	player->role_id = role_id;
-	/* 初始化角色动作动画 */
-	GamePlayer_InitAction( player, role_id );
-	GameObject_SetShadow( player->object, img_shadow );
-	/* 根据职业来选择需要启用的特殊技能 */
-	switch( player->type ) {
-	case PLAYER_TYPE_FIGHTER:
-		GamePlayer_EnableSkill( player, SKILLNAME_HUG_FRONT_PUT );
-		GamePlayer_EnableSkill( player, SKILLNAME_HUG_BACK_PUT );
-		break;
-	case PLAYER_TYPE_MARTIAL_ARTIST:
-		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
-		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
-		break;
-	case PLAYER_TYPE_KUNG_FU:
-		GamePlayer_EnableSkill( player, SKILLNAME_LIFT_JUMP );
-		GamePlayer_EnableSkill( player, SKILLNAME_HUG_JUMP );
-		break;
-	case PLAYER_TYPE_TIGER:
-		GamePlayer_EnableSkill( player, SKILLNAME_SPIN_DRILL );
-	default:
-		break;
-	}
-
-	return 0;
-}
-
-/** 设置游戏角色是否由人类控制 */
-int GamePlayer_ControlByHuman( int player_id, LCUI_BOOL flag )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetByID( player_id );
-	if( player == NULL ){
-		return -1;
-	}
-	player->human_control = flag;
-	return 0;
-}
-
 /** 响应游戏角色受到的攻击 */
 static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 {
@@ -1060,6 +960,9 @@ static int Game_InitPlayerStatusArea(void)
 
 void GamePlayer_Init( GamePlayer *player )
 {
+	LCUI_Graph img_shadow;
+	
+	Graph_Init( &img_shadow );
 	player->id = 0;
 	player->role_id = 0;
 	player->type = 0;
@@ -1096,7 +999,15 @@ void GamePlayer_Init( GamePlayer *player )
 	player->control.down_motion = FALSE;
 	player->control.jump = FALSE;
 	player->ai_data.target_update_time = 0;
+
 	ControlKey_Init( &player->ctrlkey );
+	/* 创建GameObject部件 */
+	player->object = GameObject_New();
+	/* 设置响应游戏角色的受攻击信号 */
+	GameObject_AtUnderAttack( player->object, GamePlayer_ResponseAttack );
+	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
+	/* 设置阴影 */
+	GameObject_SetShadow( player->object, img_shadow );
 }
 
 static void UpdateViewFPS( void *arg )
@@ -1105,28 +1016,6 @@ static void UpdateViewFPS( void *arg )
 	LCUI_Widget *label = (LCUI_Widget*)arg;
 	sprintf( str, "FPS: %d", LCUIScreen_GetFPS() );
 	Label_Text( label, str );
-}
-
-static void InitSceneText( LCUI_Widget *scene )
-{
-	LCUI_Widget *text, *fps_text;
-	LCUI_TextStyle style;
-
-	text = Widget_New("label");
-	fps_text = Widget_New("label");
-	Widget_Container_Add( scene, text );
-	Widget_Container_Add( scene, fps_text );
-	TextStyle_Init( &style );
-	TextStyle_FontSize( &style, 18 );
-	Label_TextStyle( fps_text, style );
-	Widget_SetAlign( text, ALIGN_TOP_CENTER, Pos(0,40) );
-	Widget_SetAlign( fps_text, ALIGN_TOP_CENTER, Pos(0,100) );
-	Label_TextW( text, L"<size=42px>游戏测试</size>");
-	Widget_SetZIndex( fps_text, -5000 );
-	Widget_SetZIndex( text, -5000 );
-	Widget_Show( fps_text );
-	Widget_Show( text );
-	LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
 }
 
 /** 响应按键的按下 */
@@ -1166,142 +1055,26 @@ static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
 	}
 }
 
-int Game_Init(void)
+static void InitSceneText( LCUI_Widget *scene )
 {
-	int ret;
-	ControlKey ctrlkey;
+	LCUI_Widget *text, *fps_text;
+	LCUI_TextStyle style;
 
-	ret = GameScene_Init();
-	if( ret != 0 ) {
-		return ret;
-	}
-	ret = GameGraphRes_LoadFromFile("action-riki.data");
-	ret |= GameGraphRes_LoadFromFile("action-kuni.data");
-	ret |= GameGraphRes_LoadFromFile("action-mike.data");
-	ret |= GameGraphRes_LoadFromFile("action-ben.data");
-	ret |= GameGraphRes_LoadFromFile("action-toraji.data");
-	if( ret != 0 ) {
-		LCUI_MessageBoxW(
-			MB_ICON_ERROR,
-			L"角色资源载入出错，请检查程序的完整性！",
-			L"错误", MB_BTN_OK );
-		return ret;
-	}
-	/* 注册所需部件 */
-	GameObject_Register();
-	StatusBar_Register();
-	LifeBar_Regiser();
-	/* 初始化攻击记录 */
-	Game_InitAttackRecord();
-	/* 初始化状态与动作的映射表 */
-	Game_InitStateActionMap();
-	/** 初始化技能库 */
-	SkillLibrary_Init();
-	/* 初始化角色信息 */
-	GamePlayer_Init( &player_data[0] );
-	GamePlayer_Init( &player_data[1] );
-	GamePlayer_Init( &player_data[2] );
-	GamePlayer_Init( &player_data[3] );
-	/* 初始化角色状态信息区域 */
-	ret |= Game_InitPlayerStatusArea();
-
-	/* 记录玩家ID */
-	player_data[0].id = 1;
-	player_data[1].id = 2;
-	player_data[2].id = 3;
-	player_data[3].id = 4;
-
-	player_data[0].enable = TRUE;
-	player_data[1].enable = TRUE;
-	player_data[2].enable = TRUE;
-	player_data[3].enable = TRUE;
-
-	player_data[0].property.max_hp = 1600;
-	player_data[0].property.cur_hp = 1600;
-	player_data[0].property.defense = 150;
-	player_data[0].property.kick = 150;
-	player_data[0].property.punch = 100;
-	player_data[0].property.throw = 100;
-	player_data[0].property.speed = 150;
-
-	player_data[1].property.max_hp = 1600;
-	player_data[1].property.cur_hp = 1600;
-	player_data[1].property.defense = 130;
-	player_data[1].property.kick = 100;
-	player_data[1].property.punch = 200;
-	player_data[1].property.throw = 100;
-	player_data[1].property.speed = 100;
-	
-	player_data[2].property.max_hp = 1600;
-	player_data[2].property.cur_hp = 1600;
-	player_data[2].property.defense = 200;
-	player_data[2].property.kick = 200;
-	player_data[2].property.punch = 100;
-	player_data[2].property.throw = 110;
-	player_data[2].property.speed = 150;
-	
-	player_data[3].property.max_hp = 2000;
-	player_data[3].property.cur_hp = 2000;
-	player_data[3].property.defense = 250;
-	player_data[3].property.kick = 250;
-	player_data[3].property.punch = 200;
-	player_data[3].property.throw = 200;
-	player_data[3].property.speed = 150;
-
-	Graph_Init( &img_shadow );
-	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
-
-	/* 记录1号角色的控制键 */
-	ctrlkey.up = LCUIKEY_W;
-	ctrlkey.down = LCUIKEY_S;
-	ctrlkey.left = LCUIKEY_A;
-	ctrlkey.right = LCUIKEY_D;
-	ctrlkey.jump = LCUIKEY_SPACE;
-	ctrlkey.a_attack = LCUIKEY_J;
-	ctrlkey.b_attack = LCUIKEY_K;
-	ctrlkey.defense = LCUIKEY_L;
-	/* 设置3号玩家的控制键 */
-	GamePlayer_SetControlKey( 1, &ctrlkey );
-
-	/* 记录2号角色的控制键 */
-	ctrlkey.up = LCUIKEY_UP;
-	ctrlkey.down = LCUIKEY_DOWN;
-	ctrlkey.left = LCUIKEY_LEFT;
-	ctrlkey.right = LCUIKEY_RIGHT;
-	ctrlkey.defense = 0;
-	ctrlkey.jump = 0;
-	ctrlkey.a_attack = 0;
-	ctrlkey.b_attack = 0;
-	/* 设置2号玩家的控制键 */
-	GamePlayer_SetControlKey( 2, &ctrlkey );
-	/* 设置玩家的角色 */
-	GamePlayer_SetRole( 1, ROLE_BEN );
-	GamePlayer_SetRole( 2, ROLE_KUNI );
-	GamePlayer_SetRole( 3, ROLE_MIKE );
-	GamePlayer_SetRole( 4, ROLE_TORAJI );
-	/* 设置玩家由人来控制 */
-	GamePlayer_ControlByHuman( 1, TRUE );
-	GamePlayer_ControlByHuman( 2, FALSE );
-	GamePlayer_ControlByHuman( 3, FALSE );
-	GamePlayer_ControlByHuman( 4, FALSE );
-	/* 设置响应游戏角色的受攻击信号 */
-	GameObject_AtUnderAttack( player_data[0].object, GamePlayer_ResponseAttack );
-	GameObject_AtUnderAttack( player_data[1].object, GamePlayer_ResponseAttack );
-	GameObject_AtUnderAttack( player_data[2].object, GamePlayer_ResponseAttack );
-	GameObject_AtUnderAttack( player_data[3].object, GamePlayer_ResponseAttack );
-	/* 将游戏对象放入战斗场景内 */
-	GameObject_AddToContainer( player_data[0].object, GetGameScene() );
-	GameObject_AddToContainer( player_data[1].object, GetGameScene() );
-	GameObject_AddToContainer( player_data[2].object, GetGameScene() );
-	GameObject_AddToContainer( player_data[3].object, GetGameScene() );
-	/* 响应按键输入 */
-	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
-	ret |= GameMsgLoopStart();
-	/* 初始化在场景上显示的文本 */
-	InitSceneText( GetGameScene() );
-	/* 显示场景 */
-	Widget_Show( GetGameScene() );
-	return ret;
+	text = Widget_New("label");
+	fps_text = Widget_New("label");
+	Widget_Container_Add( scene, text );
+	Widget_Container_Add( scene, fps_text );
+	TextStyle_Init( &style );
+	TextStyle_FontSize( &style, 18 );
+	Label_TextStyle( fps_text, style );
+	Widget_SetAlign( text, ALIGN_TOP_CENTER, Pos(0,40) );
+	Widget_SetAlign( fps_text, ALIGN_TOP_CENTER, Pos(0,100) );
+	Label_TextW( text, L"<size=42px>游戏测试</size>");
+	Widget_SetZIndex( fps_text, -5000 );
+	Widget_SetZIndex( text, -5000 );
+	Widget_Show( fps_text );
+	Widget_Show( text );
+	LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
 }
 
 /** 同步游戏玩家的按键控制 */
@@ -1407,66 +1180,6 @@ static void GamePlayer_SetStart( GamePlayer *player )
 	GameObject_AtActionDone( player->object, ACTION_START, GamePlayer_SetToReady );
 }
 
-int Game_Start(void)
-{
-	int i;
-	int x, y, start_x, start_y;
-	LCUI_Size scene_size;
-
-	GameScene_GetLandSize( &scene_size );
-	GameScene_GetLandStartX( &start_x );
-	GameScene_GetLandStartY( &start_y );
-	/* 计算并设置游戏角色的位置 */
-	x = scene_size.w/2 - 150;
-	GameObject_SetX( player_data[0].object, start_x+x );
-	GameObject_SetX( player_data[1].object, start_x+x-50 );
-	x = scene_size.w/2 + 150;
-	GameObject_SetX( player_data[2].object, start_x+x );
-	GameObject_SetX( player_data[3].object, start_x+x+50 );
-	y = scene_size.h/2;
-	GameObject_SetY( player_data[0].object, start_y+y-50 );
-	GameObject_SetY( player_data[1].object, start_y+y+50 );
-	GameObject_SetY( player_data[2].object, start_y+y-50 );
-	GameObject_SetY( player_data[3].object, start_y+y+50 );
-
-	/* 改变游戏角色的朝向 */
-	GamePlayer_SetRightOriented( &player_data[0] );
-	GamePlayer_SetRightOriented( &player_data[1] );
-	GamePlayer_SetLeftOriented( &player_data[2] );
-	GamePlayer_SetLeftOriented( &player_data[3] );
-	/* 设置游戏角色的初始状态 */
-	GamePlayer_SetStart( &player_data[0] );
-	GamePlayer_SetStart( &player_data[1] );
-	GamePlayer_SetStart( &player_data[2] );
-	GamePlayer_SetStart( &player_data[3] );
-	/* 播放动作动画，并显示游戏角色 */
-	for(i=0; i<4; ++i) {
-		if( !player_data[i].enable ) {
-			continue;
-		}
-		GameObject_PlayAction( player_data[i].object );
-		StatusBar_SetHealth( player_data[i].statusbar, player_data[i].property.cur_hp );
-		StatusBar_SetMaxHealth( player_data[i].statusbar, player_data[i].property.max_hp );
-		Widget_Show( player_data[i].object );
-	}
-	/* 设置状态栏里的信息 */
-	//StatusBar_SetPlayerNameW( player_data[0].statusbar, GetPlayerName() );
-	//StatusBar_SetPlayerNameW( player_data[1].statusbar, GetPlayerName() );
-	//StatusBar_SetPlayerNameW( player_data[2].statusbar, GetPlayerName() );
-	//StatusBar_SetPlayerNameW( player_data[3].statusbar, GetPlayerName() );
-	StatusBar_SetPlayerTypeNameW( player_data[0].statusbar, L"1P" );
-	StatusBar_SetPlayerTypeNameW( player_data[1].statusbar, L"CPU" );
-	StatusBar_SetPlayerTypeNameW( player_data[2].statusbar, L"CPU" );
-	StatusBar_SetPlayerTypeNameW( player_data[3].statusbar, L"CPU" );
-	/* 显示状态栏 */
-	Widget_Show( player_data[0].statusbar );
-	Widget_Show( player_data[1].statusbar );
-	Widget_Show( player_data[2].statusbar );
-	Widget_Show( player_data[3].statusbar );
-	Widget_Show( player_status_area );
-	return 0;
-}
-
 int Game_Loop(void)
 {
 	int i, n_found;
@@ -1506,4 +1219,217 @@ int Game_Loop(void)
 int Game_Pause(void)
 {
 	return 0;
+}
+
+static RoleInfo role_library[TOTAL_ROLE_NUM] = {
+	{ ROLE_KUNI, L"国夫", PLAYER_TYPE_FIGHTER, {
+		1600, 1600, 60, 150, 150, 100, 100}, {
+			SKILLNAME_MACH_B_ATTACK,
+			SKILLNAME_SPINHIT,
+			SKILLNAME_BOMBKICK,
+		}, 3
+	}, { ROLE_RIKI, L"阿力", PLAYER_TYPE_MARTIAL_ARTIST, {
+		1600, 1600, 200, 60, 100, 100, 80}, {
+			SKILLNAME_MACH_A_ATTACK,
+			SKILLNAME_SPINHIT,
+			SKILLNAME_TORNADO_ATTACK,
+		}, 3
+	}, { ROLE_MIKE, L"姬山", PLAYER_TYPE_KUNG_FU, {
+		1600, 1600, 60, 200, 150, 110, 130}, {
+			SKILLNAME_MACH_B_ATTACK,
+			SKILLNAME_BOMBKICK,
+		}, 2
+	}, { ROLE_BEN, L"御堂", PLAYER_TYPE_JUDO_MASTER, {
+		1600, 1600, 150, 150, 150, 110, 150}, {
+			SKILLNAME_SOLID_DEFENSE,
+			SKILLNAME_BOMBKICK,
+			SKILLNAME_SPINHIT,
+		}, 3
+	}, { ROLE_TORAJI, L"寅", PLAYER_TYPE_TIGER, {
+		2000, 2000, 150, 150, 150, 100, 150}, {
+			SKILLNAME_SOLID_DEFENSE,
+			SKILLNAME_BOMBKICK,
+			SKILLNAME_SPINHIT,
+			SKILLNAME_BIG_ELBOW,
+			SKILLNAME_GUILLOTINE,
+			SKILLNAME_JUMP_SPINKICK,
+			SKILLNAME_TORNADO_ATTACK,
+			SKILLNAME_MACH_STOMP
+		}, 8
+	}
+};
+
+/** 获取角色信息 */
+RoleInfo *Game_GetRoleInfo( int role_id )
+{
+	int i;
+	for(i=0; i<TOTAL_ROLE_NUM; ++i) {
+		if( role_library[i].role_id == role_id ) {
+			return &role_library[i];
+		}
+	}
+	return NULL;
+}
+
+/** 设置游戏角色 */
+int Game_SetGamePlayer( int id, int role_id, LCUI_BOOL human_control )
+{
+	int i;
+	RoleInfo *p_info;
+	GamePlayer *player;
+
+	player = GamePlayer_GetByID( id );
+	p_info = Game_GetRoleInfo( role_id );
+	if( !player || !p_info ) {
+		return -1;
+	}
+
+	player->type = p_info->type;
+	player->role_id = role_id;
+	player->property = p_info->property;
+	player->human_control = human_control;
+
+	for(i=0; i<p_info->total_skill && i<MAX_SKILL_NUM; ++i) {
+		GamePlayer_EnableSkill( player, p_info->skills[i] );
+	}
+	/* 初始化角色动作动画 */
+	GamePlayer_InitAction( player, role_id );
+	/* 根据职业来选择需要启用的特殊技能 */
+	switch( player->type ) {
+	case PLAYER_TYPE_FIGHTER:
+		GamePlayer_EnableSkill( player, SKILLNAME_HUG_FRONT_PUT );
+		GamePlayer_EnableSkill( player, SKILLNAME_HUG_BACK_PUT );
+		break;
+	case PLAYER_TYPE_MARTIAL_ARTIST:
+		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
+		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
+		break;
+	case PLAYER_TYPE_KUNG_FU:
+		GamePlayer_EnableSkill( player, SKILLNAME_LIFT_JUMP );
+		GamePlayer_EnableSkill( player, SKILLNAME_HUG_JUMP );
+		break;
+	case PLAYER_TYPE_TIGER:
+		GamePlayer_EnableSkill( player, SKILLNAME_SPIN_DRILL );
+	default:
+		break;
+	}
+	return 0;
+}
+
+/** 启用一个游戏角色 */
+void Game_EnableGamePlayer( int id )
+{
+	GamePlayer *player;
+	player = GamePlayer_GetByID( id );
+	if( player ) {
+		player->enable = TRUE;
+	}
+}
+
+/** 初始化对战 */
+int Game_InitBattle(void)
+{
+	int ret;
+
+	ret = GameScene_Init();
+	if( ret != 0 ) {
+		return ret;
+	}
+	/* 注册所需部件 */
+	StatusBar_Register();
+	LifeBar_Regiser();
+	/* 初始化攻击记录 */
+	Game_InitAttackRecord();
+	/* 初始化状态与动作的映射表 */
+	Game_InitStateActionMap();
+	/** 初始化技能库 */
+	SkillLibrary_Init();
+	/* 初始化角色信息 */
+	GamePlayer_Init( &player_data[0] );
+	GamePlayer_Init( &player_data[1] );
+	GamePlayer_Init( &player_data[2] );
+	GamePlayer_Init( &player_data[3] );
+	/* 记录玩家ID */
+	player_data[0].id = 1;
+	player_data[1].id = 2;
+	player_data[2].id = 3;
+	player_data[3].id = 4;
+	/* 初始化角色状态信息区域 */
+	ret |= Game_InitPlayerStatusArea();
+	/* 将游戏对象放入战斗场景内 */
+	GameObject_AddToContainer( player_data[0].object, GetGameScene() );
+	GameObject_AddToContainer( player_data[1].object, GetGameScene() );
+	GameObject_AddToContainer( player_data[2].object, GetGameScene() );
+	GameObject_AddToContainer( player_data[3].object, GetGameScene() );
+	/* 响应按键输入 */
+	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
+	ret |= GameMsgLoopStart();
+	/* 初始化在场景上显示的文本 */
+	InitSceneText( GetGameScene() );
+	return ret;
+}
+
+/** 开始对战 */
+void Game_StartBattle( void )
+{
+	int i;
+	int x, y, start_x, start_y;
+	LCUI_Size scene_size;
+	wchar_t player_type_name[5];
+
+	GameScene_GetLandSize( &scene_size );
+	GameScene_GetLandStartX( &start_x );
+	GameScene_GetLandStartY( &start_y );
+	/* 计算并设置游戏角色的位置 */
+	x = scene_size.w/2 - 150;
+	GameObject_SetX( player_data[0].object, start_x+x );
+	GameObject_SetX( player_data[1].object, start_x+x-50 );
+	x = scene_size.w/2 + 150;
+	GameObject_SetX( player_data[2].object, start_x+x );
+	GameObject_SetX( player_data[3].object, start_x+x+50 );
+	y = scene_size.h/2;
+	GameObject_SetY( player_data[0].object, start_y+y-50 );
+	GameObject_SetY( player_data[1].object, start_y+y+50 );
+	GameObject_SetY( player_data[2].object, start_y+y-50 );
+	GameObject_SetY( player_data[3].object, start_y+y+50 );
+	/* 改变游戏角色的朝向 */
+	GamePlayer_SetRightOriented( &player_data[0] );
+	GamePlayer_SetRightOriented( &player_data[1] );
+	GamePlayer_SetLeftOriented( &player_data[2] );
+	GamePlayer_SetLeftOriented( &player_data[3] );
+	/* 设置游戏角色的初始状态 */
+	GamePlayer_SetStart( &player_data[0] );
+	GamePlayer_SetStart( &player_data[1] );
+	GamePlayer_SetStart( &player_data[2] );
+	GamePlayer_SetStart( &player_data[3] );
+	/* 播放动作动画，并显示游戏角色 */
+	for(i=0; i<4; ++i) {
+		if( !player_data[i].enable ) {
+			continue;
+		}
+		/* 播放动作动画 */
+		GameObject_PlayAction( player_data[i].object );
+		if( player_data[i].human_control ) {
+			player_type_name[0] = L'1'+i;
+			player_type_name[1] = L'P';
+			player_type_name[2] = 0;
+		} else {
+			player_type_name[0] = L'C';
+			player_type_name[1] = L'P';
+			player_type_name[2] = L'U';
+			player_type_name[3] = 0;
+		}
+		/* 设置角色类型名 */
+		StatusBar_SetPlayerTypeNameW( player_data[0].statusbar, player_type_name );
+		/* 设置血量 */
+		StatusBar_SetHealth( player_data[i].statusbar, player_data[i].property.cur_hp );
+		StatusBar_SetMaxHealth( player_data[i].statusbar, player_data[i].property.max_hp );
+		/* 显示游戏角色 */
+		Widget_Show( player_data[i].object );
+		/* 显示状态栏 */
+		Widget_Show( player_data[i].statusbar );
+	}
+	Widget_Show( player_status_area );
+	/* 显示场景 */
+	Widget_Show( GetGameScene() );
 }
