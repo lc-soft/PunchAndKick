@@ -99,73 +99,6 @@ enum GamePlayerState {
 	TOTAL_STATE_NUM			/**< 状态的总数量 */
 };
 
-enum ActionType {
-	ACTION_START = 0,
-	ACTION_READY,
-	ACTION_STANCE,
-	ACTION_WALK,
-	ACTION_RUN,
-	ACTION_A_ATTACK,
-	ACTION_B_ATTACK,
-	ACTION_DEFENSE,
-	ACTION_SOLID_DEFENSE,
-	ACTION_MACH_A_ATTACK,
-	ACTION_MACH_B_ATTACK,
-	ACTION_JUMP_MACH_A_ATTACK,
-	ACTION_JUMP_MACH_B_ATTACK,
-	ACTION_AS_ATTACK,
-	ACTION_BS_ATTACK,
-	ACTION_AJ_ATTACK,
-	ACTION_BJ_ATTACK,
-	ACTION_ASJ_ATTACK,
-	ACTION_BSJ_ATTACK,
-	ACTION_FINAL_BLOW,
-	ACTION_FALL,
-	ACTION_HIT,
-	ACTION_HIT_FLY,
-	ACTION_HIT_FLY_FALL,
-	ACTION_LYING,
-	ACTION_LYING_HIT,
-	ACTION_TUMMY,
-	ACTION_TUMMY_HIT,
-	ACTION_REST,
-	ACTION_SQUAT,
-	ACTION_JUMP,
-	ACTION_F_ROLL,
-	ACTION_ROLL_DOWN,	/**< 面朝上卷曲 */
-	ACTION_ROLL_UP,		/**< 面朝下卷曲 */
-	ACTION_B_ROLL,
-	ACTION_JUMP_ELBOW,
-	ACTION_JUMP_STOMP,
-	ACTION_KICK,
-	ACTION_GUILLOTINE,
-	ACTION_SPINHIT,
-	ACTION_BOMBKICK,
-	ACTION_MACH_STOMP,
-	ACTION_CATCH,
-	ACTION_BE_CATCH,
-	ACTION_BE_PUSH,
-	ACTION_HALF_LYING,
-	ACTION_HALF_STANCE,
-	ACTION_BACK_BE_CATCH,
-	ACTION_CATCH_SKILL_FA,	/**< 正面抓握压制技能 A */
-	ACTION_CATCH_SKILL_FB,	/**< 正面抓握压制技能 B */
-	ACTION_CATCH_SKILL_BA,	/**< 背面抓握压制技能 A */
-	ACTION_CATCH_SKILL_BB,	/**< 背面抓握压制技能 B */
-	ACTION_WEAK_RUN,
-	ACTION_LIFT_STANCE,
-	ACTION_LIFT_WALK,
-	ACTION_LIFT_RUN,
-	ACTION_LIFT_JUMP,
-	ACTION_LIFT_FALL,
-	ACTION_THROW,
-	ACTION_RIDE,
-	ACTION_RIDE_ATTACK,
-	ACTION_LYING_DYING,	/**< 躺着，快死了 */
-	ACTION_TUMMY_DYING,	/**< 趴着，快死了 */
-	TOTAL_ACTION_NUM	/** 动作的总数量 */
-};
-
 typedef struct GamePlayerProperty_ {
 	int max_hp;	/**< 最大生命值 */
 	int cur_hp;	/**< 当前生命值 */
@@ -175,19 +108,6 @@ typedef struct GamePlayerProperty_ {
 	int throw;	/**< 投掷伤害 */
 	int defense;	/**< 防御力 */
 } GamePlayerProperty;
-
-typedef struct SpecialSkill_ {
-	LCUI_BOOL rock_defense;		/**< 磐石防御 */
-	LCUI_BOOL mach_punch;		/**< 高速拳 */
-	LCUI_BOOL mach_kick;		/**< 高速踢 */
-	LCUI_BOOL mach_stomp;		/**< 高速跺脚 */
-	LCUI_BOOL tornado_attack;	/**< 龙卷攻击 */
-	LCUI_BOOL big_elbow;		/**< 跳跃肘压 */
-	LCUI_BOOL guillotine;		/**< 断头台 */
-	LCUI_BOOL spin_hit;		/**< 翻滚击 */
-	LCUI_BOOL bomb_kick;		/**< 爆裂踢 */
-	LCUI_BOOL jump_spin_kick;	/**< 高跳旋转落踢 */
-} SpecialSkill;
 
 typedef struct ControlState_ {
 	LCUI_BOOL run;			/**< 是否奔跑 */
@@ -201,20 +121,31 @@ typedef struct ControlState_ {
 	LCUI_BOOL defense;		/**< 是否进行防御 */
 } ControlState;
 
+#define MAX_SKILL_NUM 10
+
+typedef struct RoleInfo_ {
+	int role_id;				/**< 角色ID */
+	wchar_t name[12];			/**< 角色名 */
+	int type;				/**< 角色类型 */
+	GamePlayerProperty property;		/**< 角色的各项属性 */
+	char skills[MAX_SKILL_NUM][256];	/**< 拥有的技能 */
+	int total_skill;			/**< 技能总数 */
+} RoleInfo;
+
 typedef struct GamePlayer_ GamePlayer;
 struct GamePlayer_{
+	int state;			/**< 状态 */
 	int id;				/**< 玩家ID */
 	int role_id;			/**< 角色ID */
 	int type;			/**< 角色类型 */
-	int state;			/**< 状态 */
+	GamePlayerProperty property;	/**< 游戏角色属性 */
+	LCUI_Queue skills;		/**< 已经启用的技能 */
 	LCUI_BOOL enable;		/**< 是否启用该角色 */
 	LCUI_BOOL right_direction;	/**< 角色是否朝着右方 */
 	LCUI_BOOL human_control;	/**< 是否由人类控制 */
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
 	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
-	GamePlayerProperty property;	/**< 角色的各项属性 */
-	LCUI_Queue skills;		/**< 角色拥有的技能 */
 	char attack_type_name[64];	/**< 当前的攻击类型 */
 	int n_attack;			/**< 被攻击的次数 */
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
