@@ -74,14 +74,11 @@ static void UIEffect_MoveWave2( void *arg )
 	Widget_SetAlign( back_wave[1], ALIGN_BOTTOM_LEFT, offset_pos );
 }
 
-int Game_LoadMainMenuRes(void)
+void Game_LoadMainMenuRes(void)
 {
-	int i, ret;
-	ret = 0;
-	for(i=0; i<3; ++i) {
-		ret |= Graph_LoadImage( img_path[i], &img_res[i] );
-	}
-	return ret;
+	GameGraphRes_GetGraph( MAIN_RES, "main-menu-bg", &img_res[0] );
+	GameGraphRes_GetGraph( MAIN_RES, "front-wave-img", &img_res[1] );
+	GameGraphRes_GetGraph( MAIN_RES, "back-wave-img", &img_res[2] );
 }
 
 /** 初始化主菜单 */
