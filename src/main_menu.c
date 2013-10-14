@@ -11,6 +11,7 @@
 static LCUI_Widget *main_menu_box;
 static LCUI_Widget *main_menu_item_box;
 static LCUI_Widget *front_wave[2], *back_wave[2];
+static LCUI_Widget *copyright_text;
 static LCUI_Graph img_res[3];
 
 static char img_path[3][256]={
@@ -83,16 +84,18 @@ int Game_LoadMainMenuRes(void)
 	return ret;
 }
 
+/** 初始化主菜单 */
 void Game_InitMainMenu(void)
 {
 	Game_LoadMainMenuRes();
-	
+	/* 创建所需的部件 */
 	main_menu_box = Widget_New(NULL);
 	main_menu_item_box = Widget_New(NULL);
 	front_wave[0] = Widget_New(NULL);
 	front_wave[1] = Widget_New(NULL);
 	back_wave[0] = Widget_New(NULL);
 	back_wave[1] = Widget_New(NULL);
+	copyright_text = Widget_New("label");
 
 	Widget_SetSize( main_menu_box, "100%", "100%" );
 	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
@@ -130,17 +133,23 @@ void Game_InitMainMenu(void)
 	Widget_SetAlign( back_wave[0], ALIGN_BOTTOM_LEFT, Pos(0,-ITEM_BOX_HEIGHT) );
 	Widget_SetAlign( back_wave[1], ALIGN_BOTTOM_LEFT, Pos(Graph_GetSize(&img_res[2]).w,-ITEM_BOX_HEIGHT) );
 	
+	Widget_Container_Add( main_menu_box, copyright_text );
+	Label_TextW( copyright_text, L"<size=16px>Powered By LCUI</size>" );
+	Widget_SetAlign( copyright_text, ALIGN_BOTTOM_CENTER, Pos(0,-30) );
+
 	Widget_Show( front_wave[0] );
 	Widget_Show( front_wave[1] );
 	Widget_Show( back_wave[0] );
 	Widget_Show( back_wave[1] );
 	Widget_Show( main_menu_item_box );
+	Widget_Show( copyright_text );
 	Widget_Show( main_menu_box );
-
+	/* 设置两个定时器，用于定时改变波浪的位置，以实现波浪的移动效果 */
 	LCUITimer_Set( 20, UIEffect_MoveWave1, NULL, TRUE );
 	LCUITimer_Set( 60, UIEffect_MoveWave2, NULL, TRUE );
 }
 
+/** 显示主菜单 */
 void Game_ShowMainMenu(void)
 {
 	uchar_t alpha;
@@ -154,6 +163,7 @@ void Game_ShowMainMenu(void)
 	Widget_SetAlpha( main_menu_box, 255 );
 }
 
+/** 隐藏主菜单 */
 void Game_HideMainMenu(void)
 {
 	uchar_t alpha;
@@ -164,4 +174,10 @@ void Game_HideMainMenu(void)
 	}
 	Widget_SetAlpha( main_menu_box, 0 );
 	Widget_Hide( main_menu_box );
+}
+
+/** 销毁主菜单 */
+void Game_DestroyMainMenu(void)
+{
+
 }
