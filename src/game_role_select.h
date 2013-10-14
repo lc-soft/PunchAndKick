@@ -4,6 +4,9 @@
 /** 初始化角色选择框 */
 void Game_InitRoleSelectBox(void);
 
+/** 获取已选择的角色 */
+int Game_GetSelectedRole(void);
+
 /** 显示角色选择框 */
 void Game_ShowRoleSelectBox(void);
 

@@ -33,6 +33,7 @@ static LCUI_Widget *progbar_hp, *progbar_throw, *progbar_speed;
 static LCUI_Widget *label_skilllist;
 static LCUI_Widget *info_area, *skill_area;
 
+static LCUI_Sleeper sleeper;
 static int current_select_role = 0;
 
 static void closebtn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
@@ -82,6 +83,13 @@ static void GetSkillName( const char *in_skillname, wchar_t *out_skillname )
 	} else {
 		wcscpy( out_skillname, L"(未知)" );
 	}
+}
+
+/** 获取已选择的角色 */
+int Game_GetSelectedRole(void)
+{
+	LCUISleeper_StartSleep( &sleeper, MAXINT32 );
+	return current_select_role;
 }
 
 /** 选择角色 */
@@ -134,7 +142,9 @@ static void btn_next_role_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused
 
 static void btn_select_role_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
-
+	Game_HideRoleSelectBox();
+	Game_DestroyRoleSelectBox();
+	LCUISleeper_BreakSleep( &sleeper );
 }
 
 /** 初始化角色选择框 */
@@ -303,6 +313,7 @@ void Game_InitRoleSelectBox(void)
 	Widget_Show( skill_area );
 
 	RoleSelectBox_SetRole( ROLE_KUNI );
+	LCUISleeper_Create( &sleeper );
 }
 
 /** 显示角色选择框 */
