@@ -6,6 +6,7 @@
 #include LC_WIDGET_H
 #include LC_DISPLAY_H
 #include LC_LABEL_H
+#include LC_INPUT_H
 
 #include "game.h"
 #include "skills/game_skill.h"
@@ -92,8 +93,39 @@ static void Game_ShowBootScreen(void)
 	Widget_Destroy( wdg_copyright_text );
 }
 
+static void Game_AddCPUPlayer(void)
+{
+	int i, j, role_id;
+	GamePlayer *player, *other_player;
+	for(j=2; j<5; ++j) {
+		player = GamePlayer_GetByID(j);
+		while(1) {
+			/* 随机选择一个角色 */
+			role_id = rand()%TOTAL_ROLE_NUM;
+			/* 检查是否与前面几个角色的ID相同 */
+			for(i=1; i<j; ++i) {
+				other_player = GamePlayer_GetByID(i);
+				if( !other_player ) {
+					continue;	
+				}
+				if( role_id == other_player->role_id ) {
+					break;
+				}
+			}
+			if( i>=j ) {
+				break;
+			}
+		}
+		Game_EnableGamePlayer( j );
+		Game_SetGamePlayer( j, role_id, FALSE );
+	}
+}
+
 static void Game_MainThread( void *arg )
 {
+	int role_id;
+	ControlKey ctrlkey;
+
 	GameObject_Register();
 	LCUICursor_Hide();		/* 隐藏鼠标游标 */
 	Game_ShowBootScreen();		/* 显示启动画面 */
@@ -102,6 +134,26 @@ static void Game_MainThread( void *arg )
 	Game_ShowMainMenu();
 	Game_InitRoleSelectBox();
 	Game_ShowRoleSelectBox();
+	role_id = Game_GetSelectedRole();
+	Game_HideMainMenu();
+
+	ctrlkey.a_attack = LCUIKEY_J;
+	ctrlkey.b_attack = LCUIKEY_K;
+	ctrlkey.jump = LCUIKEY_SPACE;
+	ctrlkey.defense = LCUIKEY_L;
+	ctrlkey.left = LCUIKEY_A;
+	ctrlkey.right = LCUIKEY_D;
+	ctrlkey.up = LCUIKEY_W;
+	ctrlkey.down = LCUIKEY_S;
+
+	Game_InitBattle();
+	Game_EnableGamePlayer( 1 );
+	Game_SetGamePlayer( 1, role_id, TRUE );
+	Game_SetGamePlayerControlKey( 1, &ctrlkey );
+	Game_AddCPUPlayer();
+	Game_StartBattle();
+	Game_Loop();
+
 	LCUIThread_Exit(NULL);
 }
 
@@ -128,7 +180,7 @@ int main( int argc, char **argv )
 {
 	int ret;
 	LCUI_Thread t;
-#define DEBUG
+//#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
