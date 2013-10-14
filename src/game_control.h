@@ -255,4 +255,6 @@ void GamePlayer_SetUpMotion( GamePlayer *player );
 
 void GamePlayer_SetDownMotion( GamePlayer *player );
 
+/** 获取角色信息 */
+RoleInfo *Game_GetRoleInfo( int role_id );
 #endif
