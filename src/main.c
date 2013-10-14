@@ -1,4 +1,4 @@
-﻿//#define SKIP_BOOT_SCREEN
+﻿#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -6,7 +6,10 @@
 #include LC_WIDGET_H
 #include LC_DISPLAY_H
 #include LC_LABEL_H
+
 #include "game.h"
+#include "skills/game_skill.h"
+#include "game_role_select.h"
 
 #define TEXT_COPYRIGHT		L"Developed by LC-Games."
 #define TEXT_STATEMENT		L"<size=20px>"\
@@ -91,28 +94,14 @@ static void Game_ShowBootScreen(void)
 
 static void Game_MainThread( void *arg )
 {
-	int ret;
-	ret = GameGraphRes_LoadFromFile("main.data");
-	if( ret != 0 ) {
-		LCUI_MessageBoxW(
-			MB_ICON_ERROR,
-			L"游戏资源载入出错，请检查程序的完整性！",
-			L"错误", MB_BTN_OK );
-		LCUI_MainLoop_Quit(NULL);
-		LCUIThread_Exit(NULL);
-		return;
-	}
+	GameObject_Register();
 	LCUICursor_Hide();		/* 隐藏鼠标游标 */
 	Game_ShowBootScreen();		/* 显示启动画面 */
 	LCUICursor_Show();		/* 显示鼠标游标 */
-	ret = Game_Init();
-	if( ret != 0 ) {
-		LCUI_MainLoop_Quit(NULL);
-		LCUIThread_Exit(NULL);
-		return;
-	}
-	Game_Start();
-	Game_Loop();
+	Game_InitMainMenu();
+	Game_ShowMainMenu();
+	Game_InitRoleSelectBox();
+	Game_ShowRoleSelectBox();
 	LCUIThread_Exit(NULL);
 }
 
@@ -137,14 +126,36 @@ static void InitConsoleWindow(void)
 
 int main( int argc, char **argv )
 {
+	int ret;
 	LCUI_Thread t;
-	
-#ifdef LCUI_BUILD_IN_WIN32
-	//InitConsoleWindow();
+#define DEBUG
+#if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
+	InitConsoleWindow();
 #endif
 	LCUI_Init(800,600,0);
 	/* 初始化游戏资源 */
 	GameGraphRes_Init();
+	ret = GameGraphRes_LoadFromFile("main.data");
+	if( ret != 0 ) {
+		LCUI_MessageBoxW(
+			MB_ICON_ERROR,
+			L"游戏资源载入出错，请检查程序的完整性！",
+			L"错误", MB_BTN_OK );
+		return -1;
+	}
+
+	ret = GameGraphRes_LoadFromFile("action-riki.data");
+	ret |= GameGraphRes_LoadFromFile("action-kuni.data");
+	ret |= GameGraphRes_LoadFromFile("action-mike.data");
+	ret |= GameGraphRes_LoadFromFile("action-ben.data");
+	ret |= GameGraphRes_LoadFromFile("action-toraji.data");
+	if( ret != 0 ) {
+		LCUI_MessageBoxW(
+			MB_ICON_ERROR,
+			L"角色资源载入出错，请检查程序的完整性！",
+			L"错误", MB_BTN_OK );
+		return -2;
+	}
 	/* 创建一个线程，用于进行游戏的初始化 */
 	LCUIThread_Create( &t, Game_MainThread, NULL );
 	return LCUI_Main();
