@@ -887,7 +887,7 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 }
 
 /** 设置游戏角色的控制键 */
-int GamePlayer_SetControlKey( int player_id, ControlKey *key )
+int Game_SetGamePlayerControlKey( int player_id, ControlKey *key )
 {
 	GamePlayer *player;
 	player = GamePlayer_GetByID( player_id );
@@ -1223,40 +1223,40 @@ int Game_Pause(void)
 
 static RoleInfo role_library[TOTAL_ROLE_NUM] = {
 	{ ROLE_KUNI, L"国夫", PLAYER_TYPE_FIGHTER, {
-		1600, 1600, 60, 150, 150, 100, 100}, {
+		1800, 1800, 60, 150, 150, 100, 100}, {
 			SKILLNAME_MACH_B_ATTACK,
 			SKILLNAME_SPINHIT,
 			SKILLNAME_BOMBKICK,
 		}, 3
 	}, { ROLE_RIKI, L"阿力", PLAYER_TYPE_MARTIAL_ARTIST, {
-		1600, 1600, 200, 60, 100, 100, 80}, {
+		1900, 1900, 200, 60, 100, 100, 130}, {
 			SKILLNAME_MACH_A_ATTACK,
 			SKILLNAME_SPINHIT,
 			SKILLNAME_TORNADO_ATTACK,
 		}, 3
 	}, { ROLE_MIKE, L"姬山", PLAYER_TYPE_KUNG_FU, {
-		1600, 1600, 60, 200, 150, 110, 130}, {
+		1800, 1800, 60, 200, 150, 110, 130}, {
 			SKILLNAME_MACH_B_ATTACK,
 			SKILLNAME_BOMBKICK,
 		}, 2
 	}, { ROLE_BEN, L"御堂", PLAYER_TYPE_JUDO_MASTER, {
-		1600, 1600, 150, 150, 130, 110, 150}, {
+		2200, 2200, 150, 150, 130, 110, 200}, {
 			SKILLNAME_SOLID_DEFENSE,
 			SKILLNAME_BOMBKICK,
 			SKILLNAME_SPINHIT,
 		}, 3
 	}, { ROLE_TORAJI, L"寅", PLAYER_TYPE_TIGER, {
 		2000, 2000, 180, 180, 150, 150, 150}, {
-			SKILLNAME_SOLID_DEFENSE,
+			SKILLNAME_MACH_A_ATTACK,
+			SKILLNAME_MACH_B_ATTACK,
+			SKILLNAME_MACH_STOMP,
 			SKILLNAME_BOMBKICK,
 			SKILLNAME_SPINHIT,
-			SKILLNAME_BIG_ELBOW,
-			SKILLNAME_GUILLOTINE,
+			SKILLNAME_SOLID_DEFENSE,
 			SKILLNAME_JUMP_SPINKICK,
 			SKILLNAME_TORNADO_ATTACK,
-			SKILLNAME_MACH_STOMP,
-			SKILLNAME_MACH_A_ATTACK,
-			SKILLNAME_MACH_B_ATTACK
+			SKILLNAME_BIG_ELBOW,
+			SKILLNAME_GUILLOTINE
 		}, 10
 	}
 };
@@ -1293,6 +1293,12 @@ int Game_SetGamePlayer( int id, int role_id, LCUI_BOOL human_control )
 
 	for(i=0; i<p_info->total_skill && i<MAX_SKILL_NUM; ++i) {
 		GamePlayer_EnableSkill( player, p_info->skills[i] );
+		if( strcmp(p_info->skills[i], SKILLNAME_MACH_A_ATTACK) == 0 ) {
+			GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
+		}
+		else if( strcmp(p_info->skills[i], SKILLNAME_MACH_B_ATTACK) == 0 ) {
+			GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
+		}
 	}
 	/* 初始化角色动作动画 */
 	GamePlayer_InitAction( player, role_id );
@@ -1375,6 +1381,7 @@ int Game_InitBattle(void)
 void Game_StartBattle( void )
 {
 	int i;
+	RoleInfo *p_role_info;
 	int x, y, start_x, start_y;
 	LCUI_Size scene_size;
 	wchar_t player_type_name[5];
@@ -1421,8 +1428,10 @@ void Game_StartBattle( void )
 			player_type_name[2] = L'U';
 			player_type_name[3] = 0;
 		}
+		p_role_info = Game_GetRoleInfo( player_data[i].role_id );
+		StatusBar_SetPlayerNameW( player_data[i].statusbar, p_role_info->name );
 		/* 设置角色类型名 */
-		StatusBar_SetPlayerTypeNameW( player_data[0].statusbar, player_type_name );
+		StatusBar_SetPlayerTypeNameW( player_data[i].statusbar, player_type_name );
 		/* 设置血量 */
 		StatusBar_SetHealth( player_data[i].statusbar, player_data[i].property.cur_hp );
 		StatusBar_SetMaxHealth( player_data[i].statusbar, player_data[i].property.max_hp );
