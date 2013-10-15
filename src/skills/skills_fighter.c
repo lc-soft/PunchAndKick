@@ -149,10 +149,15 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 	int z_index;
 	GamePlayer *player;
 	double x, y, z, x_speed;
-
+	
 	player = GamePlayer_GetPlayerByWidget( widget );
+	if( !player->other ) {
+		return;
+	}
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index-1 );
+
 	switch( GameObject_GetCurrentActionFrameNumber(widget) ) {
-	//case 1:break;
 	case 1:
 		x = GameObject_GetX( player->object );
 		y = GameObject_GetY( player->object );
@@ -170,8 +175,6 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetX( player->other->object, x );
 		GameObject_SetY( player->other->object, y );
 		GameObject_SetZ( player->other->object, z+20 );
-		z_index = Widget_GetZIndex( player->object );
-		Widget_SetZIndex( player->other->object, z_index-1 );
 		break;
 	case 2:
 		x = GameObject_GetX( player->object );
@@ -190,8 +193,6 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetX( player->other->object, x );
 		GameObject_SetY( player->other->object, y );
 		GameObject_SetZ( player->other->object, z+25 );
-		z_index = Widget_GetZIndex( player->object );
-		Widget_SetZIndex( player->other->object, z_index-1 );
 		break;
 	case 3:
 		x = GameObject_GetX( player->object );
@@ -210,8 +211,6 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetX( player->other->object, x );
 		GameObject_SetY( player->other->object, y );
 		GameObject_SetZ( player->other->object, z+20 );
-		z_index = Widget_GetZIndex( player->object );
-		Widget_SetZIndex( player->other->object, z_index-1 );
 		break;
 	case 4:
 		x = GameObject_GetX( player->object );
@@ -230,8 +229,6 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetX( player->other->object, x );
 		GameObject_SetY( player->other->object, y );
 		GameObject_SetZ( player->other->object, z+15 );
-		z_index = Widget_GetZIndex( player->object );
-		Widget_SetZIndex( player->other->object, z_index-1 );
 		break;
 	case 5:
 		x = GameObject_GetX( player->object );
@@ -252,8 +249,6 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetX( player->other->object, x );
 		GameObject_SetY( player->other->object, y );
 		GameObject_SetZ( player->other->object, z+10 );
-		z_index = Widget_GetZIndex( player->object );
-		Widget_SetZIndex( player->other->object, z_index-1 );
 
 		GameObject_SetXSpeed( player->other->object, x_speed );
 		GameObject_AtLanding(	player->other->object,
