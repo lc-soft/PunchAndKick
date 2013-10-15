@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	63
+#define MAX_ACTION_NUM	64
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 开打 动作 */
 	{ ACTION_START, FALSE, {
@@ -892,6 +892,13 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 躺着被击中 动作 */
 	{ ACTION_LYING_HIT, FALSE, {
 		{ TRUE, FALSE, FALSE, "lying-hit", 10, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	{ ACTION_TUMMY_HIT_FLY, FALSE, {
+		{ TRUE, FALSE, FALSE, "tummy-hit-fly", 10, 0, 0,
 			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
 			{0,0,0,0,0,0} 
 		},
