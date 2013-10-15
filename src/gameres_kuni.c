@@ -5,7 +5,7 @@
 #include "game.h"
 #include "game_resource.h"
 
-#define MAX_ACTION_NUM	63
+#define MAX_ACTION_NUM	64
 static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 开打 动作 */
 	{ ACTION_START, FALSE, {
@@ -520,7 +520,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
-	/* 正面压制技能B（拉推） 动作 */
+	/* 正面压制技能（拉推） 动作 */
 	{ ACTION_CATCH_SKILL_FB, FALSE, {
 		{ TRUE, FALSE, FALSE, "pull", 10, 12, 0,
 			{13, -GLOBAL_Y_WIDTH/2, 0, 54, GLOBAL_Y_WIDTH, 58},
@@ -532,7 +532,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
-	/* 背面压制技能B（推） 动作 */
+	/* 背面压制技能（推） 动作 */
 	{ ACTION_CATCH_SKILL_BB, FALSE, {
 		{ TRUE, FALSE, FALSE, "rest-01", 10, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
@@ -807,6 +807,13 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	/* 躺着被击中 动作 */
 	{ ACTION_LYING_HIT, FALSE, {
 		{ TRUE, FALSE, FALSE, "lying-hit", 10, 0, 0,
+			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
+			{0,0,0,0,0,0} 
+		},
+		END_ACTION_FRAME
+	}},
+	{ ACTION_TUMMY_HIT_FLY, FALSE, {
+		{ TRUE, FALSE, FALSE, "tummy-hit-fly", 10, 0, 0,
 			{-32, -GLOBAL_Y_WIDTH/2, 0, 64, GLOBAL_Y_WIDTH, 26},
 			{0,0,0,0,0,0} 
 		},
