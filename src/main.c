@@ -8,6 +8,9 @@
 #include LC_LABEL_H
 #include LC_INPUT_H
 
+#include <time.h>
+#include <stdlib.h>
+
 #include "game.h"
 #include "skills/game_skill.h"
 #include "game_role_select.h"
@@ -117,7 +120,7 @@ static void Game_AddCPUPlayer(void)
 			}
 		}
 		Game_EnableGamePlayer( j );
-		Game_SetGamePlayer( j, role_id, FALSE );
+		Game_SetGamePlayer( j, role_id, TRUE );
 	}
 }
 
@@ -126,6 +129,7 @@ static void Game_MainThread( void *arg )
 	int role_id;
 	ControlKey ctrlkey;
 
+	srand((unsigned int)time(NULL));
 	GameObject_Register();
 	LCUICursor_Hide();		/* 隐藏鼠标游标 */
 	Game_ShowBootScreen();		/* 显示启动画面 */
@@ -185,6 +189,7 @@ int main( int argc, char **argv )
 	InitConsoleWindow();
 #endif
 	LCUI_Init(800,600,0);
+
 	/* 初始化游戏资源 */
 	GameGraphRes_Init();
 	ret = GameGraphRes_LoadFromFile("main.data");
