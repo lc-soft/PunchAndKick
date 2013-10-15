@@ -7,11 +7,11 @@
 #include "game_object.h"
 #include "game_resource.h"
 
-#define KUNI_ACTION_FILE_NUM	69
-#define RIKI_ACTION_FILE_NUM	74
-#define MIKE_ACTION_FILE_NUM	71
-#define BEN_ACTION_FILE_NUM	66
-#define TORAJI_ACTION_FILE_NUM	74
+#define KUNI_ACTION_FILE_NUM	70
+#define RIKI_ACTION_FILE_NUM	75
+#define MIKE_ACTION_FILE_NUM	72
+#define BEN_ACTION_FILE_NUM	76
+#define TORAJI_ACTION_FILE_NUM	75
 #define MAIN_FILE_NUM		2
 #define FONT_FILE_NUM		11
 
@@ -75,7 +75,10 @@ const struct fileinfo font_file_info[FONT_FILE_NUM]={
 	{"font-x.png","x"}
 };
 
-const struct fileinfo main_file_info[2]={
+const struct fileinfo main_file_info[5]={
+	{"bg.png","main-menu-bg"},
+	{"wave1.png","front-wave-img"},
+	{"wave2.png","back-wave-img"},
 	{"LC-GAMES-175x128.png","main-logo"},
 	{"shadow.png", "shadow"}
 };
@@ -120,6 +123,7 @@ const struct fileinfo kuni_action_file_info[KUNI_ACTION_FILE_NUM]={
 	{"lift.png","lift"},
 	{"tummy.png","tummy"},
 	{"tummy-hit.png","tummy-hit"},
+	{"tummy-hit-fly.png","tummy-hit-fly"},
 	{"lying.png","lying"},
 	{"lying-hit.png","lying-hit"},
 	{"half-lying.png","half-lying"},
@@ -217,6 +221,7 @@ const struct fileinfo riki_action_file_info[RIKI_ACTION_FILE_NUM]={
 	{"squat.png","squat"},
 	{"stance-01.png","stance-01"},
 	{"tummy-hit.png","tummy-hit"},
+	{"tummy-hit-fly.png","tummy-hit-fly"},
 	{"tummy.png","tummy"},
 	{"walk-01.png","walk-01"},
 	{"walk-02.png","walk-02"},
@@ -271,6 +276,7 @@ const struct fileinfo mike_action_file_info[MIKE_ACTION_FILE_NUM]={
 	{"lift.png","lift"},
 	{"tummy.png","tummy"},
 	{"tummy-hit.png","tummy-hit"},
+	{"tummy-hit-fly.png","tummy-hit-fly"},
 	{"lying.png","lying"},
 	{"lying-hit.png","lying-hit"},
 	{"half-lying.png","half-lying"},
@@ -345,6 +351,7 @@ const struct fileinfo toraji_action_file_info[TORAJI_ACTION_FILE_NUM]={
 	{"lying.png","lying"},
 	{"tummy.png","tummy"},
 	{"tummy-hit.png","tummy-hit"},
+	{"tummy-hit-fly.png","tummy-hit-fly"},
 	{"stomp.png","stomp"},
 	{"kick.png","kick"},
 	{"roll-01.png","roll-01"},
@@ -421,6 +428,7 @@ const struct fileinfo ben_action_file_info[BEN_ACTION_FILE_NUM]={
 	{"lift.png","lift"},
 	{"tummy.png","tummy"},
 	{"tummy-hit.png","tummy-hit"},
+	{"tummy-hit-fly.png","tummy-hit-fly"},
 	{"lying.png","lying"},
 	{"lying-hit.png","lying-hit"},
 	{"half-lying.png","half-lying"},
@@ -450,10 +458,19 @@ const struct fileinfo ben_action_file_info[BEN_ACTION_FILE_NUM]={
 	{"ride-attack-01.png","ride-attack-01"},
 	{"ride-attack-02.png","ride-attack-02"},
 	{"be-push.png", "be-push"},
-	{"sit.png", "sit"}
+	{"sit.png", "sit"},
+	{"back-judo-01.png","back-judo-01"},
+	{"back-judo-02.png","back-judo-02"},
+	{"back-judo-03.png","back-judo-03"},
+	{"back-judo-04.png","back-judo-04"},
+	{"back-judo-05.png","back-judo-05"},
+	{"judo-01.png","judo-01"},
+	{"judo-02.png","judo-02"},
+	{"judo-03.png","judo-03"},
+	{"judo-04.png","judo-04"}
 };
 
-static void ActionRes_WirteToFile(	const char *class_name,
+static void GraphRes_WirteToFile(	const char *class_name,
 					const struct fileinfo *filelist,
 					int n_file,
 					const char *outputfile )
@@ -471,7 +488,6 @@ static void ActionRes_WirteToFile(	const char *class_name,
 	GameGraphRes_WriteToFile( outputfile, class_name );
 	GameGraphRes_FreeAll();
 }
-
 
 static void ActionRes_Toraji_ReadFromFile(void)
 {
@@ -493,19 +509,22 @@ static void ActionRes_Toraji_ReadFromFile(void)
 	GameGraphRes_FreeAll();
 }
 
-static void ActionRes_Riki_WirteToFile( void )
+static void MainGraphRes_ReadFromFile(void)
 {
-	int i, class_id;
+	int i;
 	LCUI_Graph graph_buff;
 
 	GameGraphRes_Init();
-	class_id = GameGraphRes_AddClass(ACTION_RES_CLASS_RIKI);
-	for(i=0; i<RIKI_ACTION_FILE_NUM; ++i) {
+	GameGraphRes_LoadFromFile( "main.data" );
+	for(i=0; i<5; ++i) {
 		Graph_Init( &graph_buff );
-		Graph_LoadImage( riki_action_file_info[i].filepath, &graph_buff );
-		GameGraphRes_AddGraph( class_id, riki_action_file_info[i].name, &graph_buff );
+		GameGraphRes_GetGraph( 
+			MAIN_RES, 
+			main_file_info[i].name,
+			&graph_buff 
+		);
+		Graph_WritePNG( main_file_info[i].filepath, &graph_buff );
 	}
-	GameGraphRes_WriteToFile( "action-riki.data", ACTION_RES_CLASS_RIKI );
 	GameGraphRes_FreeAll();
 }
 
@@ -580,28 +599,34 @@ int main(int argc, char** argv)
 	//ScenesGraphRes_WirteToFile();
 	//MainGraphRes_WirteToFile();
 #define need_ben
-#ifdef need_kuni
-	ActionRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
+#ifdef need_main_res
+	//MainGraphRes_ReadFromFile();
+	GraphRes_WirteToFile(	MAIN_RES,
+				main_file_info,
+				5, 
+				"main.data" );
+#elif defined(need_kuni)
+	GraphRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
 				kuni_action_file_info,
 				KUNI_ACTION_FILE_NUM, 
 				"action-kuni.data" );
 #elif defined(need_riki)
-	ActionRes_WirteToFile(	ACTION_RES_CLASS_RIKI,
+	GraphRes_WirteToFile(	ACTION_RES_CLASS_RIKI,
 				riki_action_file_info,
 				RIKI_ACTION_FILE_NUM, 
 				"action-riki.data" );
 #elif defined(need_toraji)
-	ActionRes_WirteToFile(	ACTION_RES_CLASS_TORAJI,
+	GraphRes_WirteToFile(	ACTION_RES_CLASS_TORAJI,
 				toraji_action_file_info,
 				TORAJI_ACTION_FILE_NUM, 
 				"action-toraji.data" );
 #elif defined(need_mike)
-	ActionRes_WirteToFile(	ACTION_RES_CLASS_MIKE,
+	GraphRes_WirteToFile(	ACTION_RES_CLASS_MIKE,
 				mike_action_file_info,
 				MIKE_ACTION_FILE_NUM, 
 				"action-mike.data" );
 #elif defined(need_ben)
-	ActionRes_WirteToFile(	ACTION_RES_CLASS_BEN,
+	GraphRes_WirteToFile(	ACTION_RES_CLASS_BEN,
 				ben_action_file_info,
 				BEN_ACTION_FILE_NUM, 
 				"action-ben.data" );
