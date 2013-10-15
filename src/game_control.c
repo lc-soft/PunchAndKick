@@ -1223,24 +1223,24 @@ int Game_Pause(void)
 
 static RoleInfo role_library[TOTAL_ROLE_NUM] = {
 	{ ROLE_KUNI, L"国夫", PLAYER_TYPE_FIGHTER, {
-		1800, 1800, 60, 150, 150, 100, 100}, {
+		1800, 1800, 60, 200, 150, 100, 100}, {
 			SKILLNAME_MACH_B_ATTACK,
 			SKILLNAME_SPINHIT,
 			SKILLNAME_BOMBKICK,
 		}, 3
 	}, { ROLE_RIKI, L"阿力", PLAYER_TYPE_MARTIAL_ARTIST, {
-		1900, 1900, 200, 60, 100, 100, 130}, {
+		1900, 1900, 240, 60, 100, 100, 130}, {
 			SKILLNAME_MACH_A_ATTACK,
 			SKILLNAME_SPINHIT,
 			SKILLNAME_TORNADO_ATTACK,
 		}, 3
 	}, { ROLE_MIKE, L"姬山", PLAYER_TYPE_KUNG_FU, {
-		1800, 1800, 60, 200, 150, 110, 130}, {
+		1800, 1800, 60, 240, 150, 110, 130}, {
 			SKILLNAME_MACH_B_ATTACK,
 			SKILLNAME_BOMBKICK,
 		}, 2
 	}, { ROLE_BEN, L"御堂", PLAYER_TYPE_JUDO_MASTER, {
-		2200, 2200, 150, 150, 130, 110, 200}, {
+		2200, 2200, 150, 150, 100, 150, 200}, {
 			SKILLNAME_SOLID_DEFENSE,
 			SKILLNAME_BOMBKICK,
 			SKILLNAME_SPINHIT,
@@ -1315,6 +1315,10 @@ int Game_SetGamePlayer( int id, int role_id, LCUI_BOOL human_control )
 	case PLAYER_TYPE_KUNG_FU:
 		GamePlayer_EnableSkill( player, SKILLNAME_LIFT_JUMP );
 		GamePlayer_EnableSkill( player, SKILLNAME_HUG_JUMP );
+		break;
+	case PLAYER_TYPE_JUDO_MASTER:
+		GamePlayer_EnableSkill( player, SKILLNAME_JUDO );
+		GamePlayer_EnableSkill( player, SKILLNAME_BACK_JUDO );
 		break;
 	case PLAYER_TYPE_TIGER:
 		GamePlayer_EnableSkill( player, SKILLNAME_SPIN_DRILL );
