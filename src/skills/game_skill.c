@@ -29,6 +29,7 @@ void SkillLibrary_Init(void)
 	FighterSkill_Register();
 	MartialArtistSkill_Register();
 	KungFuSkill_Register();
+	JudoMasterSkill_Register();
 	TigerSkill_Register();
 }
 
