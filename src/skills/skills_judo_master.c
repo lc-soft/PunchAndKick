@@ -143,9 +143,14 @@ static void Judo_AtActionUpdate( LCUI_Widget *widget )
 		z = GameObject_GetZ( widget );
 		GameObject_SetX( other_player->object, x );
 		GameObject_SetY( other_player->object, y );
-		GameObject_SetZ( other_player->object, z+50 );
+		GameObject_SetZ( other_player->object, z+40 );
+		if( GamePlayer_IsLeftOriented(player) ) {
+			GamePlayer_SetRightOriented( other_player );
+		} else {
+			GamePlayer_SetLeftOriented( other_player );
+		}
 		GamePlayer_UnlockAction( other_player );
-		GamePlayer_ChangeState( other_player, STATE_LYING_HIT );
+		GamePlayer_ChangeState( other_player, STATE_TUMMY_HIT_FLY );
 		GamePlayer_LockAction( other_player );
 		break;
 	case 2:
