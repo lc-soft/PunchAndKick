@@ -597,7 +597,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
-	/* 正面压制技能B（拉推） 动作 */
+	/* 正面压制技能（拉推） 动作 */
 	{ ACTION_CATCH_SKILL_FB, FALSE, {
 		{ TRUE, FALSE, FALSE, "pull", 10, 12, 0,
 			{13, -GLOBAL_Y_WIDTH/2, 0, 54, GLOBAL_Y_WIDTH, 58},
@@ -609,7 +609,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		END_ACTION_FRAME
 	}},
-	/* 背面压制技能B（推） 动作 */
+	/* 背面压制技能（推） 动作 */
 	{ ACTION_CATCH_SKILL_BB, FALSE, {
 		{ TRUE, FALSE, FALSE, "rest-01", 10, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
@@ -663,10 +663,70 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/** 正面压制技能 动作 */
 	{ ACTION_CATCH_SKILL_FA, FALSE, {
+		{ TRUE, FALSE, FALSE, "judo-01", 3, 0, 0,
+			{-20,-GLOBAL_Y_WIDTH/2,0,34,GLOBAL_Y_WIDTH,56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "judo-02", 3, 25, 0,
+			{0,-GLOBAL_Y_WIDTH/2,0,45,GLOBAL_Y_WIDTH,52},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "judo-03", 5, 20, 0,
+			{-5,-GLOBAL_Y_WIDTH/2,0,45,GLOBAL_Y_WIDTH,50},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "judo-04", 8, 20, 0,
+			{-5,-GLOBAL_Y_WIDTH/2,0,45,GLOBAL_Y_WIDTH,47},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "judo-03", 5, 20, 0,
+			{-5,-GLOBAL_Y_WIDTH/2,0,45,GLOBAL_Y_WIDTH,50},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "judo-02", 3, 25, 0,
+			{0,-GLOBAL_Y_WIDTH/2,0,45,GLOBAL_Y_WIDTH,52},
+			{0,0,0,0,0,0} 
+		},
 		END_ACTION_FRAME
 	}},
 	/** 背面面压制技能 动作 */
 	{ ACTION_CATCH_SKILL_BA, FALSE, {
+		{ TRUE, FALSE, FALSE, "back-judo-01", 3, 0, 0,
+			{0,-GLOBAL_Y_WIDTH/2,0,38,GLOBAL_Y_WIDTH,56},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "back-judo-02", 3, 0, 0,
+			{0,-GLOBAL_Y_WIDTH/2,0,38,GLOBAL_Y_WIDTH,58},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-07", 3, 15, -5,
+			{0,-GLOBAL_Y_WIDTH/2,0,40,GLOBAL_Y_WIDTH,40},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "back-judo-03", 5, 20, -6,
+			{-44,-GLOBAL_Y_WIDTH/2,0,54,GLOBAL_Y_WIDTH,42},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "back-judo-04", 5, 25, -10,
+			{-49,-GLOBAL_Y_WIDTH/2,0,58,GLOBAL_Y_WIDTH,35},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "back-judo-05", 10, 30, -7,
+			{-57,-GLOBAL_Y_WIDTH/2,0,54,GLOBAL_Y_WIDTH,35},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-07", 3, 25, -5,
+			{0,-GLOBAL_Y_WIDTH/2,0,40,GLOBAL_Y_WIDTH,40},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-08", 3, 20, -5,
+			{0,-GLOBAL_Y_WIDTH/2,0,40,GLOBAL_Y_WIDTH,40},
+			{0,0,0,0,0,0} 
+		},
+		{ TRUE, FALSE, FALSE, "roll-01", 3, 15, -5,
+			{0,-GLOBAL_Y_WIDTH/2,0,40,GLOBAL_Y_WIDTH,40},
+			{0,0,0,0,0,0} 
+		},
 		END_ACTION_FRAME
 	}},
 	/* 虚弱奔跑 动作 */
