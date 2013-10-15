@@ -2,6 +2,7 @@
 #define __GAME_SKILL_H__
 
 #include "skills_common.h"
+#include "skills_judo_master.h"
 #include "skills_fighter.h"
 #include "skills_martial_artist.h"
 #include "skills_kung_fu.h"
