@@ -52,6 +52,7 @@ enum GamePlayerState {
 	STATE_HIT_FLY_FALL,	/**< 被击飞（头朝地） */
 	STATE_LYING,
 	STATE_LYING_HIT,
+	STATE_TUMMY_HIT_FLY,
 	STATE_TUMMY,
 	STATE_TUMMY_HIT,
 	STATE_REST,		/**< 歇息 */

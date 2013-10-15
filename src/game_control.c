@@ -166,6 +166,7 @@ static void Game_InitStateActionMap(void)
 	state_action_map[STATE_BE_LIFT_LYING] = ACTION_LYING;
 	state_action_map[STATE_LYING_HIT] =
 	state_action_map[STATE_BE_LIFT_LYING_HIT] = ACTION_LYING_HIT;
+	state_action_map[STATE_TUMMY_HIT_FLY] = ACTION_TUMMY_HIT_FLY;
 	state_action_map[STATE_TUMMY] = 
 	state_action_map[STATE_BE_LIFT_TUMMY] = ACTION_TUMMY;
 	state_action_map[STATE_TUMMY_HIT] = 
