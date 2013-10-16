@@ -51,7 +51,8 @@ static int LifeBar_CountBarNum( int cur_hp, int full_hp )
 	return n+1;
 }
 
-static void LifeBar_GetShadowForeColor( int n_lifebar, LCUI_RGB *color )
+/** 获取血条残影的颜色 */
+static void LifeBar_GetForeShadowColor( int n_lifebar, LCUI_RGB *color )
 {
 	if( n_lifebar > 0 ) {
 		n_lifebar -= 1;
@@ -61,15 +62,18 @@ static void LifeBar_GetShadowForeColor( int n_lifebar, LCUI_RGB *color )
 	color->blue = color_set[n_lifebar%5].blue*4/5;
 }
 
-static void LifeBar_GetShadowBackColor( int n_lifebar, LCUI_RGB *color )
+/** 获取背层血条残影的颜色 */
+static void LifeBar_GetBackShadowColor( int n_lifebar, LCUI_RGB *color )
 {
-	int n;
+	int n = 0;
 	if( n_lifebar > 0 ) {
 		n_lifebar -= 1;
 	}
-	n = n_lifebar%5 - 1;
-	if( n<0 ) {
-		n = 4;
+	if( n_lifebar > 0 ) {
+		n = n_lifebar%5 - 1;
+		if( n<0 ) {
+			n = 4;
+		}
 	}
 	color->red = color_set[n].red*4/5;
 	color->green = color_set[n].green*4/5;
@@ -102,14 +106,40 @@ static void LifeBar_UpdateShadow( void *arg )
 	if( data->lifebar_shadow_state == SHADOW_STATE_NEED_CLEAN ) {
 		data->lifebar_shadow_state = SHADOW_STATE_CLEAN;
 	}
+	/* 获取当前血条和残影血条的数量 */
 	cur_n = LifeBar_CountBarNum( data->current_life_point, data->full_life_point );
 	old_n = LifeBar_CountBarNum( data->shadow_life_point, data->full_life_point );
 	if( old_n < cur_n ) {
 		return;
 	}
-	else if( old_n == cur_n ) {
-		LifeBar_GetShadowForeColor( cur_n, &fore_color );
-		LifeBar_GetShadowBackColor( cur_n, &back_color );
+	else if( old_n == cur_n ) { /* 如果数量相同 */
+		/* 获取当前残影血条的前景色和背景色 */
+		LifeBar_GetForeShadowColor( cur_n, &fore_color );
+		LifeBar_GetBackShadowColor( cur_n, &back_color );
+		/* 计算在当前血槽上剩余的残影生命值 */
+		scale = data->shadow_life_point % data->full_life_point;
+		if( scale == 0.0 ) {
+			scale = 100.0;
+		} else {
+			scale = 100 * scale / data->full_life_point;
+		}
+		/* 设置残影血条的颜色 */
+		Widget_SetBackgroundColor( data->lifebar_shadow[2], fore_color );
+		Widget_SetBackgroundTransparent( data->lifebar_shadow[2], FALSE );
+		sprintf( scale_str, "%.2lf%%", scale );
+		/* 设置残影血条的长度 */
+		Widget_SetSize( data->lifebar_shadow[2], scale_str, "100%" );
+		/* 只显示最底层的血条残影 */
+		Widget_Show( data->lifebar_shadow[2] );
+		/* 隐藏上层的血条残影 */
+		Widget_Hide( data->lifebar_shadow[1] );
+		Widget_Hide( data->lifebar_shadow[0] );
+	}
+	/* 如果当前生命值刚好充满 cur_n 条血槽，并且残影血条量与当前血条量相差1条 */
+	else if( data->current_life_point == cur_n*data->full_life_point
+		 && old_n - cur_n == 1 ) {
+		LifeBar_GetForeShadowColor( old_n, &fore_color );
+		LifeBar_GetBackShadowColor( old_n, &back_color );
 		scale = data->shadow_life_point % data->full_life_point;
 		if( scale == 0.0 ) {
 			scale = 100.0;
@@ -125,8 +155,8 @@ static void LifeBar_UpdateShadow( void *arg )
 		Widget_Hide( data->lifebar_shadow[0] );
 	}
 	else if( old_n - cur_n == 1 ) {
-		LifeBar_GetShadowForeColor( old_n, &fore_color );
-		LifeBar_GetShadowForeColor( cur_n, &back_color );
+		LifeBar_GetForeShadowColor( old_n, &fore_color );
+		LifeBar_GetForeShadowColor( cur_n, &back_color );
 		scale = data->shadow_life_point % data->full_life_point;
 		if( scale == 0.0 ) {
 			scale = 100.0;
@@ -144,8 +174,8 @@ static void LifeBar_UpdateShadow( void *arg )
 		Widget_Show( data->lifebar_shadow[1] );
 		Widget_Hide( data->lifebar_shadow[0] );
 	} else {
-		LifeBar_GetShadowForeColor( old_n, &fore_color );
-		LifeBar_GetShadowBackColor( old_n, &back_color );
+		LifeBar_GetForeShadowColor( old_n, &fore_color );
+		LifeBar_GetBackShadowColor( old_n, &back_color );
 		scale = data->shadow_life_point % data->full_life_point;
 		if( scale == 0.0 ) {
 			scale = 100.0;
@@ -212,16 +242,21 @@ static void LifeBar_UpdateFlashBar( void *arg )
 			Widget_SetAlpha( data->flashbar[0], 255 );
 			/* 在血条前面显示一个闪光，表示在之前那个血条里扣除的血量 */
 			Widget_Show( data->flashbar[0] );
-
-			Widget_SetSize( data->flashbar[1], "100%", "100%" );
-			Widget_SetAlpha( data->flashbar[1], 255 );
-			/* 在本血条后面显示一个闪光，表示在当前血条里扣除的血量 */
-			Widget_Show( data->flashbar[1] );
+			/*如果当前生命值刚好充满 cur_n 条血槽，那就不需要显示背层残影血条 */
+			if( data->current_life_point == new_n*data->full_life_point ) {
+				Widget_Hide( data->flashbar[1] );
+			} else {
+				Widget_SetSize( data->flashbar[1], "100%", "100%" );
+				Widget_SetAlpha( data->flashbar[1], 255 );
+				/* 在本血条后面显示一个闪光，表示在当前血条里扣除的血量 */
+				Widget_Show( data->flashbar[1] );
+			}
 		} else {
 			/* 否则，只在本血条后面显示一个闪光 */
 			scale = data->old_life_point % data->full_life_point;
 			scale = 100 * scale / data->full_life_point;
 			sprintf( scale_str, "%.2lf%%", scale );
+			_DEBUG_MSG("scale: %s\n", scale_str);
 			Widget_SetSize( data->flashbar[1], scale_str, "100%" );
 			Widget_SetAlpha( data->flashbar[1], 255 );
 			Widget_Show( data->flashbar[1] );
