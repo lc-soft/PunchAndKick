@@ -206,7 +206,6 @@ static void LifeBar_UpdateShadow( void *arg )
 		Widget_Hide( data->lifebar_shadow[1] );
 		Widget_Hide( data->lifebar_shadow[0] );
 	}
-
 }
 
 /** 定时更新闪光条 */
@@ -256,7 +255,6 @@ static void LifeBar_UpdateFlashBar( void *arg )
 			scale = data->old_life_point % data->full_life_point;
 			scale = 100 * scale / data->full_life_point;
 			sprintf( scale_str, "%.2lf%%", scale );
-			_DEBUG_MSG("scale: %s\n", scale_str);
 			Widget_SetSize( data->flashbar[1], scale_str, "100%" );
 			Widget_SetAlpha( data->flashbar[1], 255 );
 			Widget_Show( data->flashbar[1] );
