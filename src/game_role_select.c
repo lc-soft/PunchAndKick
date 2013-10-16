@@ -1,4 +1,6 @@
-﻿#include <LCUI_Build.h>
+﻿//角色选择界面
+
+#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
 #include LC_WINDOW_H
