@@ -232,6 +232,7 @@ static void ChangeTargetAction( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY_FALL );
 	GamePlayer_LockAction( player );
+	GameObject_AtZSpeed( widget, -ZSPEED_JUDO_THROW/2, NULL );
 }
 
 static void BackJudo_AtActionUpdate( LCUI_Widget *widget )
