@@ -7,6 +7,8 @@
 #include "game_object.h"
 #include "game_resource.h"
 
+#define MAIN_RES_NUM 6
+
 #define KUNI_ACTION_FILE_NUM	70
 #define RIKI_ACTION_FILE_NUM	75
 #define MIKE_ACTION_FILE_NUM	72
@@ -75,10 +77,11 @@ const struct fileinfo font_file_info[FONT_FILE_NUM]={
 	{"font-x.png","x"}
 };
 
-const struct fileinfo main_file_info[5]={
+const struct fileinfo main_file_info[MAIN_RES_NUM]={
 	{"bg.png","main-menu-bg"},
 	{"wave1.png","front-wave-img"},
 	{"wave2.png","back-wave-img"},
+	{"keyboard-control-method.png","keyboard-control-method"},
 	{"LC-GAMES-175x128.png","main-logo"},
 	{"shadow.png", "shadow"}
 };
@@ -598,12 +601,12 @@ int main(int argc, char** argv)
 	//FontGraphRes_WirteToFile();
 	//ScenesGraphRes_WirteToFile();
 	//MainGraphRes_WirteToFile();
-#define need_ben
+#define need_main_res
 #ifdef need_main_res
 	//MainGraphRes_ReadFromFile();
 	GraphRes_WirteToFile(	MAIN_RES,
 				main_file_info,
-				5, 
+				MAIN_RES_NUM, 
 				"main.data" );
 #elif defined(need_kuni)
 	GraphRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
