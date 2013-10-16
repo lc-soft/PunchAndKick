@@ -1,4 +1,4 @@
-﻿#define SKIP_BOOT_SCREEN
+﻿//#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -18,6 +18,7 @@
 #define TEXT_COPYRIGHT		L"Developed by LC-Games."
 #define TEXT_STATEMENT		L"<size=20px>"\
 				L"本程序仅用于展示：\n\n"\
+				L" ● 游戏主菜单界面\n"\
 				L" ● 游戏角色的控制\n"\
 				L" ● 技能动作效果\n"\
 				L" ● 血条的动态效果\n"\
