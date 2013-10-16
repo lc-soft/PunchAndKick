@@ -2905,6 +2905,9 @@ static void GamePlayer_AtWeakWalkDone( GamePlayer *player )
 
 static void CommonSkill_StartBackPush( GamePlayer *player )
 {
+	GamePlayer *other_player;
+
+	other_player = player->other;
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BB );
@@ -2920,6 +2923,8 @@ static void CommonSkill_StartBackPush( GamePlayer *player )
 		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
 	}
 	GamePlayer_LockMotion( player->other );
+	player->other = NULL;
+	other_player->other = NULL;
 }
 
 /** 处理游戏角色在进行虚弱奔跑时与其他角色的碰撞 */
@@ -2935,11 +2940,6 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 	}
 	/* 如果自己并不是处于 虚弱奔跑（带攻击） 的状态 */
 	if( player->state != STATE_WEAK_RUN_ATTACK ) {
-		return;
-	}
-	/* 若推自己的角色的动作还未完成，则忽略他 */
-	if( other_player->state == STATE_CATCH_SKILL_FB
-	&& other_player->other == player ) {
 		return;
 	}
 	x1 = GameObject_GetX( self );
@@ -2983,8 +2983,11 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 
 static void CommonSkill_StartFrontPush( GamePlayer *player )
 {
+	GamePlayer *other_player;
+
+	other_player = player->other;
 	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
+	GamePlayer_UnlockAction( other_player );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		GamePlayer_SetRightOriented( player );
 	} else {
@@ -2994,16 +2997,18 @@ static void CommonSkill_StartFrontPush( GamePlayer *player )
 	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FB, GamePlayer_AtAttackDone );
 	GamePlayer_ChangeState( player->other, STATE_WEAK_RUN_ATTACK );
 	/* 在与其他对象触碰时进行响应 */
-	GameObject_AtTouch( player->other->object, GamePlayer_ProcWeakWalkAttack );
+	GameObject_AtTouch( other_player->object, GamePlayer_ProcWeakWalkAttack );
 	GamePlayer_SetActionTimeOut( player->other, WEAK_WALK_TIMEOUT, GamePlayer_AtWeakWalkDone );
 	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
+	GamePlayer_LockAction( other_player );
 	if( GamePlayer_IsLeftOriented(player->other) ) {
-		GameObject_SetXSpeed( player->other->object, -XSPEED_WEAK_WALK );
+		GameObject_SetXSpeed( other_player->object, -XSPEED_WEAK_WALK );
 	} else {
-		GameObject_SetXSpeed( player->other->object, XSPEED_WEAK_WALK );
+		GameObject_SetXSpeed( other_player->object, XSPEED_WEAK_WALK );
 	}
-	GamePlayer_LockMotion( player->other );
+	GamePlayer_LockMotion( other_player );
+	player->other = NULL;
+	other_player->other = NULL;
 }
 
 static void CommonSkill_StartPush( GamePlayer *player )
