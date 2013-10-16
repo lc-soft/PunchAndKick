@@ -928,15 +928,6 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 
 static int Game_InitPlayerStatusArea(void)
 {
-	int ret;
-	ret = GameGraphRes_LoadFromFile( "font.data" );
-	if( ret != 0 ) {
-		LCUI_MessageBoxW(
-			MB_ICON_ERROR,
-			L"字体资源载入出错，请检查程序的完整性！",
-			L"错误", MB_BTN_OK );
-		return -1;
-	}
 	player_status_area = Widget_New(NULL);
 	Widget_SetBackgroundColor( player_status_area, RGB(240,240,240) );
 	Widget_SetBackgroundTransparent( player_status_area, FALSE );

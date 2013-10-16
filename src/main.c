@@ -120,7 +120,7 @@ static void Game_AddCPUPlayer(void)
 			}
 		}
 		Game_EnableGamePlayer( j );
-		Game_SetGamePlayer( j, role_id, TRUE );
+		Game_SetGamePlayer( j, role_id, FALSE );
 	}
 }
 
@@ -200,7 +200,14 @@ int main( int argc, char **argv )
 			L"错误", MB_BTN_OK );
 		return -1;
 	}
-
+	ret = GameGraphRes_LoadFromFile( "font.data" );
+	if( ret != 0 ) {
+		LCUI_MessageBoxW(
+			MB_ICON_ERROR,
+			L"字体资源载入出错，请检查程序的完整性！",
+			L"错误", MB_BTN_OK );
+		return -1;
+	}
 	ret = GameGraphRes_LoadFromFile("action-riki.data");
 	ret |= GameGraphRes_LoadFromFile("action-kuni.data");
 	ret |= GameGraphRes_LoadFromFile("action-mike.data");
