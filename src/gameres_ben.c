@@ -642,12 +642,12 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		END_ACTION_FRAME
 	}},
 	/** 背面被擒住 动作 */
-	{ ACTION_BACK_BE_CATCH, FALSE, {
-		{ TRUE, FALSE, FALSE, "back-be-catch-01", 5, -6, 0,
+	{ ACTION_BACK_BE_CATCH, TRUE, {
+		{ TRUE, FALSE, FALSE, "back-be-catch-01", 10, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "back-be-catch-02", 5, -6, 0,
+		{ TRUE, FALSE, FALSE, "back-be-catch-02", 10, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
 		},
