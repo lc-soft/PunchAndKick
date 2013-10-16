@@ -9,16 +9,11 @@
 #define ITEM_BOX_HEIGHT	50
 
 static LCUI_Widget *main_menu_box;
+static LCUI_Widget *keyboard_control_info;
 static LCUI_Widget *main_menu_item_box;
 static LCUI_Widget *front_wave[2], *back_wave[2];
 static LCUI_Widget *copyright_text;
-static LCUI_Graph img_res[3];
-
-static char img_path[3][256]={
-	"bg.png",
-	"wave1.png",
-	"wave2.png"
-};
+static LCUI_Graph img_res[4];
 
 static void UIEffect_MoveWave1( void *arg )
 {
@@ -79,6 +74,7 @@ void Game_LoadMainMenuRes(void)
 	GameGraphRes_GetGraph( MAIN_RES, "main-menu-bg", &img_res[0] );
 	GameGraphRes_GetGraph( MAIN_RES, "front-wave-img", &img_res[1] );
 	GameGraphRes_GetGraph( MAIN_RES, "back-wave-img", &img_res[2] );
+	GameGraphRes_GetGraph( MAIN_RES, "keyboard-control-method", &img_res[3] );
 }
 
 /** 初始化主菜单 */
@@ -88,6 +84,7 @@ void Game_InitMainMenu(void)
 	/* 创建所需的部件 */
 	main_menu_box = Widget_New(NULL);
 	main_menu_item_box = Widget_New(NULL);
+	keyboard_control_info = Widget_New(NULL);
 	front_wave[0] = Widget_New(NULL);
 	front_wave[1] = Widget_New(NULL);
 	back_wave[0] = Widget_New(NULL);
@@ -133,11 +130,17 @@ void Game_InitMainMenu(void)
 	Widget_Container_Add( main_menu_box, copyright_text );
 	Label_TextW( copyright_text, L"<size=16px>Powered By LCUI</size>" );
 	Widget_SetAlign( copyright_text, ALIGN_BOTTOM_CENTER, Pos(0,-30) );
+	
+	Widget_Container_Add( main_menu_box, keyboard_control_info );
+	Widget_SetBackgroundImage( keyboard_control_info, &img_res[3] );
+	Widget_Resize( keyboard_control_info, Graph_GetSize(&img_res[3]) );
+	Widget_SetAlign( keyboard_control_info, ALIGN_MIDDLE_CENTER, Pos(0,0) );
 
 	Widget_Show( front_wave[0] );
 	Widget_Show( front_wave[1] );
 	Widget_Show( back_wave[0] );
 	Widget_Show( back_wave[1] );
+	Widget_Show( keyboard_control_info );
 	Widget_Show( main_menu_item_box );
 	Widget_Show( copyright_text );
 	Widget_Show( main_menu_box );
