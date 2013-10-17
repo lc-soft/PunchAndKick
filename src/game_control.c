@@ -446,11 +446,13 @@ void GamePlayer_StartStand( GamePlayer *player )
 	 || player->state == STATE_TUMMY_DYING ) {
 		 return;
 	}
-	/* 如果自己正被对方举起，那么现在就不站起了 */
+	/* 如果有其他玩家记录 */
 	if( player->other ) {
 		other_player = player->other;
+		/* 根据对方玩家状态， */
 		switch( other_player->state ) {
-		case STATE_SQUAT:
+		/* 如果对方正处于举起状态，那么现在就不站起了 */
+		case STATE_LIFT_SQUAT: 
 			return;
 		case STATE_RIDE_JUMP:
 			break;
