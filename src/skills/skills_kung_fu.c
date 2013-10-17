@@ -148,6 +148,10 @@ static void StartHugJump( GamePlayer *player )
 	if( !player->other ) {
 		return;
 	}
+	/* 发动技能前，停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	/* 对目标进行调整，使技能能够正常实现 */
 	CommonSkill_AdjustTargetAtBeCatch( player );
 	
 	GamePlayer_UnlockAction( player );
@@ -251,12 +255,17 @@ static void SelfStartFall( LCUI_Widget *widget )
 static void StartLiftJump( GamePlayer *player )
 {
 	double x, y, z;
+	/* 发动技能前，停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player->other, STATE_LYING );
 	GamePlayer_ChangeState( player, STATE_LIFT_JUMP );
 	GamePlayer_LockAction( player->other );
 	GamePlayer_LockAction( player );
+
 	GamePlayer_SetRestTimeOut( player->other, SHORT_REST_TIMEOUT, GamePlayer_StartStand );
 	x = GameObject_GetX( player->object );
 	y = GameObject_GetY( player->object );

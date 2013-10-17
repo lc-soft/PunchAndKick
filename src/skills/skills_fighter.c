@@ -329,6 +329,10 @@ static void StartHugFrontPut( GamePlayer *player )
 	if( !player->other ) {
 		return;
 	}
+	/* 发动技能前，停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	/* 对目标进行调整，使技能能够正常实现 */
 	CommonSkill_AdjustTargetAtBeCatch( player );
 	
 	GamePlayer_UnlockAction( player );
@@ -363,15 +367,23 @@ static void StartHugFrontPut( GamePlayer *player )
 static void StartHugBackPut( GamePlayer *player )
 {
 	int z_index;
-
-	z_index = Widget_GetZIndex( player->object );
-	Widget_SetZIndex( player->other->object, z_index-1 );
-	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_BA, HugBackPut_AtActionUpdate );
+	if( !player->other ) {
+		return;
+	}
+	/* 发动技能前，停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BA );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
+
+	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_BA, HugBackPut_AtActionUpdate );
 	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_BA, SelfAtSkillDone );
+	
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index-1 );
+	player->other->n_attack = 0;
 }
 
 /** 注册格斗家特有的技能 */

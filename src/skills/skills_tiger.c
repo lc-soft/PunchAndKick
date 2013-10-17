@@ -152,6 +152,10 @@ static void StartSpinDrill( GamePlayer *player )
 	if( !player->other ) {
 		return;
 	}
+	/* 发动技能前，停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	/* 对目标进行调整，使技能能够正常实现 */
 	CommonSkill_AdjustTargetAtBeCatch( player );
 	
 	GamePlayer_UnlockAction( player );

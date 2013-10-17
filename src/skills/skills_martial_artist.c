@@ -157,6 +157,10 @@ static void StartElbow( GamePlayer *player )
 	if( !player->other ) {
 		return;
 	}
+	/* 发动技能前，停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
+	/* 对目标进行调整，使技能能够正常实现 */
 	CommonSkill_AdjustTargetAtBeCatch( player );
 	
 	GamePlayer_UnlockAction( player );
@@ -237,6 +241,10 @@ static void StartKneeHit( GamePlayer *player )
 {
 	double x, y;
 	int z_index;
+	
+	/* 发动技能前，停止移动 */
+	GamePlayer_StopXMotion( player );
+	GamePlayer_StopYMotion( player );
 
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( player->other );
