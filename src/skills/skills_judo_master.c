@@ -122,6 +122,36 @@ static void AtTargetLanding( LCUI_Widget *widget )
 	GamePlayer_SetActionTimeOut( player, 200, Judo_SetTargetLying );
 }
 
+/* 处理目标在被摔倒时与其它玩家的碰撞 */
+static void Judo_ProcTargetTouchAttack(	LCUI_Widget *self, LCUI_Widget *other )
+{
+	GamePlayer *player, *other_player;
+
+	player = GamePlayer_GetPlayerByWidget( self );
+	other_player = GamePlayer_GetPlayerByWidget( other );
+	if( !player || !other_player ) {
+		return;
+	}
+	if( other_player == player->other
+	 && other_player->state == STATE_CATCH_SKILL_FA ) {
+		return;
+	}
+	if( player->state != STATE_HIT_FLY_FALL ) {
+		GameObject_AtTouch( self, NULL );
+		return;
+	}
+	/* 如果已经是受攻击者了，则退出，不重复记录攻击 */
+	if( GameObject_HaveVictim(self, other) ) {
+		return;
+	}
+	/* 设置自己的攻击类型 */
+	GamePlayer_SetAttackTypeName( player, ATK_JUMP_TREAD );
+	/* 添加受害者记录 */
+	GameObject_DirectAddVictim( self, other );
+	/* 重置对方的受攻击次数 */
+	other_player->n_attack = 0;
+}
+
 static void Judo_AtActionUpdate( LCUI_Widget *widget )
 {
 	int z_index;
@@ -170,6 +200,9 @@ static void Judo_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetX( other_player->object, x );
 		GameObject_SetY( other_player->object, y );
 		GameObject_SetZ( other_player->object, z );
+		/* 清除对方攻击记录，以让对方能够对其它角色造成新攻击 */
+		GameObject_ClearAttack( other_player->object );
+		GameObject_AtTouch( other_player->object, Judo_ProcTargetTouchAttack );
 		GameObject_AtLanding( other_player->object, 0, -ZACC_JUMP, AtTargetLanding );
 		break;
 	case 4:
@@ -217,6 +250,7 @@ static void TargetStartLying( LCUI_Widget *widget )
 		Game_RecordAttack(	player->other, ATK_BACK_JUDO, 
 					player, STATE_HIT_FLY_FALL );
 		player->other->other = NULL;
+		GameObject_AtTouch( widget, NULL );
 	}
 	player->other = NULL;
 	GamePlayer_UnlockAction( player );
@@ -236,6 +270,41 @@ static void ChangeTargetAction( LCUI_Widget *widget )
 	GamePlayer_ChangeState( player, STATE_HIT_FLY_FALL );
 	GamePlayer_LockAction( player );
 	GameObject_AtZSpeed( widget, -ZSPEED_JUDO_THROW/2, NULL );
+}
+
+/* 处理目标在被扔飞后与其它玩家的碰撞 */
+static void BackJudo_ProcTargetTouchAttack(	LCUI_Widget *self, 
+						LCUI_Widget *other )
+{
+	GamePlayer *player, *other_player;
+
+	player = GamePlayer_GetPlayerByWidget( self );
+	other_player = GamePlayer_GetPlayerByWidget( other );
+	if( !player || !other_player ) {
+		return;
+	}
+	if( other_player == player->other
+	 && other_player->state == STATE_CATCH_SKILL_BA ) {
+		return;
+	}
+	switch( player->state ) {
+	case STATE_HIT_FLY_FALL:
+	case STATE_LYING_HIT:
+		break;
+	default:
+		GameObject_AtTouch( self, NULL );
+		return;
+	}
+	/* 如果已经是受攻击者了，则退出，不重复记录攻击 */
+	if( GameObject_HaveVictim(self, other) ) {
+		return;
+	}
+	/* 设置自己的攻击类型 */
+	GamePlayer_SetAttackTypeName( player, ATK_BUMPED );
+	/* 添加受害者记录 */
+	GameObject_DirectAddVictim( self, other );
+	/* 重置对方的受攻击次数 */
+	other_player->n_attack = 0;
 }
 
 static void BackJudo_AtActionUpdate( LCUI_Widget *widget )
@@ -280,6 +349,8 @@ static void BackJudo_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_AtLanding(	other_player->object, 
 					ZSPEED_JUDO_THROW, -ZACC_JUDO_THROW, 
 					TargetStartLying );
+		GameObject_ClearAttack( other_player->object );
+		GameObject_AtTouch( other_player->object, BackJudo_ProcTargetTouchAttack );
 		break;
 	default:break;
 	}
@@ -298,7 +369,7 @@ void StartBackJudo( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_BA );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
-	
+
 	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_BA,
 				 SelfAtSkillDone );
 	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_BA,
