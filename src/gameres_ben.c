@@ -113,7 +113,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 攻击动作 */
 	{ ACTION_A_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -10, 0,
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -10, 0,
 			{-5, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
@@ -121,7 +121,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{-5, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 62},
 			{0, -GLOBAL_Y_WIDTH/2, 28, 45, GLOBAL_Y_WIDTH, 20} 
 		},
-		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -10, 0,
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -10, 0,
 			{-5, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
@@ -129,7 +129,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* A 跳跃攻击动作 */
 	{ ACTION_AJ_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "A-attack-01", 3, -10, 0,
+		{ TRUE, FALSE, FALSE, "A-attack-01", 2, -10, 0,
 			{-5, -GLOBAL_Y_WIDTH/2, 0, 30, GLOBAL_Y_WIDTH, 62},
 			{0,0,0,0,0,0} 
 		},
@@ -205,7 +205,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* B攻击 动作 */
 	{ ACTION_B_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "B-attack-01", 3, -18, 0, 
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -18, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
@@ -213,7 +213,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 			{6, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{26, -GLOBAL_Y_WIDTH/2, 8, 35, GLOBAL_Y_WIDTH, 25}
 		},
-		{ TRUE, FALSE, FALSE, "B-attack-03", 3, -18, 0, 
+		{ TRUE, FALSE, FALSE, "B-attack-03", 2, -18, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
@@ -221,7 +221,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/* B 跳跃攻击动作 */
 	{ ACTION_BJ_ATTACK, FALSE, {
-		{ TRUE, FALSE, FALSE, "B-attack-01", 3, -18, 0, 
+		{ TRUE, FALSE, FALSE, "B-attack-01", 2, -18, 0, 
 			{6, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
 			{0,0,0,0,0,0} 
 		},
@@ -643,11 +643,11 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 	}},
 	/** 背面被擒住 动作 */
 	{ ACTION_BACK_BE_CATCH, TRUE, {
-		{ TRUE, FALSE, FALSE, "back-be-catch-01", 10, -6, 0,
+		{ TRUE, FALSE, FALSE, "back-be-catch-01", 15, -6, 0,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
 		},
-		{ TRUE, FALSE, FALSE, "back-be-catch-02", 10, -6, 0,
+		{ TRUE, FALSE, FALSE, "back-be-catch-02", 15, -6, 4,
 			{-16, -GLOBAL_Y_WIDTH/2, 0, 40, GLOBAL_Y_WIDTH, 56},
 			{0,0,0,0,0,0} 
 		},
