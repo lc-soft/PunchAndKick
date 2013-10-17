@@ -541,15 +541,15 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, FALSE, TRUE, "squat", 3, -2, 0,
 			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
-			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
+			{0,0,0,0,0,0} 
 		},
 		{ TRUE, FALSE, FALSE, "final-blow-01", 10, -2, 0,
 			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
-			{-12, -GLOBAL_Y_WIDTH/2, 0, 55, GLOBAL_Y_WIDTH, 64},
+			{0, -GLOBAL_Y_WIDTH/2, 0, 26, GLOBAL_Y_WIDTH, 63}
 		},
 		{ TRUE, FALSE, FALSE, "final-blow-02", 10, -2, 0,
 			{-4, -GLOBAL_Y_WIDTH/2, 0, 36, GLOBAL_Y_WIDTH, 60},
-			{-12, -GLOBAL_Y_WIDTH/2, 0, 55, GLOBAL_Y_WIDTH, 64},
+			{0, -GLOBAL_Y_WIDTH/2, 0, 26, GLOBAL_Y_WIDTH, 63}
 		},
 		END_ACTION_FRAME
 	}},
