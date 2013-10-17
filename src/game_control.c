@@ -257,6 +257,7 @@ void GamePlayer_SetRestTimeOut(	GamePlayer *player,
 {
 	GamePlayer_BreakRest( player );
 	player->t_rest_timeout = LCUITimer_Set( n_ms, (void(*)(void*))func, player, FALSE );
+	DEBUG_MSG("player %d start rest, n_ms: %d, timer: %d\n", player->id, n_ms, player->t_rest_timeout);
 }
 
 static int GamePlayer_InitAction( GamePlayer *player, int id )
@@ -440,10 +441,12 @@ static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
 void GamePlayer_StartStand( GamePlayer *player )
 {
 	GamePlayer *other_player;
+	DEBUG_MSG("player %d start stand\n", player->id);
 	/* 如果已经死了，就不站起来了 */
 	if( player->state == STATE_DIED
 	 || player->state == STATE_LYING_DYING
 	 || player->state == STATE_TUMMY_DYING ) {
+		 DEBUG_MSG("tip1\n");
 		 return;
 	}
 	/* 如果有其他玩家记录 */
@@ -453,6 +456,7 @@ void GamePlayer_StartStand( GamePlayer *player )
 		switch( other_player->state ) {
 		/* 如果对方正处于举起状态，那么现在就不站起了 */
 		case STATE_LIFT_SQUAT: 
+			 DEBUG_MSG("tip2\n");
 			return;
 		case STATE_RIDE_JUMP:
 			break;
@@ -468,6 +472,7 @@ void GamePlayer_StartStand( GamePlayer *player )
 		default:break;
 		}
 	}
+	 DEBUG_MSG("tip3\n");
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GamePlayer_LockAction( player );
@@ -1232,7 +1237,8 @@ static RoleInfo role_library[TOTAL_ROLE_NUM] = {
 		1800, 1800, 60, 240, 150, 110, 130}, {
 			SKILLNAME_MACH_B_ATTACK,
 			SKILLNAME_BOMBKICK,
-		}, 2
+			SKILLNAME_JUMP_SPINKICK
+		}, 3
 	}, { ROLE_BEN, L"御堂", PLAYER_TYPE_JUDO_MASTER, {
 		2200, 2200, 150, 150, 100, 150, 200}, {
 			SKILLNAME_SOLID_DEFENSE,
