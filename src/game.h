@@ -1,6 +1,8 @@
 ﻿
 LCUI_BEGIN_HEADER
 	
+#define GAME_SCREEN_WIDTH	800
+#define GAME_SCREEN_HEIGHT	600
 #define STATUS_BAR_HEIGHT	90	/**< 游戏角色的状态信息区域的高度 */
 
 #include "game_lifebar.h"

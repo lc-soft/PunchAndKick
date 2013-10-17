@@ -1,4 +1,4 @@
-﻿//#define SKIP_BOOT_SCREEN
+﻿#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -240,7 +240,11 @@ int main( int argc, char **argv )
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
-	LCUI_Init(800,600,0);		/* 初始化LCUI */
+	/* 初始化LCUI */
+	LCUI_Init(	GAME_SCREEN_WIDTH, 
+			GAME_SCREEN_HEIGHT, 
+			LCUI_INIT_MODE_WINDOW );
+
 	GameGraphRes_Init();		/* 初始化游戏资源 */
 	ret = Game_LoadResource();	/* 载入游戏资源 */
 	if( ret != 0 ) {
