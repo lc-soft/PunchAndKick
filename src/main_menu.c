@@ -9,7 +9,7 @@
 #define ITEM_BOX_HEIGHT	50
 
 static LCUI_Widget *main_menu_box;
-static LCUI_Widget *keyboard_control_info;
+static LCUI_Widget *keyboard_tip_box;
 static LCUI_Widget *main_menu_item_box;
 static LCUI_Widget *front_wave[2], *back_wave[2];
 static LCUI_Widget *copyright_text;
@@ -77,6 +77,35 @@ void Game_LoadMainMenuRes(void)
 	GameGraphRes_GetGraph( MAIN_RES, "keyboard-control-method", &img_res[3] );
 }
 
+static void keyboard_tip_box_on_drag( LCUI_Widget *widget, LCUI_WidgetEvent *event )
+{
+	/* 在开始拖动时 */
+	if( event->drag.first_click ) {
+		Widget_SetAlign( widget, ALIGN_NONE, Pos(0,0) );
+		Widget_Front( widget );		/* 前置部件显示 */
+		Widget_Refresh( widget );	/* 刷新该部件区域的图形 */
+	}
+	if( event->drag.new_pos.x < 0 ) {
+		event->drag.new_pos.x = 0;
+	}
+	if( event->drag.new_pos.x + widget->size.w > GAME_SCREEN_WIDTH ) {
+		event->drag.new_pos.x = GAME_SCREEN_WIDTH - widget->size.w;
+	}
+	if( event->drag.new_pos.y < 0 ) {
+		event->drag.new_pos.y = 0;
+	}
+	if( event->drag.new_pos.y + widget->size.h > GAME_SCREEN_HEIGHT ) {
+		event->drag.new_pos.y = GAME_SCREEN_HEIGHT - widget->size.h;
+	}
+	Widget_Move( widget, event->drag.new_pos );
+}
+
+static void keyboard_tip_box_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
+{
+	Widget_Front( widget );
+	Widget_Refresh( widget );
+}
+
 /** 初始化主菜单 */
 void Game_InitMainMenu(void)
 {
@@ -84,7 +113,7 @@ void Game_InitMainMenu(void)
 	/* 创建所需的部件 */
 	main_menu_box = Widget_New(NULL);
 	main_menu_item_box = Widget_New(NULL);
-	keyboard_control_info = Widget_New(NULL);
+	keyboard_tip_box = Widget_New(NULL);
 	front_wave[0] = Widget_New(NULL);
 	front_wave[1] = Widget_New(NULL);
 	back_wave[0] = Widget_New(NULL);
@@ -96,8 +125,10 @@ void Game_InitMainMenu(void)
 	Widget_SetAlpha( main_menu_box, 0 );
 	Widget_SetBackgroundImage( main_menu_box, &img_res[0] );
 	Widget_SetBackgroundLayout( main_menu_box, LAYOUT_TILE );
-	Widget_SetBackgroundTransparent ( main_menu_box, FALSE );
-	
+	Widget_SetBackgroundTransparent( main_menu_box, FALSE );
+	/* 主菜单框显示在普通部件的底层 */
+	Widget_SetZIndex( main_menu_box, -1 );
+
 	Widget_Container_Add( main_menu_box, main_menu_item_box );
 	Widget_SetHeight( main_menu_item_box, ITEM_BOX_HEIGHT );
 	Widget_SetSize( main_menu_item_box, "100%", NULL );
@@ -131,16 +162,16 @@ void Game_InitMainMenu(void)
 	Label_TextW( copyright_text, L"<size=16px>Powered By LCUI</size>" );
 	Widget_SetAlign( copyright_text, ALIGN_BOTTOM_CENTER, Pos(0,-30) );
 	
-	Widget_Container_Add( main_menu_box, keyboard_control_info );
-	Widget_SetBackgroundImage( keyboard_control_info, &img_res[3] );
-	Widget_Resize( keyboard_control_info, Graph_GetSize(&img_res[3]) );
-	Widget_SetAlign( keyboard_control_info, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	Widget_SetBackgroundImage( keyboard_tip_box, &img_res[3] );
+	Widget_Resize( keyboard_tip_box, Graph_GetSize(&img_res[3]) );
+	Widget_SetAlign( keyboard_tip_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	Widget_Event_Connect( keyboard_tip_box, EVENT_DRAG, keyboard_tip_box_on_drag );
+	Widget_Event_Connect( keyboard_tip_box, EVENT_CLICKED, keyboard_tip_box_on_clicked );
 
 	Widget_Show( front_wave[0] );
 	Widget_Show( front_wave[1] );
 	Widget_Show( back_wave[0] );
 	Widget_Show( back_wave[1] );
-	Widget_Show( keyboard_control_info );
 	Widget_Show( main_menu_item_box );
 	Widget_Show( copyright_text );
 	Widget_Show( main_menu_box );
@@ -161,12 +192,16 @@ void Game_ShowMainMenu(void)
 		LCUI_MSleep(25);
 	}
 	Widget_SetAlpha( main_menu_box, 255 );
+	/* 显示按键提示框 */
+	Widget_Show( keyboard_tip_box );
 }
 
 /** 隐藏主菜单 */
 void Game_HideMainMenu(void)
 {
 	uchar_t alpha;
+	/* 隐藏按键提示框 */
+	Widget_Hide( keyboard_tip_box );
 	/* 以淡出的效果显示菜单 */
 	for( alpha=240; alpha>0; alpha-=20 ) {
 		Widget_SetAlpha( main_menu_box, alpha );
