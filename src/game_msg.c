@@ -14,6 +14,7 @@ static LCUI_Thread msg_thread_id = 0;
 static LCUI_Queue game_msg_queue;		/**< 游戏的消息队列 */
 static LCUI_BOOL enable_lan_battle = FALSE;	/**< 是否启用局域网对战 */
 static GamePlayerComputer second_computer;	/**< 对方玩家计算机信息 */
+static LCUI_Sleeper msg_sleeper;
 
 /* 向对方主机发送消息 */
 static int Game_SendMsg( GameMsg *msg )
@@ -41,6 +42,7 @@ int Game_PostMsg( GameMsg *msg )
 	Queue_Lock( &game_msg_queue );
 	ret = Queue_Add( &game_msg_queue, msg );
 	Queue_Unlock( &game_msg_queue );
+	LCUISleeper_BreakSleep( &msg_sleeper );
 	return ret>=0?0:-1;
 }
 
@@ -48,6 +50,11 @@ int Game_PostMsg( GameMsg *msg )
 int Game_GetMsg( GameMsg *msg_buff )
 {
 	GameMsg *p_msg;
+
+	Game_RecvMsg();
+	while( Queue_GetTotal(&game_msg_queue)<=0 ) {
+		LCUISleeper_StartSleep( &msg_sleeper, 1000 );
+	}
 	Queue_Lock( &game_msg_queue );
 	p_msg = (GameMsg*)Queue_Get( &game_msg_queue, 0 );
 	if( p_msg == NULL ) {
@@ -84,17 +91,12 @@ int Game_ProcMsg( GameMsg *p_msg )
 
 static void GameMsgProcThread( void *arg )
 {
-	int ret;
 	GameMsg msg;
 
 	while(1) {
-		Game_RecvMsg();
-		ret = Game_GetMsg( &msg );
-		if( ret == 0 ) {
+		if( Game_GetMsg( &msg ) == 0 ) {
 			Game_ProcMsg( &msg );
-		} else {
-			LCUI_MSleep( 10 );
-		}
+		} 
 	}
 }
 
@@ -103,6 +105,7 @@ int GameMsgLoopStart( void )
 	if( msg_thread_id != 0 ) {
 		return -1;
 	}
+	LCUISleeper_Create( &msg_sleeper );
 	Queue_Init( &game_msg_queue, sizeof(GameMsg), NULL );
 	return LCUIThread_Create( &msg_thread_id, GameMsgProcThread, NULL );
 }
