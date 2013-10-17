@@ -145,11 +145,24 @@ static void StartHugJump( GamePlayer *player )
 	double x;
 	int z_index;
 
-	if( player->state != STATE_CATCH ) {
-		GamePlayer_StopXMotion( player->other );
-		GamePlayer_StopYMotion( player->other );
-		CommonSkill_SetPositionAtCatch( player, player->other );
+	if( !player->other ) {
+		return;
 	}
+	CommonSkill_AdjustTargetAtBeCatch( player );
+	
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_ChangeState( player->other, STATE_ROLL_DOWN );
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	GamePlayer_LockMotion( player->other );
+
+	GameObject_AtActionUpdate(	player->object,
+					ACTION_CATCH_SKILL_FA, 
+					GamePlayer_AtHugJumpUpdate );
+	GamePlayer_SetActionTimeOut( player, 200, ChangeTargetAction );
+	/* 调整对方的位置 */
 	x = GameObject_GetX( player->object );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		x -= 15;
@@ -157,26 +170,11 @@ static void StartHugJump( GamePlayer *player )
 		x += 15;
 	}
 	GameObject_SetX( player->other->object, x );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	GamePlayer_ChangeState( player->other, STATE_ROLL_DOWN );
-	
-	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
-	GameObject_AtActionUpdate(
-		player->object,
-		ACTION_CATCH_SKILL_FA, 
-		GamePlayer_AtHugJumpUpdate
-	);
-	GamePlayer_SetActionTimeOut( player, 200, ChangeTargetAction );
 	z_index = Widget_GetZIndex( player->object );
 	/* 被攻击者需要显示在攻击者后面 */
 	Widget_SetZIndex( player->other->object, z_index-1 );
-
 	/* 重置被攻击的次数 */
 	player->other->n_attack = 0;
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-	GamePlayer_LockMotion( player->other );
 }
 
 static LCUI_BOOL CanUseLiftJump( GamePlayer *player )

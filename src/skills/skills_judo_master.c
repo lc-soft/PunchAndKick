@@ -184,13 +184,8 @@ void StartJudo( GamePlayer *player )
 	if( !player->other ) {
 		return;
 	}
-	player->other->n_attack = 0;
-	z_index = Widget_GetZIndex( player->object );
-	Widget_SetZIndex( player->other->object, z_index-1 );
-	GameObject_AtActionUpdate(	player->object, 
-					ACTION_CATCH_SKILL_FA,
-					Judo_AtActionUpdate
-	);
+	CommonSkill_AdjustTargetAtBeCatch( player );
+	
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
@@ -198,10 +193,14 @@ void StartJudo( GamePlayer *player )
 	GamePlayer_LockAction( player->other );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
-	GameObject_AtActionDone(	player->object, 
-					ACTION_CATCH_SKILL_FA,
-					SelfAtSkillDone 
-	);
+
+	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_FA, 
+					Judo_AtActionUpdate );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FA, 
+					SelfAtSkillDone );
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index-1 );
+	player->other->n_attack = 0;
 }
 
 static void TargetStartLying( LCUI_Widget *widget )

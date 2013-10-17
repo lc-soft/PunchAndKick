@@ -152,14 +152,17 @@ static void StartSpinDrill( GamePlayer *player )
 	if( !player->other ) {
 		return;
 	}
+	CommonSkill_AdjustTargetAtBeCatch( player );
+	
+	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( player->other );
 	GamePlayer_ChangeState( player->other, STATE_HALF_LYING );
-	GameObject_SetX( player->other->object, GameObject_GetX(player->object) );
-	GameObject_SetY( player->other->object, GameObject_GetY(player->object) );
-	GamePlayer_LockAction( player->other );
-	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
 	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+
+	GameObject_SetX( player->other->object, GameObject_GetX(player->object) );
+	GameObject_SetY( player->other->object, GameObject_GetY(player->object) );
 	z_index = Widget_GetZIndex( player->other->object );
 	Widget_SetZIndex( player->object, z_index+1 );
 	if( GamePlayer_IsLeftOriented(player) ) {
@@ -169,6 +172,8 @@ static void StartSpinDrill( GamePlayer *player )
 		GameObject_AtLanding( player->other->object, ZSPEED_SPIN_DRILL, -ZACC_SPIN_DRILL, StartTargetRightBounce );
 		GameObject_AtLanding( player->object, ZSPEED_SPIN_DRILL, -ZACC_SPIN_DRILL, StartLeftBounce );
 	}
+	/* 重置被攻击的次数 */
+	player->other->n_attack = 0;
 }
 
 /** 注册老虎特有的技能 */

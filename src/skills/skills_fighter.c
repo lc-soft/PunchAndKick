@@ -311,7 +311,7 @@ static void HugBackPut_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetZ( player->other->object, z );
 		Game_RecordAttack( player, ATK_HUG_BACK_PUT, player->other, STATE_HALF_LYING );
 		GameObject_AtLanding( player->other->object, -100, -ZACC_JUMP, NULL );
-		GamePlayer_SetActionTimeOut( player->other, 1000, TargetStartLying );
+		GamePlayer_SetActionTimeOut( player->other, 500, TargetStartLying );
 		if( player->other ) {
 			player->other->other = NULL;
 		}
@@ -326,6 +326,19 @@ static void StartHugFrontPut( GamePlayer *player )
 	int z_index;
 	double x, y, z;
 
+	if( !player->other ) {
+		return;
+	}
+	CommonSkill_AdjustTargetAtBeCatch( player );
+	
+	GamePlayer_UnlockAction( player );
+	GamePlayer_UnlockAction( player->other );
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
+	GamePlayer_ChangeState( player->other, STATE_ROLL_DOWN );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player->other );
+
 	x = GameObject_GetX( player->object );
 	y = GameObject_GetY( player->object );
 	z = GameObject_GetZ( player->object );
@@ -336,20 +349,15 @@ static void StartHugFrontPut( GamePlayer *player )
 		GamePlayer_SetLeftOriented( player->other );
 		x += 30;
 	}
-	z_index = Widget_GetZIndex( player->object );
-	Widget_SetZIndex( player->other->object, z_index-1 );
-	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_FA, HugFrontPut_AtActionUpdate );
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockAction( player->other );
-	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
-	GamePlayer_ChangeState( player->other, STATE_ROLL_DOWN );
-	GamePlayer_LockAction( player );
-	GamePlayer_LockMotion( player );
-	GamePlayer_LockAction( player->other );
 	GameObject_SetX( player->other->object, x );
 	GameObject_SetY( player->other->object, y );
 	GameObject_SetZ( player->other->object, z );
+	z_index = Widget_GetZIndex( player->object );
+	Widget_SetZIndex( player->other->object, z_index-1 );
 	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FA, SelfAtSkillDone );
+	GameObject_AtActionUpdate( player->object, ACTION_CATCH_SKILL_FA, HugFrontPut_AtActionUpdate );
+	/* 重置被攻击的次数 */
+	player->other->n_attack = 0;
 }
 
 static void StartHugBackPut( GamePlayer *player )

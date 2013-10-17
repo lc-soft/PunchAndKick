@@ -154,35 +154,32 @@ static void GamePlayer_AtElbowUpdate( LCUI_Widget *widget )
 
 static void StartElbow( GamePlayer *player )
 {
-	if( player->state != STATE_CATCH ) {
-		GamePlayer_StopXMotion( player->other );
-		GamePlayer_StopYMotion( player->other );
-		CommonSkill_SetPositionAtCatch( player, player->other );
+	if( !player->other ) {
+		return;
 	}
+	CommonSkill_AdjustTargetAtBeCatch( player );
+	
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockAction( player->other );
+	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
 	GamePlayer_ChangeState( player->other, STATE_HIT );
+	GamePlayer_LockAction( player );
+	GamePlayer_LockAction( player->other );
+	GamePlayer_LockMotion( player->other );
+
 	GameObject_AtActionDone( player->other->object, ACTION_HIT, NULL );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		GamePlayer_SetLeftOriented( player->other );
 	} else {
 		GamePlayer_SetRightOriented( player->other );
 	}
-	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
-	GameObject_AtActionUpdate(
-		player->object,
-		ACTION_CATCH_SKILL_FA, 
-		GamePlayer_AtElbowUpdate 
-	);
-	GameObject_AtActionDone(
-		player->object, ACTION_CATCH_SKILL_FA, 
-		GamePlayer_AtSkillDone 
-	);
+	GameObject_AtActionUpdate(	player->object,
+					ACTION_CATCH_SKILL_FA, 
+					GamePlayer_AtElbowUpdate );
+	GameObject_AtActionDone( player->object, ACTION_CATCH_SKILL_FA, 
+				 GamePlayer_AtSkillDone  );
 	/* 重置被攻击的次数 */
 	player->other->n_attack = 0;
-	GamePlayer_LockAction( player );
-	GamePlayer_LockAction( player->other );
-	GamePlayer_LockMotion( player->other );
 }
 
 /** 在被膝击后落地时 */
