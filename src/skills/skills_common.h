@@ -130,6 +130,9 @@ enum SkillPriority_Defense {
 	SKILLPRIORITY_DEFENSE
 };
 
+/** 在擒住状态下，对目标的状态进行调整 */
+void CommonSkill_AdjustTargetAtBeCatch( GamePlayer *self );
+
 /** 设置自己在擒获住对方时对方的位置 */
 void CommonSkill_SetPositionAtCatch( GamePlayer *self, GamePlayer *other );
 

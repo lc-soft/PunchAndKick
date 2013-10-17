@@ -23,7 +23,7 @@
 #define XSPEED_SPINHIT_2	300
 
 /** 可擒获范围的水平宽度 */
-#define CATCH_RANGE_X_WIDTH	40
+#define CATCH_RANGE_X_WIDTH	50
 
 #define XSPEED_BE_PUSH	100
 #define YSPEED_BE_PUSH	100
@@ -887,7 +887,11 @@ static void GamePlayer_StartRightBackwardRoll( LCUI_Widget *widget )
 static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 {
 	double victim_speed, attacker_speed;
-
+	/* 如果受攻击者对攻击者使用了擒制技能，那么此攻击效果无效 */
+	if( victim->state == STATE_CATCH_SKILL_FA
+	 && victim->other == attacker ) {
+		 return;
+	}
 	attacker_speed = GameObject_GetXSpeed( attacker->object );
 	if( (attacker_speed > 0 && !GamePlayer_IsLeftOriented(attacker))
 	 || (attacker_speed < 0 && GamePlayer_IsLeftOriented(attacker))) {
@@ -2345,6 +2349,11 @@ static LCUI_BOOL CommonSkill_CanUseCatch( GamePlayer *player )
 			if( z1 <= z2-15 || z1 >= z2+15 ) {
 				return FALSE;
 			}
+			/* 如对方被其它玩家抓住了 */
+			if( other_player->other && other_player->other != player 
+			 && other_player->other->other == other_player ) {
+				return FALSE;
+			}
 			/* 记录擒获者和被擒者 */
 			player->other = other_player;
 			other_player->other = player;
@@ -2365,6 +2374,24 @@ static void GamePlayer_AtCatchDone( GamePlayer *player )
 		GamePlayer_UnlockAction( player->other );
 		GamePlayer_SetRest( player->other );
 	}
+}
+
+/** 在擒住状态下，对目标的状态进行调整 */
+void CommonSkill_AdjustTargetAtBeCatch( GamePlayer *self )
+{
+	GamePlayer *target_player;
+
+	target_player = self->other;
+	if( !target_player ) {
+		return;
+	}
+	GamePlayer_UnlockAction( target_player );
+	GamePlayer_StopXMotion( target_player );
+	GamePlayer_StopYMotion( target_player );
+	GamePlayer_ChangeState( target_player, STATE_BE_CATCH );
+	GamePlayer_LockAction( target_player );
+	CommonSkill_SetPositionAtCatch( self, target_player );
+	target_player->other = self;
 }
 
 /** 设置自己在擒获住对方时对方的位置 */
@@ -3458,7 +3485,8 @@ GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
 	LCUI_Widget *a_attacker, *b_attacker;
 	/* 自己必须处于READY或STANCE状态 */
 	if( self->state != STATE_READY
-	 && self->state != STATE_STANCE ) {
+	 && self->state != STATE_STANCE
+	 && self->state != STATE_WALK ) {
 		 return NULL;
 	}
 	catch_range.x = 0;
