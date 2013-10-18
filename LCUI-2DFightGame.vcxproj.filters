@@ -90,6 +90,12 @@
     <ClCompile Include="src\gameres_ben.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\game_role_select.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\skills\skills_judo_master.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
@@ -150,6 +156,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\skills\skills_fighter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_role_select.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\skills\skills_judo_master.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
