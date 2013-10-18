@@ -533,6 +533,7 @@ static void GamePlayer_AtHitFlyMaxHeight( LCUI_Widget *widget )
 	player = GamePlayer_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LYING_HIT );
+	GameObject_AtActionDone( widget, ACTION_LYING_HIT, NULL );
 	GamePlayer_LockAction( player );
 	GameObject_AtZSpeed( widget, -20, GamePlayer_AtHitFlyFall );
 }
