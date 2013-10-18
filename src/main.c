@@ -1,4 +1,4 @@
-﻿#define SKIP_BOOT_SCREEN
+﻿//#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
