@@ -334,6 +334,7 @@ static void BackJudo_AtActionUpdate( LCUI_Widget *widget )
 		GameObject_SetX( other_player->object, x );
 		GamePlayer_UnlockAction( other_player );
 		GamePlayer_ChangeState( other_player, STATE_LYING_HIT);
+		GameObject_AtActionDone( other_player->object, ACTION_LYING_HIT, NULL );
 		GamePlayer_LockAction( other_player );
 		x_speed = XSPEED_JUDO_THROW;
 		x_acc = -XACC_JUDO_THROW;
