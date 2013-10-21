@@ -7,9 +7,15 @@
 
 #include "game.h"
 #include "game_logobtn.h"
+#include "game_titlebarbtn.h"
 
 #define ITEM_BOX_HEIGHT	50
 #define LOGOBTN_SIZE Size(116,116)
+
+#define TEXT_SINGLE_GAME	L"<size=18px>单人游戏</size>"
+#define TEXT_NETWORK_BATTLE	L"<size=18px>网络对战</size>"
+#define TEXT_OPTIONS		L"<size=18px>选项</size>"
+#define TEXT_HELP		L"<size=18px>帮助</size>"
 
 enum RES_ID {
 	RES_MAIN_BG,
@@ -25,6 +31,7 @@ enum RES_ID {
 
 static LCUI_Widget *main_menu_box;
 static LCUI_Widget *main_menu_titlebar;
+static LCUI_Widget *btn_single, *btn_battle, *btn_options, *btn_help;
 static LCUI_Widget *logobtn;
 static LCUI_Widget *keyboard_tip_box;
 static LCUI_Widget *main_menu_item_box;
@@ -128,14 +135,61 @@ static void keyboard_tip_box_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *
 	Widget_Refresh( widget );
 }
 
+static void Game_InitMenuBar(void)
+{
+	logobtn = LogoBtn_New();
+	btn_single = TitleBarBtn_New();
+	btn_help = TitleBarBtn_New();
+	btn_battle = TitleBarBtn_New();
+	btn_options = TitleBarBtn_New();
+	main_menu_titlebar = Widget_New(NULL);
+	/* 配置主菜单栏 */
+	Widget_Container_Add( main_menu_box, main_menu_titlebar );
+	Widget_SetBackgroundImage( main_menu_titlebar, &img_res[RES_TITEBAR_BG] );
+	Widget_Resize( main_menu_titlebar, Graph_GetSize(&img_res[RES_TITEBAR_BG]) );
+	Widget_SetAlign( main_menu_titlebar, ALIGN_TOP_LEFT, Pos(0,30) );
+	/* 配置LOGO按钮 */
+	Widget_Container_Add( main_menu_titlebar, logobtn );
+	Widget_Resize( logobtn, LOGOBTN_SIZE );
+	Widget_SetAlign( logobtn, ALIGN_MIDDLE_LEFT, Pos(10,0) );
+	LogoBtn_SetStyle( logobtn, &img_res[RES_LOGO_NORMAL], &img_res[RES_LOGOBTN_NORMAL],
+				&img_res[RES_LOGOBTN_HOVER], &img_res[RES_LOGOBTN_PRESSED] );
+	/* 配置菜单栏上的按钮 */
+	Widget_Container_Add( main_menu_titlebar, btn_single );
+	Widget_Container_Add( main_menu_titlebar, btn_battle );
+	Widget_Container_Add( main_menu_titlebar, btn_options );
+	Widget_Container_Add( main_menu_titlebar, btn_help );
+	
+	Widget_SetAlign( btn_single, ALIGN_MIDDLE_LEFT, Pos(130,-2) );
+	Widget_SetAlign( btn_battle, ALIGN_MIDDLE_LEFT, Pos(130+100,-2) );
+	Widget_SetAlign( btn_options, ALIGN_MIDDLE_LEFT, Pos(130+200,-2) );
+	Widget_SetAlign( btn_help, ALIGN_MIDDLE_LEFT, Pos(130+300,-2) );
+	
+	TitleBarBtn_TextW( btn_single, TEXT_SINGLE_GAME );
+	TitleBarBtn_TextW( btn_battle, TEXT_NETWORK_BATTLE );
+	TitleBarBtn_TextW( btn_options, TEXT_OPTIONS );
+	TitleBarBtn_TextW( btn_help, TEXT_HELP );
+	
+	Widget_Resize( btn_single, Size(100,65) );
+	Widget_Resize( btn_battle, Size(100,65) );
+	Widget_Resize( btn_options, Size(100,65) );
+	Widget_Resize( btn_help, Size(100,65) );
+
+	Widget_Show( logobtn );
+	Widget_Show( btn_single );
+	Widget_Show( btn_battle );
+	Widget_Show( btn_options );
+	Widget_Show( btn_help );
+	Widget_Show( main_menu_titlebar );
+}
+
 /** 初始化主菜单 */
 void Game_InitMainMenu(void)
 {
 	Game_LoadMainMenuRes();
 	/* 创建所需的部件 */
 	main_menu_box = Widget_New(NULL);
-	main_menu_titlebar = Widget_New(NULL);
-	logobtn = LogoBtn_New();
+
 	main_menu_item_box = Widget_New(NULL);
 	keyboard_tip_box = Widget_New(NULL);
 	front_wave[0] = Widget_New(NULL);
@@ -152,19 +206,6 @@ void Game_InitMainMenu(void)
 	Widget_SetBackgroundTransparent( main_menu_box, FALSE );
 	/* 主菜单框显示在普通部件的底层 */
 	Widget_SetZIndex( main_menu_box, -1 );
-	
-	/* 配置主菜单栏 */
-	Widget_Container_Add( main_menu_box, main_menu_titlebar );
-	Widget_SetBackgroundImage( main_menu_titlebar, &img_res[RES_TITEBAR_BG] );
-	Widget_Resize( main_menu_titlebar, Graph_GetSize(&img_res[RES_TITEBAR_BG]) );
-	Widget_SetAlign( main_menu_titlebar, ALIGN_TOP_LEFT, Pos(0,30) );
-	/* 配置LOGO按钮 */
-	Widget_Container_Add( main_menu_titlebar, logobtn );
-	Widget_Resize( logobtn, LOGOBTN_SIZE );
-	Widget_SetAlign( logobtn, ALIGN_MIDDLE_LEFT, Pos(10,0) );
-	LogoBtn_SetStyle( logobtn, &img_res[RES_LOGO_NORMAL], &img_res[RES_LOGOBTN_NORMAL],
-				&img_res[RES_LOGOBTN_HOVER], &img_res[RES_LOGOBTN_PRESSED] );
-
 	Widget_Container_Add( main_menu_box, main_menu_item_box );
 	Widget_SetHeight( main_menu_item_box, ITEM_BOX_HEIGHT );
 	Widget_SetSize( main_menu_item_box, "100%", NULL );
@@ -203,13 +244,12 @@ void Game_InitMainMenu(void)
 	Widget_SetAlign( keyboard_tip_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
 	Widget_Event_Connect( keyboard_tip_box, EVENT_DRAG, keyboard_tip_box_on_drag );
 	Widget_Event_Connect( keyboard_tip_box, EVENT_CLICKED, keyboard_tip_box_on_clicked );
-
+	
+	Game_InitMenuBar();
 	Widget_Show( front_wave[0] );
 	Widget_Show( front_wave[1] );
 	Widget_Show( back_wave[0] );
 	Widget_Show( back_wave[1] );
-	Widget_Show( logobtn );
-	Widget_Show( main_menu_titlebar );
 	Widget_Show( main_menu_item_box );
 	Widget_Show( copyright_text );
 	Widget_Show( main_menu_box );
