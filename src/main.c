@@ -1,4 +1,4 @@
-﻿//#define SKIP_BOOT_SCREEN
+﻿#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -14,6 +14,7 @@
 #include "game.h"
 #include "skills/game_skill.h"
 #include "game_role_select.h"
+#include "game_logobtn.h"
 
 #define TEXT_COPYRIGHT_EN	L"Developed by LC-Games, Copyright © 2013 LC-Games, All Rights Reserved."
 #define TEXT_COPYRIGHT_CN	L"本游戏由 LC-Games 开发 , LC-Games 保留所有权利。"
@@ -147,6 +148,7 @@ static void Game_MainThread( void *arg )
 	ControlKey ctrlkey;
 
 	srand((unsigned int)time(NULL));	/* 初始化本线程的随机种子 */
+	LogoBtn_Register();
 	GameObject_Register();			/* 预先注册GameObject部件 */
 	LCUICursor_Hide();			/* 隐藏鼠标游标 */
 	Game_ShowBootScreen();			/* 显示启动画面 */
