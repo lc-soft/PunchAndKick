@@ -36,19 +36,17 @@ static LCUI_Widget *label_skilllist;
 static LCUI_Widget *info_area, *skill_area;
 
 static LCUI_Sleeper sleeper;
+static LCUI_BOOL window_is_inited = FALSE;
+
 static int current_select_role = 0;
 
 static void closebtn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
-	int ret;
-	ret = LCUI_MessageBoxW(	MB_ICON_WARNING, 
-				L"你确定要退出游戏？", 
-				L"提示", MB_BTN_YESNO );
-	if( ret == MB_BTN_IS_YES ) {
-		Game_HideRoleSelectBox();
-		Widget_Destroy( window );
-		LCUI_MainLoop_Quit(NULL);
-	}
+	Game_HideRoleSelectBox();
+	Game_DestroyRoleSelectBox();
+	/* 赋值为-1，表示当前并未选中角色 */
+	current_select_role = -1;
+	LCUISleeper_BreakSleep( &sleeper );
 }
 
 static void GetSkillName( const char *in_skillname, wchar_t *out_skillname )
@@ -90,6 +88,9 @@ static void GetSkillName( const char *in_skillname, wchar_t *out_skillname )
 /** 获取已选择的角色 */
 int Game_GetSelectedRole(void)
 {
+	if( !window_is_inited ) {
+		return -1;
+	}
 	LCUISleeper_StartSleep( &sleeper, MAXINT32 );
 	return current_select_role;
 }
@@ -145,8 +146,8 @@ static void btn_next_role_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused
 static void btn_select_role_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
 	Game_HideRoleSelectBox();
-	Game_DestroyRoleSelectBox();
 	LCUISleeper_BreakSleep( &sleeper );
+	Game_DestroyRoleSelectBox();
 }
 
 /** 初始化角色选择框 */
@@ -154,7 +155,10 @@ void Game_InitRoleSelectBox(void)
 {
 	int i;
 	ActionData *p_action;
-
+	
+	if( window_is_inited ) {
+		return;
+	}
 	window = Widget_New("window");
 	role_image_box = Widget_New(NULL);
 	role_image = GameObject_New();
@@ -316,14 +320,19 @@ void Game_InitRoleSelectBox(void)
 
 	RoleSelectBox_SetRole( ROLE_KUNI );
 	LCUISleeper_Create( &sleeper );
+	window_is_inited = TRUE;
 }
 
 /** 显示角色选择框 */
 void Game_ShowRoleSelectBox(void)
 {
 	uchar_t alpha;
-
+	
+	if( !window_is_inited ) {
+		return;
+	}
 	Widget_Show( window );
+	Widget_SetModal( window, TRUE );
 	/* 以淡入的效果显示菜单 */
 	for( alpha=0; alpha<240; alpha+=20 ) {
 		Widget_SetAlpha( window, alpha );
@@ -336,6 +345,9 @@ void Game_ShowRoleSelectBox(void)
 void Game_HideRoleSelectBox(void)
 {
 	uchar_t alpha;
+	if( !window_is_inited ) {
+		return;
+	}
 	/* 以淡出的效果显示菜单 */
 	for( alpha=240; alpha>0; alpha-=20 ) {
 		Widget_SetAlpha( window, alpha );
@@ -347,5 +359,9 @@ void Game_HideRoleSelectBox(void)
 
 void Game_DestroyRoleSelectBox(void)
 {
-
+	if( !window_is_inited ) {
+		return;
+	}
+	Widget_Destroy( window );
+	window_is_inited = FALSE;
 }
