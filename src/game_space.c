@@ -150,3 +150,20 @@ SpaceObject* SpaceObject_New( int x, int y, int z, int x_width, int y_width, int
 	Queue_Unlock( &space_object_list );
 	return p;
 }
+
+void SpaceObject_Destroy( SpaceObject* object )
+{
+	int i, n;
+	SpaceObject* p;
+
+	Queue_Lock( &space_object_list );
+	n = Queue_GetTotal( &space_object_list );
+	for(i=0; i<n; ++i) {
+		p = (SpaceObject*)Queue_Get( &space_object_list, i );
+		if( p == object ) {
+			Queue_Delete( &space_object_list, i );
+			break;
+		}
+	}
+	Queue_Unlock( &space_object_list );
+}

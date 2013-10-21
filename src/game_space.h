@@ -64,4 +64,6 @@ extern void GameSpace_Step( void );
 */
 extern SpaceObject* SpaceObject_New( int x, int y, int z, int x_width, int y_width, int z_width );
 
+extern void SpaceObject_Destroy( SpaceObject* object );
+
 #endif
