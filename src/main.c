@@ -157,32 +157,32 @@ static void Game_MainThread( void *arg )
 	LCUICursor_Show();			/* 显示鼠标游标 */
 	Game_InitMainMenu();			/* 初始化主菜单界面 */
 	Game_ShowMainMenu();			/* 显示主菜单界面 */
-	LCUIThread_Exit(NULL);
-	return;
-	Game_InitRoleSelectBox();		/* 初始化角色选择框 */
-	Game_ShowRoleSelectBox();		/* 显示角色选择框 */
-	role_id = Game_GetSelectedRole();	/* 获取选择的角色的ID */
-	Game_HideMainMenu();			/* 隐藏主菜单界面 */
 	
-	/* 设置1号玩家的控制键 */
-	ctrlkey.a_attack = LCUIKEY_J;
-	ctrlkey.b_attack = LCUIKEY_K;
-	ctrlkey.jump = LCUIKEY_SPACE;
-	ctrlkey.defense = LCUIKEY_L;
-	ctrlkey.left = LCUIKEY_A;
-	ctrlkey.right = LCUIKEY_D;
-	ctrlkey.up = LCUIKEY_W;
-	ctrlkey.down = LCUIKEY_S;
+	while(1) {
+		role_id = Game_GetSelectedRole();	/* 获取选择的角色的ID */
+		if( role_id == -1 ) {
+			LCUI_MSleep(100);
+			continue;
+		}
+		Game_HideMainMenu();			/* 隐藏主菜单界面 */
+		/* 设置1号玩家的控制键 */
+		ctrlkey.a_attack = LCUIKEY_J;
+		ctrlkey.b_attack = LCUIKEY_K;
+		ctrlkey.jump = LCUIKEY_SPACE;
+		ctrlkey.defense = LCUIKEY_L;
+		ctrlkey.left = LCUIKEY_A;
+		ctrlkey.right = LCUIKEY_D;
+		ctrlkey.up = LCUIKEY_W;
+		ctrlkey.down = LCUIKEY_S;
 
-	Game_InitBattle();				/* 初始化对战 */
-	Game_EnableGamePlayer( 1 );			/* 启用1号玩家 */
-	Game_SetGamePlayer( 1, role_id, TRUE );		/* 设置1号玩家信息 */
-	Game_SetGamePlayerControlKey( 1, &ctrlkey );	/* 设置1号玩家的控制键 */
-	Game_AddCPUPlayer();				/* 补全剩余玩家信息 */
-	Game_StartBattle();				/* 开始对战 */
-	Game_Loop();					/* 进入游戏主循环 */
-
-	LCUIThread_Exit(NULL);
+		Game_InitBattle();				/* 初始化对战 */
+		Game_EnableGamePlayer( 1 );			/* 启用1号玩家 */
+		Game_SetGamePlayer( 1, role_id, TRUE );		/* 设置1号玩家信息 */
+		Game_SetGamePlayerControlKey( 1, &ctrlkey );	/* 设置1号玩家的控制键 */
+		Game_AddCPUPlayer();				/* 补全剩余玩家信息 */
+		Game_StartBattle();				/* 开始对战 */
+		Game_Loop();					/* 进入游戏主循环 */
+	}
 }
 
 #ifdef LCUI_BUILD_IN_WIN32
