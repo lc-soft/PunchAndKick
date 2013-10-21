@@ -8,6 +8,7 @@
 #include "game.h"
 #include "game_logobtn.h"
 #include "game_titlebarbtn.h"
+#include "game_role_select.h"
 
 #define ITEM_BOX_HEIGHT	50
 #define LOGOBTN_SIZE Size(116,116)
@@ -135,6 +136,12 @@ static void keyboard_tip_box_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *
 	Widget_Refresh( widget );
 }
 
+static void btn_single_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	Game_InitRoleSelectBox();	/* 初始化角色选择框 */
+	Game_ShowRoleSelectBox();	/* 显示角色选择框 */
+}
+
 static void Game_InitMenuBar(void)
 {
 	logobtn = LogoBtn_New();
@@ -174,6 +181,8 @@ static void Game_InitMenuBar(void)
 	Widget_Resize( btn_battle, Size(100,65) );
 	Widget_Resize( btn_options, Size(100,65) );
 	Widget_Resize( btn_help, Size(100,65) );
+
+	Widget_Event_Connect( btn_single, EVENT_CLICKED, btn_single_clicked );
 
 	Widget_Show( logobtn );
 	Widget_Show( btn_single );
