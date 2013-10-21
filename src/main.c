@@ -15,6 +15,7 @@
 #include "skills/game_skill.h"
 #include "game_role_select.h"
 #include "game_logobtn.h"
+#include "game_titlebarbtn.h"
 
 #define TEXT_COPYRIGHT_EN	L"Developed by LC-Games, Copyright © 2013 LC-Games, All Rights Reserved."
 #define TEXT_COPYRIGHT_CN	L"本游戏由 LC-Games 开发 , LC-Games 保留所有权利。"
@@ -148,6 +149,7 @@ static void Game_MainThread( void *arg )
 	ControlKey ctrlkey;
 
 	srand((unsigned int)time(NULL));	/* 初始化本线程的随机种子 */
+	TitleBarBtn_Register();
 	LogoBtn_Register();
 	GameObject_Register();			/* 预先注册GameObject部件 */
 	LCUICursor_Hide();			/* 隐藏鼠标游标 */
@@ -155,6 +157,8 @@ static void Game_MainThread( void *arg )
 	LCUICursor_Show();			/* 显示鼠标游标 */
 	Game_InitMainMenu();			/* 初始化主菜单界面 */
 	Game_ShowMainMenu();			/* 显示主菜单界面 */
+	LCUIThread_Exit(NULL);
+	return;
 	Game_InitRoleSelectBox();		/* 初始化角色选择框 */
 	Game_ShowRoleSelectBox();		/* 显示角色选择框 */
 	role_id = Game_GetSelectedRole();	/* 获取选择的角色的ID */
