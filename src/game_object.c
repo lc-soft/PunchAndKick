@@ -38,7 +38,7 @@ typedef struct GameObject_ {
 	
 	LCUI_BOOL data_valid;		/**< 当前使用的数据是否有效 */
 	LCUI_BOOL horiz_flip;		/**< 是否水平翻转 */
-	
+
 	ActionRec *current;		/**< 当前动作动画记录 */
 	LCUI_Queue action_list;		/**< 动作列表 */
 	
@@ -1082,9 +1082,26 @@ static void GameObject_ExecShow( LCUI_Widget *widget )
 
 static void GameObject_ExecDestroy( LCUI_Widget *widget )
 {
+	int i, n;
 	GameObject *obj;
+	LCUI_Widget *tmp_widget;
+
 	obj = (GameObject*)Widget_GetPrivData( widget );
+	SpaceObject_Destroy( obj->space_obj );
 	Widget_Destroy( obj->shadow );
+	Queue_Destroy( &obj->action_list );
+	Queue_Destroy( &obj->victim );
+	Queue_Destroy( &obj->attacker_info );
+	Queue_Lock( &gameobject_stream );
+	n = Queue_GetTotal( &gameobject_stream );
+	for(i=0; i<n; ++i) {
+		tmp_widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		if( tmp_widget == widget ) {
+			Queue_DeletePointer( &gameobject_stream, i );
+			break;
+		}
+	}
+	Queue_Unlock( &gameobject_stream );
 }
 
 /** 获取当前动作信息 */
