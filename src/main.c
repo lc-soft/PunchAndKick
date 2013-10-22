@@ -155,10 +155,10 @@ static void GameDemoScene_PutPlayer( int battle_id )
 	
 	player[0] = GameBattle_GetPlayer( battle_id, 1 );
 	player[1] = GameBattle_GetPlayer( battle_id, 2 );
-	GameObject_SetFillColor( player[0]->object, TRUE, RGB(0,0,0) );
-	GameObject_SetFillColor( player[1]->object, TRUE, RGB(0,0,0) );
-	GameObject_SetShadowVisible( player[0]->object, FALSE );
-	GameObject_SetShadowVisible( player[1]->object, FALSE );
+	//GameObject_SetFillColor( player[0]->object, TRUE, RGB(0,0,0) );
+	//GameObject_SetFillColor( player[1]->object, TRUE, RGB(0,0,0) );
+	//GameObject_SetShadowVisible( player[0]->object, FALSE );
+	//GameObject_SetShadowVisible( player[1]->object, FALSE );
 	GameBattle_GetSceneLand( battle_id, &start_pos, &scene_size );
 	x = scene_size.w/2 - 150;
 	y = scene_size.h/2;
