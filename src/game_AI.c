@@ -454,7 +454,7 @@ static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 	int id, i;
 	GamePlayer *player;
 	if( LCUI_GetTickCount() < self->ai_data.target_update_time ) {
-		player = GamePlayer_GetByID( self->ai_data.target_id );
+		player = GameBattle_GetPlayer( self->battle_id, self->ai_data.target_id );
 		if( player && player->enable
 		&& player->state != STATE_DIED
 		&& player->state != STATE_LYING_DYING
@@ -468,8 +468,8 @@ static GamePlayer *GamePlayer_GetTarget( GamePlayer *self )
 		id = rand()%4+1;
 		if( id != self->id ) {
 			self->ai_data.target_id = id;
-			player = GamePlayer_GetByID( id );
-			if( !player->enable
+			player = GameBattle_GetPlayer( self->battle_id, id );
+			if( !player || !player->enable
 			|| player->state == STATE_DIED
 			|| player->state == STATE_LYING_DYING
 			|| player->state == STATE_TUMMY_DYING ) {
@@ -592,7 +592,7 @@ LCUI_BOOL StrategyIsValid( GameAI_Data *p_data, int target_state, int x_width, i
 	AIStrategy *p_strategy;
 
 	/* 若策略ID超出有效范围 */
-	if( p_data->strategy_id >= MAX_STRATEGY_NUM ) {
+	if( p_data->strategy_id < 0 && p_data->strategy_id >= MAX_STRATEGY_NUM ) {
 		return FALSE;
 	}
 	p_strategy = &global_strategy_set[p_data->strategy_id];
@@ -884,7 +884,7 @@ LCUI_BOOL CanCloseTarget( GamePlayer *player )
 	p_strategy = &global_strategy_set[player->ai_data.strategy_id];
 	if( player->state == STATE_LEFTRUN ) {
 		if( x_width < 0 ) {
-			_DEBUG_MSG("left run, x_width: %d\n", x_width);
+			DEBUG_MSG("left run, x_width: %d\n", x_width);
 			GamePlayer_StopRun( player );
 			return FALSE;
 		}
@@ -892,7 +892,7 @@ LCUI_BOOL CanCloseTarget( GamePlayer *player )
 	else if( player->state == STATE_RIGHTRUN ) {
 		if( x_width > 0 ) {
 			GamePlayer_StopRun( player );
-			_DEBUG_MSG("right run, x_width: %d\n", x_width);
+			DEBUG_MSG("right run, x_width: %d\n", x_width);
 			return FALSE;
 		}
 	}
@@ -900,13 +900,13 @@ LCUI_BOOL CanCloseTarget( GamePlayer *player )
 }
 
 /** 将游戏玩家交给AI控制 */
-void GameAI_Control( int player_id )
+void GameAI_Control( int battle_id, int player_id )
 {
 	GamePlayer *self, *target;
 	int x_width, y_width;
 	int n, strategy_buff[10];
 	
-	self = GamePlayer_GetByID( player_id );
+	self = GameBattle_GetPlayer( battle_id, player_id );
 	/* 获取自己的目标 */
 	target = GamePlayer_GetTarget( self );
 	if( !target ) {

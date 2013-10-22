@@ -14,6 +14,6 @@ typedef struct GameAI_Data_ {
 void GameAI_Init(void);
 
 /** 将游戏玩家交给AI控制 */
-void GameAI_Control( int player_id );
+void GameAI_Control( int battle_id, int player_id );
 
 #endif
