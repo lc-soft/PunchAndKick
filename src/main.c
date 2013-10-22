@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "game.h"
+#include "main_menu.h"
 #include "skills/game_skill.h"
 #include "game_role_select.h"
 #include "game_logobtn.h"
@@ -116,6 +117,7 @@ static void Game_ShowBootScreen(void)
 /** 加入CPU玩家 */
 static void Game_AddCPUPlayer(void)
 {
+#ifdef aaaa
 	int i, j, role_id;
 	GamePlayer *player, *other_player;
 	for(j=2; j<5; ++j) {
@@ -140,6 +142,61 @@ static void Game_AddCPUPlayer(void)
 		Game_EnableGamePlayer( j );
 		Game_SetGamePlayer( j, role_id, FALSE );
 	}
+#endif
+}
+
+static void GameDemoScene_PutPlayer( int battle_id )
+{
+	int i;
+	int x, y;
+	LCUI_Pos start_pos;
+	LCUI_Size scene_size;
+	GamePlayer *player[2];
+	
+	player[0] = GameBattle_GetPlayer( battle_id, 1 );
+	player[1] = GameBattle_GetPlayer( battle_id, 2 );
+	GameObject_SetFillColor( player[0]->object, TRUE, RGB(0,0,0) );
+	GameObject_SetFillColor( player[1]->object, TRUE, RGB(0,0,0) );
+	GameObject_SetShadowVisible( player[0]->object, FALSE );
+	GameObject_SetShadowVisible( player[1]->object, FALSE );
+	GameBattle_GetSceneLand( battle_id, &start_pos, &scene_size );
+	x = scene_size.w/2 - 150;
+	y = scene_size.h/2;
+	GameObject_SetX( player[0]->object, start_pos.x+x );
+	GameObject_SetX( player[1]->object, start_pos.x+x+300 );
+	GameObject_SetY( player[0]->object, start_pos.y+y );
+	GameObject_SetY( player[1]->object, start_pos.y+y );
+	GamePlayer_SetRightOriented( player[0] );
+	GamePlayer_SetLeftOriented( player[1] );
+	GamePlayer_SetStart( player[0] );
+	GamePlayer_SetStart( player[1] );
+}
+
+static void Game_DemoThread( void *arg )
+{
+	int battle_id;
+	LCUI_Size scene_size;
+	LCUI_Widget *demo_scene;
+
+	scene_size.w = 800;
+	scene_size.h = 600;
+	battle_id = GameBattle_New();
+	GameBattle_SetSceneLand( battle_id, Pos(50,400), Size(700,10) );
+	GameBattle_SetSceneSize( battle_id, scene_size );
+	demo_scene = GameBattle_GetScene( battle_id );
+	Widget_SetZIndex( demo_scene, -10 );
+	Widget_SetClickableAlpha( demo_scene, 0, 0 );
+	Widget_Container_Add( Game_GetMainMenuBox(), demo_scene );
+	GameBattle_SetPlayer( battle_id, 1, ROLE_KUNI, FALSE );
+	GameBattle_SetPlayer( battle_id, 2, ROLE_RIKI, FALSE );
+	GameBattle_EnablePlayer( battle_id, 1, TRUE );
+	GameBattle_EnablePlayer( battle_id, 2, TRUE );
+	GameBattlePlayer_SetInvincible( battle_id, 1, TRUE );
+	GameBattlePlayer_SetInvincible( battle_id, 2, TRUE );
+	GameDemoScene_PutPlayer( battle_id );
+	GameBattle_Start( battle_id );
+	Widget_Show( demo_scene );
+	GameBattle_Loop( battle_id );
 }
 
 /** 游戏线程 */
@@ -147,17 +204,28 @@ static void Game_MainThread( void *arg )
 {
 	int role_id;
 	ControlKey ctrlkey;
+	LCUI_Thread t;
 
-	srand((unsigned int)time(NULL));	/* 初始化本线程的随机种子 */
+	srand((unsigned int)time(NULL));
 	TitleBarBtn_Register();
 	LogoBtn_Register();
-	GameObject_Register();			/* 预先注册GameObject部件 */
+	GameObject_Register();
+
+	Game_InitAttackRecord();
+	Game_InitStateActionMap();
+	SkillLibrary_Init();
+
 	LCUICursor_Hide();			/* 隐藏鼠标游标 */
 	Game_ShowBootScreen();			/* 显示启动画面 */
 	LCUICursor_Show();			/* 显示鼠标游标 */
 	Game_InitMainMenu();			/* 初始化主菜单界面 */
 	Game_ShowMainMenu();			/* 显示主菜单界面 */
 	
+	GameMsgLoopStart();
+	LCUIThread_Create( &t, Game_DemoThread, NULL );
+	//LCUIThread_Exit(NULL);
+	return;
+#ifdef asdasdasd
 	while(1) {
 		role_id = Game_GetSelectedRole();	/* 获取选择的角色的ID */
 		if( role_id == -1 ) {
@@ -183,6 +251,7 @@ static void Game_MainThread( void *arg )
 		Game_StartBattle();				/* 开始对战 */
 		Game_Loop();					/* 进入游戏主循环 */
 	}
+#endif
 }
 
 #ifdef LCUI_BUILD_IN_WIN32
