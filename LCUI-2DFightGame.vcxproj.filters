@@ -96,6 +96,15 @@
     <ClCompile Include="src\skills\skills_judo_master.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\game_logobtn.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_titlebarbtn.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_battle.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
@@ -162,6 +171,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\skills\skills_judo_master.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_logobtn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_titlebarbtn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_battle.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

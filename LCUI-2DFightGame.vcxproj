@@ -111,11 +111,14 @@
     <ClCompile Include="src\game_AI.c" />
     <ClCompile Include="src\game_attack.c" />
     <ClCompile Include="src\game_control.c" />
+    <ClCompile Include="src\game_battle.c" />
+    <ClCompile Include="src\game_logobtn.c" />
     <ClCompile Include="src\game_object.c" />
     <ClCompile Include="src\game_resource.c" />
     <ClCompile Include="src\game_role_select.c" />
     <ClCompile Include="src\game_scene.c" />
     <ClCompile Include="src\game_statusbar.c" />
+    <ClCompile Include="src\game_titlebarbtn.c" />
     <ClCompile Include="src\lan_battle.c" />
     <ClCompile Include="src\game_lifebar.c" />
     <ClCompile Include="src\main.c" />
@@ -136,7 +139,9 @@
     <ClInclude Include="src\game_action.h" />
     <ClInclude Include="src\game_AI.h" />
     <ClInclude Include="src\game_attack.h" />
+    <ClInclude Include="src\game_battle.h" />
     <ClInclude Include="src\game_control.h" />
+    <ClInclude Include="src\game_logobtn.h" />
     <ClInclude Include="src\game_msg.h" />
     <ClInclude Include="src\game_object.h" />
     <ClInclude Include="src\game_resource.h" />
@@ -144,6 +149,7 @@
     <ClInclude Include="src\game_scene.h" />
     <ClInclude Include="src\game_statusbar.h" />
     <ClInclude Include="src\game_lifebar.h" />
+    <ClInclude Include="src\game_titlebarbtn.h" />
     <ClInclude Include="src\main_menu.h" />
     <ClInclude Include="src\game_space.h" />
     <ClInclude Include="src\skills\game_skill.h" />
