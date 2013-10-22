@@ -307,7 +307,7 @@ static const ActionInfo action_set[MAX_ACTION_NUM]={
 		},
 		{ TRUE, FALSE, FALSE, "B-sprint-attack-02", 100, 0, 0,
 			{-13, -GLOBAL_Y_WIDTH/2, 0, 34, GLOBAL_Y_WIDTH, 60},
-			{10, -GLOBAL_Y_WIDTH/2, 0, 25, GLOBAL_Y_WIDTH, 44},
+			{0, -GLOBAL_Y_WIDTH/2, 10, 35, GLOBAL_Y_WIDTH, 35}
 		},
 		END_ACTION_FRAME
 	}},
