@@ -1,4 +1,5 @@
-﻿
+﻿#ifndef __GAME_SCENE_H__
+#define __GAME_SCENE_H__
 /** 获取游戏场景 */
 LCUI_Widget *GetGameScene(void);
 
@@ -22,3 +23,7 @@ int GameScene_UpdateCamera( void );
 
 /** 退出战斗场景，释放占用的内存资源 */
 void GameScene_Quit( void );
+
+void GameDemoScene_Quit( void );
+
+#endif

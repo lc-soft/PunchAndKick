@@ -3,7 +3,6 @@
 #include LC_WIDGET_H
 #include LC_INPUT_H
 #include "game.h"
-#include "game_object.h"
 
 typedef struct GamePlayerComputer_ {
 	char name[256];
@@ -72,7 +71,7 @@ int Game_ProcMsg( GameMsg *p_msg )
 {
 	GamePlayer *target;
 
-	target = GamePlayer_GetByID( p_msg->player_id );
+	target = GameBattle_GetPlayer( p_msg->battle_id, p_msg->player_id );
 	if( target == NULL ) {
 		return -1;
 	}

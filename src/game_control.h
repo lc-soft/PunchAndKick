@@ -136,6 +136,7 @@ typedef struct RoleInfo_ {
 typedef struct GamePlayer_ GamePlayer;
 struct GamePlayer_{
 	int state;			/**< 状态 */
+	int battle_id;			/**< 所属对战ID */
 	int id;				/**< 玩家ID */
 	int role_id;			/**< 角色ID */
 	int type;			/**< 角色类型 */
@@ -147,6 +148,7 @@ struct GamePlayer_{
 	LCUI_BOOL local_control;	/**< 是否由此处玩家控制 */
 	LCUI_BOOL lock_action;		/**< 是否锁定动作 */
 	LCUI_BOOL lock_motion;		/**< 是否锁定移动 */
+	LCUI_BOOL is_invincible;	/**< 是否无敌 */
 	char attack_type_name[64];	/**< 当前的攻击类型 */
 	int n_attack;			/**< 被攻击的次数 */
 	int t_rest_timeout;		/**< 定时器，用于限定休息时间 */
@@ -160,18 +162,28 @@ struct GamePlayer_{
 	ControlState control;		/**< 角色的控制状态 */
 };
 
-extern int Game_Init(void);
-extern int Game_Start(void);
-extern int Game_Loop(void);
-extern int Game_Pause(void);
 
-/** 通过部件获取游戏玩家数据 */
-extern GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget );
+/** 设置游戏角色为开打动作 */
+void GamePlayer_SetStart( GamePlayer *player );
 
 /** 重置攻击控制 */
 extern void GamePlayer_ResetAttackControl( GamePlayer *player );
 
 extern void GamePlayer_SetReady( GamePlayer *player );
+
+extern void GamePlayer_Init( GamePlayer *player );
+
+/** 同步游戏玩家的按键控制 */
+extern void GamePlayer_SyncKeyControl( GamePlayer *player );
+
+/** 同步游戏玩家的数据 */
+extern void GamePlayer_SyncData( GamePlayer *player );
+
+/** 初始化状态与动作的映射表 */
+extern void Game_InitStateActionMap(void);
+
+/** 设置游戏角色是否无敌 */
+void GamePlayer_SetInvincible( int player_id, LCUI_BOOL flag );
 
 /** 设置角色面向右方 */
 void GamePlayer_SetRightOriented( GamePlayer *player );
@@ -184,12 +196,6 @@ LCUI_BOOL GamePlayer_IsLeftOriented( GamePlayer *player );
 
 /** 改变角色的动作动画  */
 extern void GamePlayer_ChangeAction( GamePlayer *player, int action_id );
-
-/** 通过控制键获取该键控制的角色 */
-GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code );
-
-/** 通过角色ID来获取角色 */
-GamePlayer *GamePlayer_GetByID( int player_id );
 
 /** 为游戏角色的动作设置时限，并在超时后进行响应 */
 void GamePlayer_SetActionTimeOut(	GamePlayer *player,
@@ -256,9 +262,6 @@ void GamePlayer_SetUpMotion( GamePlayer *player );
 
 void GamePlayer_SetDownMotion( GamePlayer *player );
 
-/** 设置游戏角色的控制键 */
-int Game_SetGamePlayerControlKey( int player_id, ControlKey *key );
-
 /** 获取角色信息 */
 RoleInfo *Game_GetRoleInfo( int role_id );
 
@@ -271,7 +274,12 @@ void Game_EnableGamePlayer( int id );
 /** 初始化对战 */
 int Game_InitBattle(void);
 
+int Game_InitDemoBattle(void);
+
 /** 开始对战 */
 void Game_StartBattle( void );
+
+/** 开始演示对战 */
+void Game_StartDemoBattle( void );
 
 #endif

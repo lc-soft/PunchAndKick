@@ -1,6 +1,8 @@
 ﻿#ifndef __GAME_OBJECT_H__
 #define __GAME_OBJECT_H__
 
+#include "game_space.h"
+
 /** 范围框 */
 typedef struct RangeBox_ {
 	int x, y, z;
@@ -40,7 +42,6 @@ typedef struct ActionData_ {
 	LCUI_Queue frame;	/**< 用于记录该动作集的所有帧动作 */
 } ActionData;
 
-
 /**
  * 创建一个动作集
  * 创建的动作集将记录至动作库中
@@ -61,39 +62,6 @@ LCUI_API void Action_SetReplay( ActionData *action, LCUI_BOOL replay );
  *	正常则返回0，失败则返回-1
  */
 LCUI_API int Action_Delete( ActionData* action );
-
-/**
- * 为动作添加一帧动作图
- * @param action
- *	目标动作
- * @param offset_x
- *	人物底线中点相对于动作图低边中点的X轴的偏移量
- * @param offset_y
- *	人物底线中点相对于动作图低边中点的Y轴的偏移量
- * @param graph
- *	动作图
- * @param sleep_time
- *	动作图的停留时间，单位时间为20毫秒，即当它的值为50时，该帧动作图停留1秒
- * @return
- *	正常则返回该帧动作图的序号，失败返回-1
- */
-LCUI_API int Action_AddFrame(	ActionData* action,
-				int offset_x,
-				int offset_y,
-				LCUI_Graph *graph,
-				int sleep_time );
-
-LCUI_API int Action_SetNewAttack( ActionData* action,
-					int n_frame,
-					LCUI_BOOL flag );
-
-LCUI_API int Action_SetAttackRange(	ActionData* action,
-					int n_frame,
-					RangeBox attack_range );
-
-LCUI_API int Action_SetHitRange(	ActionData* action,
-					int n_frame,
-					RangeBox hit_range );
 
 LCUI_API int GameObject_AtActionDone(	LCUI_Widget *widget,
 					int action_id,
@@ -165,6 +133,14 @@ LCUI_API int GameObject_DirectAddVictim( LCUI_Widget *attacker, LCUI_Widget *vic
 /** 为攻击者添加受害者记录，若已存在，则不添加 */
 LCUI_API int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim );
 
+/** 创建游戏对象库 */
+LCUI_API int GameObjectLibrary_Create( LCUI_Queue *library );
+
+LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library );
+
+LCUI_API void GameObjectLibrary_UpdateAction( LCUI_Queue *library );
+
+
 /**
  * 切换对象的动作
  * @param widget
@@ -187,6 +163,39 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget );
 
 /** 暂停对象的动作 */
 LCUI_API int GameObject_PauseAction( LCUI_Widget *widget );
+
+/**
+ * 为动作添加一帧动作图
+ * @param action
+ *	目标动作
+ * @param offset_x
+ *	人物底线中点相对于动作图低边中点的X轴的偏移量
+ * @param offset_y
+ *	人物底线中点相对于动作图低边中点的Y轴的偏移量
+ * @param graph
+ *	动作图
+ * @param sleep_time
+ *	动作图的停留时间，单位时间为20毫秒，即当它的值为50时，该帧动作图停留1秒
+ * @return
+ *	正常则返回该帧动作图的序号，失败返回-1
+ */
+LCUI_API int Action_AddFrame(	ActionData* action,
+				int offset_x,
+				int offset_y,
+				LCUI_Graph *graph,
+				int sleep_time );
+
+LCUI_API int Action_SetNewAttack(	ActionData* action,
+					int n_frame,
+					LCUI_BOOL flag );
+
+LCUI_API int Action_SetAttackRange(	ActionData* action,
+					int n_frame,
+					RangeBox attack_range );
+
+LCUI_API int Action_SetHitRange(	ActionData* action,
+					int n_frame,
+					RangeBox hit_range );
 
 /** 为对象添加一个动作 */
 LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
@@ -244,9 +253,6 @@ LCUI_API double GameObject_GetZSpeed( LCUI_Widget *widget );
 /** 设置游戏对象在Z轴的坐标 */
 LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z );
 
-/** 获取游戏对象的位置 */
-LCUI_API void GameObject_GetPos( LCUI_Widget *widget, double *x, double *y );
-
 /** 将游戏对象添加至容器中 */
 LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr );
 
@@ -256,8 +262,16 @@ LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x );
 /** 获取游戏对象的X轴坐标 */
 LCUI_API double GameObject_GetX( LCUI_Widget *widget );
 
+/** 设置填充颜色 */
+LCUI_API void GameObject_SetFillColor(	LCUI_Widget *widget,
+					LCUI_BOOL flag, 
+					LCUI_RGB color );
+
 /** 设置游戏对象的阴影图像 */
 LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow );
+
+/** 设置游戏对象的阴影是否可见 */
+LCUI_API void GameObject_SetShadowVisible( LCUI_Widget *widget, LCUI_BOOL visible );
 
 /** 清空攻击记录 */
 LCUI_API void GameObject_ClearAttack( LCUI_Widget *widget );
@@ -276,7 +290,8 @@ LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(
 					LCUI_BOOL specific_action,
 					int action_id );
 
-LCUI_API LCUI_Widget* GameObject_New(void);
+LCUI_API LCUI_Widget* GameObject_New(	GameSpaceData *space, 
+					LCUI_Queue *library );
 
 LCUI_API void GameObject_Register(void);
 

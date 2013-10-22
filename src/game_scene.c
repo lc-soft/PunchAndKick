@@ -2,10 +2,12 @@
 #include LC_LCUI_H
 #include LC_WIDGET_H
 #include LC_DISPLAY_H
+
 #include "game.h"
 
 #define CAMERA_X_PANDDING 200
 
+static GameSpaceData *game_space;
 static LCUI_Widget *game_scene;
 static LCUI_Size scene_land_size = {0,0};
 static LCUI_Pos scene_land_pos = {0,0};
@@ -16,6 +18,32 @@ LCUI_Widget *GetGameScene(void)
 {
 	return game_scene;
 }
+#ifdef aaaaa
+/** 初始化演示场景 */
+int GameDemoScene_Init(void)
+{
+	int ret;
+	LCUI_Size scene_size;
+
+	scene_size.w = 800;
+	scene_size.h = 600;
+	game_demo_scene = Widget_New(NULL);
+	if( !game_demo_scene ) {
+		return -1;
+	}
+	Widget_Resize( game_demo_scene, scene_size );
+	Widget_SetAlign( game_demo_scene, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	demo_scene_land_pos.x = 50;
+	demo_scene_land_pos.y = 400;
+	demo_scene_land_size.w = scene_size.w - 2*demo_scene_land_pos.x;
+	demo_scene_land_size.h = 10;
+	GameSpace_SetBound(	demo_scene_land_pos.x, 
+				demo_scene_land_size.w, 
+				demo_scene_land_pos.y,
+				demo_scene_land_size.h );
+	return 0;
+}
+#endif
 
 /** 初始化战斗场景 */
 int GameScene_Init( void )
@@ -23,7 +51,6 @@ int GameScene_Init( void )
 	int ret;
 	LCUI_Size scene_size;
 	LCUI_Graph scene_graph;
-
 	Graph_Init( &scene_graph );
 	ret = GameGraphRes_LoadFromFile("scenes.data");
 	if( ret != 0 ) {
@@ -37,6 +64,7 @@ int GameScene_Init( void )
 	GameGraphRes_GetGraph( SCENES_RES, "default", &scene_graph );
 	scene_size = Graph_GetSize( &scene_graph );
 	game_scene = Widget_New(NULL);
+	game_space = GameSpace_New();
 	/* 设置战斗场景 */
 	Widget_SetBackgroundImage( game_scene, &scene_graph );
 	Widget_SetBackgroundLayout( game_scene, LAYOUT_CENTER );
@@ -52,7 +80,8 @@ int GameScene_Init( void )
 	scene_land_size.w = scene_size.w - 2*scene_land_pos.x;
 	scene_land_size.h = scene_size.h - scene_land_pos.y;
 	/* 设置战斗场景的空间边界 */
-	GameSpace_SetBound(	scene_land_pos.x, 
+	GameSpace_SetBound(	game_space, 
+				scene_land_pos.x, 
 				scene_land_size.w, 
 				scene_land_pos.y, 
 				scene_land_size.h );

@@ -13,18 +13,6 @@ static GamePlayer player_data[4];
 static LCUI_Widget *player_status_area;
 static int state_action_map[TOTAL_STATE_NUM];
 
-/** 通过部件获取游戏玩家数据 */
-GamePlayer *GamePlayer_GetPlayerByWidget( LCUI_Widget *widget )
-{
-	int i;
-	for(i=0; i<4; ++i) {
-		if( widget == player_data[i].object ) {
-			return &player_data[i];
-		}
-	}
-	return NULL;
-}
-
 static void ControlKey_Init( ControlKey *key )
 {
 	key->up = 0;
@@ -64,45 +52,18 @@ LCUI_BOOL GamePlayer_IsLeftOriented( GamePlayer *player )
 	return !player->right_direction;
 }
 
-/** 通过控制键获取该键控制的角色 */
-GamePlayer *GamePlayer_GetPlayerByControlKey( int key_code )
-{
-	int i;
-	for(i=0; i<4; ++i) {
-		if( key_code == player_data[i].ctrlkey.a_attack
-		 || key_code == player_data[i].ctrlkey.b_attack
-		 || key_code == player_data[i].ctrlkey.defense
-		 || key_code == player_data[i].ctrlkey.left
-		 || key_code == player_data[i].ctrlkey.right
-		 || key_code == player_data[i].ctrlkey.up
-		 || key_code == player_data[i].ctrlkey.down
-		 || key_code == player_data[i].ctrlkey.jump ) {
-			 return &player_data[i];
-		}
-	}
-	return NULL;
-}
-
-/** 通过角色ID来获取角色 */
-GamePlayer *GamePlayer_GetByID( int player_id )
-{
-	int i;
-	for(i=0; i<4; ++i) {
-		if( player_data[i].id == player_id ) {
-			return &player_data[i];
-		}
-	}
-	return NULL;
-}
-
 /** 改变角色的动作动画  */
 void GamePlayer_ChangeAction( GamePlayer *player, int action_id )
 {
 	GameMsg msg;
-
+	msg.battle_id = player->battle_id;
 	msg.player_id = player->id;
 	msg.msg.msg_id = GAMEMSG_ACTION;
 	msg.msg.action.action_id = action_id;
+	DEBUG_MSG("battle id: %d, player id: %d, action id: %d\n", player->battle_id, player->id, action_id);
+	if( action_id == ACTION_DEFENSE ) {
+		abort();
+	}
 	Game_PostMsg( &msg );
 }
 
@@ -119,12 +80,14 @@ void GamePlayer_SetActionTimeOut(	GamePlayer *player,
 					int n_ms,
 					void (*func)(GamePlayer*) )
 {
+	int64_t lost_ms;
+	lost_ms = LCUI_GetTickCount();
 	GamePlayer_BreakActionTiming( player );
 	player->t_action_timeout = LCUITimer_Set( n_ms, (void(*)(void*))func, player, FALSE );
 }
 
 /** 初始化状态与动作的映射表 */
-static void Game_InitStateActionMap(void)
+void Game_InitStateActionMap(void)
 {
 	state_action_map[STATE_START] = ACTION_START;
 	state_action_map[STATE_LYING_DYING] = ACTION_LYING_DYING;
@@ -213,7 +176,7 @@ void GamePlayer_ChangeState( GamePlayer *player, int state )
 	if( player->lock_action ) {
 		return;
 	}
-	if( state >= TOTAL_STATE_NUM ) {
+	if( state < 0 || state >= TOTAL_STATE_NUM ) {
 		return;
 	}
 	player->state = state;;
@@ -366,7 +329,7 @@ static void GamePlayer_SetRightRun( GamePlayer *player )
 static void GamePlayer_AtRunEnd( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 }
@@ -398,9 +361,11 @@ LCUI_BOOL GamePlayer_IsInLiftState( GamePlayer *player )
 
 void GamePlayer_SetReady( GamePlayer *player )
 {
+	int64_t lost_ms;
 	if( player->lock_action ) {
 		return;
 	}
+	lost_ms = LCUI_GetTickCount();
 	GamePlayer_ChangeState( player, STATE_READY );
 	/* 设置响应动作超时信号 */
 	GamePlayer_SetActionTimeOut( player, 1000, GamePlayer_AtReadyTimeOut );
@@ -430,7 +395,7 @@ static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_ResetAttackControl( player );
@@ -544,7 +509,7 @@ int GamePlayer_SetTummy( GamePlayer *player )
 static void GamePlayer_AtJumpDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_SetReady( player );
@@ -554,7 +519,7 @@ static void GamePlayer_AtJumpDone( LCUI_Widget *widget )
 static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_ResetAttackControl( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP_DONE );
@@ -568,7 +533,7 @@ static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 static void GamePlayer_SetBeLiftStance( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( player->state != STATE_BE_LIFT_SQUAT ) {
 		return;
 	}
@@ -652,7 +617,7 @@ GamePlayer* GamePlayer_CatchGaspingPlayer( GamePlayer *player )
 	if( obj == NULL ) {
 		return NULL;
 	}
-	return GamePlayer_GetPlayerByWidget( obj );
+	return GameBattle_GetPlayerByWidget( obj );
 }
 
 static void GamePlayer_SetLeftMotion( GamePlayer *player )
@@ -894,18 +859,6 @@ void GamePlayer_SetDownMotion( GamePlayer *player )
 	GameObject_SetYSpeed( player->object, speed );
 }
 
-/** 设置游戏角色的控制键 */
-int Game_SetGamePlayerControlKey( int player_id, ControlKey *key )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetByID( player_id );
-	if( player == NULL ){
-		return -1;
-	}
-	player->ctrlkey = *key;
-	return 0;
-}
-
 /** 响应游戏角色受到的攻击 */
 static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 {
@@ -913,7 +866,7 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 	AttackerInfo *p_info;
 	LCUI_Queue *attacker_info;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( player == NULL ){
 		return;
 	}
@@ -924,7 +877,7 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 		if( p_info == NULL ) {
 			break;
 		}
-		atk_player = GamePlayer_GetPlayerByWidget( p_info->attacker );
+		atk_player = GameBattle_GetPlayerByWidget( p_info->attacker );
 		/* 记录本次攻击的信息 */
 		Game_RecordAttack(	atk_player, atk_player->attack_type_name,
 					player, player->state );
@@ -972,6 +925,7 @@ void GamePlayer_Init( GamePlayer *player )
 	player->local_control = TRUE;
 	player->lock_action = FALSE;
 	player->lock_motion = FALSE;
+	player->is_invincible = FALSE;
 	player->property.cur_hp = 0;
 	player->property.max_hp = 0;
 	player->property.defense = 0;
@@ -997,16 +951,19 @@ void GamePlayer_Init( GamePlayer *player )
 	player->control.up_motion = FALSE;
 	player->control.down_motion = FALSE;
 	player->control.jump = FALSE;
+	player->control.defense = FALSE;
+	player->ai_data.strategy_id = 0;
 	player->ai_data.target_update_time = 0;
+	player->ai_data.action_num = 0;
 
 	ControlKey_Init( &player->ctrlkey );
 	/* 创建GameObject部件 */
-	player->object = GameObject_New();
+	player->object = NULL;
 	/* 设置响应游戏角色的受攻击信号 */
-	GameObject_AtUnderAttack( player->object, GamePlayer_ResponseAttack );
+	//GameObject_AtUnderAttack( player->object, GamePlayer_ResponseAttack );
 	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
 	/* 设置阴影 */
-	GameObject_SetShadow( player->object, img_shadow );
+	//GameObject_SetShadow( player->object, img_shadow );
 }
 
 static void UpdateViewFPS( void *arg )
@@ -1022,7 +979,7 @@ static void GameKeyboardProcKeyDown( int key_code )
 {
 	GamePlayer *target;
 
-	target = GamePlayer_GetPlayerByControlKey( key_code );
+	target = GameBattle_GetPlayerByControlKey( key_code );
 	if( target == NULL ) {
 		return;
 	}
@@ -1077,7 +1034,7 @@ static void InitSceneText( LCUI_Widget *scene )
 }
 
 /** 同步游戏玩家的按键控制 */
-static void GamePlayer_SyncKeyControl( GamePlayer *player )
+void GamePlayer_SyncKeyControl( GamePlayer *player )
 {
 	player->control.left_motion = LCUIKey_IsHit(player->ctrlkey.left);
 	player->control.right_motion = LCUIKey_IsHit(player->ctrlkey.right);
@@ -1087,7 +1044,7 @@ static void GamePlayer_SyncKeyControl( GamePlayer *player )
 }
 
 /** 同步游戏玩家的数据 */
-static void GamePlayer_SyncData( GamePlayer *player )
+void GamePlayer_SyncData( GamePlayer *player )
 {
 	int skill_id;
 	LCUI_BOOL stop_xmotion=FALSE, stop_ymotion=FALSE;
@@ -1167,57 +1124,17 @@ static void GamePlayer_SyncData( GamePlayer *player )
 static void GamePlayer_SetToReady( LCUI_Widget* widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_SetReady( player );
 }
 
-static void GamePlayer_SetStart( GamePlayer *player )
+/** 设置游戏角色为开打动作 */
+void GamePlayer_SetStart( GamePlayer *player )
 {
 	GamePlayer_ChangeState( player, STATE_START );
 	GameObject_AtActionDone( player->object, ACTION_START, GamePlayer_SetToReady );
-}
-
-int Game_Loop(void)
-{
-	int i, n_found;
-	/* 初始化游戏AI */
-	GameAI_Init();
-
-	/* 循环更新游戏数据 */
-	while(1) {
-		for(n_found=0,i=0; i<4; ++i) {
-			if( !player_data[i].enable
-			 || !player_data[i].local_control ) {
-				continue;
-			}
-			++n_found;
-			/* 如果该游戏玩家不是由人类控制的 */
-			if( !player_data[i].human_control ) {
-				GameAI_Control( player_data[i].id );
-			} else {
-				GamePlayer_SyncKeyControl( &player_data[i] );
-			}
-			GamePlayer_SyncData( &player_data[i] );
-			Widget_Update( player_data[i].object );
-			/* 将第一个有效的游戏角色设置为镜头焦点 */
-			if( n_found == 1 ) {
-				GameScene_SetCameraTarget( player_data[i].object );
-			}
-		}
-		/* 更新镜头 */
-		GameScene_UpdateCamera();
-		/* 处理攻击 */
-		Game_ProcAttack();
-		LCUI_MSleep( 10 );
-	}
-	return 0;
-}
-
-int Game_Pause(void)
-{
-	return 0;
 }
 
 static RoleInfo role_library[TOTAL_ROLE_NUM] = {
@@ -1273,69 +1190,24 @@ RoleInfo *Game_GetRoleInfo( int role_id )
 	return NULL;
 }
 
-/** 设置游戏角色 */
-int Game_SetGamePlayer( int id, int role_id, LCUI_BOOL human_control )
+/** 初始化演示对战 */
+int Game_InitDemoBattle(void)
 {
-	int i;
-	RoleInfo *p_info;
-	GamePlayer *player;
+	int ret;
 
-	player = GamePlayer_GetByID( id );
-	p_info = Game_GetRoleInfo( role_id );
-	if( !player || !p_info ) {
-		return -1;
+	ret = 0;//GameDemoScene_Init();
+	if( ret != 0 ) {
+		return ret;
 	}
-
-	player->type = p_info->type;
-	player->role_id = role_id;
-	player->property = p_info->property;
-	player->human_control = human_control;
-
-	for(i=0; i<p_info->total_skill && i<MAX_SKILL_NUM; ++i) {
-		GamePlayer_EnableSkill( player, p_info->skills[i] );
-		if( strcmp(p_info->skills[i], SKILLNAME_MACH_A_ATTACK) == 0 ) {
-			GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_A_ATTACK );
-		}
-		else if( strcmp(p_info->skills[i], SKILLNAME_MACH_B_ATTACK) == 0 ) {
-			GamePlayer_EnableSkill( player, SKILLNAME_JUMP_MACH_B_ATTACK );
-		}
-	}
-	/* 初始化角色动作动画 */
-	GamePlayer_InitAction( player, role_id );
-	/* 根据职业来选择需要启用的特殊技能 */
-	switch( player->type ) {
-	case PLAYER_TYPE_FIGHTER:
-		GamePlayer_EnableSkill( player, SKILLNAME_HUG_FRONT_PUT );
-		GamePlayer_EnableSkill( player, SKILLNAME_HUG_BACK_PUT );
-		break;
-	case PLAYER_TYPE_MARTIAL_ARTIST:
-		GamePlayer_EnableSkill( player, SKILLNAME_KNEEHIT );
-		GamePlayer_EnableSkill( player, SKILLNAME_ELBOW );
-		break;
-	case PLAYER_TYPE_KUNG_FU:
-		GamePlayer_EnableSkill( player, SKILLNAME_LIFT_JUMP );
-		GamePlayer_EnableSkill( player, SKILLNAME_HUG_JUMP );
-		break;
-	case PLAYER_TYPE_JUDO_MASTER:
-		GamePlayer_EnableSkill( player, SKILLNAME_JUDO );
-		GamePlayer_EnableSkill( player, SKILLNAME_BACK_JUDO );
-		break;
-	case PLAYER_TYPE_TIGER:
-		GamePlayer_EnableSkill( player, SKILLNAME_SPIN_DRILL );
-	default:
-		break;
-	}
-	return 0;
-}
-
-/** 启用一个游戏角色 */
-void Game_EnableGamePlayer( int id )
-{
-	GamePlayer *player;
-	player = GamePlayer_GetByID( id );
-	if( player ) {
-		player->enable = TRUE;
-	}
+	GamePlayer_Init( &player_data[0] );
+	GamePlayer_Init( &player_data[1] );
+	player_data[0].id = 1;
+	player_data[1].id = 2;
+	/* 将游戏对象放入战斗场景内 */
+	//GameObject_AddToContainer( player_data[0].object, GetGameDemoScene() );
+	//GameObject_AddToContainer( player_data[1].object, GetGameDemoScene() );
+	ret |= GameMsgLoopStart();
+	return ret;
 }
 
 /** 初始化对战 */
@@ -1379,6 +1251,40 @@ int Game_InitBattle(void)
 	/* 初始化在场景上显示的文本 */
 	InitSceneText( GetGameScene() );
 	return ret;
+}
+
+/** 开始演示对战 */
+void Game_StartDemoBattle( void )
+{
+	int i;
+	int x, y, start_x, start_y;
+	LCUI_Size scene_size;
+	return;
+	//GameDemoScene_GetLandSize( &scene_size );
+	//GameDemoScene_GetLandStartX( &start_x );
+	//GameDemoScene_GetLandStartY( &start_y );
+	x = scene_size.w/2 - 150;
+	GameObject_SetX( player_data[0].object, start_x+x );
+	GameObject_SetX( player_data[1].object, start_x+x+300 );
+	y = scene_size.h/2;
+	GameObject_SetY( player_data[0].object, start_y+y );
+	GameObject_SetY( player_data[1].object, start_y+y );
+	GamePlayer_SetRightOriented( &player_data[0] );
+	GamePlayer_SetLeftOriented( &player_data[1] );
+	GamePlayer_SetStart( &player_data[0] );
+	GamePlayer_SetStart( &player_data[1] );
+	/* 播放动作动画，并显示游戏角色 */
+	for(i=0; i<2; ++i) {
+		if( !player_data[i].enable ) {
+			continue;
+		}
+		/* 播放动作动画 */
+		GameObject_PlayAction( player_data[i].object );
+		/* 显示游戏角色 */
+		Widget_Show( player_data[i].object );
+	}
+	/* 显示场景 */
+	//Widget_Show( GetGameDemoScene() );
 }
 
 /** 开始对战 */

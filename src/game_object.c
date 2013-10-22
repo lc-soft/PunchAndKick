@@ -3,7 +3,6 @@
 #include LC_WIDGET_H
 
 #include "game_object.h"
-#include "game_space.h"
 
 #include <time.h>
 
@@ -50,9 +49,14 @@ typedef struct GameObject_ {
 
 	SpaceObject *space_obj;		/**< 对应的物理对象 */
 	LCUI_Widget *shadow;		/**< 对象的阴影 */
+	LCUI_BOOL shadow_visible;	/**< 阴影是否可见 */
 
 	LCUI_Queue victim;		/**< 当前攻击的受害者 */
 	LCUI_Queue attacker_info;	/**< 攻击者信息 */
+	LCUI_Queue *library;		/**< 所属库 */
+
+	LCUI_BOOL need_fill_color;	/**< 指示是否填充颜色 */
+	LCUI_RGB fill_color;		/**< 需要填充的颜色 */
 
 	void (*at_landing)(LCUI_Widget*);
 	void (*at_touch)(LCUI_Widget*,LCUI_Widget*);
@@ -64,11 +68,9 @@ typedef struct GameObject_ {
 	double target_z_speed;
 } GameObject;
 
+static LCUI_BOOL action_database_inited = FALSE;
 static LCUI_Queue action_database;
-static LCUI_Queue gameobject_stream;
 
-static int database_init = FALSE;
-static LCUI_Thread frame_proc_thread = -1;
 
 static void ActionData_Destroy( void *arg )
 {
@@ -91,11 +93,11 @@ LCUI_API ActionData* Action_Create( void )
 	Queue_Init( &action.frame, sizeof(ActionFrameData), NULL );
 	action.replay = TRUE;
 
-	if( !database_init ) {
+	if( !action_database_inited ) {
 		Queue_Init(	&action_database,
 				sizeof(ActionData),
 				ActionData_Destroy );
-		database_init = TRUE;
+		action_database_inited = TRUE;
 	}
 	Queue_Lock( &action_database );
 	/* 记录该动画至库中 */
@@ -466,10 +468,10 @@ LCUI_API LCUI_BOOL RangeBox_IsIntersect( RangeBox *range1, RangeBox *range2 )
 static int GameObject_ProcTouch( LCUI_Widget *widget )
 {
 	int i, n;
-	LCUI_Widget *tmp_obj;
 	GameObject *obj;
+	LCUI_Widget *tmp_obj;
 	RangeBox my_range, other_range;
-	
+
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	if( !obj->at_touch ) {
 		return -1;
@@ -477,9 +479,9 @@ static int GameObject_ProcTouch( LCUI_Widget *widget )
 	if( 0 > GameObject_GetHitRange( widget, &my_range ) ) {
 		return -2;
 	}
-	n = Queue_GetTotal( &gameobject_stream );
+	n = Queue_GetTotal( obj->library );
 	for(i=0; i<n; ++i) {
-		tmp_obj = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		tmp_obj = (LCUI_Widget*)Queue_Get( obj->library, i );
 		if( !tmp_obj || widget == tmp_obj ) {
 			continue;
 		}
@@ -555,14 +557,17 @@ static int GameObject_ProcAttack( LCUI_Widget *widget )
 {
 	int i, n;
 	LCUI_Widget *tmp_obj;
+	GameObject *obj_data;
 	RangeBox hit_range, attack_range;
+
 	/* 获取该对象的受攻击范围，若获取失败，则返回NULL */
 	if( 0 > GameObject_GetHitRange( widget, &hit_range ) ) {
 		return -1;
 	}
-	n = Queue_GetTotal( &gameobject_stream );
+	obj_data = (GameObject*)Widget_GetPrivData( widget );
+	n = Queue_GetTotal( obj_data->library );
 	for(i=0; i<n; ++i) {
-		tmp_obj = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		tmp_obj = (LCUI_Widget*)Queue_Get( obj_data->library, i );
 		if( !tmp_obj || widget == tmp_obj ) {
 			continue;
 		}
@@ -582,24 +587,39 @@ static int GameObject_ProcAttack( LCUI_Widget *widget )
 	return 0;
 }
 
-static void GameObjectProc_DispatchEvent( void )
+/** 创建游戏对象库 */
+LCUI_API int GameObjectLibrary_Create( LCUI_Queue *library )
+{
+	Queue_Init( library, sizeof(LCUI_Widget*), NULL );
+	Queue_UsingPointer( library );
+	return 0;
+}
+
+LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library )
 {
 	int i, n;
 	double z_acc;
 	GameObject *obj;
 	LCUI_Widget *widget;
-
-	n = Queue_GetTotal( &gameobject_stream );
+	int64_t lost_ms;
+	FILE *fp;
+	fp = fopen("debug.txt","a+");
+	fprintf( fp, "[%d]: %s(): %d: enter\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__ );
+	lost_ms = LCUI_GetTickCount();
+	n = Queue_GetTotal( library );
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d, n = %d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms), n );
 	for(i=0; i<n; ++i) {
-		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		widget = (LCUI_Widget*)Queue_Get( library, i );
 		obj = (GameObject*)Widget_GetPrivData( widget );
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		if( !obj || obj->state != ACTION_STATE_PLAY ) {
 			continue;
 		}
-		
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		GameObject_ProcAttack( widget );
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		GameObject_ProcTouch( widget );
-
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		/* 若在X轴的移动速度接近0 */
 		if( (obj->space_obj->x_acc > 0
 		 && obj->space_obj->x_speed >= 0 )
@@ -607,10 +627,13 @@ static void GameObjectProc_DispatchEvent( void )
 		 && obj->space_obj->x_speed <= 0 ) ) {
 			obj->space_obj->x_acc = 0;
 			obj->space_obj->x_speed = 0;
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 			Widget_Update( widget );
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 			if( obj->at_xspeed_to_zero ) {
 				obj->at_xspeed_to_zero( widget );
 			}
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		}
 		z_acc = obj->space_obj->z_acc/FRAMES_PER_SEC;
 		if( obj->at_zspeed ) {
@@ -627,6 +650,7 @@ static void GameObjectProc_DispatchEvent( void )
 				}
 			}
 		}
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		/* 若在Z轴的移动速度接近0 */
 		if( (obj->space_obj->z_acc > 0
 		 && obj->space_obj->z_speed >= -z_acc
@@ -639,6 +663,7 @@ static void GameObjectProc_DispatchEvent( void )
 				obj->at_zero_zspeed( widget );
 			}
 		}
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		/**
 		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
 		暂不考虑其他对象对当前对象的着陆点的影响。
@@ -658,13 +683,17 @@ static void GameObjectProc_DispatchEvent( void )
 				obj->at_landing( widget );
 			}
 		}
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		if( obj->at_move ) {
 			obj->at_move( widget );
 		}
 	}
+	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
+	fprintf( fp, "[%d]: %s(): %d: quit\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__ );
+	fclose(fp);
 }
 
-static void GameObjectPorc_UpdateObjectPos( LCUI_Widget *widget )
+static void GameObjectLibrary_UpdateObjectPos( LCUI_Widget *widget )
 {
 	int n, src_i=-1, des_i=-1;
 	int64_t time_left, tmp_time_left;
@@ -676,9 +705,9 @@ static void GameObjectPorc_UpdateObjectPos( LCUI_Widget *widget )
 	time_left -= p_obj->action_pause_ms;
 	time_left = p_obj->action_total_ms - time_left;
 
-	n = Queue_GetTotal( &gameobject_stream );
+	n = Queue_GetTotal( p_obj->library );
 	while(n--) {
-		tmp_widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, n );
+		tmp_widget = (LCUI_Widget*)Queue_Get( p_obj->library, n );
 		if( !tmp_widget ) {
 			continue;
 		}
@@ -704,28 +733,29 @@ static void GameObjectPorc_UpdateObjectPos( LCUI_Widget *widget )
 		}
 	}
 	if( des_i == -1 ) {
-		des_i = Queue_GetTotal( &gameobject_stream )-1;
+		des_i = Queue_GetTotal(p_obj->library)-1;
 	}
 	/* 若源位置和目标位置有效，则开始移动 */
 	if( src_i != -1 ) {
 		DEBUG_MSG("src: %d, des: %d\n", src_i, des_i );
-		Queue_Move( &gameobject_stream, des_i, src_i );
+		Queue_Move( p_obj->library, des_i, src_i );
 	}
 }
 
-static void GameObjectProc_UpdateAction(void)
+LCUI_API void GameObjectLibrary_UpdateAction( LCUI_Queue *library )
 {
+	FILE *fp;
 	int i, n, total;
 	long int lost_ms, frame_ms;
 	LCUI_BOOL need_draw = FALSE;
 	LCUI_Widget *widget;
 	GameObject *obj;
 	ActionFrameData *frame = NULL;
-
-	Queue_Lock( &gameobject_stream );
-	total = Queue_GetTotal( &gameobject_stream );
+	
+	Queue_Lock( library );
+	total = Queue_GetTotal( library );
 	for(i=0; i<total; ++i) {
-		widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		widget = (LCUI_Widget*)Queue_Get( library, i );
 		obj = (GameObject*)Widget_GetPrivData( widget );
 		/* 忽略无效或者未处于播放状态的对象 */
 		if( !obj || obj->state != ACTION_STATE_PLAY) {
@@ -749,7 +779,7 @@ static void GameObjectProc_UpdateAction(void)
 		if( lost_ms >= frame_ms ) {
 			++obj->n_frame;
 			obj->action_start_time = LCUI_GetTickCount();
-			GameObjectPorc_UpdateObjectPos( widget );
+			GameObjectLibrary_UpdateObjectPos( widget );
 			/* 标记这个对象需要重绘 */
 			need_draw = TRUE;
 		} else {
@@ -779,46 +809,7 @@ static void GameObjectProc_UpdateAction(void)
 			Widget_Draw( widget );
 		}
 	}
-	Queue_Unlock( &gameobject_stream );
-}
-
-static int one_frame_remain_time;
-static int64_t prev_frame_start_time;
-
-/** 初始化帧数控制 */
-static void FrameControl_Init( int ms_per_frame )
-{
-	one_frame_remain_time = ms_per_frame;
-	prev_frame_start_time = LCUI_GetTickCount();
-}
-
-/** 让当前帧停留一段时间 */
-static void FrameControl_RemainFrame(void)
-{
-	int n_ms;
-	int64_t current_time;
-
-	current_time = LCUI_GetTickCount();
-	n_ms = (int)(current_time - prev_frame_start_time);
-	if( n_ms < one_frame_remain_time ) {
-		n_ms = one_frame_remain_time - n_ms;
-		if( n_ms > 0 ) {
-			LCUI_MSleep( n_ms );
-		}
-	}
-	prev_frame_start_time += one_frame_remain_time;
-}
-
-static void GameObjectProc_Thread( void *arg )
-{
-	FrameControl_Init( 1000/FRAMES_PER_SEC );
-	while(LCUI_Active()) {
-		GameSpace_Step();
-		GameObjectProc_UpdateAction();
-		GameObjectProc_DispatchEvent();
-		FrameControl_RemainFrame();
-	}
-	LCUIThread_Exit(NULL);
+	Queue_Unlock( library );
 }
 
 /**
@@ -841,7 +832,7 @@ LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 	if( p_rec == NULL ) {
 		return -1;
 	}
-	Queue_Lock( &gameobject_stream );
+	Queue_Lock( obj->library );
 	obj->current = p_rec;
 	obj->n_frame = 0;
 	obj->action_start_time = LCUI_GetTickCount();
@@ -850,11 +841,11 @@ LCUI_API int GameObject_SwitchAction(	LCUI_Widget *widget,
 	if( obj->state == ACTION_STATE_PAUSE ) {
 		obj->action_pause_time = LCUI_GetTickCount();
 	}
-	GameObjectPorc_UpdateObjectPos( widget );
+	GameObjectLibrary_UpdateObjectPos( widget );
 	if( Action_IsNewAttack( obj->current->action, obj->n_frame ) ) {
 		GameObject_ClearAttack( widget );
 	}
-	Queue_Unlock( &gameobject_stream );
+	Queue_Unlock( obj->library );
 	/* 标记数据为无效，以根据当前动作动画来更新数据 */
 	obj->data_valid = FALSE;
 	Widget_Draw(widget);
@@ -907,7 +898,7 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
 			return -1;
 		}
 	}
-	Queue_Lock( &gameobject_stream );
+	Queue_Lock( obj->library );
 	if( obj->state != ACTION_STATE_PLAY ) {
 		obj->state = ACTION_STATE_PLAY;
 		obj->action_pause_ms = (long int)LCUI_GetTicks( obj->action_pause_time );
@@ -915,8 +906,8 @@ LCUI_API int GameObject_PlayAction( LCUI_Widget *widget )
 	obj->n_frame = 0;
 	obj->action_start_time = LCUI_GetTickCount();
 	obj->action_total_ms = Action_GetFrameSleepTime( obj->current->action, 0 );
-	GameObjectPorc_UpdateObjectPos( widget );
-	Queue_Unlock( &gameobject_stream );
+	GameObjectLibrary_UpdateObjectPos( widget );
+	Queue_Unlock( obj->library );
 	Widget_Draw( widget );
 	if( obj->current->update ) {
 		obj->current->update( widget );
@@ -933,14 +924,14 @@ LCUI_API int GameObject_PauseAction( LCUI_Widget *widget )
 	if( obj->current == NULL ) {
 		return -1;
 	}
-	Queue_Lock( &gameobject_stream );
+	Queue_Lock( obj->library );
 	if( obj->state == ACTION_STATE_PLAY ) {
 		obj->action_pause_time = LCUI_GetTickCount();
 		obj->action_pause_ms = 0;
 		obj->state = ACTION_STATE_PAUSE;
-		GameObjectPorc_UpdateObjectPos( widget );
+		GameObjectLibrary_UpdateObjectPos( widget );
 	}
-	Queue_Unlock( &gameobject_stream );
+	Queue_Unlock( obj->library );
 	return 0;
 }
 
@@ -1042,20 +1033,19 @@ static void GameObject_ExecInit( LCUI_Widget *widget )
 	obj->global_center_x = 0;
 	obj->global_bottom_line_y = 0;
 	obj->horiz_flip = FALSE;
-	obj->space_obj = SpaceObject_New(0,0,0,0,0,0 );
+	obj->space_obj = NULL;
 	obj->shadow = Widget_New(NULL);
+	obj->shadow_visible = TRUE;
+	obj->need_fill_color = FALSE;
+	obj->fill_color.red = 0;
+	obj->fill_color.green = 0;
+	obj->fill_color.blue = 0;
 
 	Queue_Init( &obj->action_list, sizeof(ActionRec), NULL );
 	Queue_Init( &obj->victim, sizeof(LCUI_Widget*), NULL );
 	Queue_Init( &obj->attacker_info, sizeof(AttackerInfo), NULL );
 	Queue_UsingPointer( &obj->victim );
 
-	if( frame_proc_thread == -1 ) {
-		Queue_Init( &gameobject_stream, sizeof(LCUI_Widget*), NULL );
-		Queue_UsingPointer( &gameobject_stream );
-		LCUIThread_Create( &frame_proc_thread, GameObjectProc_Thread, NULL );
-	}
-	Queue_AddPointer( &gameobject_stream, widget );
 	obj->at_landing = NULL;
 	obj->at_touch = NULL;
 	obj->at_under_attack = NULL;
@@ -1077,7 +1067,11 @@ static void GameObject_ExecShow( LCUI_Widget *widget )
 {
 	GameObject *obj;
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	Widget_Show( obj->shadow );
+	if( obj->shadow_visible ) {
+		Widget_Show( obj->shadow );
+	} else {
+		Widget_Hide( obj->shadow );
+	}
 }
 
 static void GameObject_ExecDestroy( LCUI_Widget *widget )
@@ -1092,16 +1086,16 @@ static void GameObject_ExecDestroy( LCUI_Widget *widget )
 	Queue_Destroy( &obj->action_list );
 	Queue_Destroy( &obj->victim );
 	Queue_Destroy( &obj->attacker_info );
-	Queue_Lock( &gameobject_stream );
-	n = Queue_GetTotal( &gameobject_stream );
+	Queue_Lock( obj->library );
+	n = Queue_GetTotal( obj->library );
 	for(i=0; i<n; ++i) {
-		tmp_widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		tmp_widget = (LCUI_Widget*)Queue_Get( obj->library, i );
 		if( tmp_widget == widget ) {
-			Queue_DeletePointer( &gameobject_stream, i );
+			Queue_DeletePointer( obj->library, i );
 			break;
 		}
 	}
-	Queue_Unlock( &gameobject_stream );
+	Queue_Unlock( obj->library );
 }
 
 /** 获取当前动作信息 */
@@ -1312,6 +1306,9 @@ static void GameObject_ExecDraw( LCUI_Widget *widget )
 		pos.x = obj->global_center_x - pos.x;
 		Graph_Replace( graph, &frame->graph, pos );
 	}
+	if( obj->need_fill_color ) {
+		Graph_FillColor( graph, obj->fill_color );
+	}
 }
 
 /** 设置对象是否进行水平翻转 */
@@ -1476,7 +1473,6 @@ LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z )
 LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr )
 {
 	GameObject *obj;
-
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	Widget_Container_Add( ctnr, widget );
 	Widget_Container_Add( ctnr, obj->shadow );
@@ -1486,7 +1482,6 @@ LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr 
 LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x )
 {
 	GameObject *obj;
-
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	obj->space_obj->x = x;
 }
@@ -1495,26 +1490,47 @@ LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x )
 LCUI_API double GameObject_GetX( LCUI_Widget *widget )
 {
 	GameObject *obj;
-
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	return obj->space_obj->x;
+}
+
+/** 设置填充颜色 */
+LCUI_API void GameObject_SetFillColor(	LCUI_Widget *widget,
+					LCUI_BOOL flag, 
+					LCUI_RGB color )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->fill_color = color;
+	obj->need_fill_color = flag;
 }
 
 /** 设置游戏对象的阴影图像 */
 LCUI_API void GameObject_SetShadow( LCUI_Widget *widget, LCUI_Graph img_shadow )
 {
 	GameObject *obj;
-
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	Widget_Resize( obj->shadow, Graph_GetSize(&img_shadow) );
 	Widget_SetBackgroundImage( obj->shadow, &img_shadow );
+}
+
+/** 设置游戏对象的阴影是否可见 */
+LCUI_API void GameObject_SetShadowVisible( LCUI_Widget *widget, LCUI_BOOL visible )
+{
+	GameObject *obj;
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->shadow_visible = visible;
+	if( visible ) {
+		Widget_Show( obj->shadow );
+	} else {
+		Widget_Hide( obj->shadow );
+	}
 }
 
 /** 清空攻击记录 */
 LCUI_API void GameObject_ClearAttack( LCUI_Widget *widget )
 {
 	GameObject *obj;
-
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	while( Queue_Delete( &obj->victim, 0 ) );
 }
@@ -1551,10 +1567,10 @@ LCUI_API LCUI_Widget* GameObject_GetObjectInRange(
 	range.z = (int)obj1->space_obj->z + range.z;
 	range.z_width = range.z_width;
 	
-	n = Queue_GetTotal( &gameobject_stream );
+	n = Queue_GetTotal( obj1->library );
 	/* 遍历其它游戏对象 */
 	for(i=0; i<n; ++i) {
-		tmp_widget = (LCUI_Widget*)Queue_Get( &gameobject_stream, i );
+		tmp_widget = (LCUI_Widget*)Queue_Get( obj1->library, i );
 		obj2 = (GameObject*)Widget_GetPrivData( tmp_widget );
 		/* 忽略其它无效对象和当前对象 */
 		if( obj2 == NULL || tmp_widget == widget ) {
@@ -1660,11 +1676,19 @@ LCUI_API LCUI_Widget* GameObject_GetObjectInAttackRange(
 	return GameObject_GetObjectInRange( widget, range, specific_action, action_id );
 }
 
-LCUI_API LCUI_Widget* GameObject_New(void)
+LCUI_API LCUI_Widget* GameObject_New(	GameSpaceData *space, 
+					LCUI_Queue *library )
 {
-	return Widget_New("GameObject");
-}
+	GameObject *obj;
+	LCUI_Widget *widget;
 
+	widget = Widget_New("GameObject");
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	obj->space_obj = SpaceObject_New( space, 0,0,0,0,0,0 );
+	obj->library = library;
+	Queue_AddPointer( library, widget );
+	return widget;
+}
 
 LCUI_API void GameObject_Register(void)
 {

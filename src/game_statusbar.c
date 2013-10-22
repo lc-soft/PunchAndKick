@@ -191,6 +191,9 @@ void StatusBar_SetMaxHealth( LCUI_Widget *widget, int value )
 {
 	StatusBarData *data;
 	data = (StatusBarData*)Widget_GetPrivData( widget );
+	if( !data ) {
+		return;
+	}
 	LifeBar_SetMaxHP( data->lifebar, value );
 	StatusBar_UpdateLifeBarNum( widget );
 }
@@ -200,6 +203,9 @@ void StatusBar_SetHealth( LCUI_Widget *widget, int value )
 {
 	StatusBarData *data;
 	data = (StatusBarData*)Widget_GetPrivData( widget );
+	if( !data ) {
+		return;
+	}
 	LifeBar_SetHP( data->lifebar, value );
 	StatusBar_UpdateLifeBarNum( widget );
 }

@@ -3,52 +3,47 @@
 
 #include "game_space.h"
 
-static LCUI_BOOL init = FALSE;
-static LCUI_Queue space_object_list;
-static int space_x = 0, space_x_width = 600, space_y = 0, space_y_width = 600;
-
-/** 设置空间边界  */
-void GameSpace_SetBound( int x, int x_width, int y, int y_width )
+/** 设置空间边界 */
+void GameSpace_SetBound( GameSpaceData *space, int x, int x_width, int y, int y_width )
 {
-	space_x = x;
-	space_y = y;
-	space_x_width = x_width;
-	space_y_width = y_width;
+	space->space_x = x;
+	space->space_y = y;
+	space->space_x_width = x_width;
+	space->space_y_width = y_width;
 }
 
 /** 获取Y轴空间范围 */
-void GameSpace_GetXBound( int* x, int* x_width )
+void GameSpace_GetXBound( GameSpaceData *space, int* x, int* x_width )
 {
 	if( x ) {
-		*x = space_x;
+		*x = space->space_x;
 	}
 	if( x_width ) {
-		*x_width = space_x_width;
+		*x_width = space->space_x_width;
 	}
 }
 
 /** 获取X轴空间范围 */
-void GameSpace_GetYBound( int* y, int* y_width )
+void GameSpace_GetYBound( GameSpaceData *space, int* y, int* y_width )
 {
 	if( y ) {
-		*y = space_y;
+		*y = space->space_y;
 	}
 	if( y_width ) {
-		*y_width = space_y_width;
+		*y_width = space->space_y_width;
 	}
 }
 
 /** 处理空间内的对象的运动 */
-void GameSpace_Step( void )
+void GameSpace_Step( GameSpaceData *space )
 {
 	int i, n;
 	SpaceObject *obj;
 
-	Queue_Lock( &space_object_list );
-	n = Queue_GetTotal( &space_object_list );
+	Queue_Lock( &space->space_object_list );
+	n = Queue_GetTotal( &space->space_object_list );
 	for(i=0; i<n; ++i) {
-		obj = (SpaceObject*)Queue_Get(
-				&space_object_list, i );
+		obj = (SpaceObject*)Queue_Get( &space->space_object_list, i );
 		if( !obj ) {
 			continue;
 		}
@@ -89,22 +84,30 @@ void GameSpace_Step( void )
 		obj->x += (obj->x_speed/FRAMES_PER_SEC);
 		obj->y += (obj->y_speed/FRAMES_PER_SEC);
 		obj->z += (obj->z_speed/FRAMES_PER_SEC);
-		if( obj->x < space_x ) {
-			obj->x = space_x;
+		if( obj->x < space->space_x ) {
+			obj->x = space->space_x;
 		}
-		if( obj->x >= space_x + space_x_width ) {
-			obj->x = space_x + space_x_width - 1;
+		if( obj->x >= space->space_x + space->space_x_width ) {
+			obj->x = space->space_x + space->space_x_width - 1;
 		}
-		if( obj->y < space_y ) {
-			obj->y = space_y;
+		if( obj->y < space->space_y ) {
+			obj->y = space->space_y;
 		}
-		if( obj->y >= space_y + space_y_width ) {
-			obj->y = space_y + space_y_width - 1;
+		if( obj->y >= space->space_y + space->space_y_width ) {
+			obj->y = space->space_y + space->space_y_width - 1;
 		}
 	}
-	Queue_Unlock( &space_object_list );
+	Queue_Unlock( &space->space_object_list );
 }
 
+/** 创建一个游戏空间 */
+GameSpaceData *GameSpace_New(void)
+{
+	GameSpaceData *space;
+	space = (GameSpaceData*)malloc( sizeof(GameSpaceData) );
+	Queue_Init( &space->space_object_list, sizeof(SpaceObject), NULL ); 
+	return space;
+}
 
 /**
 创建一个新的对象
@@ -123,7 +126,7 @@ void GameSpace_Step( void )
 @return
 	创建成功则返回该对象，失败则返回NULL
 */
-SpaceObject* SpaceObject_New( int x, int y, int z, int x_width, int y_width, int z_width )
+SpaceObject* SpaceObject_New( GameSpaceData *space, int x, int y, int z, int x_width, int y_width, int z_width )
 {
 	int pos;
 	SpaceObject *p, obj;
@@ -140,14 +143,10 @@ SpaceObject* SpaceObject_New( int x, int y, int z, int x_width, int y_width, int
 	obj.x_acc = 0;
 	obj.y_acc = 0;
 	obj.z_acc = 0;
-	if( !init ) {
-		Queue_Init( &space_object_list, sizeof(SpaceObject), NULL ); 
-		init = TRUE;
-	}
-	Queue_Lock( &space_object_list );
-	pos = Queue_Add( &space_object_list, &obj );
-	p = (SpaceObject*)Queue_Get( &space_object_list, pos );
-	Queue_Unlock( &space_object_list );
+	Queue_Lock( &space->space_object_list );
+	pos = Queue_Add( &space->space_object_list, &obj );
+	p = (SpaceObject*)Queue_Get( &space->space_object_list, pos );
+	Queue_Unlock( &space->space_object_list );
 	return p;
 }
 
@@ -156,14 +155,14 @@ void SpaceObject_Destroy( SpaceObject* object )
 	int i, n;
 	SpaceObject* p;
 
-	Queue_Lock( &space_object_list );
-	n = Queue_GetTotal( &space_object_list );
+	Queue_Lock( &object->space->space_object_list );
+	n = Queue_GetTotal( &object->space->space_object_list );
 	for(i=0; i<n; ++i) {
-		p = (SpaceObject*)Queue_Get( &space_object_list, i );
+		p = (SpaceObject*)Queue_Get( &object->space->space_object_list, i );
 		if( p == object ) {
-			Queue_Delete( &space_object_list, i );
+			Queue_Delete( &object->space->space_object_list, i );
 			break;
 		}
 	}
-	Queue_Unlock( &space_object_list );
+	Queue_Unlock( &object->space->space_object_list );
 }

@@ -29,6 +29,7 @@ typedef union GameMsgBuff_ {
 
 
 typedef struct GameMsg {
+	int battle_id;		/**< 对战ID */
 	int player_id;		/**< 针对的角色的ID */
 	GameMsgBuff msg;	/**< 消息内容 */
 } GameMsg;
