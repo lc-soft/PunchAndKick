@@ -24,11 +24,6 @@ typedef struct AttackInfo_ {
 static LCUI_Queue attack_record;
 static LCUI_Queue attack_library;
 
-void AttackLibrary_Init(void)
-{
-	Queue_Init( &attack_library, sizeof(AttackInfo), NULL );
-}
-
 static AttackInfo *AttackLibrary_GetInfo( const char *attack_type_name )
 {
 	AttackInfo *p_info;
@@ -148,6 +143,11 @@ void Game_ProcAttack(void)
 		} else {
 			true_damage = 0;
 		}
+		/* 如果该受害者是无敌的，则不扣血 */
+		if( p_data->victim->is_invincible ) {
+			Queue_Delete( &attack_record, 0 );
+			continue;
+		}
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= true_damage;
 		if( p_data->victim->property.cur_hp < 0 ) {
@@ -156,7 +156,7 @@ void Game_ProcAttack(void)
 		/* 设置状态栏上显示的血量 */
 		StatusBar_SetHealth(	p_data->victim->statusbar,
 					p_data->victim->property.cur_hp );
-		/* 删除该攻击记录 */
+			/* 删除该攻击记录 */
 		Queue_Delete( &attack_record, 0 );
 	}
 	Queue_Unlock( &attack_record );
@@ -165,6 +165,11 @@ void Game_ProcAttack(void)
 /** 初始化攻击记录 */
 void Game_InitAttackRecord(void)
 {
-	AttackLibrary_Init();
+	Queue_Init( &attack_library, sizeof(AttackInfo), NULL );
 	Queue_Init( &attack_record, sizeof(AttackRecord), NULL );
+}
+
+void Game_DestroyAttackRecord(void)
+{
+
 }
