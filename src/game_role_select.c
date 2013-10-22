@@ -161,7 +161,7 @@ void Game_InitRoleSelectBox(void)
 	}
 	window = Widget_New("window");
 	role_image_box = Widget_New(NULL);
-	role_image = GameObject_New();
+	role_image = NULL;//GameObject_New();
 	btn_prev_role = Widget_New("button");
 	btn_next_role = Widget_New("button");
 	btn_select_role = Widget_New("button");
