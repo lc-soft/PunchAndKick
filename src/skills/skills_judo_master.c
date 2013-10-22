@@ -87,7 +87,7 @@ LCUI_BOOL CanUseBackJudo( GamePlayer *player )
 static void SelfAtSkillDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_SetReady( player );
@@ -108,7 +108,7 @@ static void Judo_SetTargetLying( GamePlayer *player )
 static void AtTargetLanding( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LYING_HIT );
 	GameObject_AtActionDone( widget, ACTION_LYING_HIT, NULL );
@@ -127,8 +127,8 @@ static void Judo_ProcTargetTouchAttack(	LCUI_Widget *self, LCUI_Widget *other )
 {
 	GamePlayer *player, *other_player;
 
-	player = GamePlayer_GetPlayerByWidget( self );
-	other_player = GamePlayer_GetPlayerByWidget( other );
+	player = GameBattle_GetPlayerByWidget( self );
+	other_player = GameBattle_GetPlayerByWidget( other );
 	if( !player || !other_player ) {
 		return;
 	}
@@ -158,7 +158,7 @@ static void Judo_AtActionUpdate( LCUI_Widget *widget )
 	double x, z, y;
 	GamePlayer *player, *other_player;
 	
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	other_player = player->other;
 	if( !other_player ) {
 		return;
@@ -245,7 +245,7 @@ static void TargetStartLying( LCUI_Widget *widget )
 	int ret;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( player->other ) {
 		Game_RecordAttack(	player->other, ATK_BACK_JUDO, 
 					player, STATE_HIT_FLY_FALL );
@@ -265,7 +265,7 @@ static void TargetStartLying( LCUI_Widget *widget )
 static void ChangeTargetAction( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY_FALL );
 	GamePlayer_LockAction( player );
@@ -278,8 +278,8 @@ static void BackJudo_ProcTargetTouchAttack(	LCUI_Widget *self,
 {
 	GamePlayer *player, *other_player;
 
-	player = GamePlayer_GetPlayerByWidget( self );
-	other_player = GamePlayer_GetPlayerByWidget( other );
+	player = GameBattle_GetPlayerByWidget( self );
+	other_player = GameBattle_GetPlayerByWidget( other );
 	if( !player || !other_player ) {
 		return;
 	}
@@ -313,7 +313,7 @@ static void BackJudo_AtActionUpdate( LCUI_Widget *widget )
 	double x, z, x_speed, x_acc;
 	GamePlayer *player, *other_player;
 	
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	other_player = player->other;
 	if( !other_player ) {
 		return;

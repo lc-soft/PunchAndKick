@@ -65,7 +65,7 @@ static LCUI_BOOL CanUseHugJump( GamePlayer *player )
 static void SelfAtSkillDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( player->other ) {
 		player->other->other = NULL;
 	}
@@ -81,7 +81,7 @@ static void TargetAtHugJumpDone( LCUI_Widget *widget )
 	int ret = 0;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	ret = GamePlayer_SetLying( player );
 	GamePlayer_LockAction( player );
@@ -95,7 +95,7 @@ static void TargetStartBounce( LCUI_Widget *widget )
 {
 	double x_speed;
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		x_speed = XSPEED_BOUNCE;
 	} else {
@@ -108,7 +108,7 @@ static void TargetStartBounce( LCUI_Widget *widget )
 static void SelfStartBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GameObject_AtActionDone( widget, ACTION_SQUAT, NULL );
@@ -131,7 +131,7 @@ static void GamePlayer_AtHugJumpUpdate( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( GameObject_GetCurrentActionFrameNumber( player->object) != 3 ) {
 		return;
 	}
@@ -216,7 +216,7 @@ static void SelfAtLiftJumpDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_SetActionTimeOut( player, 100, GamePlayer_StartStand );
 	if( player->other ) {
 		Game_RecordAttack( player, ATK_LIFT_JUMP, player->other, STATE_LYING );
@@ -231,7 +231,7 @@ static void SelfStartFall( LCUI_Widget *widget )
 	int z_index, h1, h2;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( !player->other ) {
 		GamePlayer_SetFall( player );
 	}

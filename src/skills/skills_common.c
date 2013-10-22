@@ -213,8 +213,7 @@ static void AttackEffect_ShortHitFly( GamePlayer *attacker, GamePlayer *victim )
 static void GamePlayer_AtHitDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	switch( player->state ) {
 	case STATE_LYING_HIT:
 		GamePlayer_SetLying( player );
@@ -335,7 +334,7 @@ static void GamePlayer_CancelStateAtBeCatch( GamePlayer *player )
 /** 在空中受到攻击后 */
 static void GamePlayer_AtAirHitDone( LCUI_Widget *widget )
 {
-	GamePlayer_SetFall( GamePlayer_GetPlayerByWidget( widget ) );
+	GamePlayer_SetFall( GameBattle_GetPlayerByWidget( widget ) );
 }
 
 /** 设置游戏角色被攻击命中 */
@@ -489,7 +488,7 @@ static void GamePlayer_CancelStateAtBeLift( GamePlayer *player )
 static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	/* 停止移动 */
 	GameObject_SetYSpeed( widget, 0 );
 	GameObject_SetXSpeed( widget, 0 );
@@ -506,7 +505,7 @@ static void GamePlayer_AtHitFlyDone( LCUI_Widget *widget )
 void GamePlayer_AtFrontalHitFlyDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		GameObject_SetXSpeed( player->object, XSPEED_X_HIT_FLY2 );
 	} else {
@@ -519,7 +518,7 @@ void GamePlayer_AtFrontalHitFlyDone( LCUI_Widget *widget )
 static void GamePlayer_AtHitFlyFall( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT_FLY_FALL );
 	GamePlayer_LockAction( player );
@@ -530,7 +529,7 @@ static void GamePlayer_AtHitFlyFall( LCUI_Widget *widget )
 static void GamePlayer_AtHitFlyMaxHeight( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LYING_HIT );
 	GameObject_AtActionDone( widget, ACTION_LYING_HIT, NULL );
@@ -542,7 +541,7 @@ static void GamePlayer_AtHitFlyMaxHeight( LCUI_Widget *widget )
 static void GameObject_AtBumpBufferDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 }
@@ -833,7 +832,7 @@ static void GamePlayer_StartLeftForwardRoll( LCUI_Widget *widget )
 {
 	double speed;
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_SetLeftOriented( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_F_ROLL );
@@ -850,7 +849,7 @@ static void GamePlayer_StartRightForwardRoll( LCUI_Widget *widget )
 	double speed;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_SetRightOriented( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_F_ROLL );
@@ -866,7 +865,7 @@ static void GamePlayer_StartLeftBackwardRoll( LCUI_Widget *widget )
 	double speed;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_B_ROLL );
 	GamePlayer_LockAction( player );
@@ -881,7 +880,7 @@ static void GamePlayer_StartRightBackwardRoll( LCUI_Widget *widget )
 	double speed;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_B_ROLL );
 	GamePlayer_LockAction( player );
@@ -1074,7 +1073,7 @@ static LCUI_BOOL GamePlayerStateCanThrow( GamePlayer *player )
 static void GamePlayer_AtBeLiftAttackDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_SetAttackTypeName( player, ATK_NONE );
 	GamePlayer_ChangeState( player, STATE_BE_LIFT_STANCE );
@@ -1083,8 +1082,10 @@ static void GamePlayer_AtBeLiftAttackDone( LCUI_Widget *widget )
 /** 在攻击结束时  */
 static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 {
+	int64_t lost_ms;
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	lost_ms = LCUI_GetTickCount();
+	player = GameBattle_GetPlayerByWidget( widget );
 	GameObject_AtXSpeedToZero( widget, 0, NULL );
 	GamePlayer_SetAttackTypeName( player, ATK_NONE );
 	GamePlayer_ResetAttackControl( player );
@@ -1350,22 +1351,22 @@ static GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_LYING );
 	if( widget ) {
-		return GamePlayer_GetPlayerByWidget( widget );;
+		return GameBattle_GetPlayerByWidget( widget );;
 	}
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_TUMMY );
 	if( widget ) {
-		return GamePlayer_GetPlayerByWidget( widget );
+		return GameBattle_GetPlayerByWidget( widget );
 	}
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_LYING_HIT );
 	if( widget ) {
-		return GamePlayer_GetPlayerByWidget( widget );
+		return GameBattle_GetPlayerByWidget( widget );
 	}
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_TUMMY_HIT );
 	if( widget ) {
-		return GamePlayer_GetPlayerByWidget( widget );
+		return GameBattle_GetPlayerByWidget( widget );
 	}
 	return NULL;
 }
@@ -1496,7 +1497,7 @@ static LCUI_BOOL CommonSkill_CanBLift( GamePlayer *player )
 static void GamePlayer_SetBeLiftStance( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( player->state != STATE_BE_LIFT_SQUAT ) {
 		return;
 	}
@@ -1517,7 +1518,7 @@ static void GamePlayer_BeLiftStartStand( GamePlayer *player )
 static void GamePlayer_AtJumpDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_SetReady( player );
@@ -1535,7 +1536,7 @@ static void GamePlayer_AtLandingSuqatDone( GamePlayer *player )
 static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_ResetAttackControl( player );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
@@ -1575,7 +1576,7 @@ static void GamePlayer_UpdateLiftPosition( LCUI_Widget *widget )
 	GamePlayer *player, *other_player;
 	LCUI_Widget *other;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	other_player = player->other;
 	/* 如果没有举起者，或自己不是被举起者 */
 	if( !player->other ) {
@@ -1614,7 +1615,7 @@ static void GamePlayer_UpdateLiftPosition( LCUI_Widget *widget )
 static void GamePlayer_AtLiftDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	if( !player->other ) {
@@ -1689,7 +1690,7 @@ static void CommonSkill_StartLift( GamePlayer *player )
 static void GamePlayer_AtGroundAttackDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GamePlayer_LockAction( player );
@@ -1702,7 +1703,7 @@ static void CommonSkill_JumpTreadStep2( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP_STOMP );
 	GamePlayer_LockAction( player );
@@ -1716,7 +1717,7 @@ static void CommonSkill_JumpTreadStep1( LCUI_Widget *widget )
 	double z_speed, z_acc;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	z_acc = -ZACC_JUMP;
 	z_speed = ZSPEED_JUMP;
 	GamePlayer_UnlockAction( player );
@@ -1744,7 +1745,7 @@ static void CommonSkill_JumpElbowStep2( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_JUMP_ELBOW );
 	GamePlayer_LockAction( player );
@@ -1758,7 +1759,7 @@ static void CommonSkill_JumpElbowStep1( LCUI_Widget *widget )
 	double z_speed, z_acc;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	z_acc = -ZACC_JUMP;
 	z_speed = ZSPEED_JUMP;
 	GamePlayer_UnlockAction( player );
@@ -1953,7 +1954,7 @@ static LCUI_BOOL CommonSkill_CanUseBThrow( GamePlayer *player )
 static void GamePlayer_BeLiftPassiveStartJump( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	player->other = NULL;
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SJUMP );
@@ -1962,7 +1963,7 @@ static void GamePlayer_BeLiftPassiveStartJump( LCUI_Widget *widget )
 static void GamePlayer_AtThrowLanding( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
 	GamePlayer_StartStand( player );
@@ -1972,7 +1973,7 @@ static void GamePlayer_AtThrowLanding( LCUI_Widget *widget )
 static void GamePlayer_AtThrowUpFlyDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_StopXMotion( player );
 	GameObject_AtTouch( widget, NULL );
 	if( GamePlayer_SetLying( player ) == 0 ) {
@@ -1987,7 +1988,7 @@ static void GamePlayer_AtThrowUpFlyDone( LCUI_Widget *widget )
 static void GamePlayer_LandingBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_ReduceSpeed( player, 50 );
 	Game_RecordAttack( player->other, ATK_THROW, player, player->state );
 	player->other = NULL;
@@ -2002,8 +2003,8 @@ static void GamePlayer_ProcThrowFlyTouch( LCUI_Widget *self, LCUI_Widget *other 
 {
 	GamePlayer *player, *other_player;
 
-	player = GamePlayer_GetPlayerByWidget( self );
-	other_player = GamePlayer_GetPlayerByWidget( other );
+	player = GameBattle_GetPlayerByWidget( self );
+	other_player = GameBattle_GetPlayerByWidget( other );
 	if( !player || !other_player ) {
 		return;
 	}
@@ -2042,7 +2043,7 @@ static void GamePlayer_AtThrowDone( LCUI_Widget *widget )
 	GamePlayer *player;
 	double z, z_speed, z_acc;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	z = GameObject_GetZ( widget );
 	z_speed = GameObject_GetZSpeed( widget );
 	z_acc = GameObject_GetZAcc( widget );
@@ -2062,7 +2063,7 @@ static void GamePlayer_AtBeThrowDownDone( LCUI_Widget *widget )
 	int ret = 0;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	switch( player->state ) {
 	case STATE_TUMMY:
@@ -2087,7 +2088,7 @@ static void GamePlayer_AtBeThrowDownLanding( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	if( player->state == STATE_BE_LIFT_TUMMY ) {
 		GamePlayer_ChangeState( player, STATE_TUMMY_HIT );
@@ -2536,7 +2537,7 @@ static LCUI_BOOL CommonSkill_CanUseRideBAttack( GamePlayer *player )
 static void GamePlayer_AtRideAttackDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	/* 如果还骑在对方身上 */
 	if( player->other ) {
@@ -2560,7 +2561,7 @@ static void CommonSkill_StartRideAAttack( GamePlayer *player )
 static void GamePlayer_AtRideJumpDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( !player->other ) {
 		GamePlayer_StartStand( player );
 		return;
@@ -2633,7 +2634,7 @@ static LCUI_BOOL CommonSkill_CanUseGuillotine( GamePlayer *player )
 static void GamePlayer_AtBigElbowStep2( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GameObject_AtZeroZSpeed( widget, NULL );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
@@ -2709,7 +2710,7 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 	GamePlayer *player, *other_player;
 	RangeBox head_range, foot_range;
 	
-	player = GamePlayer_GetPlayerByWidget( self );
+	player = GameBattle_GetPlayerByWidget( self );
 	if( player->state != STATE_JUMP
 	 && player->state != STATE_SJUMP ) {
 		GameObject_AtTouch( self, NULL );
@@ -2734,7 +2735,7 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 	if( !RangeBox_IsIntersect( &foot_range, &head_range ) ) {
 		return;
 	}
-	other_player = GamePlayer_GetPlayerByWidget( other );
+	other_player = GameBattle_GetPlayerByWidget( other );
 	switch( other_player->state ) {
 	case STATE_READY:
 	case STATE_STANCE:
@@ -2772,7 +2773,7 @@ static void GamePlayer_PorcJumpTouch( LCUI_Widget *self, LCUI_Widget *other )
 static void GamePlayer_AtSquatActionDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_ChangeState( player, STATE_JUMP );
 	/* 在跳跃过程中检测是否有碰撞 */
 	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
@@ -2830,7 +2831,7 @@ static void CommonSkill_StartActiveJumpOnBeLift( GamePlayer *player )
 static void GamePlayer_SetLiftFall( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	/* 撤销响应 */
 	GameObject_AtZeroZSpeed( player->object, NULL );
 	if( player->other == NULL ) {
@@ -2844,7 +2845,7 @@ static void GamePlayer_SetLiftFall( LCUI_Widget *widget )
 static void GamePlayer_AtLiftLanding( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( player->state == STATE_THROW ) {
 		GamePlayer_ReduceSpeed( player, 75 );
 	}
@@ -2869,7 +2870,7 @@ static void CommonSkill_StartJumpOnLift( GamePlayer *player )
 static void GamePlayer_AtSprintSquatDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_ChangeState( player, STATE_SJUMP );
 	GameObject_AtTouch( widget, GamePlayer_PorcJumpTouch );
 }
@@ -2967,8 +2968,8 @@ static void GamePlayer_ProcWeakWalkAttack( LCUI_Widget *self, LCUI_Widget *other
 	double x1, x2;
 	GamePlayer *player, *other_player;
 
-	player = GamePlayer_GetPlayerByWidget( self );
-	other_player = GamePlayer_GetPlayerByWidget( other );
+	player = GameBattle_GetPlayerByWidget( self );
+	other_player = GameBattle_GetPlayerByWidget( other );
 	if( !player || !other_player ) {
 		return;
 	}
@@ -3108,7 +3109,7 @@ static void CommonSkill_StartSpinKickDown( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	/* 增加下落的速度 */
 	GameObject_SetZSpeed( player->object, -ZSPEED_JUMP*2.5 );
 	GameObject_SetZAcc( player->object, 0 );
@@ -3530,5 +3531,5 @@ GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
 	if( !a_attacker ) {
 		return NULL;
 	}
-	return GamePlayer_GetPlayerByWidget( a_attacker );
+	return GameBattle_GetPlayerByWidget( a_attacker );
 }

@@ -93,7 +93,7 @@ static void TargetAtHugFrontPutDone( LCUI_Widget *widget )
 	int ret = 0;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	ret = GamePlayer_SetLying( player );
 	GamePlayer_LockAction( player );
@@ -120,7 +120,7 @@ static void TargetStartBounce( LCUI_Widget *widget )
 {
 	double x_speed;
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( GamePlayer_IsLeftOriented(player) ) {
 		x_speed = XSPEED_BOUNCE;
 	} else {
@@ -138,7 +138,7 @@ static void TargetStartBounce( LCUI_Widget *widget )
 static void SelfAtSkillDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_UnlockMotion( player );
 	GamePlayer_SetReady( player );
@@ -150,7 +150,7 @@ static void HugFrontPut_AtActionUpdate( LCUI_Widget *widget )
 	GamePlayer *player;
 	double x, y, z, x_speed;
 	
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( !player->other ) {
 		return;
 	}
@@ -264,7 +264,7 @@ static void HugBackPut_AtActionUpdate( LCUI_Widget *widget )
 	GamePlayer *player;
 	double x, y, z;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	if( !player->other ) {
 		return;
 	}

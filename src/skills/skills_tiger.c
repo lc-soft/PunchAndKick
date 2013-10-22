@@ -54,7 +54,7 @@ static void AtLandingDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GameObject_SetXSpeed( widget, 0 );
 	GamePlayer_StartStand( player );
 }
@@ -63,7 +63,7 @@ static void StartLeftBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_FALL );
 	GamePlayer_LockAction( player );
@@ -81,7 +81,7 @@ static void StartRightBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_FALL );
 	GamePlayer_LockAction( player );
@@ -100,7 +100,7 @@ static void AtTargetLandingDone( LCUI_Widget *widget )
 	int ret = 0;
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	ret = GamePlayer_SetLying( player );
 	GamePlayer_LockAction( player );
@@ -114,7 +114,7 @@ static void StartTargetRightBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LYING_HIT );
 	GameObject_AtActionDone( player->object, ACTION_LYING_HIT, NULL );
@@ -132,7 +132,7 @@ static void StartTargetLeftBounce( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_LYING_HIT );
 	GameObject_AtActionDone( player->object, ACTION_LYING_HIT, NULL );

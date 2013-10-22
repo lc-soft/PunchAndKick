@@ -106,7 +106,7 @@ static LCUI_BOOL CanUseKneeHit( GamePlayer *player )
 static void GamePlayer_AtSkillDone( LCUI_Widget *widget )
 {
 	GamePlayer* player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_StartStand( player );
 }
 
@@ -114,7 +114,7 @@ static void GamePlayer_AtElbowUpdate( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	GamePlayer_UnlockAction( player->other );
 	switch( GameObject_GetCurrentActionFrameNumber( player->object) ) {
 	case 0:
@@ -190,7 +190,7 @@ static void StartElbow( GamePlayer *player )
 static void GamePlayer_AtLandingByAfterKneeHit( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	/* 记录第二段攻击伤害 */
 	Game_RecordAttack(	player->other, ATK_KNEEHIT_2,
 				player, STATE_LYING
@@ -209,7 +209,7 @@ static void AtKneeHitUpdate( LCUI_Widget *widget )
 {
 	GamePlayer *player;
 	
-	player = GamePlayer_GetPlayerByWidget( widget );
+	player = GameBattle_GetPlayerByWidget( widget );
 	switch( GameObject_GetCurrentActionFrameNumber( player->object) ) {
 	case 0:
 		break;
