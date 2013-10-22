@@ -15,7 +15,7 @@ LCUI_BEGIN_HEADER
 #include "game_msg.h"
 #include "game_statusbar.h"
 #include "game_attack.h"
-#include "main_menu.h"
+#include "game_battle.h"
 	
 wchar_t *GetPlayerName(void);
 
