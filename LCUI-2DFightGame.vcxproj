@@ -113,6 +113,7 @@
     <ClCompile Include="src\game_control.c" />
     <ClCompile Include="src\game_battle.c" />
     <ClCompile Include="src\game_logobtn.c" />
+    <ClCompile Include="src\game_menubtn.c" />
     <ClCompile Include="src\game_object.c" />
     <ClCompile Include="src\game_resource.c" />
     <ClCompile Include="src\game_role_select.c" />
@@ -142,6 +143,7 @@
     <ClInclude Include="src\game_battle.h" />
     <ClInclude Include="src\game_control.h" />
     <ClInclude Include="src\game_logobtn.h" />
+    <ClInclude Include="src\game_menubtn.h" />
     <ClInclude Include="src\game_msg.h" />
     <ClInclude Include="src\game_object.h" />
     <ClInclude Include="src\game_resource.h" />

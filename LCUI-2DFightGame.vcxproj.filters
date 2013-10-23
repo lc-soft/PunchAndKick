@@ -105,6 +105,9 @@
     <ClCompile Include="src\game_battle.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\game_menubtn.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
@@ -180,6 +183,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\game_battle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_menubtn.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
