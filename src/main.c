@@ -17,6 +17,7 @@
 #include "game_role_select.h"
 #include "game_logobtn.h"
 #include "game_titlebarbtn.h"
+#include "game_menubtn.h"
 
 #define TEXT_COPYRIGHT_EN	L"Developed by LC-Games, Copyright © 2013 LC-Games, All Rights Reserved."
 #define TEXT_COPYRIGHT_CN	L"本游戏由 LC-Games 开发 , LC-Games 保留所有权利。"
@@ -210,6 +211,7 @@ static void Game_MainThread( void *arg )
 	TitleBarBtn_Register();
 	LogoBtn_Register();
 	GameObject_Register();
+	GameMenuBtn_Register();
 
 	Game_InitAttackRecord();
 	Game_InitStateActionMap();
@@ -223,7 +225,7 @@ static void Game_MainThread( void *arg )
 	
 	GameMsgLoopStart();
 	LCUIThread_Create( &t, Game_DemoThread, NULL );
-	//LCUIThread_Exit(NULL);
+	LCUIThread_Exit(NULL);
 	return;
 #ifdef asdasdasd
 	while(1) {
