@@ -10,6 +10,7 @@
 #include "game_titlebarbtn.h"
 #include "game_role_select.h"
 #include "game_menubtn.h"
+#include "game_menu.h"
 
 #define ITEM_BOX_HEIGHT	50
 #define LOGOBTN_SIZE Size(116,116)
@@ -27,11 +28,19 @@
 #define SIZE_MAIN_MENU_BOX	Size(150,174)
 #define SIZE_HELP_MENU_BOX	Size(150,110)
 
-#define COLOR_RED	RGB(255,78,0)
-#define COLOR_ORANGE	RGB(255,197,2)
-#define COLOR_GREEN	RGB(76,133,2)
-#define COLOR_BLUE	RGB(0,156,255)
-#define COLOR_PURPLE	RGB(161,159,234)
+#define COLOR_RED	{255,78,0}
+#define COLOR_ORANGE	{255,197,2}
+#define COLOR_GREEN	{76,133,2}
+#define COLOR_BLUE	{0,156,255}
+#define COLOR_PURPLE	{161,159,234}
+
+#define TOTAL_COLOR_NUM	5
+
+static LCUI_RGB color_set[TOTAL_COLOR_NUM]={ 
+	COLOR_RED, COLOR_ORANGE, 
+	COLOR_GREEN, COLOR_BLUE, 
+	COLOR_PURPLE
+};
 
 enum RES_ID {
 	RES_MAIN_BG,
@@ -156,46 +165,6 @@ static void btn_single_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 	Game_ShowRoleSelectBox();	/* 显示角色选择框 */
 }
 
-/** 初始化帮助菜单按钮 */
-static void Game_InitHelpMenuButton(void)
-{
-	help_menu_box = Widget_New(NULL);
-	btn_usage = GameMenuBtn_New();
-	btn_about = GameMenuBtn_New();
-	btn_license = GameMenuBtn_New();
-	
-	Widget_Container_Add( main_ui_box, help_menu_box );
-	Widget_Container_Add( help_menu_box, btn_usage );
-	Widget_Container_Add( help_menu_box, btn_about );
-	Widget_Container_Add( help_menu_box, btn_license );
-	
-	Widget_SetAlign( help_menu_box, ALIGN_MIDDLE_LEFT, Pos(200,0) );
-	Widget_SetAlign( btn_usage, ALIGN_MIDDLE_LEFT, Pos(0,-35) );
-	Widget_SetAlign( btn_about, ALIGN_MIDDLE_LEFT, Pos(0,0) );
-	Widget_SetAlign( btn_license, ALIGN_MIDDLE_LEFT, Pos(0,35) );
-	
-	Widget_Resize( help_menu_box, SIZE_HELP_MENU_BOX );
-	Widget_Resize( btn_usage, Size(150,34) );
-	Widget_Resize( btn_about, Size(150,34) );
-	Widget_Resize( btn_license, Size(150,34) );
-
-	GameMenuBtn_SetTextW( btn_usage, TEXT_USAGE );
-	GameMenuBtn_SetTextW( btn_about, TEXT_ABOUT );
-	GameMenuBtn_SetTextW( btn_license, TEXT_LICENSE );
-
-	GameMenuBtn_SetFontSize( btn_usage, 16 );
-	GameMenuBtn_SetFontSize( btn_about, 16 );
-	GameMenuBtn_SetFontSize( btn_license, 16 );
-
-	GameMenuBtn_SetForeWidgetColor( btn_usage, COLOR_RED );
-	GameMenuBtn_SetForeWidgetColor( btn_about, COLOR_ORANGE );
-	GameMenuBtn_SetForeWidgetColor( btn_license, COLOR_GREEN );
-	
-	Widget_Show( btn_usage );
-	Widget_Show( btn_about );
-	Widget_Show( btn_license );
-}
-
 static void Game_ShowHelpMenuButton(void)
 {
 	Widget_Show( help_menu_box );
@@ -204,57 +173,16 @@ static void Game_ShowHelpMenuButton(void)
 /** 初始化主菜单按钮 */
 void Game_InitMenuButton(void)
 {
-	main_menu_box = Widget_New(NULL);
-	btn_single = GameMenuBtn_New();
-	btn_battle = GameMenuBtn_New();
-	btn_options = GameMenuBtn_New();
-	btn_help = GameMenuBtn_New();
-	btn_quit = GameMenuBtn_New();
-	
-	Widget_Container_Add( main_ui_box, main_menu_box );
-	Widget_Container_Add( main_menu_box, btn_single );
-	Widget_Container_Add( main_menu_box, btn_battle );
-	Widget_Container_Add( main_menu_box, btn_options );
-	Widget_Container_Add( main_menu_box, btn_help );
-	Widget_Container_Add( main_menu_box, btn_quit );
+	main_menu_box = GameMenu_New();
 	
 	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_LEFT, Pos(50,0) );
-	Widget_SetAlign( btn_single, ALIGN_MIDDLE_LEFT, Pos(0,-70) );
-	Widget_SetAlign( btn_battle, ALIGN_MIDDLE_LEFT, Pos(0,-35) );
-	Widget_SetAlign( btn_options, ALIGN_MIDDLE_LEFT, Pos(0,0) );
-	Widget_SetAlign( btn_help, ALIGN_MIDDLE_LEFT, Pos(0,35) );
-	Widget_SetAlign( btn_quit, ALIGN_MIDDLE_LEFT, Pos(0,70) );
-
+	GameMenu_SetColorScheme( main_menu_box, color_set, TOTAL_COLOR_NUM );
+	GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
+	GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
+	GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
+	GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
+	GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
 	Widget_Resize( main_menu_box, SIZE_MAIN_MENU_BOX );
-	Widget_Resize( btn_single, Size(150,34) );
-	Widget_Resize( btn_battle, Size(150,34) );
-	Widget_Resize( btn_options, Size(150,34) );
-	Widget_Resize( btn_help, Size(150,34) );
-	Widget_Resize( btn_quit, Size(150,34) );
-
-	GameMenuBtn_SetTextW( btn_single, TEXT_SINGLE_GAME );
-	GameMenuBtn_SetTextW( btn_battle, TEXT_NETWORK_BATTLE );
-	GameMenuBtn_SetTextW( btn_options, TEXT_OPTIONS );
-	GameMenuBtn_SetTextW( btn_help, TEXT_HELP );
-	GameMenuBtn_SetTextW( btn_quit, TEXT_QUIT );
-
-	GameMenuBtn_SetFontSize( btn_single, 16 );
-	GameMenuBtn_SetFontSize( btn_battle, 16 );
-	GameMenuBtn_SetFontSize( btn_options, 16 );
-	GameMenuBtn_SetFontSize( btn_help, 16 );
-	GameMenuBtn_SetFontSize( btn_quit, 16 );
-
-	GameMenuBtn_SetForeWidgetColor( btn_single, COLOR_RED );
-	GameMenuBtn_SetForeWidgetColor( btn_battle, COLOR_ORANGE );
-	GameMenuBtn_SetForeWidgetColor( btn_options, COLOR_GREEN );
-	GameMenuBtn_SetForeWidgetColor( btn_help, COLOR_BLUE );
-	GameMenuBtn_SetForeWidgetColor( btn_quit, COLOR_PURPLE );
-	
-	Widget_Show( btn_single );
-	Widget_Show( btn_battle );
-	Widget_Show( btn_options );
-	Widget_Show( btn_help );
-	Widget_Show( btn_quit );
 }
 
 static void Game_ShowMenuButton(void)
@@ -318,9 +246,7 @@ void Game_InitMainMenu(void)
 	Widget_SetAlign( copyright_text, ALIGN_BOTTOM_CENTER, Pos(0,-30) );
 	
 	Game_InitMenuButton();
-	Game_InitHelpMenuButton();
 	Game_ShowMenuButton();
-	Game_ShowHelpMenuButton();
 
 	Widget_Show( front_wave[0] );
 	Widget_Show( front_wave[1] );
