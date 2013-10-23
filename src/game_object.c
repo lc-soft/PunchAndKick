@@ -601,25 +601,16 @@ LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library )
 	double z_acc;
 	GameObject *obj;
 	LCUI_Widget *widget;
-	int64_t lost_ms;
-	FILE *fp;
-	fp = fopen("debug.txt","a+");
-	fprintf( fp, "[%d]: %s(): %d: enter\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__ );
-	lost_ms = LCUI_GetTickCount();
+
 	n = Queue_GetTotal( library );
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d, n = %d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms), n );
 	for(i=0; i<n; ++i) {
 		widget = (LCUI_Widget*)Queue_Get( library, i );
 		obj = (GameObject*)Widget_GetPrivData( widget );
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		if( !obj || obj->state != ACTION_STATE_PLAY ) {
 			continue;
 		}
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		GameObject_ProcAttack( widget );
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		GameObject_ProcTouch( widget );
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		/* 若在X轴的移动速度接近0 */
 		if( (obj->space_obj->x_acc > 0
 		 && obj->space_obj->x_speed >= 0 )
@@ -627,13 +618,10 @@ LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library )
 		 && obj->space_obj->x_speed <= 0 ) ) {
 			obj->space_obj->x_acc = 0;
 			obj->space_obj->x_speed = 0;
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 			Widget_Update( widget );
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 			if( obj->at_xspeed_to_zero ) {
 				obj->at_xspeed_to_zero( widget );
 			}
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		}
 		z_acc = obj->space_obj->z_acc/FRAMES_PER_SEC;
 		if( obj->at_zspeed ) {
@@ -650,7 +638,6 @@ LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library )
 				}
 			}
 		}
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		/* 若在Z轴的移动速度接近0 */
 		if( (obj->space_obj->z_acc > 0
 		 && obj->space_obj->z_speed >= -z_acc
@@ -663,7 +650,6 @@ LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library )
 				obj->at_zero_zspeed( widget );
 			}
 		}
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		/**
 		目前假设地面的Z坐标为0，当对象的Z坐标达到0时就认定它着陆了。
 		暂不考虑其他对象对当前对象的着陆点的影响。
@@ -683,14 +669,10 @@ LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library )
 				obj->at_landing( widget );
 			}
 		}
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
 		if( obj->at_move ) {
 			obj->at_move( widget );
 		}
 	}
-	fprintf( fp, "[%d]: %s(): %d: lost ms: %I64d\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__, LCUI_GetTicks(lost_ms) );
-	fprintf( fp, "[%d]: %s(): %d: quit\n", LCUIThread_SelfID(), __FUNCTION__, __LINE__ );
-	fclose(fp);
 }
 
 static void GameObjectLibrary_UpdateObjectPos( LCUI_Widget *widget )
@@ -744,7 +726,6 @@ static void GameObjectLibrary_UpdateObjectPos( LCUI_Widget *widget )
 
 LCUI_API void GameObjectLibrary_UpdateAction( LCUI_Queue *library )
 {
-	FILE *fp;
 	int i, n, total;
 	long int lost_ms, frame_ms;
 	LCUI_BOOL need_draw = FALSE;
