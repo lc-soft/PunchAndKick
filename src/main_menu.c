@@ -9,14 +9,22 @@
 #include "game_logobtn.h"
 #include "game_titlebarbtn.h"
 #include "game_role_select.h"
+#include "game_menubtn.h"
 
 #define ITEM_BOX_HEIGHT	50
 #define LOGOBTN_SIZE Size(116,116)
 
-#define TEXT_SINGLE_GAME	L"<size=18px>单人游戏</size>"
-#define TEXT_NETWORK_BATTLE	L"<size=18px>网络对战</size>"
-#define TEXT_OPTIONS		L"<size=18px>选项</size>"
-#define TEXT_HELP		L"<size=18px>帮助</size>"
+#define TEXT_SINGLE_GAME	L"单人游戏"
+#define TEXT_NETWORK_BATTLE	L"网络对战"
+#define TEXT_OPTIONS		L"选项"
+#define TEXT_HELP		L"帮助"
+#define TEXT_QUIT		L"退出"
+
+#define COLOR_RED	RGB(255,78,0)
+#define COLOR_ORANGE	RGB(255,197,2)
+#define COLOR_GREEN	RGB(76,133,2)
+#define COLOR_BLUE	RGB(0,156,255)
+#define COLOR_PURPLE	RGB(161,159,234)
 
 enum RES_ID {
 	RES_MAIN_BG,
@@ -32,7 +40,7 @@ enum RES_ID {
 
 static LCUI_Widget *main_menu_box;
 static LCUI_Widget *main_menu_titlebar;
-static LCUI_Widget *btn_single, *btn_battle, *btn_options, *btn_help;
+static LCUI_Widget *btn_single, *btn_battle, *btn_options, *btn_help, *btn_quit;
 static LCUI_Widget *logobtn;
 static LCUI_Widget *keyboard_tip_box;
 static LCUI_Widget *main_menu_item_box;
@@ -138,6 +146,57 @@ static void Game_InitMenuBar(void)
 	Widget_Show( main_menu_titlebar );
 }
 
+void Game_InitMenuButton(void)
+{
+	btn_single = GameMenuBtn_New();
+	btn_battle = GameMenuBtn_New();
+	btn_options = GameMenuBtn_New();
+	btn_help = GameMenuBtn_New();
+	btn_quit = GameMenuBtn_New();
+
+	Widget_Container_Add( main_menu_box, btn_single );
+	Widget_Container_Add( main_menu_box, btn_battle );
+	Widget_Container_Add( main_menu_box, btn_options );
+	Widget_Container_Add( main_menu_box, btn_help );
+	Widget_Container_Add( main_menu_box, btn_quit );
+
+	Widget_SetAlign( btn_single, ALIGN_MIDDLE_LEFT, Pos(50,-70) );
+	Widget_SetAlign( btn_battle, ALIGN_MIDDLE_LEFT, Pos(50,-35) );
+	Widget_SetAlign( btn_options, ALIGN_MIDDLE_LEFT, Pos(50,0) );
+	Widget_SetAlign( btn_help, ALIGN_MIDDLE_LEFT, Pos(50,35) );
+	Widget_SetAlign( btn_quit, ALIGN_MIDDLE_LEFT, Pos(50,70) );
+
+	Widget_Resize( btn_single, Size(150,34) );
+	Widget_Resize( btn_battle, Size(150,34) );
+	Widget_Resize( btn_options, Size(150,34) );
+	Widget_Resize( btn_help, Size(150,34) );
+	Widget_Resize( btn_quit, Size(150,34) );
+
+	GameMenuBtn_SetTextW( btn_single, TEXT_SINGLE_GAME );
+	GameMenuBtn_SetTextW( btn_battle, TEXT_NETWORK_BATTLE );
+	GameMenuBtn_SetTextW( btn_options, TEXT_OPTIONS );
+	GameMenuBtn_SetTextW( btn_help, TEXT_HELP );
+	GameMenuBtn_SetTextW( btn_quit, TEXT_QUIT );
+
+	GameMenuBtn_SetFontSize( btn_single, 16 );
+	GameMenuBtn_SetFontSize( btn_battle, 16 );
+	GameMenuBtn_SetFontSize( btn_options, 16 );
+	GameMenuBtn_SetFontSize( btn_help, 16 );
+	GameMenuBtn_SetFontSize( btn_quit, 16 );
+
+	GameMenuBtn_SetForeWidgetColor( btn_single, COLOR_RED );
+	GameMenuBtn_SetForeWidgetColor( btn_battle, COLOR_ORANGE );
+	GameMenuBtn_SetForeWidgetColor( btn_options, COLOR_GREEN );
+	GameMenuBtn_SetForeWidgetColor( btn_help, COLOR_BLUE );
+	GameMenuBtn_SetForeWidgetColor( btn_quit, COLOR_PURPLE );
+	
+	Widget_Show( btn_single );
+	Widget_Show( btn_battle );
+	Widget_Show( btn_options );
+	Widget_Show( btn_help );
+	Widget_Show( btn_quit );
+}
+
 /** 初始化主菜单 */
 void Game_InitMainMenu(void)
 {
@@ -158,6 +217,20 @@ void Game_InitMainMenu(void)
 	Label_TextW( copyright_text, L"<size=16px>Powered By LCUI</size>" );
 	Widget_SetAlign( copyright_text, ALIGN_BOTTOM_CENTER, Pos(0,-30) );
 	
+	Widget_SetBackgroundImage( keyboard_tip_box, &img_res[RES_KEY_TIP] );
+	Widget_Resize( keyboard_tip_box, Graph_GetSize(&img_res[RES_KEY_TIP]) );
+	Widget_SetAlign( keyboard_tip_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	Widget_Event_Connect( keyboard_tip_box, EVENT_DRAG, keyboard_tip_box_on_drag );
+	Widget_Event_Connect( keyboard_tip_box, EVENT_CLICKED, keyboard_tip_box_on_clicked );
+	
+	//Game_InitMenuBar();
+	Game_InitMenuButton();
+
+	Widget_Show( front_wave[0] );
+	Widget_Show( front_wave[1] );
+	Widget_Show( back_wave[0] );
+	Widget_Show( back_wave[1] );
+	Widget_Show( main_menu_item_box );
 	Widget_Show( copyright_text );
 	Widget_Show( main_menu_box );
 }
