@@ -212,6 +212,7 @@ static void Game_MainThread( void *arg )
 	LogoBtn_Register();
 	GameObject_Register();
 	GameMenuBtn_Register();
+	GameMenu_Register();
 
 	Game_InitAttackRecord();
 	Game_InitStateActionMap();
