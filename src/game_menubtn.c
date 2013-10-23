@@ -17,6 +17,7 @@ typedef struct GameMenuBtnData_ {
 	LCUI_BOOL need_fill_fore;
 	int timer_id;
 	int fore_widget_width;
+	LCUI_RGB color;
 	LCUI_Widget *fore_widget;
 	LCUI_Widget *label;
 } GameMenuBtnData;
@@ -135,19 +136,30 @@ static void GameMenuBtn_ExecDraw( LCUI_Widget *widget )
 static void GameMenuBtn_ExecUpdate( LCUI_Widget *widget )
 {
 	GameMenuBtnData *p_data;
+	LCUI_RGB color;
 	
 	p_data = (GameMenuBtnData*)Widget_GetPrivData( widget );
 	switch( widget->state ) {
 	case WIDGET_STATE_NORMAL:
 		p_data->need_fill_fore = FALSE;
+		Widget_SetBackgroundColor( p_data->fore_widget, p_data->color );
 		break;
 	case WIDGET_STATE_OVERLAY:
 		p_data->need_fill_fore = TRUE;
+		Widget_SetBackgroundColor( p_data->fore_widget, p_data->color );
 		break;
 	case WIDGET_STATE_ACTIVE:
+		p_data->need_fill_fore = TRUE;
+		Widget_SetSize( p_data->fore_widget, "100p%", "100%" );
+		/* 让背景色变暗 */
+		color.red = (int)(p_data->color.red * 0.7);
+		color.green = (int)(p_data->color.green * 0.7);
+		color.blue = (int)(p_data->color.blue * 0.7);
+		Widget_SetBackgroundColor( p_data->fore_widget, color );
 	default:
 		break;
 	}
+	Widget_Draw( p_data->fore_widget );
 }
 
 void GameMenuBtn_SetFontSize( LCUI_Widget *widget, int pixel_size )
@@ -175,6 +187,7 @@ void GameMenuBtn_SetForeWidgetColor( LCUI_Widget *widget, LCUI_RGB color )
 {
 	GameMenuBtnData *p_data;
 	p_data = (GameMenuBtnData*)Widget_GetPrivData( widget );
+	p_data->color = color;
 	Widget_SetBackgroundColor( p_data->fore_widget, color );
 	Widget_SetBackgroundTransparent( p_data->fore_widget, FALSE );
 }
