@@ -4,6 +4,7 @@
 #include LC_WIDGET_H
 #include LC_LABEL_H
 #include LC_INPUT_H
+#include LC_DISPLAY_H
 
 #include "game.h"
 #include "game_logobtn.h"
@@ -11,6 +12,7 @@
 #include "game_role_select.h"
 #include "game_menubtn.h"
 #include "game_menu.h"
+#include "game_config.h"
 
 #define ITEM_BOX_HEIGHT	50
 #define LOGOBTN_SIZE Size(116,116)
@@ -171,10 +173,38 @@ static void btn_single_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 	Game_ShowRoleSelectBox();	/* 显示角色选择框 */
 }
 
+static void btn_switch_video_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	int mode;
+	wchar_t str_buff[32];
+	if( GameConfig_IsWindowed() ) {
+		GameConfig_SetWindowed(FALSE);
+		GameConfig_Save();
+		mode = LCUI_INIT_MODE_FULLSCREEN;
+		wcscpy( str_buff, TEXT_WINDOWED L": " TEXT_OFF );
+	} else {
+		GameConfig_SetWindowed(TRUE);
+		GameConfig_Save();
+		mode = LCUI_INIT_MODE_WINDOW;
+		wcscpy( str_buff, TEXT_WINDOWED L": " TEXT_ON );
+	}
+
+	/* 如果该部件类型不是菜单按钮，则查找是菜单按钮类型的父级部件 */
+	if( 0 != _LCUIString_Cmp(&widget->type_name, WIDGET_TYPE_GAME_MENU_BUTTON ) ) {
+		widget = Widget_GetParent( widget, WIDGET_TYPE_GAME_MENU_BUTTON );
+	}
+	if( widget ) {
+		GameMenuBtn_SetTextW( widget, str_buff );
+	}
+	LCUIScreen_SetMode( GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT, mode );
+}
+
 /** 初始化主菜单 */
 static void Game_InitMainMenu(void)
 {
+	wchar_t str_buff[32];
 	LCUI_Widget *menu_help_btn, *menu_options_btn;
+	LCUI_Widget *btn_switch_video_mode;
 
 	main_menu_box = GameMenu_New();
 	help_menu_box = GameMenu_New();
@@ -196,7 +226,15 @@ static void Game_InitMainMenu(void)
 	GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
 
 	GameMenu_NewButtonW( options_menu_box, TEXT_SET_KEYBOARD );
-	GameMenu_NewButtonW( options_menu_box, TEXT_WINDOWED );
+	/* 根据游戏的配置数据，判断是否启用窗口模式，并让按钮上显示相应文字 */
+	if( GameConfig_IsWindowed() ) {
+		wcscpy( str_buff, TEXT_WINDOWED L": " TEXT_ON );
+	} else {
+		wcscpy( str_buff, TEXT_WINDOWED L": " TEXT_OFF );
+	}
+	btn_switch_video_mode = GameMenu_NewButtonW( options_menu_box, str_buff );
+
+	Widget_Event_Connect( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
 
 	/* 设置一些子菜单 */
 	GameMenu_SetChildMenu( main_menu_box, menu_help_btn, help_menu_box );
