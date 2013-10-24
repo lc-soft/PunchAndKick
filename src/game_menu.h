@@ -1,6 +1,8 @@
 ﻿#ifndef __GAME_MENU_H__
 #define __GAME_MENU_H__
 
+#define WIDGET_TYPE_GAME_MENU	"GameMenu"
+
 /** 创建一个游戏菜单 */
 LCUI_Widget *GameMenu_New(void);
 
