@@ -30,7 +30,7 @@ static int GameMenuProc_GetMenuPos( LCUI_Widget *menu, LCUI_Pos *menu_pos )
 	GameMenuData *p_data;
 	GameChildMenuData *p_childmenu_data;
 	LCUI_Widget *p_btn, *p_exist_btn, *parent_menu;
-	int i, n, btn_y, menu_height;
+	int i, n, btn_y, menu_height, root_menu_height;
 	
 	p_data = (GameMenuData*)Widget_GetPrivData( menu );
 	/* 获取该菜单的按钮数量 */
@@ -73,7 +73,7 @@ static int GameMenuProc_GetMenuPos( LCUI_Widget *menu, LCUI_Pos *menu_pos )
 			btn_y += p_data->button_height;
 			btn_y += 2;
 		}
-
+		
 		/* 减去菜单中心的Y轴坐标，得出相对于中心的坐标 */
 		btn_y -= n*(p_data->button_height+2)/2;
 		/* 累计Y轴坐标 */
@@ -88,8 +88,13 @@ static int GameMenuProc_GetMenuPos( LCUI_Widget *menu, LCUI_Pos *menu_pos )
 	if( menu ) {
 		pos.x += Widget_GetPos( menu ).x;
 		pos.y += Widget_GetPos( menu ).y;
+		p_data = (GameMenuData*)Widget_GetPrivData( menu );
+		n = Queue_GetTotal( &p_data->button_list );
+		root_menu_height = n*(p_data->button_height+2);
+		pos.y += p_data->button_height/2;
 	}
-	pos.y += menu_height/2;
+	pos.y += root_menu_height/2;
+	pos.y -= menu_height/2;
 	menu_pos->x = pos.x;
 	menu_pos->y = pos.y;
 	return 0;
@@ -224,6 +229,110 @@ final_work:
 	GameMenuProc_HideTopMenu();
 }
 
+static LCUI_Widget *GameMenu_GetFocusButton( LCUI_Widget *menu )
+{
+	LCUI_Widget *btn;
+	GameMenuData *p_data;
+	
+	p_data = (GameMenuData*)Widget_GetPrivData( menu );
+	btn = menu->focus_widget;
+	/* 如果没有按钮获得焦点，则让第一个按钮获得焦点 */
+	if( !btn ) {
+		btn = (LCUI_Widget*)Queue_Get( &p_data->button_list, 0 );
+		/* 如果连按钮都没有，那就退出 */
+		if( !btn ) {
+			return NULL;
+		}
+	}
+	return btn;
+}
+
+static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unused )
+{
+	int i, n;
+	LCUI_Widget *menu, *other_btn, *btn;
+	GameMenuData *p_data;
+
+	if( event->type != LCUIKEYSTATE_PRESSED ) {
+		return;
+	}
+	n = Queue_GetTotal( &menu_stack );
+	if( n <= 0 ) {
+		return;	
+	}
+	menu = (LCUI_Widget*)Queue_Get( &menu_stack, n-1 );
+	p_data = (GameMenuData*)Widget_GetPrivData( menu );
+	switch( event->key_code ) {
+	case LCUIKEY_A:
+	case LCUIKEY_LEFT:
+	case LCUIKEY_ESC:
+		GameMenuProc_HideTopMenu();
+		return;
+	case LCUIKEY_D:
+	case LCUIKEY_RIGHT:
+	case LCUIKEY_ENTER:
+		btn = menu->focus_widget;
+		/* 如果没有按钮获得焦点 */
+		if( !btn ) {
+			break;
+		}
+		GameMenuProc_ShowChildMenu( menu, btn );
+		return;
+	case LCUIKEY_W:
+	case LCUIKEY_UP:
+		btn = menu->focus_widget;
+		if( !btn ) {
+			break;
+		}
+		n = Queue_GetTotal( &p_data->button_list );
+		for(i=0; i<n; ++i) {
+			other_btn = (LCUI_Widget*)Queue_Get( &p_data->button_list, i );
+			if( other_btn == btn ) {
+				break;
+			}
+		}
+		--i;
+		if( i < 0 ) {
+			i = 0;
+		}
+		/* 获取上个按钮 */
+		btn = (LCUI_Widget*)Queue_Get( &p_data->button_list, i );
+		/* 设置焦点 */
+		Widget_SetFocus( btn );
+		return;
+	case LCUIKEY_S:
+	case LCUIKEY_DOWN:
+		btn = menu->focus_widget;
+		if( !btn ) {
+			break;
+		}
+		n = Queue_GetTotal( &p_data->button_list );
+		for(i=0; i<n; ++i) {
+			other_btn = (LCUI_Widget*)Queue_Get( &p_data->button_list, i );
+			if( other_btn == btn ) {
+				break;
+			}
+		}
+		++i;
+		if( i >= n ) {
+			i = n-1;
+		}
+		/* 获取下个按钮 */
+		btn = (LCUI_Widget*)Queue_Get( &p_data->button_list, i );
+		/* 设置焦点 */
+		Widget_SetFocus( btn );
+	default:return;
+	}
+	/* 取第一个按钮 */
+	btn = (LCUI_Widget*)Queue_Get( &p_data->button_list, 0 );
+	/* 如果连按钮都没有，那就退出 */
+	if( !btn ) {
+		return;
+	}
+	/* 设置焦点 */
+	Widget_SetFocus( btn );
+}
+
 static void GameMenu_ExecInit( LCUI_Widget *widget )
 {
 	GameMenuData *p_data;
@@ -241,6 +350,8 @@ static void GameMenu_ExecInit( LCUI_Widget *widget )
 	if( !module_is_inited ) {
 		/* 关联鼠标点击事件，以处理子菜单的调度显示 */
 		LCUI_MouseButtonEvent_Connect( GameMenuProc_Dispatch, NULL );
+		/* 关联键盘事件，以实现按键控制菜单 */
+		LCUI_KeyboardEvent_Connect( GameMenuProc_KeyboardControl, NULL );
 		Queue_Init( &menu_stack, 0, NULL );
 		Queue_UsingPointer( &menu_stack );
 		module_is_inited = TRUE;
