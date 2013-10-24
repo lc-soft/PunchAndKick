@@ -1,6 +1,6 @@
 ﻿
-extern void Game_InitMainMenu(void);
-extern void Game_ShowMainMenu(void);
-extern void Game_HideMainMenu(void);
+extern void Game_InitMainUI(void);
+extern void Game_ShowMainUI(void);
+extern void Game_HideMainUI(void);
 
 extern LCUI_Widget* Game_GetMainMenuBox(void);
