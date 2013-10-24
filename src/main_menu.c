@@ -21,12 +21,18 @@
 #define TEXT_HELP		L"帮助"
 #define TEXT_QUIT		L"退出"
 
+#define TEXT_SET_KEYBOARD	L"键位设置"
+#define TEXT_WINDOWED		L"窗口模式"
+#define TEXT_ON			L"开"
+#define TEXT_OFF		L"关"
+
 #define TEXT_USAGE		L"操作方法"
 #define TEXT_ABOUT		L"关于本游戏"
 #define TEXT_LICENSE		L"许可协议"
 
 #define SIZE_MAIN_MENU_BOX	Size(150,180)
 #define SIZE_HELP_MENU_BOX	Size(150,110)
+#define SIZE_OPTIONS_MENU_BOX	Size(150,75)
 
 #define COLOR_RED	{255,78,0}
 #define COLOR_ORANGE	{255,197,2}
@@ -55,7 +61,7 @@ enum RES_ID {
 };
 
 static LCUI_Widget *main_ui_box;
-static LCUI_Widget *main_menu_box, *help_menu_box;
+static LCUI_Widget *main_menu_box, *help_menu_box, *options_menu_box;
 static LCUI_Widget *btn_single, *btn_battle, *btn_options, *btn_help, *btn_quit;
 static LCUI_Widget *btn_usage, *btn_about, *btn_license;
 static LCUI_Widget *footer_box;
@@ -168,28 +174,37 @@ static void btn_single_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 /** 初始化主菜单 */
 static void Game_InitMainMenu(void)
 {
-	LCUI_Widget *menu_help_btn;
+	LCUI_Widget *menu_help_btn, *menu_options_btn;
+
 	main_menu_box = GameMenu_New();
 	help_menu_box = GameMenu_New();
+	options_menu_box = GameMenu_New();
 
 	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_LEFT, Pos(50,0) );
 	GameMenu_SetColorScheme( main_menu_box, color_set, TOTAL_COLOR_NUM );
 	GameMenu_SetColorScheme( help_menu_box, color_set, TOTAL_COLOR_NUM );
+	GameMenu_SetColorScheme( options_menu_box, color_set, TOTAL_COLOR_NUM );
 	
 	GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
 	GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
-	GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
+	menu_options_btn = GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
 	menu_help_btn = GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
 	GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
 
 	GameMenu_NewButtonW( help_menu_box, TEXT_USAGE );
 	GameMenu_NewButtonW( help_menu_box, TEXT_ABOUT );
 	GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
-	/* 将帮助菜单设置为主菜单的子菜单 */
+
+	GameMenu_NewButtonW( options_menu_box, TEXT_SET_KEYBOARD );
+	GameMenu_NewButtonW( options_menu_box, TEXT_WINDOWED );
+
+	/* 设置一些子菜单 */
 	GameMenu_SetChildMenu( main_menu_box, menu_help_btn, help_menu_box );
+	GameMenu_SetChildMenu( main_menu_box, menu_options_btn, options_menu_box );
 
 	Widget_Resize( main_menu_box, SIZE_MAIN_MENU_BOX );
 	Widget_Resize( help_menu_box, SIZE_HELP_MENU_BOX );
+	Widget_Resize( options_menu_box, SIZE_OPTIONS_MENU_BOX );
 }
 
 static void Game_ShowMainMenu(void)
