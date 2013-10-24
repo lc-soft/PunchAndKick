@@ -19,6 +19,7 @@
 #include "game_titlebarbtn.h"
 #include "game_menubtn.h"
 #include "game_menu.h"
+#include "game_config.h"
 
 #define TEXT_COPYRIGHT_EN	L"Developed by LC-Games, Copyright © 2013 LC-Games, All Rights Reserved."
 #define TEXT_COPYRIGHT_CN	L"本游戏由 LC-Games 开发 , LC-Games 保留所有权利。"
@@ -31,6 +32,8 @@
 				L" ● 人工智能\n\n"\
 				L"游戏中大部分BUG是已知的，请无视本程序出现的一些细节上的BUG。\n"\
 				L"如果遇到较为严重的BUG，请关闭并重新运行本程序。</size>"
+
+
 
 /** 在屏幕上显示游戏启动时的画面 */
 static void Game_ShowBootScreen(void)
@@ -314,15 +317,20 @@ static int Game_LoadResource(void)
 int main( int argc, char **argv )
 {
 	int ret;
+	int mode;
 	LCUI_Thread t;
 //#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
+	GameConfig_Load();
+	if( GameConfig_IsWindowed() ) {
+		mode = LCUI_INIT_MODE_WINDOW;
+	} else {
+		mode = LCUI_INIT_MODE_FULLSCREEN;
+	}
 	/* 初始化LCUI */
-	LCUI_Init(	GAME_SCREEN_WIDTH, 
-			GAME_SCREEN_HEIGHT, 
-			LCUI_INIT_MODE_WINDOW );
+	LCUI_Init( GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT, mode );
 
 	GameGraphRes_Init();		/* 初始化游戏资源 */
 	ret = Game_LoadResource();	/* 载入游戏资源 */
