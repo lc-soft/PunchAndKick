@@ -25,7 +25,7 @@
 #define TEXT_ABOUT		L"关于本游戏"
 #define TEXT_LICENSE		L"许可协议"
 
-#define SIZE_MAIN_MENU_BOX	Size(150,174)
+#define SIZE_MAIN_MENU_BOX	Size(150,180)
 #define SIZE_HELP_MENU_BOX	Size(150,110)
 
 #define COLOR_RED	{255,78,0}
@@ -165,33 +165,40 @@ static void btn_single_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 	Game_ShowRoleSelectBox();	/* 显示角色选择框 */
 }
 
-static void Game_ShowHelpMenuButton(void)
+/** 初始化主菜单 */
+static void Game_InitMainMenu(void)
 {
-	Widget_Show( help_menu_box );
-}
-
-/** 初始化主菜单按钮 */
-void Game_InitMenuButton(void)
-{
+	LCUI_Widget *menu_help_btn;
 	main_menu_box = GameMenu_New();
-	
+	help_menu_box = GameMenu_New();
+
 	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_LEFT, Pos(50,0) );
 	GameMenu_SetColorScheme( main_menu_box, color_set, TOTAL_COLOR_NUM );
+	GameMenu_SetColorScheme( help_menu_box, color_set, TOTAL_COLOR_NUM );
+	
 	GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
 	GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
 	GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
-	GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
+	menu_help_btn = GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
 	GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
+
+	GameMenu_NewButtonW( help_menu_box, TEXT_USAGE );
+	GameMenu_NewButtonW( help_menu_box, TEXT_ABOUT );
+	GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
+	/* 将帮助菜单设置为主菜单的子菜单 */
+	GameMenu_SetChildMenu( main_menu_box, menu_help_btn, help_menu_box );
+
 	Widget_Resize( main_menu_box, SIZE_MAIN_MENU_BOX );
+	Widget_Resize( help_menu_box, SIZE_HELP_MENU_BOX );
 }
 
-static void Game_ShowMenuButton(void)
+static void Game_ShowMainMenu(void)
 {
 	Widget_Show( main_menu_box );
 }
 
-/** 初始化主菜单 */
-void Game_InitMainMenu(void)
+/** 初始化主界面 */
+void Game_InitMainUI(void)
 {
 	Game_LoadMainMenuRes();
 	/* 创建所需的部件 */
@@ -245,8 +252,8 @@ void Game_InitMainMenu(void)
 	Label_TextW( copyright_text, L"<size=16px>Powered By LCUI</size>" );
 	Widget_SetAlign( copyright_text, ALIGN_BOTTOM_CENTER, Pos(0,-30) );
 	
-	Game_InitMenuButton();
-	Game_ShowMenuButton();
+	Game_InitMainMenu();
+	Game_ShowMainMenu();
 
 	Widget_Show( front_wave[0] );
 	Widget_Show( front_wave[1] );
@@ -261,7 +268,7 @@ void Game_InitMainMenu(void)
 }
 
 /** 显示主菜单 */
-void Game_ShowMainMenu(void)
+void Game_ShowMainUI(void)
 {
 	uchar_t alpha;
 
@@ -280,7 +287,7 @@ LCUI_Widget* Game_GetMainMenuBox(void)
 }
 
 /** 隐藏主菜单 */
-void Game_HideMainMenu(void)
+void Game_HideMainUI(void)
 {
 	uchar_t alpha;
 	/* 以淡出的效果显示菜单 */
