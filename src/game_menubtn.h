@@ -2,6 +2,8 @@
 #ifndef __GAME_MENU_BUTTON_H__
 #define __GAME_MENU_BUTTON_H__
 
+#define WIDGET_TYPE_GAME_MENU_BUTTON	"GameMenuButton"
+
 void GameMenuBtn_SetFontSize( LCUI_Widget *widget, int pixel_size );
 
 void GameMenuBtn_SetTextW( LCUI_Widget *widget, const wchar_t *unicode_text );
