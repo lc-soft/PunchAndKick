@@ -4,7 +4,8 @@
 #include LC_WIDGET_H
 #include LC_LABEL_H
 
-#define WIDGET_TYPE_NAME	"GameMenuButton"
+#include "game_menubtn.h"
+
 #define	FORE_WIDGET_TYPE_NAME	"GameMenuButtonForeWidget"
 
 /** 游戏菜单按钮的前景部件数据 */
@@ -93,6 +94,11 @@ static void GameMenuBtn_UpdateForeWidgetWidth( void *arg )
 	Widget_SetSize( p_data->fore_widget, width_str, "100%" );
 }
 
+static void GameMenuBtn_OnFocusEvent( LCUI_Widget *widget, LCUI_WidgetEvent *event )
+{
+	Widget_Update( widget );
+}
+
 static void GameMenuBtn_ExecInit( LCUI_Widget *widget )
 {
 	int valid_state;
@@ -122,6 +128,9 @@ static void GameMenuBtn_ExecInit( LCUI_Widget *widget )
 	Widget_SetBackgroundTransparent( widget, FALSE );
 	Widget_SetBorder( widget, Border(1,BORDER_STYLE_SOLID,RGB(220,220,220)) );
 	Widget_SetPadding( widget, Padding(1,1,1,1) );
+
+	Widget_Event_Connect( widget, EVENT_FOCUSIN, GameMenuBtn_OnFocusEvent );
+	Widget_Event_Connect( widget, EVENT_FOCUSOUT, GameMenuBtn_OnFocusEvent );
 	/* 设置定时器，用于动态更新前景部件的宽度 */
 	p_data->timer_id = LCUITimer_Set( 20, GameMenuBtn_UpdateForeWidgetWidth, widget, TRUE );
 }
@@ -141,6 +150,11 @@ static void GameMenuBtn_ExecUpdate( LCUI_Widget *widget )
 	p_data = (GameMenuBtnData*)Widget_GetPrivData( widget );
 	switch( widget->state ) {
 	case WIDGET_STATE_NORMAL:
+		if( Widget_GetFocus(widget) ) {
+			p_data->need_fill_fore = TRUE;
+			Widget_SetBackgroundColor( p_data->fore_widget, p_data->color );
+			break;
+		}
 		p_data->need_fill_fore = FALSE;
 		Widget_SetBackgroundColor( p_data->fore_widget, p_data->color );
 		break;
@@ -196,15 +210,15 @@ void GameMenuBtn_SetForeWidgetColor( LCUI_Widget *widget, LCUI_RGB color )
 
 LCUI_Widget *GameMenuBtn_New(void)
 {
-	return Widget_New( WIDGET_TYPE_NAME );
+	return Widget_New( WIDGET_TYPE_GAME_MENU_BUTTON );
 }
 
 void GameMenuBtn_Register(void)
 {
-	WidgetType_Add( WIDGET_TYPE_NAME );
+	WidgetType_Add( WIDGET_TYPE_GAME_MENU_BUTTON );
 	WidgetType_Add( FORE_WIDGET_TYPE_NAME );
-	WidgetFunc_Add( WIDGET_TYPE_NAME, GameMenuBtn_ExecInit, FUNC_TYPE_INIT );
-	WidgetFunc_Add( WIDGET_TYPE_NAME, GameMenuBtn_ExecUpdate, FUNC_TYPE_UPDATE );
-	WidgetFunc_Add( WIDGET_TYPE_NAME, GameMenuBtn_ExecDraw, FUNC_TYPE_DRAW );
+	WidgetFunc_Add( WIDGET_TYPE_GAME_MENU_BUTTON, GameMenuBtn_ExecInit, FUNC_TYPE_INIT );
+	WidgetFunc_Add( WIDGET_TYPE_GAME_MENU_BUTTON, GameMenuBtn_ExecUpdate, FUNC_TYPE_UPDATE );
+	WidgetFunc_Add( WIDGET_TYPE_GAME_MENU_BUTTON, GameMenuBtn_ExecDraw, FUNC_TYPE_DRAW );
 	WidgetFunc_Add( FORE_WIDGET_TYPE_NAME, ForeWidget_ExecInit, FUNC_TYPE_INIT );
 }
