@@ -18,6 +18,7 @@
 #include "game_logobtn.h"
 #include "game_titlebarbtn.h"
 #include "game_menubtn.h"
+#include "game_menu.h"
 
 #define TEXT_COPYRIGHT_EN	L"Developed by LC-Games, Copyright © 2013 LC-Games, All Rights Reserved."
 #define TEXT_COPYRIGHT_CN	L"本游戏由 LC-Games 开发 , LC-Games 保留所有权利。"
@@ -221,8 +222,8 @@ static void Game_MainThread( void *arg )
 	LCUICursor_Hide();			/* 隐藏鼠标游标 */
 	Game_ShowBootScreen();			/* 显示启动画面 */
 	LCUICursor_Show();			/* 显示鼠标游标 */
-	Game_InitMainMenu();			/* 初始化主菜单界面 */
-	Game_ShowMainMenu();			/* 显示主菜单界面 */
+	Game_InitMainUI();			/* 初始化主菜单界面 */
+	Game_ShowMainUI();			/* 显示主菜单界面 */
 	
 	GameMsgLoopStart();
 	LCUIThread_Create( &t, Game_DemoThread, NULL );
@@ -235,7 +236,7 @@ static void Game_MainThread( void *arg )
 			LCUI_MSleep(100);
 			continue;
 		}
-		Game_HideMainMenu();			/* 隐藏主菜单界面 */
+		Game_HideMainUI();			/* 隐藏主菜单界面 */
 		/* 设置1号玩家的控制键 */
 		ctrlkey.a_attack = LCUIKEY_J;
 		ctrlkey.b_attack = LCUIKEY_K;
