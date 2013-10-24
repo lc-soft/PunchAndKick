@@ -150,7 +150,9 @@ static void GameMenuBtn_ExecUpdate( LCUI_Widget *widget )
 		break;
 	case WIDGET_STATE_ACTIVE:
 		p_data->need_fill_fore = TRUE;
-		Widget_SetSize( p_data->fore_widget, "100p%", "100%" );
+		p_data->fore_widget_width = Widget_GetWidth( widget );
+		/* 让前景部件长度直接达到最大 */
+		Widget_SetSize( p_data->fore_widget, "100%", "100%" );
 		/* 让背景色变暗 */
 		color.red = (int)(p_data->color.red * 0.7);
 		color.green = (int)(p_data->color.green * 0.7);
