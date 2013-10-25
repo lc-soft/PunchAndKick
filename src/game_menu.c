@@ -252,10 +252,9 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 	int i, n;
 	LCUI_Widget *menu, *other_btn, *btn;
 	GameMenuData *p_data;
+	LCUI_WidgetEvent wdg_event;
+	static LCUI_Widget *click_btn = NULL;
 
-	if( event->type != LCUIKEYSTATE_PRESSED ) {
-		return;
-	}
 	n = Queue_GetTotal( &menu_stack );
 	if( n <= 0 ) {
 		return;	
@@ -264,11 +263,16 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 	p_data = (GameMenuData*)Widget_GetPrivData( menu );
 	switch( event->key_code ) {
 	case LCUIKEY_A:
+	case LCUIKEY_K:
 	case LCUIKEY_LEFT:
 	case LCUIKEY_ESC:
+		if( event->type != LCUI_KEYDOWN ) {
+			return;
+		}
 		GameMenuProc_HideTopMenu();
 		return;
 	case LCUIKEY_D:
+	case LCUIKEY_J:
 	case LCUIKEY_RIGHT:
 	case LCUIKEY_ENTER:
 		btn = menu->focus_widget;
@@ -276,10 +280,37 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 		if( !btn ) {
 			break;
 		}
+		Widget_SetFocus( btn );
 		GameMenuProc_ShowChildMenu( menu, btn );
+		/* 
+		 * 如果是“按键按下”事件，则记录当前按下的
+		 * 按钮部件，并设置该按钮的状态为ACTIVE 
+		 */
+		if( event->type == LCUI_KEYDOWN ) {
+			click_btn = btn;
+			Widget_SetState( btn, WIDGET_STATE_ACTIVE );
+			return;
+		}
+		/*
+		 * 否则是“按键释放”事件，若按下按键时和释放
+		 * 按键的按钮一样，则向该按钮部件发送CLICKED事件，
+		 */
+		if( click_btn == btn ) {
+			wdg_event.type = EVENT_CLICKED;
+			wdg_event.clicked.rel_pos.x = 0;
+			wdg_event.clicked.rel_pos.y = 0;
+			Widget_DispatchEvent( btn, &wdg_event );
+		}
+		/* 将之前按住的按钮部件的状态设置为NORMAL */
+		Widget_SetState( click_btn, WIDGET_STATE_NORMAL );
+		/* 重置记录 */
+		click_btn = NULL;
 		return;
 	case LCUIKEY_W:
 	case LCUIKEY_UP:
+		if( event->type != LCUI_KEYDOWN ) {
+			return;
+		}
 		btn = menu->focus_widget;
 		if( !btn ) {
 			break;
@@ -302,6 +333,9 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 		return;
 	case LCUIKEY_S:
 	case LCUIKEY_DOWN:
+		if( event->type != LCUI_KEYDOWN ) {
+			return;
+		}
 		btn = menu->focus_widget;
 		if( !btn ) {
 			break;
@@ -322,6 +356,11 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 		/* 设置焦点 */
 		Widget_SetFocus( btn );
 	default:return;
+	}
+	/* 若之前还有按住的按钮部件，则重置它的状态为NORMAL，并重置记录 */
+	if( click_btn ) {
+		Widget_SetState( click_btn, WIDGET_STATE_NORMAL );
+		click_btn = NULL;
 	}
 	/* 取第一个按钮 */
 	btn = (LCUI_Widget*)Queue_Get( &p_data->button_list, 0 );
