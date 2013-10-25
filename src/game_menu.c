@@ -20,8 +20,14 @@ typedef struct GameMenuData_ {
 	LCUI_Widget *parent_menu;	/**< 父级菜单 */
 } GameMenuData;
 
+#define AVG_WIDTH	30
+
 static LCUI_BOOL module_is_inited = FALSE;
-LCUI_Queue menu_stack;
+static LCUI_Queue menu_stack;
+static LCUI_BOOL need_update_effect = FALSE;
+static LCUI_Pos root_menu_pos={0,0};
+static LCUI_Pos root_menu_offset_pos={0,0};
+static int menu_effect_timer = -1;
 
 /** 获取菜单的显示位置 */
 static int GameMenuProc_GetMenuPos( LCUI_Widget *menu, LCUI_Pos *menu_pos )
@@ -100,6 +106,61 @@ static int GameMenuProc_GetMenuPos( LCUI_Widget *menu, LCUI_Pos *menu_pos )
 	return 0;
 }
 
+static void GameMenuProc_UpdateEffect( void *arg )
+{
+	LCUI_Pos pos;
+	int target_offset_x, i, n;
+	static int current_offset_x = 0;
+	uchar_t alpha;
+	LCUI_Widget *menu;
+
+	if( !need_update_effect ) {
+		return;
+	}
+	n = Queue_GetTotal( &menu_stack );
+	/* 计算目标X坐标偏移量 */
+	target_offset_x = (n-1)*AVG_WIDTH;
+	/* 如果当前X坐标偏移量已经达到目标X坐标偏移量 */
+	if( current_offset_x == target_offset_x ) {
+		return;
+	}
+	/* 如果当前X坐标偏移量小于目标X坐标偏移量 */
+	if( current_offset_x < target_offset_x ) {
+		current_offset_x += 4;
+		if( current_offset_x > target_offset_x ) {
+			current_offset_x = target_offset_x;
+		}
+	} else {
+		current_offset_x -= 4;
+		if( current_offset_x < target_offset_x ) {
+			current_offset_x = target_offset_x;
+		}
+	}
+	menu = (LCUI_Widget*)Queue_Get( &menu_stack, 0 );
+	/* 根据部件的布局类型，进行相应方式的位置设置 */
+	if( menu->align == ALIGN_NONE ) {
+		pos.x = root_menu_pos.x - current_offset_x;
+		pos.y = Widget_GetPos(menu).y;
+		Widget_Move( menu, pos );
+	} else {
+		pos.x = root_menu_offset_pos.x-current_offset_x;
+		pos.y = root_menu_offset_pos.y;
+		Widget_SetAlign( menu, menu->align, pos );
+	}
+	/* 初始透明度为255 */
+	alpha = 255;
+	for(i=n-1; i>=0; --i) {
+		menu = (LCUI_Widget*)Queue_Get( &menu_stack, i );
+		/* 更新各个菜单的坐标 */
+		GameMenuProc_GetMenuPos( menu, &pos );
+		Widget_Move( menu, pos );
+		/* 设置本级菜单的透明度 */
+		Widget_SetAlpha( menu, alpha );
+		/* 每到上一级菜单，减少一定的透明度 */
+		alpha = (uchar_t)(alpha * 0.65);
+	}
+}
+
 /** 显示菜单 */
 static void GameMenuProc_ShowMenu( LCUI_Widget *menu )
 {
@@ -107,6 +168,11 @@ static void GameMenuProc_ShowMenu( LCUI_Widget *menu )
 	LCUI_Widget *exist_menu;
 
 	n = Queue_GetTotal( &menu_stack );
+	/* 将第一个菜单作为主菜单，并记录它的坐标 */
+	if( n == 0 ) {
+		root_menu_pos = Widget_GetPos( menu );
+		root_menu_offset_pos = menu->offset;
+	}
 	for(i=n-1;i>=0;--i) {
 		exist_menu = (LCUI_Widget*)Queue_Get( &menu_stack, n );
 		if( exist_menu && exist_menu == menu ) {
@@ -155,6 +221,8 @@ static int GameMenuProc_ShowChildMenu( LCUI_Widget *menu, LCUI_Widget *btn )
 			Widget_SetModal( p_childmenu_data->menu, TRUE );
 			/* 显示菜单 */
 			Widget_Show( p_childmenu_data->menu ); 
+			/* 标记需要更新菜单效果 */
+			need_update_effect = TRUE;
 		}
 	}
 	return 0;
@@ -176,6 +244,8 @@ static void GameMenuProc_HideTopMenu(void)
 		Queue_DeletePointer( &menu_stack, n-1 );
 		Widget_SetModal( menu, FALSE );
 		Widget_Hide( menu );
+		/* 标记需要更新菜单效果 */
+		need_update_effect = TRUE;
 	}
 	/* 重置菜单焦点 */
 	Widget_ResetFocus( menu );
@@ -372,6 +442,21 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 	Widget_SetFocus( btn );
 }
 
+static void GameMenuProc_Init(void)
+{
+	if( module_is_inited ) {
+		return;
+	}
+	/* 关联鼠标点击事件，以处理子菜单的调度显示 */
+	LCUI_MouseButtonEvent_Connect( GameMenuProc_Dispatch, NULL );
+	/* 关联键盘事件，以实现按键控制菜单 */
+	LCUI_KeyboardEvent_Connect( GameMenuProc_KeyboardControl, NULL );
+	Queue_Init( &menu_stack, 0, NULL );
+	Queue_UsingPointer( &menu_stack );
+	menu_effect_timer = LCUITimer_Set( 20, GameMenuProc_UpdateEffect, NULL, TRUE );
+	module_is_inited = TRUE;
+}
+
 static void GameMenu_ExecInit( LCUI_Widget *widget )
 {
 	GameMenuData *p_data;
@@ -385,16 +470,7 @@ static void GameMenu_ExecInit( LCUI_Widget *widget )
 	Queue_Init( &p_data->button_list, 0, NULL );
 	Queue_Init( &p_data->childmenu_data, sizeof(GameChildMenuData), NULL );
 	Queue_UsingPointer( &p_data->button_list );
-
-	if( !module_is_inited ) {
-		/* 关联鼠标点击事件，以处理子菜单的调度显示 */
-		LCUI_MouseButtonEvent_Connect( GameMenuProc_Dispatch, NULL );
-		/* 关联键盘事件，以实现按键控制菜单 */
-		LCUI_KeyboardEvent_Connect( GameMenuProc_KeyboardControl, NULL );
-		Queue_Init( &menu_stack, 0, NULL );
-		Queue_UsingPointer( &menu_stack );
-		module_is_inited = TRUE;
-	}
+	GameMenuProc_Init();
 }
 
 static void GameMenu_ExecDestroy( LCUI_Widget *widget )
