@@ -18,6 +18,7 @@ void GameConfig_Load(void)
 		return;
 	}
 	fread( &game_config, sizeof(game_config), 1, fp );
+	fclose( fp );
 }
 
 /** 保存游戏配置 */
@@ -29,6 +30,7 @@ void GameConfig_Save(void)
 		return;
 	}
 	fwrite( &game_config, sizeof(game_config), 1, fp );
+	fclose( fp );
 }
 
 /** 配置游戏是否以窗口模式运行 */
