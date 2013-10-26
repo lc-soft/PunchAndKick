@@ -260,6 +260,11 @@ static void GameMenuProc_Dispatch( LCUI_MouseButtonEvent *event, void *unused )
 	if( event->state == LCUIKEYSTATE_PRESSED ) {
 		return;
 	}
+	exist_menu = (LCUI_Widget*)Queue_Get( &menu_stack, 0 );
+	/* 如果该菜单的父部件不被允许响应事件 */
+	if( !exist_menu || !Widget_IsAllowResponseEvent(exist_menu->parent) ) {
+		return;
+	}
 	/* 获取点击的部件 */
 	widget = Widget_At( NULL, Pos(event->x,event->y) );
 	if( !widget ) {
@@ -330,6 +335,10 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 		return;	
 	}
 	menu = (LCUI_Widget*)Queue_Get( &menu_stack, n-1 );
+	/* 如果该菜单不被允许响应事件 */
+	if( !Widget_IsAllowResponseEvent(menu) ) {
+		return;
+	}
 	p_data = (GameMenuData*)Widget_GetPrivData( menu );
 	switch( event->key_code ) {
 	case LCUIKEY_A:
