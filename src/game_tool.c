@@ -7,7 +7,7 @@
 #include "game_object.h"
 #include "game_resource.h"
 
-#define MAIN_RES_NUM 12
+#define MAIN_RES_NUM 5
 
 #define KUNI_ACTION_FILE_NUM	70
 #define RIKI_ACTION_FILE_NUM	75
@@ -78,17 +78,10 @@ const struct fileinfo font_file_info[FONT_FILE_NUM]={
 };
 
 const struct fileinfo main_file_info[MAIN_RES_NUM]={
-	{"bg.png","main-menu-bg"},
 	{"wave1.png","front-wave-img"},
 	{"wave2.png","back-wave-img"},
-	{"keyboard-control-method.png","keyboard-control-method"},
 	{"LC-GAMES-175x128.png","main-logo"},
-	{"logo-btn-img.png", "logo-btn-img"},
-	{"logo-btn-img-hightlight.png", "logo-btn-img-hightlight"},
-	{"logo-btn-normal.png", "logo-btn-normal"},
-	{"logo-btn-hover.png", "logo-btn-hover"},
-	{"logo-btn-pressed.png", "logo-btn-pressed"},
-	{"main-menu-titlebar.png", "main-menu-titlebar"},
+	{"game-icon-64x64.png", "game-logo"},
 	{"shadow.png", "shadow"}
 };
 
