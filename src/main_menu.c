@@ -13,6 +13,8 @@
 #include "game_menubtn.h"
 #include "game_menu.h"
 #include "game_config.h"
+#include "gamewnd_about.h"
+#include "gamewnd_license.h"
 
 #define ITEM_BOX_HEIGHT	50
 #define LOGOBTN_SIZE Size(116,116)
@@ -32,6 +34,9 @@
 #define TEXT_ABOUT		L"关于本游戏"
 #define TEXT_LICENSE		L"许可协议"
 #define TEXT_JOINUS		L"加入我们"
+
+#define TEXT_QUIT_TIP_TEXT	L"你确定要退出游戏？"
+#define TEXT_QUIT_TIP_TITLE	L"提示"
 
 #define SIZE_MAIN_MENU_BOX	Size(150,180)
 #define SIZE_HELP_MENU_BOX	Size(150,140)
@@ -65,8 +70,6 @@ enum RES_ID {
 
 static LCUI_Widget *main_ui_box;
 static LCUI_Widget *main_menu_box, *help_menu_box, *options_menu_box;
-static LCUI_Widget *btn_single, *btn_battle, *btn_options, *btn_help, *btn_quit;
-static LCUI_Widget *btn_usage, *btn_about, *btn_license;
 static LCUI_Widget *footer_box;
 static LCUI_Widget *front_wave[2], *back_wave[2];
 static LCUI_Widget *copyright_text;
@@ -126,17 +129,11 @@ static void UIEffect_MoveWave2( void *arg )
 	Widget_SetAlign( back_wave[1], ALIGN_BOTTOM_LEFT, offset_pos );
 }
 
-void Game_LoadMainMenuRes(void)
+void Game_LoadMainUIRes(void)
 {
 	GameGraphRes_GetGraph( MAIN_RES, "main-menu-bg", &img_res[RES_MAIN_BG] );
 	GameGraphRes_GetGraph( MAIN_RES, "front-wave-img", &img_res[RES_FRONT_WAVE] );
 	GameGraphRes_GetGraph( MAIN_RES, "back-wave-img", &img_res[RES_BACK_WAVE] );
-	GameGraphRes_GetGraph( MAIN_RES, "keyboard-control-method", &img_res[RES_KEY_TIP] );
-	GameGraphRes_GetGraph( MAIN_RES, "main-menu-titlebar", &img_res[RES_TITEBAR_BG] );
-	GameGraphRes_GetGraph( MAIN_RES, "logo-btn-img", &img_res[RES_LOGO_NORMAL] );
-	GameGraphRes_GetGraph( MAIN_RES, "logo-btn-hover", &img_res[RES_LOGOBTN_HOVER] );
-	GameGraphRes_GetGraph( MAIN_RES, "logo-btn-normal", &img_res[RES_LOGOBTN_NORMAL] );
-	GameGraphRes_GetGraph( MAIN_RES, "logo-btn-pressed", &img_res[RES_LOGOBTN_PRESSED] );
 }
 
 static void keyboard_tip_box_on_drag( LCUI_Widget *widget, LCUI_WidgetEvent *event )
@@ -174,6 +171,29 @@ static void btn_single_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 	Game_ShowRoleSelectBox();	/* 显示角色选择框 */
 }
 
+/** 在退出按钮被点击时 */
+static void btn_quit_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	int ret;
+	ret = LCUI_MessageBoxW( MB_ICON_WARNING, TEXT_QUIT_TIP_TEXT, 
+				TEXT_QUIT_TIP_TITLE, MB_BTN_YESNO );
+	if( ret == MB_BTN_IS_YES ) {
+		LCUI_MainLoop_Quit(NULL);
+	}
+}
+
+static void btn_about_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	GameWindow_InitAboutWindow();
+	GameWindow_ShowAboutWindow();
+}
+
+static void btn_license_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	GameWindow_InitLicenseWindow();
+	GameWindow_ShowLicenseWindow();
+}
+
 static void btn_switch_video_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
 	int mode;
@@ -204,12 +224,17 @@ static void btn_switch_video_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent
 static void Game_InitMainMenu(void)
 {
 	wchar_t str_buff[32];
-	LCUI_Widget *menu_help_btn, *menu_options_btn;
-	LCUI_Widget *btn_switch_video_mode;
+	LCUI_Widget *menu_help_btn, *menu_options_btn, *menu_quit_btn;
+	LCUI_Widget *btn_switch_video_mode, *btn_about, *btn_license;
+
 	/* 创建几个游戏菜单 */
 	main_menu_box = GameMenu_New();
 	help_menu_box = GameMenu_New();
 	options_menu_box = GameMenu_New();
+	/* 将这些菜单放入主界面框里 */
+	Widget_Container_Add( main_ui_box, main_menu_box );
+	Widget_Container_Add( main_ui_box, help_menu_box );
+	Widget_Container_Add( main_ui_box, options_menu_box );
 	/* 设置主菜单的位置 */
 	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_LEFT, Pos(50,0) );
 	/* 为这些菜单设置配色方案 */
@@ -221,11 +246,11 @@ static void Game_InitMainMenu(void)
 	GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
 	menu_options_btn = GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
 	menu_help_btn = GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
-	GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
+	menu_quit_btn = GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
 
 	GameMenu_NewButtonW( help_menu_box, TEXT_USAGE );
-	GameMenu_NewButtonW( help_menu_box, TEXT_ABOUT );
-	GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
+	btn_about = GameMenu_NewButtonW( help_menu_box, TEXT_ABOUT );
+	btn_license = GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
 	GameMenu_NewButtonW( help_menu_box, TEXT_JOINUS );
 
 	GameMenu_NewButtonW( options_menu_box, TEXT_SET_KEYBOARD );
@@ -238,7 +263,9 @@ static void Game_InitMainMenu(void)
 	btn_switch_video_mode = GameMenu_NewButtonW( options_menu_box, str_buff );
 	/* 为菜单按钮关联CLICKED事件，以在按钮被点击时进行相应 */
 	Widget_Event_Connect( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
-
+	Widget_Event_Connect( menu_quit_btn, EVENT_CLICKED, btn_quit_clicked );
+	Widget_Event_Connect( btn_about, EVENT_CLICKED, btn_about_clicked );
+	Widget_Event_Connect( btn_license, EVENT_CLICKED, btn_license_clicked );
 	/* 设置一些子菜单 */
 	GameMenu_SetChildMenu( main_menu_box, menu_help_btn, help_menu_box );
 	GameMenu_SetChildMenu( main_menu_box, menu_options_btn, options_menu_box );
@@ -256,7 +283,7 @@ static void Game_ShowMainMenu(void)
 /** 初始化主界面 */
 void Game_InitMainUI(void)
 {
-	Game_LoadMainMenuRes();
+	Game_LoadMainUIRes();
 	/* 创建所需的部件 */
 	main_ui_box = Widget_New(NULL);
 
