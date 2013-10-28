@@ -11,15 +11,29 @@
 #include "gamewnd_about.h"
 
 #define LOGOBTN_SIZE	Size(116,116)
-#define WINDOW_SIZE	Size(350,300)
+#define WINDOW_SIZE	Size(350,300+70)
 #define BTN_SIZE	Size(80,30)
 #define LOGO_SIZE	Size(64,64)
 
 #define TEXT_OK		L"确定"
 #define TEXT_TITLE	L"关于本游戏"
 #define TEXT_MEMBER	L" 制作人员 "
+
 const wchar_t member_list_text[]={
-	L"神马"
+	L"<size=13px>"
+	L"<color=#ff4e00>主策划</color>\n"
+	L"        刘超\n\n"
+	L"<color=#ff4e00>系统设计</color>\n"
+	L"        刘超\n\n"
+	L"<color=#ff4e00>数值设计</color>\n"
+	L"        刘超\n\n"
+	L"<color=#ff4e00>UI设计</color>\n"
+	L"        刘超\n\n"
+	L"<color=#ff4e00>AI设计</color>\n"
+	L"        刘超\n\n"
+	L"<color=#ff4e00>主程序</color>\n"
+	L"        刘超\n\n"
+	L"</size>"
 };
 
 const wchar_t about_text[]={
@@ -27,6 +41,11 @@ const wchar_t about_text[]={
 	L"版本 1.1.0\n"
 	L"版权所有 (C) 2013 LC-Games 开发组。\n"
 	L"保留所有权利。"
+};
+
+const wchar_t about_support_text[]={
+	L"本游戏由 LCUI 驱动，主要为游戏提供图形界面、图形处理、键盘驱动等的支持。\n"
+	L"游戏中应用的素材资源来自红白机上的格斗游戏《热血格斗》，素材著作权属于TECHNōS JAPAN公司（虽然已经破产很久了）。"
 };
 
 enum RES_ID {
@@ -38,6 +57,7 @@ enum RES_ID {
 
 static LCUI_Widget *window;
 static LCUI_Widget *wdg_img_logo, *label_about_text;
+static LCUI_Widget *label_about_support_text;
 static LCUI_Widget *label_member;
 static LCUI_Widget *textbox_member_list;
 static LCUI_Widget *box;
@@ -55,6 +75,7 @@ void GameWindow_InitAboutWindow(void)
 {
 	window = Widget_New("window");
 	label_about_text = Widget_New("label");
+	label_about_support_text = Widget_New("label");
 	label_member = Widget_New("label");
 	textbox_member_list = Widget_New("text_box");
 	wdg_img_logo = Widget_New(NULL);
@@ -65,6 +86,7 @@ void GameWindow_InitAboutWindow(void)
 	GameGraphRes_GetGraph( MAIN_RES, "game-logo", &img_game_logo );
 
 	Window_ClientArea_Add( window, label_about_text );
+	Window_ClientArea_Add( window, label_about_support_text );
 	Window_ClientArea_Add( window, label_member );
 	Window_ClientArea_Add( window, wdg_img_logo );
 	Window_ClientArea_Add( window, box );
@@ -76,19 +98,23 @@ void GameWindow_InitAboutWindow(void)
 	
 	Widget_SetAlign( wdg_img_logo, ALIGN_TOP_LEFT, Pos(0,0) );
 	Widget_SetAlign( label_about_text, ALIGN_TOP_LEFT, Pos(76,0) );
-	Widget_SetAlign( label_member, ALIGN_TOP_CENTER, Pos(0,72) );
-	Widget_SetAlign( box, ALIGN_TOP_CENTER, Pos(0,80) );
+	Widget_SetAlign( label_about_support_text, ALIGN_TOP_LEFT, Pos(0,70) );
+	Widget_SetAlign( label_member, ALIGN_TOP_CENTER, Pos(0,72+70) );
+	Widget_SetAlign( box, ALIGN_TOP_CENTER, Pos(0,80+70) );
 	Widget_SetAlign( btn_ok, ALIGN_BOTTOM_CENTER, Pos(0,-5) );
 
 	Widget_SetBackgroundImage( wdg_img_logo, &img_game_logo );
 
 	Label_TextW( label_about_text, about_text );
+	Label_TextW( label_about_support_text, about_support_text );
 	Label_TextW( label_member, TEXT_MEMBER );
 	Button_TextW( btn_ok, TEXT_OK );
 	TextBox_SetMultiline( textbox_member_list, TRUE );
 	TextBox_SetReadOnly( textbox_member_list, TRUE );
+	TextBox_SetUsingStyleTags( textbox_member_list, TRUE );
 	TextBox_TextW( textbox_member_list, member_list_text );
 	Window_SetTitleTextW( window, TEXT_TITLE );
+	TextBox_ShowCursor( textbox_member_list, FALSE );
 
 	Widget_SetStyleID( window, WINDOW_STYLE_LINE );
 	Widget_SetPadding( Window_GetClientArea(window), Padding(10,10,10,10) );
@@ -106,6 +132,7 @@ void GameWindow_InitAboutWindow(void)
 
 	Widget_Show( wdg_img_logo );
 	Widget_Show( label_about_text );
+	Widget_Show( label_about_support_text );
 	Widget_Show( textbox_member_list );
 	Widget_Show( box );
 	Widget_Show( label_member );
