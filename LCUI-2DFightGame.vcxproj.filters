@@ -108,6 +108,21 @@
     <ClCompile Include="src\game_menubtn.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\game_menu.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game_config.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamewnd_about.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamewnd_license.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamewnd_usage.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
@@ -186,6 +201,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\game_menubtn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_menu.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamewnd_about.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamewnd_license.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamewnd_usage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -72,7 +72,7 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
       <AdditionalDependencies>LCUI_D.lib</AdditionalDependencies>
       <Profile>false</Profile>
-      <ShowProgress>NotSet</ShowProgress>
+      <ShowProgress>LinkVerbose</ShowProgress>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -107,12 +107,17 @@
     <ClCompile Include="src\gameres_mike.c" />
     <ClCompile Include="src\gameres_riki.c" />
     <ClCompile Include="src\gameres_toraji.c" />
+    <ClCompile Include="src\gamewnd_about.c" />
+    <ClCompile Include="src\gamewnd_usage.c" />
+    <ClCompile Include="src\gamewnd_license.c" />
     <ClCompile Include="src\game_action.c" />
     <ClCompile Include="src\game_AI.c" />
     <ClCompile Include="src\game_attack.c" />
+    <ClCompile Include="src\game_config.c" />
     <ClCompile Include="src\game_control.c" />
     <ClCompile Include="src\game_battle.c" />
     <ClCompile Include="src\game_logobtn.c" />
+    <ClCompile Include="src\game_menu.c" />
     <ClCompile Include="src\game_menubtn.c" />
     <ClCompile Include="src\game_object.c" />
     <ClCompile Include="src\game_resource.c" />
@@ -137,12 +142,17 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\game.h" />
+    <ClInclude Include="src\gamewnd_about.h" />
+    <ClInclude Include="src\gamewnd_license.h" />
+    <ClInclude Include="src\gamewnd_usage.h" />
     <ClInclude Include="src\game_action.h" />
     <ClInclude Include="src\game_AI.h" />
     <ClInclude Include="src\game_attack.h" />
     <ClInclude Include="src\game_battle.h" />
+    <ClInclude Include="src\game_config.h" />
     <ClInclude Include="src\game_control.h" />
     <ClInclude Include="src\game_logobtn.h" />
+    <ClInclude Include="src\game_menu.h" />
     <ClInclude Include="src\game_menubtn.h" />
     <ClInclude Include="src\game_msg.h" />
     <ClInclude Include="src\game_object.h" />
