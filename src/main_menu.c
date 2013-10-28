@@ -13,6 +13,7 @@
 #include "game_menubtn.h"
 #include "game_menu.h"
 #include "game_config.h"
+#include "gamewnd_usage.h"
 #include "gamewnd_about.h"
 #include "gamewnd_license.h"
 
@@ -39,7 +40,7 @@
 #define TEXT_QUIT_TIP_TITLE	L"提示"
 
 #define SIZE_MAIN_MENU_BOX	Size(150,180)
-#define SIZE_HELP_MENU_BOX	Size(150,140)
+#define SIZE_HELP_MENU_BOX	Size(150,145)
 #define SIZE_OPTIONS_MENU_BOX	Size(150,75)
 
 #define COLOR_RED	{255,78,0}
@@ -182,6 +183,12 @@ static void btn_quit_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 	}
 }
 
+static void btn_usage_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	GameWindow_InitUsageWindow();
+	GameWindow_ShowUsageWindow();
+}
+
 static void btn_about_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
 	GameWindow_InitAboutWindow();
@@ -225,7 +232,7 @@ static void Game_InitMainMenu(void)
 {
 	wchar_t str_buff[32];
 	LCUI_Widget *menu_help_btn, *menu_options_btn, *menu_quit_btn;
-	LCUI_Widget *btn_switch_video_mode, *btn_about, *btn_license;
+	LCUI_Widget *btn_switch_video_mode, *btn_usage, *btn_about, *btn_license;
 
 	/* 创建几个游戏菜单 */
 	main_menu_box = GameMenu_New();
@@ -248,7 +255,7 @@ static void Game_InitMainMenu(void)
 	menu_help_btn = GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
 	menu_quit_btn = GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
 
-	GameMenu_NewButtonW( help_menu_box, TEXT_USAGE );
+	btn_usage = GameMenu_NewButtonW( help_menu_box, TEXT_USAGE );
 	btn_about = GameMenu_NewButtonW( help_menu_box, TEXT_ABOUT );
 	btn_license = GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
 	GameMenu_NewButtonW( help_menu_box, TEXT_JOINUS );
@@ -264,6 +271,7 @@ static void Game_InitMainMenu(void)
 	/* 为菜单按钮关联CLICKED事件，以在按钮被点击时进行相应 */
 	Widget_Event_Connect( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
 	Widget_Event_Connect( menu_quit_btn, EVENT_CLICKED, btn_quit_clicked );
+	Widget_Event_Connect( btn_usage, EVENT_CLICKED, btn_usage_clicked );
 	Widget_Event_Connect( btn_about, EVENT_CLICKED, btn_about_clicked );
 	Widget_Event_Connect( btn_license, EVENT_CLICKED, btn_license_clicked );
 	/* 设置一些子菜单 */
