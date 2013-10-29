@@ -18,32 +18,6 @@ LCUI_Widget *GetGameScene(void)
 {
 	return game_scene;
 }
-#ifdef aaaaa
-/** 初始化演示场景 */
-int GameDemoScene_Init(void)
-{
-	int ret;
-	LCUI_Size scene_size;
-
-	scene_size.w = 800;
-	scene_size.h = 600;
-	game_demo_scene = Widget_New(NULL);
-	if( !game_demo_scene ) {
-		return -1;
-	}
-	Widget_Resize( game_demo_scene, scene_size );
-	Widget_SetAlign( game_demo_scene, ALIGN_MIDDLE_CENTER, Pos(0,0) );
-	demo_scene_land_pos.x = 50;
-	demo_scene_land_pos.y = 400;
-	demo_scene_land_size.w = scene_size.w - 2*demo_scene_land_pos.x;
-	demo_scene_land_size.h = 10;
-	GameSpace_SetBound(	demo_scene_land_pos.x, 
-				demo_scene_land_size.w, 
-				demo_scene_land_pos.y,
-				demo_scene_land_size.h );
-	return 0;
-}
-#endif
 
 /** 初始化战斗场景 */
 int GameScene_Init( void )
