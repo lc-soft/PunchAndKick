@@ -15,8 +15,6 @@
 #include "main_menu.h"
 #include "skills/game_skill.h"
 #include "game_role_select.h"
-#include "game_logobtn.h"
-#include "game_titlebarbtn.h"
 #include "game_menubtn.h"
 #include "game_menu.h"
 #include "game_config.h"
@@ -212,8 +210,6 @@ static void Game_MainThread( void *arg )
 	LCUI_Thread t;
 
 	srand((unsigned int)time(NULL));
-	TitleBarBtn_Register();
-	LogoBtn_Register();
 	GameObject_Register();
 	GameMenuBtn_Register();
 	GameMenu_Register();
@@ -230,15 +226,13 @@ static void Game_MainThread( void *arg )
 	
 	GameMsgLoopStart();
 	LCUIThread_Create( &t, Game_DemoThread, NULL );
-	LCUIThread_Exit(NULL);
-	return;
-#ifdef asdasdasd
 	while(1) {
 		role_id = Game_GetSelectedRole();	/* 获取选择的角色的ID */
 		if( role_id == -1 ) {
 			LCUI_MSleep(100);
 			continue;
 		}
+#ifdef aaaa
 		Game_HideMainUI();			/* 隐藏主菜单界面 */
 		/* 设置1号玩家的控制键 */
 		ctrlkey.a_attack = LCUIKEY_J;
@@ -257,8 +251,9 @@ static void Game_MainThread( void *arg )
 		Game_AddCPUPlayer();				/* 补全剩余玩家信息 */
 		Game_StartBattle();				/* 开始对战 */
 		Game_Loop();					/* 进入游戏主循环 */
-	}
 #endif
+		break;
+	}
 }
 
 #ifdef LCUI_BUILD_IN_WIN32
