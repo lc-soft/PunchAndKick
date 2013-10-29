@@ -7,8 +7,6 @@
 #include LC_DISPLAY_H
 
 #include "game.h"
-#include "game_logobtn.h"
-#include "game_titlebarbtn.h"
 #include "game_role_select.h"
 #include "game_menubtn.h"
 #include "game_menu.h"
@@ -26,6 +24,9 @@
 #define TEXT_HELP		L"帮助"
 #define TEXT_QUIT		L"退出"
 
+#define TEXT_2V2_GAME		L"2v2对战"
+#define TEXT_SCUFFLE_GAME	L"4人混战"
+
 #define TEXT_SET_KEYBOARD	L"键位设置"
 #define TEXT_WINDOWED		L"窗口模式"
 #define TEXT_ON			L"开"
@@ -40,6 +41,7 @@
 #define TEXT_QUIT_TIP_TITLE	L"提示"
 
 #define SIZE_MAIN_MENU_BOX	Size(150,180)
+#define SIZE_GAME_MENU_BOX	Size(150,75)
 #define SIZE_HELP_MENU_BOX	Size(150,145)
 #define SIZE_OPTIONS_MENU_BOX	Size(150,75)
 
@@ -70,7 +72,7 @@ enum RES_ID {
 };
 
 static LCUI_Widget *main_ui_box;
-static LCUI_Widget *main_menu_box, *help_menu_box, *options_menu_box;
+static LCUI_Widget *main_menu_box, *game_menu_box, *help_menu_box, *options_menu_box;
 static LCUI_Widget *footer_box;
 static LCUI_Widget *front_wave[2], *back_wave[2];
 static LCUI_Widget *copyright_text;
@@ -201,6 +203,12 @@ static void btn_license_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 	GameWindow_ShowLicenseWindow();
 }
 
+static void scuffle_game_btn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	Game_InitRoleSelectBox();
+	Game_ShowRoleSelectBox();
+}
+
 static void btn_switch_video_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
 	int mode;
@@ -231,26 +239,33 @@ static void btn_switch_video_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent
 static void Game_InitMainMenu(void)
 {
 	wchar_t str_buff[32];
-	LCUI_Widget *menu_help_btn, *menu_options_btn, *menu_quit_btn;
-	LCUI_Widget *btn_switch_video_mode, *btn_usage, *btn_about, *btn_license;
+	LCUI_Widget *menu_game_btn, *menu_help_btn, *menu_options_btn, *menu_quit_btn;
+	LCUI_Widget *scuffle_game_btn, *btn_switch_video_mode, *btn_usage, *btn_about, *btn_license;
 
 	/* 创建几个游戏菜单 */
 	main_menu_box = GameMenu_New();
+	game_menu_box = GameMenu_New();
 	help_menu_box = GameMenu_New();
 	options_menu_box = GameMenu_New();
 	/* 将这些菜单放入主界面框里 */
 	Widget_Container_Add( main_ui_box, main_menu_box );
+	Widget_Container_Add( main_ui_box, game_menu_box );
 	Widget_Container_Add( main_ui_box, help_menu_box );
 	Widget_Container_Add( main_ui_box, options_menu_box );
 	/* 设置主菜单的位置 */
 	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_LEFT, Pos(50,0) );
 	/* 为这些菜单设置配色方案 */
 	GameMenu_SetColorScheme( main_menu_box, color_set, TOTAL_COLOR_NUM );
+	GameMenu_SetColorScheme( game_menu_box, color_set, TOTAL_COLOR_NUM );
 	GameMenu_SetColorScheme( help_menu_box, color_set, TOTAL_COLOR_NUM );
 	GameMenu_SetColorScheme( options_menu_box, color_set, TOTAL_COLOR_NUM );
 	/* 为菜单创建按钮 */
-	GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
+	menu_game_btn = GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
 	GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
+
+	GameMenu_NewButtonW( game_menu_box, TEXT_2V2_GAME );
+	scuffle_game_btn = GameMenu_NewButtonW( game_menu_box, TEXT_SCUFFLE_GAME );
+
 	menu_options_btn = GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
 	menu_help_btn = GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
 	menu_quit_btn = GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
@@ -269,16 +284,19 @@ static void Game_InitMainMenu(void)
 	}
 	btn_switch_video_mode = GameMenu_NewButtonW( options_menu_box, str_buff );
 	/* 为菜单按钮关联CLICKED事件，以在按钮被点击时进行相应 */
+	Widget_Event_Connect( scuffle_game_btn, EVENT_CLICKED, scuffle_game_btn_clicked );
 	Widget_Event_Connect( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
 	Widget_Event_Connect( menu_quit_btn, EVENT_CLICKED, btn_quit_clicked );
 	Widget_Event_Connect( btn_usage, EVENT_CLICKED, btn_usage_clicked );
 	Widget_Event_Connect( btn_about, EVENT_CLICKED, btn_about_clicked );
 	Widget_Event_Connect( btn_license, EVENT_CLICKED, btn_license_clicked );
 	/* 设置一些子菜单 */
+	GameMenu_SetChildMenu( main_menu_box, menu_game_btn, game_menu_box );
 	GameMenu_SetChildMenu( main_menu_box, menu_help_btn, help_menu_box );
 	GameMenu_SetChildMenu( main_menu_box, menu_options_btn, options_menu_box );
 	/* 调整各个菜单的尺寸 */
 	Widget_Resize( main_menu_box, SIZE_MAIN_MENU_BOX );
+	Widget_Resize( game_menu_box, SIZE_GAME_MENU_BOX );
 	Widget_Resize( help_menu_box, SIZE_HELP_MENU_BOX );
 	Widget_Resize( options_menu_box, SIZE_OPTIONS_MENU_BOX );
 }
