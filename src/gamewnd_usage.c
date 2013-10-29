@@ -84,6 +84,7 @@ void GameWindow_InitUsageWindow(void)
 	Label_TextW( label_usage, TEXT_LICENSE );
 	Button_TextW( btn_ok, TEXT_OK );
 	TextBox_SetMultiline( textbox_usage, TRUE );
+	TextBox_SetAutoWrap( textbox_usage, TRUE );
 	TextBox_SetReadOnly( textbox_usage, TRUE );
 	TextBox_SetUsingStyleTags( textbox_usage, TRUE );
 	TextBox_SetTextBlockSize( textbox_usage, 1024 );
