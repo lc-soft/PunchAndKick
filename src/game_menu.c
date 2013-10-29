@@ -92,8 +92,8 @@ static int GameMenuProc_GetMenuPos( LCUI_Widget *menu, LCUI_Pos *menu_pos )
 		parent_menu = p_data->parent_menu;
 	}
 	if( menu ) {
-		pos.x += Widget_GetPos( menu ).x;
-		pos.y += Widget_GetPos( menu ).y;
+		pos.x += _Widget_GetPos( menu ).x;
+		pos.y += _Widget_GetPos( menu ).y;
 		p_data = (GameMenuData*)Widget_GetPrivData( menu );
 		n = Queue_GetTotal( &p_data->button_list );
 		root_menu_height = n*(p_data->button_height+2);
