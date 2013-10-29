@@ -44,8 +44,8 @@ const wchar_t about_text[]={
 };
 
 const wchar_t about_support_text[]={
-	L"本游戏由 LCUI 驱动，主要为游戏提供图形界面、图形处理、键盘驱动等的支持。\n"
-	L"游戏中应用的素材资源来自红白机上的格斗游戏《热血格斗》，素材著作权属于TECHNōS JAPAN公司（虽然已经破产很久了）。"
+	L"本游戏由LCUI驱动，主要为游戏提供图形界面、图形处理、键盘驱动等的支持。\n"
+	L"游戏中应用的素材资源来自FC格斗游戏《热血格斗》，素材著作权属于TECHNōS JAPAN公司（虽然已经破产很久了）。"
 };
 
 enum RES_ID {
@@ -104,7 +104,7 @@ void GameWindow_InitAboutWindow(void)
 	Widget_SetAlign( btn_ok, ALIGN_BOTTOM_CENTER, Pos(0,-5) );
 
 	Widget_SetBackgroundImage( wdg_img_logo, &img_game_logo );
-
+	Label_SetAutoWrap( label_about_support_text, TRUE );
 	Label_TextW( label_about_text, about_text );
 	Label_TextW( label_about_support_text, about_support_text );
 	Label_TextW( label_member, TEXT_MEMBER );
