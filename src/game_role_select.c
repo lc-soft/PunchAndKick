@@ -38,6 +38,11 @@ static LCUI_Widget *info_area, *skill_area;
 static LCUI_Sleeper sleeper;
 static LCUI_BOOL window_is_inited = FALSE;
 
+static LCUI_Thread th_role_action_update;
+
+static GameSpaceData *temp_space;
+static LCUI_Queue temp_role_library;
+
 static int current_select_role = 0;
 
 static void closebtn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
@@ -150,6 +155,15 @@ static void btn_select_role_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unus
 	Game_DestroyRoleSelectBox();
 }
 
+/** 更新角色的动作动画 */
+static void GameRoleSelectBox_UpdateRoleAction( void *arg )
+{
+	while( window_is_inited ) {
+		GameObjectLibrary_UpdateAction( &temp_role_library );
+		LCUI_MSleep(10);
+	}
+}
+
 /** 初始化角色选择框 */
 void Game_InitRoleSelectBox(void)
 {
@@ -159,9 +173,12 @@ void Game_InitRoleSelectBox(void)
 	if( window_is_inited ) {
 		return;
 	}
+	temp_space = GameSpace_New();
+	GameObjectLibrary_Create( &temp_role_library );
+
 	window = Widget_New("window");
 	role_image_box = Widget_New(NULL);
-	role_image = NULL;//GameObject_New();
+	role_image = GameObject_New( temp_space, &temp_role_library );
 	btn_prev_role = Widget_New("button");
 	btn_next_role = Widget_New("button");
 	btn_select_role = Widget_New("button");
@@ -193,7 +210,7 @@ void Game_InitRoleSelectBox(void)
 	Widget_Container_Add( info_area, role_image_box );
 	Widget_Resize( window, WINDOWS_SIZE );
 	Window_SetTitleTextW( window, L"选择游戏角色" );
-	Widget_SetAlpha( window, 0 );
+
 	Widget_Event_Connect(	Window_GetCloseButton(window), 
 				EVENT_CLICKED, closebtn_clicked );
 	
@@ -321,39 +338,25 @@ void Game_InitRoleSelectBox(void)
 	RoleSelectBox_SetRole( ROLE_KUNI );
 	LCUISleeper_Create( &sleeper );
 	window_is_inited = TRUE;
+	LCUIThread_Create( &th_role_action_update, GameRoleSelectBox_UpdateRoleAction, NULL );
 }
 
 /** 显示角色选择框 */
 void Game_ShowRoleSelectBox(void)
 {
-	uchar_t alpha;
-	
 	if( !window_is_inited ) {
 		return;
 	}
 	Widget_Show( window );
 	Widget_SetModal( window, TRUE );
-	/* 以淡入的效果显示菜单 */
-	for( alpha=0; alpha<240; alpha+=20 ) {
-		Widget_SetAlpha( window, alpha );
-		LCUI_MSleep(25);
-	}
-	Widget_SetAlpha( window, 255 );
 }
 
 /** 隐藏角色选择框 */
 void Game_HideRoleSelectBox(void)
 {
-	uchar_t alpha;
 	if( !window_is_inited ) {
 		return;
 	}
-	/* 以淡出的效果显示菜单 */
-	for( alpha=240; alpha>0; alpha-=20 ) {
-		Widget_SetAlpha( window, alpha );
-		LCUI_MSleep(25);
-	}
-	Widget_SetAlpha( window, 0 );
 	Widget_Hide( window );
 }
 
@@ -362,6 +365,7 @@ void Game_DestroyRoleSelectBox(void)
 	if( !window_is_inited ) {
 		return;
 	}
-	Widget_Destroy( window );
 	window_is_inited = FALSE;
+	LCUIThread_Join( th_role_action_update, NULL );
+	Widget_Destroy( window );
 }
