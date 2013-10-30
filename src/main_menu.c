@@ -168,12 +168,6 @@ static void keyboard_tip_box_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *
 	Widget_Refresh( widget );
 }
 
-static void btn_single_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
-{
-	Game_InitRoleSelectBox();	/* 初始化角色选择框 */
-	Game_ShowRoleSelectBox();	/* 显示角色选择框 */
-}
-
 /** 在退出按钮被点击时 */
 static void btn_quit_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
