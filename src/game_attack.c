@@ -102,34 +102,39 @@ void Game_RecordAttack( GamePlayer *attacker,
 			int victim_state )
 {
 	AttackRecord data;
+	BattleData *p_battle;
 	data.attacker = attacker;
 	strncpy( data.attack_type_name, attack_type_name, NAME_MAX_LEN );
 	data.attack_type_name[NAME_MAX_LEN-1] = 0;
 	data.victim = victim;
 	data.victim_state = victim_state;
-	Queue_Lock( &attack_record );
-	Queue_Add( &attack_record, &data );
-	Queue_Unlock( &attack_record );
+	p_battle = GameBattle_GetBattle( attacker->battle_id );
+	if( !p_battle ) {
+		return;
+	}
+	Queue_Lock( &p_battle->attack_record );
+	Queue_Add( &p_battle->attack_record, &data );
+	Queue_Unlock( &p_battle->attack_record );
 }
 
 /** 处理已经记录的攻击 */
-void Game_ProcAttack(void)
+void Game_ProcAttack( LCUI_Queue *p_attakc_record )
 {
 	int n, true_damage;
 	AttackRecord *p_data;
 	AttackInfo *p_info;
 
-	Queue_Lock( &attack_record );
-	n = Queue_GetTotal( &attack_record );
+	Queue_Lock( p_attakc_record );
+	n = Queue_GetTotal( p_attakc_record );
 	for( ; n>=0; --n) {
-		p_data = (AttackRecord*)Queue_Get( &attack_record, 0 );
+		p_data = (AttackRecord*)Queue_Get( p_attakc_record, 0 );
 		if( !p_data || !p_data->victim ) {
 			continue;
 		}
 		/* 获取该类型攻击的信息 */
 		p_info = AttackLibrary_GetInfo( p_data->attack_type_name );
 		if( !p_info ) {
-			Queue_Delete( &attack_record, 0 );
+			Queue_Delete( p_attakc_record, 0 );
 			continue;
 		}
 		if( p_info->effect ) {
@@ -157,16 +162,21 @@ void Game_ProcAttack(void)
 		StatusBar_SetHealth(	p_data->victim->statusbar,
 					p_data->victim->property.cur_hp );
 			/* 删除该攻击记录 */
-		Queue_Delete( &attack_record, 0 );
+		Queue_Delete( p_attakc_record, 0 );
 	}
-	Queue_Unlock( &attack_record );
+	Queue_Unlock( p_attakc_record );
+}
+
+/** 初始化攻击信息库 */
+void Game_InitAttackLibrary(void)
+{
+	Queue_Init( &attack_library, sizeof(AttackInfo), NULL );
 }
 
 /** 初始化攻击记录 */
-void Game_InitAttackRecord(void)
+void Game_InitAttackRecord( LCUI_Queue *p_attakc_record )
 {
-	Queue_Init( &attack_library, sizeof(AttackInfo), NULL );
-	Queue_Init( &attack_record, sizeof(AttackRecord), NULL );
+	Queue_Init( p_attakc_record, sizeof(AttackRecord), NULL );
 }
 
 void Game_DestroyAttackRecord(void)
