@@ -2,9 +2,15 @@
 #include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
+#include LC_DISPLAY_H
 
 #include "game.h"
 #include "skills/game_skill.h"
+
+typedef struct FrameControlData_ {
+	int one_frame_remain_time;
+	int64_t prev_frame_start_time;
+} FrameControlData;
 
 static LCUI_BOOL list_is_inited = FALSE;
 static LCUI_Queue battle_list;
@@ -53,7 +59,7 @@ int GameBattle_New(void)
 	}
 	data.id = ++battle_id;
 	data.need_sync_camera = FALSE;
-	data.camera_x_padding = 0;
+	data.camera_x_padding = 100;
 	data.scene_land_pos.x = 0;
 	data.scene_land_pos.y = 0;
 	data.scene_land_size.w = 0;
@@ -62,6 +68,7 @@ int GameBattle_New(void)
 	data.space = GameSpace_New();
 	data.scene = Widget_New(NULL);
 	Queue_Init( &data.player_list, sizeof(GamePlayer), GamePlayerList_Delete );
+	Game_InitAttackRecord( &data.attack_record );
 	GameObjectLibrary_Create( &data.gameobject_library );
 	Queue_Add( &battle_list, &data );
 	return data.id;
@@ -384,6 +391,18 @@ int GameBattle_GetSceneLand(	int battle_id,
 	return 0;
 }
 
+/** 设置是否自动同步镜头 */
+int GameBattle_SetAutoSyncCamera( int battle_id, LCUI_BOOL is_true )
+{
+	BattleData *p_battle;
+	p_battle = GameBattle_GetBattle( battle_id );
+	if( !p_battle ) {
+		return -1;
+	}
+	p_battle->need_sync_camera = is_true;
+	return 0;
+}
+
 /** 设置场景大小 */
 int GameBattle_SetSceneSize( int battle_id, LCUI_Size size )
 {
@@ -392,14 +411,36 @@ int GameBattle_SetSceneSize( int battle_id, LCUI_Size size )
 	if( !p_battle ) {
 		return -1;
 	}
+	p_battle->scene_size = size;
 	Widget_Resize( p_battle->scene, size );
+	return 0;
+}
+
+/** 获取场景大小 */
+int GameBattle_GetSceneSize( int battle_id, LCUI_Size *size )
+{
+	BattleData *p_battle;
+	p_battle = GameBattle_GetBattle( battle_id );
+	if( !p_battle ) {
+		return -1;
+	}
+	*size = p_battle->scene_size;
 	return 0;
 }
 
 /** 设置场景背景图 */
 int GameBattle_SetSceneBackground(	int battle_id, 
-					LCUI_Graph *img )
+					LCUI_Graph *stage_img )
 {
+	BattleData *p_battle;
+	p_battle = GameBattle_GetBattle( battle_id );
+	if( !p_battle ) {
+		return -1;
+	}
+	Widget_SetBackgroundImage( p_battle->scene, stage_img );
+	Widget_SetBackgroundLayout( p_battle->scene, LAYOUT_CENTER );
+	Widget_SetBackgroundColor( p_battle->scene, RGB(0,0,0) );
+	Widget_SetBackgroundTransparent( p_battle->scene, FALSE );
 	return 0;
 }
 
@@ -414,45 +455,87 @@ LCUI_Widget* GameBattle_GetScene( int battle_id )
 	return p_battle->scene;
 }
 
-static int one_frame_remain_time;
-static int64_t prev_frame_start_time;
-
 /** 初始化帧数控制 */
-static void FrameControl_Init( int ms_per_frame )
+static void FrameControl_Init( FrameControlData* p_data, int ms_per_frame )
 {
-	one_frame_remain_time = ms_per_frame;
-	prev_frame_start_time = LCUI_GetTickCount();
+	p_data->one_frame_remain_time = ms_per_frame;
+	p_data->prev_frame_start_time = LCUI_GetTickCount();
 }
 
 /** 让当前帧停留一段时间 */
-static void FrameControl_RemainFrame(void)
+static void FrameControl_RemainFrame( FrameControlData *p_data )
 {
 	int n_ms;
 	int64_t current_time;
 
 	current_time = LCUI_GetTickCount();
-	n_ms = (int)(current_time - prev_frame_start_time);
-	if( n_ms < one_frame_remain_time ) {
-		n_ms = one_frame_remain_time - n_ms;
+	n_ms = (int)(current_time - p_data->prev_frame_start_time);
+	if( n_ms < p_data->one_frame_remain_time ) {
+		n_ms = p_data->one_frame_remain_time - n_ms;
 		if( n_ms > 0 ) {
 			LCUI_MSleep( n_ms );
 		}
 	}
-	prev_frame_start_time += one_frame_remain_time;
+	p_data->prev_frame_start_time += p_data->one_frame_remain_time;
 }
 
 static void GameBattle_ProcGameObject( void *arg )
 {
 	BattleData* p_battle;
+	FrameControlData ctrl_data;
 	p_battle = (BattleData*)arg;
 	/* 初始化帧数控制 */
-	FrameControl_Init( 1000/FRAMES_PER_SEC );
+	FrameControl_Init( &ctrl_data, 1000/FRAMES_PER_SEC );
 	while(1) {
 		GameSpace_Step( p_battle->space );
 		GameObjectLibrary_UpdateAction( &p_battle->gameobject_library );
 		GameObjectLibrary_DispatchEvent( &p_battle->gameobject_library );
-		FrameControl_RemainFrame();
+		FrameControl_RemainFrame( &ctrl_data );
 	}
+}
+
+/** 更新场景上的镜头位置，使目标游戏对象处于镜头区域内 */
+static int GameScene_UpdateCamera(	LCUI_Widget *game_scene, 
+					LCUI_Widget *camera_target, 
+					int x_padding )
+{
+	int target_x, offset_x, wdg_scene_x, screen_width, start_x;
+	LCUI_Size scene_size;
+	static int speed = 1;
+
+	scene_size = Widget_GetSize( game_scene );
+	screen_width = LCUIScreen_GetWidth();
+	start_x = (screen_width - scene_size.w)/2;
+	target_x = (int)GameObject_GetX( camera_target );
+	wdg_scene_x = Widget_GetPos( game_scene ).x;
+	/* 既然大于0，则说明战斗场景小于屏幕区域，无需移动镜头 */
+	if( wdg_scene_x > 0 ) {
+		return 0;
+	}
+	/* 如果目标位置在镜头的左内边框的左边 */
+	if( wdg_scene_x + target_x < x_padding ) {
+		/* 计算出战斗场景的位置 */
+		offset_x = x_padding - target_x;
+		/* 判断镜头是否会超出战斗场景的范围 */
+		if( offset_x > 0 ) {
+			offset_x = 0;
+		}
+		/* 得出坐标偏移量 */
+		offset_x = offset_x - start_x;
+		/* 将战斗场景向右移动 */
+		Widget_SetAlign( game_scene, ALIGN_BOTTOM_CENTER, Pos(offset_x,-STATUS_BAR_HEIGHT) );
+		return 0;
+	}
+	/* 如果目标位置在镜头的右内边框的右边 */
+	if( wdg_scene_x + target_x > screen_width - x_padding ) {
+		offset_x = screen_width - x_padding - target_x;
+		if( offset_x < screen_width - scene_size.w ) {
+			offset_x = screen_width - scene_size.w;
+		}
+		offset_x = offset_x - start_x;
+		Widget_SetAlign( game_scene, ALIGN_BOTTOM_CENTER, Pos(offset_x,-STATUS_BAR_HEIGHT) );
+	}
+	return 0;
 }
 
 /** 进入循环 */
@@ -494,15 +577,17 @@ int GameBattle_Loop( int battle_id )
 			Widget_Update( p_player->object );
 			/* 将第一个有效的游戏角色设置为镜头焦点 */
 			if( n_found == 1 ) {
-				GameScene_SetCameraTarget( p_player->object );
+				p_battle->camera_target = p_player->object;
 			}
 		}
 		/* 如果需要更新镜头 */
-		if( p_battle->need_sync_camera ) {
-			GameScene_UpdateCamera();
+		if( p_battle->need_sync_camera && p_battle->camera_target ) {
+			GameScene_UpdateCamera( p_battle->scene, 
+						p_battle->camera_target, 
+						p_battle->camera_x_padding );
 		}
 		/* 处理攻击 */
-		Game_ProcAttack();
+		Game_ProcAttack( &p_battle->attack_record );
 		LCUI_MSleep(10);
 	}
 	return 0;
