@@ -173,6 +173,9 @@ extern void GamePlayer_SetReady( GamePlayer *player );
 
 extern void GamePlayer_Init( GamePlayer *player );
 
+/** 初始化按键响应 */
+extern void GameBattle_InitKeyboardControl(void);
+
 /** 同步游戏玩家的按键控制 */
 extern void GamePlayer_SyncKeyControl( GamePlayer *player );
 
@@ -264,22 +267,5 @@ void GamePlayer_SetDownMotion( GamePlayer *player );
 
 /** 获取角色信息 */
 RoleInfo *Game_GetRoleInfo( int role_id );
-
-/** 设置游戏角色 */
-int Game_SetGamePlayer( int id, int role_id, LCUI_BOOL human_control );
-
-/** 启用一个游戏角色 */
-void Game_EnableGamePlayer( int id );
-
-/** 初始化对战 */
-int Game_InitBattle(void);
-
-int Game_InitDemoBattle(void);
-
-/** 开始对战 */
-void Game_StartBattle( void );
-
-/** 开始演示对战 */
-void Game_StartDemoBattle( void );
 
 #endif

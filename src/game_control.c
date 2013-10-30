@@ -9,8 +9,6 @@
 #include "game.h"
 #include "skills/game_skill.h"
 
-static GamePlayer player_data[4];
-static LCUI_Widget *player_status_area;
 static int state_action_map[TOTAL_STATE_NUM];
 
 static void ControlKey_Init( ControlKey *key )
@@ -60,10 +58,6 @@ void GamePlayer_ChangeAction( GamePlayer *player, int action_id )
 	msg.player_id = player->id;
 	msg.msg.msg_id = GAMEMSG_ACTION;
 	msg.msg.action.action_id = action_id;
-	DEBUG_MSG("battle id: %d, player id: %d, action id: %d\n", player->battle_id, player->id, action_id);
-	if( action_id == ACTION_DEFENSE ) {
-		abort();
-	}
 	Game_PostMsg( &msg );
 }
 
@@ -886,30 +880,6 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 	}
 }
 
-static int Game_InitPlayerStatusArea(void)
-{
-	player_status_area = Widget_New(NULL);
-	Widget_SetBackgroundColor( player_status_area, RGB(240,240,240) );
-	Widget_SetBackgroundTransparent( player_status_area, FALSE );
-	Widget_SetBorder( player_status_area, Border(1,BORDER_STYLE_SOLID,RGB(150,150,150)));
-	Widget_Resize( player_status_area, Size(800,STATUS_BAR_HEIGHT) );
-	Widget_SetAlign( player_status_area, ALIGN_BOTTOM_CENTER, Pos(0,0) );
-	/* 创建状态栏 */
-	player_data[0].statusbar = StatusBar_New();
-	player_data[1].statusbar = StatusBar_New();
-	player_data[2].statusbar = StatusBar_New();
-	player_data[3].statusbar = StatusBar_New();
-	Widget_Container_Add( player_status_area, player_data[0].statusbar );
-	Widget_Container_Add( player_status_area, player_data[1].statusbar );
-	Widget_Container_Add( player_status_area, player_data[2].statusbar );
-	Widget_Container_Add( player_status_area, player_data[3].statusbar );
-	Widget_SetAlign( player_data[0].statusbar, ALIGN_TOP_LEFT, Pos(5,5) );
-	Widget_SetAlign( player_data[1].statusbar, ALIGN_TOP_LEFT, Pos(5+200,5) );
-	Widget_SetAlign( player_data[2].statusbar, ALIGN_TOP_LEFT, Pos(5+400,5) );
-	Widget_SetAlign( player_data[3].statusbar, ALIGN_TOP_LEFT, Pos(5+600,5) );
-	return 0;
-}
-
 void GamePlayer_Init( GamePlayer *player )
 {
 	LCUI_Graph img_shadow;
@@ -966,14 +936,6 @@ void GamePlayer_Init( GamePlayer *player )
 	//GameObject_SetShadow( player->object, img_shadow );
 }
 
-static void UpdateViewFPS( void *arg )
-{
-	char str[10];
-	LCUI_Widget *label = (LCUI_Widget*)arg;
-	sprintf( str, "FPS: %d", LCUIScreen_GetFPS() );
-	Label_Text( label, str );
-}
-
 /** 响应按键的按下 */
 static void GameKeyboardProcKeyDown( int key_code )
 {
@@ -1011,26 +973,10 @@ static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
 	}
 }
 
-static void InitSceneText( LCUI_Widget *scene )
+/** 初始化按键响应 */
+void GameBattle_InitKeyboardControl(void)
 {
-	LCUI_Widget *text, *fps_text;
-	LCUI_TextStyle style;
-
-	text = Widget_New("label");
-	fps_text = Widget_New("label");
-	Widget_Container_Add( scene, text );
-	Widget_Container_Add( scene, fps_text );
-	TextStyle_Init( &style );
-	TextStyle_FontSize( &style, 18 );
-	Label_TextStyle( fps_text, style );
-	Widget_SetAlign( text, ALIGN_TOP_CENTER, Pos(0,40) );
-	Widget_SetAlign( fps_text, ALIGN_TOP_CENTER, Pos(0,100) );
-	Label_TextW( text, L"<size=42px>游戏测试</size>");
-	Widget_SetZIndex( fps_text, -5000 );
-	Widget_SetZIndex( text, -5000 );
-	Widget_Show( fps_text );
-	Widget_Show( text );
-	LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
+	LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 }
 
 /** 同步游戏玩家的按键控制 */
@@ -1188,169 +1134,4 @@ RoleInfo *Game_GetRoleInfo( int role_id )
 		}
 	}
 	return NULL;
-}
-
-/** 初始化演示对战 */
-int Game_InitDemoBattle(void)
-{
-	int ret;
-
-	ret = 0;//GameDemoScene_Init();
-	if( ret != 0 ) {
-		return ret;
-	}
-	GamePlayer_Init( &player_data[0] );
-	GamePlayer_Init( &player_data[1] );
-	player_data[0].id = 1;
-	player_data[1].id = 2;
-	/* 将游戏对象放入战斗场景内 */
-	//GameObject_AddToContainer( player_data[0].object, GetGameDemoScene() );
-	//GameObject_AddToContainer( player_data[1].object, GetGameDemoScene() );
-	ret |= GameMsgLoopStart();
-	return ret;
-}
-
-/** 初始化对战 */
-int Game_InitBattle(void)
-{
-	int ret;
-
-	ret = GameScene_Init();
-	if( ret != 0 ) {
-		return ret;
-	}
-	/* 注册所需部件 */
-	StatusBar_Register();
-	LifeBar_Regiser();
-	/* 初始化攻击记录 */
-	Game_InitAttackRecord();
-	/* 初始化状态与动作的映射表 */
-	Game_InitStateActionMap();
-	/** 初始化技能库 */
-	SkillLibrary_Init();
-	/* 初始化角色信息 */
-	GamePlayer_Init( &player_data[0] );
-	GamePlayer_Init( &player_data[1] );
-	GamePlayer_Init( &player_data[2] );
-	GamePlayer_Init( &player_data[3] );
-	/* 记录玩家ID */
-	player_data[0].id = 1;
-	player_data[1].id = 2;
-	player_data[2].id = 3;
-	player_data[3].id = 4;
-	/* 初始化角色状态信息区域 */
-	ret |= Game_InitPlayerStatusArea();
-	/* 将游戏对象放入战斗场景内 */
-	GameObject_AddToContainer( player_data[0].object, GetGameScene() );
-	GameObject_AddToContainer( player_data[1].object, GetGameScene() );
-	GameObject_AddToContainer( player_data[2].object, GetGameScene() );
-	GameObject_AddToContainer( player_data[3].object, GetGameScene() );
-	/* 响应按键输入 */
-	ret |= LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
-	ret |= GameMsgLoopStart();
-	/* 初始化在场景上显示的文本 */
-	InitSceneText( GetGameScene() );
-	return ret;
-}
-
-/** 开始演示对战 */
-void Game_StartDemoBattle( void )
-{
-	int i;
-	int x, y, start_x, start_y;
-	LCUI_Size scene_size;
-	return;
-	//GameDemoScene_GetLandSize( &scene_size );
-	//GameDemoScene_GetLandStartX( &start_x );
-	//GameDemoScene_GetLandStartY( &start_y );
-	x = scene_size.w/2 - 150;
-	GameObject_SetX( player_data[0].object, start_x+x );
-	GameObject_SetX( player_data[1].object, start_x+x+300 );
-	y = scene_size.h/2;
-	GameObject_SetY( player_data[0].object, start_y+y );
-	GameObject_SetY( player_data[1].object, start_y+y );
-	GamePlayer_SetRightOriented( &player_data[0] );
-	GamePlayer_SetLeftOriented( &player_data[1] );
-	GamePlayer_SetStart( &player_data[0] );
-	GamePlayer_SetStart( &player_data[1] );
-	/* 播放动作动画，并显示游戏角色 */
-	for(i=0; i<2; ++i) {
-		if( !player_data[i].enable ) {
-			continue;
-		}
-		/* 播放动作动画 */
-		GameObject_PlayAction( player_data[i].object );
-		/* 显示游戏角色 */
-		Widget_Show( player_data[i].object );
-	}
-	/* 显示场景 */
-	//Widget_Show( GetGameDemoScene() );
-}
-
-/** 开始对战 */
-void Game_StartBattle( void )
-{
-	int i;
-	RoleInfo *p_role_info;
-	int x, y, start_x, start_y;
-	LCUI_Size scene_size;
-	wchar_t player_type_name[5];
-
-	GameScene_GetLandSize( &scene_size );
-	GameScene_GetLandStartX( &start_x );
-	GameScene_GetLandStartY( &start_y );
-	/* 计算并设置游戏角色的位置 */
-	x = scene_size.w/2 - 150;
-	GameObject_SetX( player_data[0].object, start_x+x );
-	GameObject_SetX( player_data[1].object, start_x+x-50 );
-	x = scene_size.w/2 + 150;
-	GameObject_SetX( player_data[2].object, start_x+x );
-	GameObject_SetX( player_data[3].object, start_x+x+50 );
-	y = scene_size.h/2;
-	GameObject_SetY( player_data[0].object, start_y+y-50 );
-	GameObject_SetY( player_data[1].object, start_y+y+50 );
-	GameObject_SetY( player_data[2].object, start_y+y-50 );
-	GameObject_SetY( player_data[3].object, start_y+y+50 );
-	/* 改变游戏角色的朝向 */
-	GamePlayer_SetRightOriented( &player_data[0] );
-	GamePlayer_SetRightOriented( &player_data[1] );
-	GamePlayer_SetLeftOriented( &player_data[2] );
-	GamePlayer_SetLeftOriented( &player_data[3] );
-	/* 设置游戏角色的初始状态 */
-	GamePlayer_SetStart( &player_data[0] );
-	GamePlayer_SetStart( &player_data[1] );
-	GamePlayer_SetStart( &player_data[2] );
-	GamePlayer_SetStart( &player_data[3] );
-	/* 播放动作动画，并显示游戏角色 */
-	for(i=0; i<4; ++i) {
-		if( !player_data[i].enable ) {
-			continue;
-		}
-		/* 播放动作动画 */
-		GameObject_PlayAction( player_data[i].object );
-		if( player_data[i].human_control ) {
-			player_type_name[0] = L'1'+i;
-			player_type_name[1] = L'P';
-			player_type_name[2] = 0;
-		} else {
-			player_type_name[0] = L'C';
-			player_type_name[1] = L'P';
-			player_type_name[2] = L'U';
-			player_type_name[3] = 0;
-		}
-		p_role_info = Game_GetRoleInfo( player_data[i].role_id );
-		StatusBar_SetPlayerNameW( player_data[i].statusbar, p_role_info->name );
-		/* 设置角色类型名 */
-		StatusBar_SetPlayerTypeNameW( player_data[i].statusbar, player_type_name );
-		/* 设置血量 */
-		StatusBar_SetHealth( player_data[i].statusbar, player_data[i].property.cur_hp );
-		StatusBar_SetMaxHealth( player_data[i].statusbar, player_data[i].property.max_hp );
-		/* 显示游戏角色 */
-		Widget_Show( player_data[i].object );
-		/* 显示状态栏 */
-		Widget_Show( player_data[i].statusbar );
-	}
-	Widget_Show( player_status_area );
-	/* 显示场景 */
-	Widget_Show( GetGameScene() );
 }
