@@ -47,9 +47,12 @@ void Game_RecordAttack( GamePlayer *attacker,
 			int victim_state );
 
 /** 处理已经记录的攻击 */
-void Game_ProcAttack(void);
+void Game_ProcAttack( LCUI_Queue *p_attakc_record );
+
+/** 初始化攻击信息库 */
+void Game_InitAttackLibrary(void);
 
 /** 初始化攻击记录 */
-void Game_InitAttackRecord(void);
+void Game_InitAttackRecord( LCUI_Queue *p_attakc_record );
 
 #endif
