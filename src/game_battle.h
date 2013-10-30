@@ -5,6 +5,7 @@ typedef struct BattleDate_ {
 	int id;
 	LCUI_Queue player_list;
 	LCUI_Widget *scene;
+	LCUI_Size scene_size;
 	LCUI_Pos scene_land_pos;
 	LCUI_Size scene_land_size;
 	LCUI_BOOL need_sync_camera;
@@ -12,6 +13,7 @@ typedef struct BattleDate_ {
 	int camera_x_padding;
 	GameSpaceData *space;
 	LCUI_Queue gameobject_library;
+	LCUI_Queue attack_record;
 } BattleData;
 
 /** 获取指定ID的对战数据 */
@@ -62,8 +64,14 @@ int GameBattle_GetSceneLand(	int battle_id,
 				LCUI_Pos *land_pos, 
 				LCUI_Size *land_size );
 
+/** 设置是否自动同步镜头 */
+int GameBattle_SetAutoSyncCamera( int battle_id, LCUI_BOOL is_true );
+
 /** 设置场景大小 */
 int GameBattle_SetSceneSize( int battle_id, LCUI_Size size );
+
+/** 获取场景大小 */
+int GameBattle_GetSceneSize( int battle_id, LCUI_Size *size );
 
 /** 设置场景背景图 */
 int GameBattle_SetSceneBackground(	int battle_id, 
