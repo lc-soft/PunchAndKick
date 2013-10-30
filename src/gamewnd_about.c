@@ -10,8 +10,10 @@
 #include "game_resource.h"
 #include "gamewnd_about.h"
 
+#define TOP_SPACE	85
+
 #define LOGOBTN_SIZE	Size(116,116)
-#define WINDOW_SIZE	Size(350,300+70)
+#define WINDOW_SIZE	Size(350,300+TOP_SPACE)
 #define BTN_SIZE	Size(80,30)
 #define LOGO_SIZE	Size(64,64)
 
@@ -44,8 +46,8 @@ const wchar_t about_text[]={
 };
 
 const wchar_t about_support_text[]={
-	L"本游戏由LCUI驱动，主要为游戏提供图形界面、图形处理、键盘驱动等的支持。\n"
-	L"游戏中应用的素材资源来自FC格斗游戏《热血格斗》，素材著作权属于TECHNōS JAPAN公司（虽然已经破产很久了）。"
+	L"本游戏由 LCUI 驱动，主要为游戏提供图形界面、图形处理、键盘驱动等的支持，文本渲染功能由 FreeType 字体引擎提供支持。\n"
+	L"游戏中应用的人物素材资源来自FC格斗游戏《热血格斗》，素材著作权属于TECHNōS JAPAN公司（虽然该公司已经破产很久了）。"
 };
 
 enum RES_ID {
@@ -99,8 +101,8 @@ void GameWindow_InitAboutWindow(void)
 	Widget_SetAlign( wdg_img_logo, ALIGN_TOP_LEFT, Pos(0,0) );
 	Widget_SetAlign( label_about_text, ALIGN_TOP_LEFT, Pos(76,0) );
 	Widget_SetAlign( label_about_support_text, ALIGN_TOP_LEFT, Pos(0,70) );
-	Widget_SetAlign( label_member, ALIGN_TOP_CENTER, Pos(0,72+70) );
-	Widget_SetAlign( box, ALIGN_TOP_CENTER, Pos(0,80+70) );
+	Widget_SetAlign( label_member, ALIGN_TOP_CENTER, Pos(0,72+TOP_SPACE) );
+	Widget_SetAlign( box, ALIGN_TOP_CENTER, Pos(0,80+TOP_SPACE) );
 	Widget_SetAlign( btn_ok, ALIGN_BOTTOM_CENTER, Pos(0,-5) );
 
 	Widget_SetBackgroundImage( wdg_img_logo, &img_game_logo );
