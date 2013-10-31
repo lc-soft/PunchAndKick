@@ -15,6 +15,56 @@ typedef struct FrameControlData_ {
 static LCUI_BOOL list_is_inited = FALSE;
 static LCUI_Queue battle_list;
 
+/** 初始化游戏帧数控制 */
+static void GameBattleFrame_Init(	BattleFrameStatus *p_status,
+					int ms_per_frame )
+{
+	LCUISleeper_Create( &p_status->wait_continue );
+	LCUISleeper_Create( &p_status->wait_pause );
+	p_status->one_frame_remain_time = ms_per_frame;
+}
+
+/** 暂停游戏数据帧的更新 */
+static void GameBattleFrame_Pause(	BattleFrameStatus *p_status, 
+					LCUI_BOOL need_pause )
+{
+	if( p_status->is_run && need_pause ) {
+		LCUISleeper_BreakSleep( &p_status->wait_pause );
+	}
+	else if( !p_status->is_run && !need_pause ){
+		LCUISleeper_BreakSleep( &p_status->wait_continue );
+	}
+	p_status->is_run = !need_pause;
+}
+
+/** 让当前帧停留一定时间 */
+static void GameBattleFrame_Remain( BattleFrameStatus *p_status )
+{
+	int n_ms, lost_ms;
+	int64_t current_time;
+
+	current_time = LCUI_GetTickCount();
+	n_ms = (int)(current_time - p_status->prev_frame_start_time);
+	if( n_ms > p_status->one_frame_remain_time ) {
+		goto normal_exit;
+	}
+	n_ms = p_status->one_frame_remain_time - n_ms;
+	if( n_ms < 0 ) {
+		goto normal_exit;
+	}
+	LCUISleeper_StartSleep( &p_status->wait_pause, n_ms );
+	if( p_status->is_run ) {
+		goto normal_exit;
+	}
+
+	lost_ms = LCUISleeper_StartSleep( &p_status->wait_continue, MAXINT32 );
+	p_status->prev_frame_start_time += lost_ms;
+	return;
+
+normal_exit:
+	p_status->prev_frame_start_time += p_status->one_frame_remain_time;
+}
+
 static void GamePlayerList_Delete( void* arg )
 {
 
@@ -59,7 +109,7 @@ int GameBattle_New(void)
 	}
 	data.id = ++battle_id;
 	data.need_sync_camera = FALSE;
-	data.camera_x_padding = 100;
+	data.camera_x_padding = 200;
 	data.scene_land_pos.x = 0;
 	data.scene_land_pos.y = 0;
 	data.scene_land_size.w = 0;
@@ -455,45 +505,6 @@ LCUI_Widget* GameBattle_GetScene( int battle_id )
 	return p_battle->scene;
 }
 
-/** 初始化帧数控制 */
-static void FrameControl_Init( FrameControlData* p_data, int ms_per_frame )
-{
-	p_data->one_frame_remain_time = ms_per_frame;
-	p_data->prev_frame_start_time = LCUI_GetTickCount();
-}
-
-/** 让当前帧停留一段时间 */
-static void FrameControl_RemainFrame( FrameControlData *p_data )
-{
-	int n_ms;
-	int64_t current_time;
-
-	current_time = LCUI_GetTickCount();
-	n_ms = (int)(current_time - p_data->prev_frame_start_time);
-	if( n_ms < p_data->one_frame_remain_time ) {
-		n_ms = p_data->one_frame_remain_time - n_ms;
-		if( n_ms > 0 ) {
-			LCUI_MSleep( n_ms );
-		}
-	}
-	p_data->prev_frame_start_time += p_data->one_frame_remain_time;
-}
-
-static void GameBattle_ProcGameObject( void *arg )
-{
-	BattleData* p_battle;
-	FrameControlData ctrl_data;
-	p_battle = (BattleData*)arg;
-	/* 初始化帧数控制 */
-	FrameControl_Init( &ctrl_data, 1000/FRAMES_PER_SEC );
-	while(1) {
-		GameSpace_Step( p_battle->space );
-		GameObjectLibrary_UpdateAction( &p_battle->gameobject_library );
-		GameObjectLibrary_DispatchEvent( &p_battle->gameobject_library );
-		FrameControl_RemainFrame( &ctrl_data );
-	}
-}
-
 /** 更新场景上的镜头位置，使目标游戏对象处于镜头区域内 */
 static int GameScene_UpdateCamera(	LCUI_Widget *game_scene, 
 					LCUI_Widget *camera_target, 
@@ -538,6 +549,36 @@ static int GameScene_UpdateCamera(	LCUI_Widget *game_scene,
 	return 0;
 }
 
+static void GameBattle_ProcGameObject( void *arg )
+{
+	BattleData* p_battle;
+	p_battle = (BattleData*)arg;
+	/* 初始化游戏动画帧处理 */
+	GameBattleFrame_Init( &p_battle->animation_frame, 20 );
+	p_battle->animation_frame.is_run = TRUE;
+	p_battle->animation_frame.prev_frame_start_time = LCUI_GetTickCount();
+	while(1) {
+		GameSpace_Step( p_battle->space );
+		GameObjectLibrary_UpdateAction( &p_battle->gameobject_library );
+		GameObjectLibrary_DispatchEvent( &p_battle->gameobject_library );
+		GameBattleFrame_Remain( &p_battle->animation_frame );
+	}
+}
+
+/** 设置是否暂停对战 */
+int GameBattle_Pause( int battle_id, LCUI_BOOL need_pause )
+{
+	BattleData* p_battle;
+
+	p_battle = GameBattle_GetBattle( battle_id );
+	if( !p_battle ) {
+		return -1;
+	}
+	GameBattleFrame_Pause( &p_battle->data_proc_frame, need_pause );
+	GameBattleFrame_Pause( &p_battle->animation_frame, need_pause );
+	return 0;
+}
+
 /** 进入循环 */
 int GameBattle_Loop( int battle_id )
 {
@@ -554,6 +595,10 @@ int GameBattle_Loop( int battle_id )
 	GameAI_Init();
 	/* 创建一个线程，用于处理游戏对象的数据更新 */
 	LCUIThread_Create( &th, GameBattle_ProcGameObject, p_battle );
+	/* 初始化游戏数据帧处理 */
+	GameBattleFrame_Init( &p_battle->data_proc_frame, 10 );
+	p_battle->animation_frame.is_run = TRUE;
+	p_battle->animation_frame.prev_frame_start_time = LCUI_GetTickCount();
 	/* 循环更新游戏数据 */
 	while(1) {
 		n = Queue_GetTotal( &p_battle->player_list );
@@ -588,7 +633,8 @@ int GameBattle_Loop( int battle_id )
 		}
 		/* 处理攻击 */
 		Game_ProcAttack( &p_battle->attack_record );
-		LCUI_MSleep(10);
+		/* 本帧数据处理完后，停留一段时间 */
+		GameBattleFrame_Remain( &p_battle->data_proc_frame );
 	}
 	return 0;
 }

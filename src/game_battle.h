@@ -1,6 +1,14 @@
 ﻿#ifndef __GAME_BATTLE_H__
 #define __GAME_BATTLE_H__
 
+typedef struct BattleFrameStatus_ {
+	LCUI_BOOL is_run;
+	LCUI_Sleeper wait_pause;
+	LCUI_Sleeper wait_continue;
+	int one_frame_remain_time;
+	int64_t prev_frame_start_time;
+} BattleFrameStatus;
+
 typedef struct BattleDate_ {
 	int id;
 	LCUI_Queue player_list;
@@ -14,6 +22,8 @@ typedef struct BattleDate_ {
 	GameSpaceData *space;
 	LCUI_Queue gameobject_library;
 	LCUI_Queue attack_record;
+	BattleFrameStatus animation_frame;
+	BattleFrameStatus data_proc_frame;
 } BattleData;
 
 /** 获取指定ID的对战数据 */
@@ -79,6 +89,9 @@ int GameBattle_SetSceneBackground(	int battle_id,
 
 /** 获取场景 */
 LCUI_Widget* GameBattle_GetScene( int battle_id );
+
+/** 设置是否暂停对战 */
+int GameBattle_Pause( int battle_id, LCUI_BOOL need_pause );
 
 /** 进入循环 */
 int GameBattle_Loop( int battle_id );
