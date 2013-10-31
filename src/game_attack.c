@@ -21,7 +21,6 @@ typedef struct AttackInfo_ {
 	void (*effect)(GamePlayer*, GamePlayer*);	/**< 实现攻击带来的效果 */
 } AttackInfo;
 
-static LCUI_Queue attack_record;
 static LCUI_Queue attack_library;
 
 static AttackInfo *AttackLibrary_GetInfo( const char *attack_type_name )
@@ -131,6 +130,7 @@ void Game_ProcAttack( LCUI_Queue *p_attakc_record )
 		if( !p_data || !p_data->victim ) {
 			continue;
 		}
+
 		/* 获取该类型攻击的信息 */
 		p_info = AttackLibrary_GetInfo( p_data->attack_type_name );
 		if( !p_info ) {
@@ -150,7 +150,7 @@ void Game_ProcAttack( LCUI_Queue *p_attakc_record )
 		}
 		/* 如果该受害者是无敌的，则不扣血 */
 		if( p_data->victim->is_invincible ) {
-			Queue_Delete( &attack_record, 0 );
+			Queue_Delete( p_attakc_record, 0 );
 			continue;
 		}
 		/* 计算现在的血量 */
