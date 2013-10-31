@@ -19,9 +19,11 @@ static LCUI_Queue battle_list;
 static void GameBattleFrame_Init(	BattleFrameStatus *p_status,
 					int ms_per_frame )
 {
+	p_status->is_run = TRUE;
+	p_status->one_frame_remain_time = ms_per_frame;
+	p_status->prev_frame_start_time = LCUI_GetTickCount();
 	LCUISleeper_Create( &p_status->wait_continue );
 	LCUISleeper_Create( &p_status->wait_pause );
-	p_status->one_frame_remain_time = ms_per_frame;
 }
 
 /** 暂停游戏数据帧的更新 */
@@ -49,7 +51,7 @@ static void GameBattleFrame_Remain( BattleFrameStatus *p_status )
 		goto normal_exit;
 	}
 	n_ms = p_status->one_frame_remain_time - n_ms;
-	if( n_ms < 0 ) {
+	if( n_ms < 1 ) {
 		goto normal_exit;
 	}
 	LCUISleeper_StartSleep( &p_status->wait_pause, n_ms );
@@ -555,8 +557,6 @@ static void GameBattle_ProcGameObject( void *arg )
 	p_battle = (BattleData*)arg;
 	/* 初始化游戏动画帧处理 */
 	GameBattleFrame_Init( &p_battle->animation_frame, 20 );
-	p_battle->animation_frame.is_run = TRUE;
-	p_battle->animation_frame.prev_frame_start_time = LCUI_GetTickCount();
 	while(1) {
 		GameSpace_Step( p_battle->space );
 		GameObjectLibrary_UpdateAction( &p_battle->gameobject_library );
@@ -596,9 +596,7 @@ int GameBattle_Loop( int battle_id )
 	/* 创建一个线程，用于处理游戏对象的数据更新 */
 	LCUIThread_Create( &th, GameBattle_ProcGameObject, p_battle );
 	/* 初始化游戏数据帧处理 */
-	GameBattleFrame_Init( &p_battle->data_proc_frame, 10 );
-	p_battle->animation_frame.is_run = TRUE;
-	p_battle->animation_frame.prev_frame_start_time = LCUI_GetTickCount();
+	GameBattleFrame_Init( &p_battle->data_proc_frame, 20 );
 	/* 循环更新游戏数据 */
 	while(1) {
 		n = Queue_GetTotal( &p_battle->player_list );
