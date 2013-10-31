@@ -21,17 +21,6 @@
 
 #define TEXT_COPYRIGHT_EN	L"Developed by LC-Games, Copyright © 2013 LC-Games, All Rights Reserved."
 #define TEXT_COPYRIGHT_CN	L"本游戏由 LC-Games 开发 , LC-Games 保留所有权利。"
-#define TEXT_STATEMENT		L"<size=20px>"\
-				L"此版本的游戏仅用于展示：\n\n"\
-				L" ● 游戏主菜单界面\n"\
-				L" ● 游戏角色的控制\n"\
-				L" ● 技能动作效果\n"\
-				L" ● 血条的动态效果\n"\
-				L" ● 人工智能\n\n"\
-				L"游戏中大部分BUG是已知的，请无视本程序出现的一些细节上的BUG。\n"\
-				L"如果遇到较为严重的BUG，请关闭并重新运行本程序。</size>"
-
-
 
 static LCUI_Widget *player_status_area;
 
@@ -40,27 +29,24 @@ static void Game_ShowBootScreen(void)
 {
 	uchar_t alpha;
 	LCUI_Graph img_game_logo;
-	LCUI_Widget *wdg_img_logo, *wdg_text;
+	LCUI_Widget *wdg_img_logo;
 	LCUI_Widget *wdg_copyright_cn_text, *wdg_copyright_en_text;
 
 	wdg_img_logo = Widget_New(NULL);
 	wdg_copyright_cn_text = Widget_New("label");
 	wdg_copyright_en_text = Widget_New("label");
-	wdg_text = Widget_New("label");
 	
 	Graph_Init( &img_game_logo );
 	GameGraphRes_GetGraph(MAIN_RES, "main-logo", &img_game_logo );
 	
 	Label_TextW( wdg_copyright_en_text, TEXT_COPYRIGHT_EN );
 	Label_TextW( wdg_copyright_cn_text, TEXT_COPYRIGHT_CN );
-	Label_TextW( wdg_text, TEXT_STATEMENT );
 
 	Widget_Resize( wdg_img_logo, Graph_GetSize(&img_game_logo) );
 	
 	Widget_SetAlign( wdg_copyright_cn_text, ALIGN_BOTTOM_CENTER, Pos(0,-20) );
 	Widget_SetAlign( wdg_copyright_en_text, ALIGN_BOTTOM_CENTER, Pos(0,-40) );
 	Widget_SetAlign( wdg_img_logo, ALIGN_MIDDLE_CENTER, Pos(0,0) );
-	Widget_SetAlign( wdg_text, ALIGN_MIDDLE_CENTER, Pos(0,0) );
 	
 	Widget_SetBackgroundImage( wdg_img_logo, &img_game_logo );
 	Widget_SetBackgroundLayout( wdg_img_logo, LAYOUT_CENTER );
@@ -68,7 +54,6 @@ static void Game_ShowBootScreen(void)
 	Widget_SetAlpha( wdg_img_logo, 0 );
 	Widget_SetAlpha( wdg_copyright_cn_text, 0 );
 	Widget_SetAlpha( wdg_copyright_en_text, 0 );
-	Widget_SetAlpha( wdg_text, 0 );
 
 	Widget_Show( wdg_img_logo );
 	Widget_Show( wdg_copyright_en_text );
@@ -98,23 +83,8 @@ static void Game_ShowBootScreen(void)
 	Widget_Hide( wdg_img_logo );
 	Widget_Hide( wdg_copyright_en_text );
 	Widget_Hide( wdg_copyright_cn_text );
-	Widget_Show( wdg_text );
-#ifndef SKIP_BOOT_SCREEN
-	/* 以淡入淡出的效果显示文本内容 */
-	for( alpha=0; alpha<250; alpha+=10 ) {
-		Widget_SetAlpha( wdg_text, alpha );
-		LCUI_MSleep(25);
-	}
-	Widget_SetAlpha( wdg_text, 255 );
-	LCUI_Sleep(2);
-	for( alpha=255; alpha>5; alpha-=10 ) {
-		Widget_SetAlpha( wdg_text, alpha );
-		LCUI_MSleep(25);
-	}
-#endif
-	Widget_Hide( wdg_text );
+
 	Widget_Destroy( wdg_img_logo );
-	Widget_Destroy( wdg_text );
 	Widget_Destroy( wdg_copyright_en_text );
 	Widget_Destroy( wdg_copyright_cn_text );
 }
@@ -175,7 +145,7 @@ static void Game_DemoThread( void *arg )
 
 	scene_size.w = 800;
 	scene_size.h = 600;
-	battle_id = GameBattle_New();
+	battle_id = (int)arg;
 	GameBattle_SetSceneLand( battle_id, Pos(50,400), Size(700,10) );
 	GameBattle_SetSceneSize( battle_id, scene_size );
 	demo_scene = GameBattle_GetScene( battle_id );
@@ -268,7 +238,6 @@ static void UpdateViewFPS( void *arg )
 	LCUI_Widget *label = (LCUI_Widget*)arg;
 	sprintf( str, "FPS: %d", LCUIScreen_GetFPS() );
 	Label_Text( label, str );
-	_DEBUG_MSG("tip, %s\n", str);
 }
 
 static void InitSceneText( LCUI_Widget *scene )
@@ -290,7 +259,6 @@ static void InitSceneText( LCUI_Widget *scene )
 	Widget_SetZIndex( text, -5000 );
 	Widget_Show( fps_text );
 	Widget_Show( text );
-	_DEBUG_MSG("tip\n");
 	LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
 }
 
@@ -404,8 +372,8 @@ static int Game_InitFight( int role_id[4] )
 
 static void Game_StartFight( int battle_id )
 {
-	int i;
 	GamePlayer *p_player[4];
+	LCUI_Widget *game_scene;
 
 	p_player[0] = GameBattle_GetPlayer( battle_id, 1 );
 	p_player[1] = GameBattle_GetPlayer( battle_id, 2 );
@@ -418,14 +386,12 @@ static void Game_StartFight( int battle_id )
 	GamePlayer_SetStart( p_player[2] );
 	GamePlayer_SetStart( p_player[3] );
 
-	for(i=0; i<4; ++i) {
-		GameObject_PlayAction( p_player[i]->object );
-		Widget_Show( p_player[i]->object );
-	}
-
-	Widget_Show( GameBattle_GetScene(battle_id) );
+	game_scene = GameBattle_GetScene(battle_id);
+	Widget_SetModal( game_scene, TRUE );
+	Widget_Show( game_scene );
 	Game_ShowPlayerStatusArea();
 	GameBattle_InitKeyboardControl();
+	GameBattle_Start( battle_id );
 	GameBattle_Loop( battle_id );
 }
 
@@ -433,7 +399,7 @@ static void Game_StartFight( int battle_id )
 static void Game_MainThread( void *arg )
 {
 	int role_id[4];
-	int main_battle;
+	int main_battle, demo_battle;
 	LCUI_Thread t;
 
 	srand((unsigned int)time(NULL));
@@ -455,14 +421,17 @@ static void Game_MainThread( void *arg )
 	Game_ShowMainUI();			/* 显示主菜单界面 */
 	
 	GameMsgLoopStart();
-	LCUIThread_Create( &t, Game_DemoThread, NULL );
+	
+	demo_battle = GameBattle_New();
+	LCUIThread_Create( &t, Game_DemoThread, (void*)demo_battle );
 	while(1) {
 		role_id[0] = Game_GetSelectedRole();
 		if( role_id[0] == -1 ) {
 			LCUI_MSleep(100);
 			continue;
 		}
-
+		/* 暂停演示对战 */
+		GameBattle_Pause( demo_battle, TRUE );
 		Game_HideMainUI();
 		main_battle = Game_InitFight( role_id );
 		Game_StartFight( main_battle );
@@ -528,7 +497,7 @@ int main( int argc, char **argv )
 	int ret;
 	int mode;
 	LCUI_Thread t;
-#define DEBUG
+//#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
