@@ -101,27 +101,25 @@ void Game_RecordAttack( GamePlayer *attacker,
 			int victim_state )
 {
 	AttackRecord data;
-	BattleData *p_battle;
+	LCUI_Queue *p_atk_record;
 	data.attacker = attacker;
 	strncpy( data.attack_type_name, attack_type_name, NAME_MAX_LEN );
 	data.attack_type_name[NAME_MAX_LEN-1] = 0;
 	data.victim = victim;
 	data.victim_state = victim_state;
-	p_battle = GameBattle_GetBattle( attacker->battle_id );
-	if( !p_battle ) {
-		return;
-	}
-	Queue_Lock( &p_battle->attack_record );
-	Queue_Add( &p_battle->attack_record, &data );
-	Queue_Unlock( &p_battle->attack_record );
+	p_atk_record = GameBattle_GetAttackRecord( attacker->battle_id );
+	Queue_Lock( p_atk_record );
+	Queue_Add( p_atk_record, &data );
+	Queue_Unlock( p_atk_record );
 }
 
 /** 处理已经记录的攻击 */
-void Game_ProcAttack( LCUI_Queue *p_attakc_record )
+void Game_ProcAttack( LCUI_Queue *p_attakc_record, ValueTipData *value_tip )
 {
 	int n, true_damage;
 	AttackRecord *p_data;
 	AttackInfo *p_info;
+	LCUI_Pos start_pos;
 
 	Queue_Lock( p_attakc_record );
 	n = Queue_GetTotal( p_attakc_record );
@@ -152,6 +150,11 @@ void Game_ProcAttack( LCUI_Queue *p_attakc_record )
 		if( p_data->victim->is_invincible ) {
 			Queue_Delete( p_attakc_record, 0 );
 			continue;
+		}
+		/** 如果已经初始化数值提示功能 */
+		if( value_tip->is_inited ) {
+			GameObject_GetFootPos( p_data->victim->object, &start_pos );
+			GameValueTip_AddTip( value_tip, start_pos, true_damage );
 		}
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= true_damage;

@@ -2,6 +2,8 @@
 #ifndef __GAME_ATTACK_H__
 #define __GAME_ATTACK_H__
 
+#include "game_value_tip.h"
+
 #define ATK_NONE			"none"
 #define ATK_THROW			"throw attack"
 #define ATK_RIDE_A_ATTACK		"ride A attack"
@@ -47,7 +49,7 @@ void Game_RecordAttack( GamePlayer *attacker,
 			int victim_state );
 
 /** 处理已经记录的攻击 */
-void Game_ProcAttack( LCUI_Queue *p_attakc_record );
+void Game_ProcAttack( LCUI_Queue *p_attakc_record, ValueTipData *value_tip );
 
 /** 初始化攻击信息库 */
 void Game_InitAttackLibrary(void);
