@@ -1,4 +1,4 @@
-﻿#define SKIP_BOOT_SCREEN
+﻿//#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -22,6 +22,8 @@
 #define TEXT_COPYRIGHT_EN	L"Developed by LC-Games, Copyright © 2013 LC-Games, All Rights Reserved."
 #define TEXT_COPYRIGHT_CN	L"本游戏由 LC-Games 开发 , LC-Games 保留所有权利。"
 
+static int main_battle_id;
+static LCUI_Thread main_thread_id;
 static LCUI_Widget *player_status_area;
 
 /** 在屏幕上显示游戏启动时的画面 */
@@ -370,6 +372,41 @@ static int Game_InitFight( int role_id[4] )
 	return battle_id;
 }
 
+/** 显示退出提示框 */
+static void Game_ShowQuitTipBox( void *arg1, void *arg2 )
+{
+	int ret;
+	GameBattle_Pause( main_battle_id, TRUE );
+	ret = LCUI_MessageBoxW(	MB_ICON_WARNING, 
+				L"是否退出本场对战？", 
+				L"提示", MB_BTN_OKCANCEL );
+	GameBattle_Pause( main_battle_id, FALSE );
+	if( ret == MB_BTN_IS_OK ) {
+		GameBattle_Quit( main_battle_id );
+	}
+}
+
+/** 在游戏的对战场景中对键盘进行响应 */
+static void Game_ProcKeyboardInBattle( LCUI_KeyboardEvent *event, void *arg )
+{
+	LCUI_Task task;
+	if( event->type != LCUI_KEYDOWN ) {
+		return;
+	}
+	if( event->key_code != LCUIKEY_ESC ) {
+		return;
+	}
+	/** 准备程序任务 */
+	task.id = main_thread_id;
+	task.destroy_arg[0] = FALSE;
+	task.destroy_arg[1] = FALSE;
+	task.func = Game_ShowQuitTipBox;
+	task.arg[0] = NULL;
+	task.arg[1] = NULL;
+	/* 投递至程序任务队列 */
+	AppTasks_Add( &task );
+}
+
 static void Game_StartFight( int battle_id )
 {
 	GamePlayer *p_player[4];
@@ -387,11 +424,11 @@ static void Game_StartFight( int battle_id )
 	GamePlayer_SetStart( p_player[3] );
 
 	game_scene = GameBattle_GetScene(battle_id);
-	Widget_SetModal( game_scene, TRUE );
 	Widget_Show( game_scene );
 	Game_ShowPlayerStatusArea();
 	GameBattle_InitKeyboardControl();
 	GameBattle_Start( battle_id );
+	LCUI_KeyboardEvent_Connect( Game_ProcKeyboardInBattle, NULL );
 	GameBattle_Loop( battle_id );
 }
 
@@ -399,7 +436,7 @@ static void Game_StartFight( int battle_id )
 static void Game_MainThread( void *arg )
 {
 	int role_id[4];
-	int main_battle, demo_battle;
+	int demo_battle;
 	LCUI_Thread t;
 
 	srand((unsigned int)time(NULL));
@@ -433,8 +470,11 @@ static void Game_MainThread( void *arg )
 		/* 暂停演示对战 */
 		GameBattle_Pause( demo_battle, TRUE );
 		Game_HideMainUI();
-		main_battle = Game_InitFight( role_id );
-		Game_StartFight( main_battle );
+		main_battle_id = Game_InitFight( role_id );
+		Game_StartFight( main_battle_id );
+		/* 继续演示对战 */
+		GameBattle_Pause( demo_battle, FALSE );
+		Game_ShowMainUI();
 		break;
 	}
 }
@@ -509,12 +549,13 @@ int main( int argc, char **argv )
 	}
 	/* 初始化LCUI */
 	LCUI_Init( GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT, mode );
-
 	GameGraphRes_Init();		/* 初始化游戏资源 */
 	ret = Game_LoadResource();	/* 载入游戏资源 */
 	if( ret != 0 ) {
 		return -1;
 	}
+	/* 保存主线程ID */
+	main_thread_id = LCUIThread_SelfID();
 	LCUIThread_Create( &t, Game_MainThread, NULL );
 	return LCUI_Main();
 }
