@@ -15,7 +15,7 @@
 #define BEN_ACTION_FILE_NUM	76
 #define TORAJI_ACTION_FILE_NUM	75
 #define MAIN_FILE_NUM		2
-#define FONT_FILE_NUM		11
+#define FONT_FILE_NUM		31
 
 struct fileinfo {
 	char *filepath;
@@ -74,7 +74,27 @@ const struct fileinfo font_file_info[FONT_FILE_NUM]={
 	{"font-7.png","7"},
 	{"font-8.png","8"},
 	{"font-9.png","9"},
-	{"font-x.png","x"}
+	{"font-x.png","x"},
+	{"red-font-digital-0.png","red-0"},
+	{"red-font-digital-1.png","red-1"},
+	{"red-font-digital-2.png","red-2"},
+	{"red-font-digital-3.png","red-3"},
+	{"red-font-digital-4.png","red-4"},
+	{"red-font-digital-5.png","red-5"},
+	{"red-font-digital-6.png","red-6"},
+	{"red-font-digital-7.png","red-7"},
+	{"red-font-digital-8.png","red-8"},
+	{"red-font-digital-9.png","red-9"},
+	{"green-font-digital-0.png","red-0"},
+	{"green-font-digital-1.png","red-1"},
+	{"green-font-digital-2.png","red-2"},
+	{"green-font-digital-3.png","red-3"},
+	{"green-font-digital-4.png","red-4"},
+	{"green-font-digital-5.png","red-5"},
+	{"green-font-digital-6.png","red-6"},
+	{"green-font-digital-7.png","red-7"},
+	{"green-font-digital-8.png","red-8"},
+	{"green-font-digital-9.png","red-9"}
 };
 
 const struct fileinfo main_file_info[MAIN_RES_NUM]={
@@ -600,8 +620,13 @@ int main(int argc, char** argv)
 	//FontGraphRes_WirteToFile();
 	//ScenesGraphRes_WirteToFile();
 	//MainGraphRes_WirteToFile();
-#define need_main_res
-#ifdef need_main_res
+#define need_font
+#ifdef need_font
+	GraphRes_WirteToFile(	FONT_RES,
+				font_file_info,
+				FONT_FILE_NUM, 
+				"font.data" );
+#elif defined(need_main_res)
 	//MainGraphRes_ReadFromFile();
 	GraphRes_WirteToFile(	MAIN_RES,
 				main_file_info,
