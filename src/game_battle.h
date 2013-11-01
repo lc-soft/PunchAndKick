@@ -32,6 +32,9 @@ BattleData *GameBattle_GetBattle( int battle_id );
 /** 新建一个对战，并返回该对战的ID */
 int GameBattle_New(void);
 
+/** 退出对战 */
+int GameBattle_Quit( int battle_id );
+
 /** 开始对战 */
 int GameBattle_Start( int battle_id );
 

@@ -126,6 +126,12 @@ int GameBattle_New(void)
 	return data.id;
 }
 
+/** 退出对战 */
+int GameBattle_Quit( int battle_id )
+{
+	return 0;
+}
+
 /** 开始对战 */
 int GameBattle_Start( int battle_id )
 {
