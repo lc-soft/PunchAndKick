@@ -121,8 +121,8 @@
     <ClCompile Include="src\game_object.c" />
     <ClCompile Include="src\game_resource.c" />
     <ClCompile Include="src\game_role_select.c" />
-    <ClCompile Include="src\game_scene.c" />
     <ClCompile Include="src\game_statusbar.c" />
+    <ClCompile Include="src\game_value_tip.c" />
     <ClCompile Include="src\lan_battle.c" />
     <ClCompile Include="src\game_lifebar.c" />
     <ClCompile Include="src\main.c" />
@@ -155,11 +155,11 @@
     <ClInclude Include="src\game_object.h" />
     <ClInclude Include="src\game_resource.h" />
     <ClInclude Include="src\game_role_select.h" />
-    <ClInclude Include="src\game_scene.h" />
+    <ClInclude Include="src\game_space.h" />
     <ClInclude Include="src\game_statusbar.h" />
     <ClInclude Include="src\game_lifebar.h" />
+    <ClInclude Include="src\game_value_tip.h" />
     <ClInclude Include="src\main_menu.h" />
-    <ClInclude Include="src\game_space.h" />
     <ClInclude Include="src\skills\game_skill.h" />
     <ClInclude Include="src\skills\skills_common.h" />
     <ClInclude Include="src\skills\skills_fighter.h" />

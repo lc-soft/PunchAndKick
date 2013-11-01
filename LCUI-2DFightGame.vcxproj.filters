@@ -39,9 +39,6 @@
     <ClCompile Include="src\game_resource.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\game_scene.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\game_space.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -117,6 +114,9 @@
     <ClCompile Include="src\gamewnd_usage.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\game_value_tip.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game.h">
@@ -138,12 +138,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\game_action.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\game_scene.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\game_space.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\game_statusbar.h">
@@ -204,6 +198,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\gamewnd_usage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_space.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_value_tip.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
