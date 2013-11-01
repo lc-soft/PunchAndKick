@@ -1,39 +1,16 @@
 ﻿#ifndef __GAME_BATTLE_H__
 #define __GAME_BATTLE_H__
 
-typedef struct BattleFrameStatus_ {
-	LCUI_BOOL is_run;
-	LCUI_Sleeper wait_pause;
-	LCUI_Sleeper wait_continue;
-	int one_frame_remain_time;
-	int64_t prev_frame_start_time;
-} BattleFrameStatus;
-
-typedef struct BattleDate_ {
-	int id;
-	LCUI_Queue player_list;
-	LCUI_Widget *scene;
-	LCUI_Size scene_size;
-	LCUI_Pos scene_land_pos;
-	LCUI_Size scene_land_size;
-	LCUI_BOOL need_sync_camera;
-	LCUI_Widget *camera_target;
-	int camera_x_padding;
-	GameSpaceData *space;
-	LCUI_Queue gameobject_library;
-	LCUI_Queue attack_record;
-	BattleFrameStatus animation_frame;
-	BattleFrameStatus data_proc_frame;
-} BattleData;
-
-/** 获取指定ID的对战数据 */
-BattleData *GameBattle_GetBattle( int battle_id );
+#include "game_value_tip.h"
 
 /** 新建一个对战，并返回该对战的ID */
 int GameBattle_New(void);
 
 /** 退出对战 */
 int GameBattle_Quit( int battle_id );
+
+/** 设置是否启用数值提示功能 */
+int GameBattle_SetEnableValueTip( int battle_id, LCUI_BOOL need_enable );
 
 /** 开始对战 */
 int GameBattle_Start( int battle_id );
@@ -92,6 +69,9 @@ int GameBattle_SetSceneBackground(	int battle_id,
 
 /** 获取场景 */
 LCUI_Widget* GameBattle_GetScene( int battle_id );
+
+/** 获取攻击记录 */
+LCUI_Queue* GameBattle_GetAttackRecord( int battle_id );
 
 /** 设置是否暂停对战 */
 int GameBattle_Pause( int battle_id, LCUI_BOOL need_pause );

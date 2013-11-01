@@ -6,6 +6,33 @@
 
 #include "game.h"
 #include "skills/game_skill.h"
+#include "game_value_tip.h"
+
+typedef struct BattleFrameStatus_ {
+	LCUI_BOOL is_run;
+	LCUI_Sleeper wait_pause;
+	LCUI_Sleeper wait_continue;
+	int one_frame_remain_time;
+	int64_t prev_frame_start_time;
+} BattleFrameStatus;
+
+typedef struct BattleData_ {
+	int id;
+	LCUI_Queue player_list;
+	LCUI_Widget *scene;
+	LCUI_Size scene_size;
+	LCUI_Pos scene_land_pos;
+	LCUI_Size scene_land_size;
+	LCUI_BOOL need_sync_camera;
+	LCUI_Widget *camera_target;
+	int camera_x_padding;
+	GameSpaceData *space;
+	LCUI_Queue gameobject_library;
+	LCUI_Queue attack_record;
+	BattleFrameStatus animation_frame;
+	BattleFrameStatus data_proc_frame;
+	ValueTipData value_tip_proc;
+} BattleData;
 
 typedef struct FrameControlData_ {
 	int one_frame_remain_time;
@@ -78,7 +105,7 @@ static void GameBattleList_Delete( void* arg )
 }
 
 /** 获取指定ID的对战数据 */
-BattleData *GameBattle_GetBattle( int battle_id )
+static BattleData *GameBattle_GetBattle( int battle_id )
 {
 	int i, n;
 	BattleData *p_data;
@@ -119,6 +146,7 @@ int GameBattle_New(void)
 	data.camera_target = NULL;
 	data.space = GameSpace_New();
 	data.scene = Widget_New(NULL);
+	data.value_tip_proc.is_inited = FALSE;
 	Queue_Init( &data.player_list, sizeof(GamePlayer), GamePlayerList_Delete );
 	Game_InitAttackRecord( &data.attack_record );
 	GameObjectLibrary_Create( &data.gameobject_library );
@@ -129,6 +157,28 @@ int GameBattle_New(void)
 /** 退出对战 */
 int GameBattle_Quit( int battle_id )
 {
+	return 0;
+}
+
+/** 设置是否启用数值提示功能 */
+int GameBattle_SetEnableValueTip( int battle_id, LCUI_BOOL need_enable )
+{
+	BattleData *p_battle;
+	
+	p_battle = GameBattle_GetBattle( battle_id );
+	if( !p_battle ) {
+		return -1;
+	}
+
+	if( need_enable == p_battle->value_tip_proc.is_inited ) {
+		return 1;
+	}
+	if( !need_enable && p_battle->value_tip_proc.is_inited ) {
+		p_battle->value_tip_proc.is_inited = FALSE;
+		GameValueTip_Quit( &p_battle->value_tip_proc );
+	}
+	p_battle->value_tip_proc.is_inited = TRUE;
+	GameValueTip_Init( &p_battle->value_tip_proc, p_battle->scene );
 	return 0;
 }
 
@@ -513,6 +563,17 @@ LCUI_Widget* GameBattle_GetScene( int battle_id )
 	return p_battle->scene;
 }
 
+/** 获取攻击记录 */
+LCUI_Queue* GameBattle_GetAttackRecord( int battle_id )
+{
+	BattleData *p_battle;
+	p_battle = GameBattle_GetBattle( battle_id );
+	if( !p_battle ) {
+		return NULL;
+	}
+	return &p_battle->attack_record;
+}
+
 /** 更新场景上的镜头位置，使目标游戏对象处于镜头区域内 */
 static int GameScene_UpdateCamera(	LCUI_Widget *game_scene, 
 					LCUI_Widget *camera_target, 
@@ -636,7 +697,7 @@ int GameBattle_Loop( int battle_id )
 						p_battle->camera_x_padding );
 		}
 		/* 处理攻击 */
-		Game_ProcAttack( &p_battle->attack_record );
+		Game_ProcAttack( &p_battle->attack_record, &p_battle->value_tip_proc );
 		/* 本帧数据处理完后，停留一段时间 */
 		GameBattleFrame_Remain( &p_battle->data_proc_frame );
 	}
