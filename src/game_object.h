@@ -256,6 +256,9 @@ LCUI_API void GameObject_SetZ( LCUI_Widget *widget, double z );
 /** 将游戏对象添加至容器中 */
 LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr );
 
+/** 获取游戏对象脚底中心坐标（相对于部件容器） */
+LCUI_API int GameObject_GetFootPos( LCUI_Widget *widget, LCUI_Pos *pos );
+
 /** 设置游戏对象的X轴坐标 */
 LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x );
 

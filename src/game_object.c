@@ -1459,6 +1459,19 @@ LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr 
 	Widget_Container_Add( ctnr, obj->shadow );
 }
 
+/** 获取游戏对象脚底中心坐标（相对于部件容器） */
+LCUI_API int GameObject_GetFootPos( LCUI_Widget *widget, LCUI_Pos *pos )
+{
+	GameObject *obj;
+	LCUI_Pos object_pos;
+
+	obj = (GameObject*)Widget_GetPrivData( widget );
+	object_pos.x = obj->x;
+	object_pos.y = obj->y - obj->global_bottom_line_y;
+	*pos = object_pos;
+	return 0;
+}
+
 /** 设置游戏对象的X轴坐标 */
 LCUI_API void GameObject_SetX( LCUI_Widget *widget, double x )
 {
