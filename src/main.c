@@ -1,4 +1,4 @@
-﻿//#define SKIP_BOOT_SCREEN
+﻿#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -369,6 +369,7 @@ static int Game_InitFight( int role_id[4] )
 	Game_InitPlayerPos( battle_id );
 	Game_UpdatePlayerStatusBar( battle_id );
 	GameBattle_SetAutoSyncCamera( battle_id, TRUE );
+	GameBattle_SetEnableValueTip( battle_id, TRUE );
 	return battle_id;
 }
 
