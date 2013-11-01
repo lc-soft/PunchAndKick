@@ -250,58 +250,57 @@ static void GameMenuProc_HideTopMenu(void)
 	/* 重置菜单焦点 */
 	Widget_ResetFocus( menu );
 }
-
 static void GameMenuProc_Dispatch( LCUI_MouseButtonEvent *event, void *unused )
 {
-	int i, n;
-	LCUI_Widget *widget, *btn, *menu;
-	LCUI_Widget *exist_menu;
+        int i, n;
+        LCUI_Widget *widget, *btn, *menu;
+        LCUI_Widget *exist_menu;
 
-	if( event->state == LCUIKEYSTATE_PRESSED ) {
-		return;
-	}
-	exist_menu = (LCUI_Widget*)Queue_Get( &menu_stack, 0 );
-	/* 如果该菜单的父部件不被允许响应事件 */
-	if( !exist_menu || !Widget_IsAllowResponseEvent(exist_menu->parent) ) {
-		return;
-	}
-	/* 获取点击的部件 */
-	widget = Widget_At( NULL, Pos(event->x,event->y) );
-	if( !widget ) {
-		goto final_work;
-	}
+        if( event->state == LCUIKEYSTATE_PRESSED ) {
+                return;
+        }
+        exist_menu = (LCUI_Widget*)Queue_Get( &menu_stack, 0 );
+        /* 如果该菜单的父部件不被允许响应事件 */
+        if( !exist_menu || !Widget_IsAllowResponseEvent(exist_menu->parent) ) {
+                return;
+        }
+        /* 获取点击的部件 */
+        widget = Widget_At( NULL, Pos(event->x,event->y) );
+        if( !widget ) {
+                goto final_work;
+        }
 
-	/* 如果该部件类型就是菜单按钮 */
-	if( 0 == _LCUIString_Cmp(&widget->type_name, WIDGET_TYPE_GAME_MENU_BUTTON ) ) {
-		btn = widget;
-	} else {
-		/* 否则，查找菜单按钮类型的父级部件 */
-		btn = Widget_GetParent( widget, WIDGET_TYPE_GAME_MENU_BUTTON );
-		if( !btn ) {
-			goto final_work;
-		}
-	}
+        /* 如果该部件类型就是菜单按钮 */
+        if( 0 == _LCUIString_Cmp(&widget->type_name, WIDGET_TYPE_GAME_MENU_BUTTON ) ) {
+                btn = widget;
+        } else {
+                /* 否则，查找菜单按钮类型的父级部件 */
+                btn = Widget_GetParent( widget, WIDGET_TYPE_GAME_MENU_BUTTON );
+                if( !btn ) {
+                        goto final_work;
+                }
+        }
 
-	menu = Widget_GetParent( btn, WIDGET_TYPE_GAME_MENU );
-	if( !menu ) {
-		goto final_work;
-	}
-	n = Queue_GetTotal( &menu_stack );
-	for(i=n-1;i>=0;--i) {
-		exist_menu = (LCUI_Widget*)Queue_Get( &menu_stack, i );
-		if( exist_menu && exist_menu == menu ) {
-			break;
-		}
-	}
-	if( i < 0 ) {
-		return;
-	}
-	else if( i == n-1 ) {
-		GameMenuProc_ShowChildMenu( menu, btn );
-		return;
-	}
+        menu = Widget_GetParent( btn, WIDGET_TYPE_GAME_MENU );
+        if( !menu ) {
+                goto final_work;
+        }
+        n = Queue_GetTotal( &menu_stack );
+        for(i=n-1;i>=0;--i) {
+                exist_menu = (LCUI_Widget*)Queue_Get( &menu_stack, i );
+                if( exist_menu && exist_menu == menu ) {
+                        break;
+                }
+        }
+        if( i < 0 ) {
+                return;
+        }
+        else if( i == n-1 ) {
+                GameMenuProc_ShowChildMenu( menu, btn );
+                return;
+        }
 final_work:
-	GameMenuProc_HideTopMenu();
+        GameMenuProc_HideTopMenu();
 }
 
 static LCUI_Widget *GameMenu_GetFocusButton( LCUI_Widget *menu )
@@ -337,6 +336,9 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 	menu = (LCUI_Widget*)Queue_Get( &menu_stack, n-1 );
 	/* 如果该菜单不被允许响应事件 */
 	if( !Widget_IsAllowResponseEvent(menu) ) {
+		return;
+	}
+	if( !menu->parent->visible ) {
 		return;
 	}
 	p_data = (GameMenuData*)Widget_GetPrivData( menu );
