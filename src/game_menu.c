@@ -28,6 +28,7 @@ static LCUI_BOOL need_update_effect = FALSE;
 static LCUI_Pos root_menu_pos={0,0};
 static LCUI_Pos root_menu_offset_pos={0,0};
 static int menu_effect_timer = -1;
+static int connect_id[4];
 
 /** 获取菜单的显示位置 */
 static int GameMenuProc_GetMenuPos( LCUI_Widget *menu, LCUI_Pos *menu_pos )
@@ -250,13 +251,14 @@ static void GameMenuProc_HideTopMenu(void)
 	/* 重置菜单焦点 */
 	Widget_ResetFocus( menu );
 }
-static void GameMenuProc_Dispatch( LCUI_MouseButtonEvent *event, void *unused )
+
+static void GameMenuProc_Dispatch( LCUI_Event *event, void *unused )
 {
         int i, n;
         LCUI_Widget *widget, *btn, *menu;
         LCUI_Widget *exist_menu;
 
-        if( event->state == LCUIKEYSTATE_PRESSED ) {
+        if( event->button.state == LCUIKEYSTATE_PRESSED ) {
                 return;
         }
         exist_menu = (LCUI_Widget*)Queue_Get( &menu_stack, 0 );
@@ -265,7 +267,7 @@ static void GameMenuProc_Dispatch( LCUI_MouseButtonEvent *event, void *unused )
                 return;
         }
         /* 获取点击的部件 */
-        widget = Widget_At( NULL, Pos(event->x,event->y) );
+        widget = Widget_At( NULL, Pos(event->button.x,event->button.y) );
         if( !widget ) {
                 goto final_work;
         }
@@ -321,7 +323,7 @@ static LCUI_Widget *GameMenu_GetFocusButton( LCUI_Widget *menu )
 	return btn;
 }
 
-static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unused )
+static void GameMenuProc_KeyboardControl( LCUI_Event *event, void *unused )
 {
 	int i, n;
 	LCUI_Widget *menu, *other_btn, *btn;
@@ -342,7 +344,7 @@ static void GameMenuProc_KeyboardControl( LCUI_KeyboardEvent *event, void *unuse
 		return;
 	}
 	p_data = (GameMenuData*)Widget_GetPrivData( menu );
-	switch( event->key_code ) {
+	switch( event->key.key_code ) {
 	case LCUIKEY_A:
 	case LCUIKEY_K:
 	case LCUIKEY_LEFT:
@@ -459,9 +461,11 @@ static void GameMenuProc_Init(void)
 		return;
 	}
 	/* 关联鼠标点击事件，以处理子菜单的调度显示 */
-	LCUI_MouseButtonEvent_Connect( GameMenuProc_Dispatch, NULL );
+	connect_id[0] = LCUISysEvent_Connect( LCUI_MOUSEBUTTONDOWN, GameMenuProc_Dispatch, NULL );
+	connect_id[1] = LCUISysEvent_Connect( LCUI_MOUSEBUTTONUP, GameMenuProc_Dispatch, NULL );
 	/* 关联键盘事件，以实现按键控制菜单 */
-	LCUI_KeyboardEvent_Connect( GameMenuProc_KeyboardControl, NULL );
+	connect_id[2] = LCUISysEvent_Connect( LCUI_KEYUP, GameMenuProc_KeyboardControl, NULL );
+	connect_id[3] = LCUISysEvent_Connect( LCUI_KEYDOWN, GameMenuProc_KeyboardControl, NULL );
 	Queue_Init( &menu_stack, 0, NULL );
 	Queue_UsingPointer( &menu_stack );
 	menu_effect_timer = LCUITimer_Set( 20, GameMenuProc_UpdateEffect, NULL, TRUE );
@@ -603,6 +607,16 @@ int GameMenu_SetChildMenu(	LCUI_Widget *menu,
 	/* 记录该子菜单的父级菜单 */
 	p_data->parent_menu = menu;
 	return 0;
+}
+
+/** 仅显示主菜单 */
+void GameMenu_OnlyShowMainMenu(void)
+{
+	int n;
+	n = Queue_GetTotal( &menu_stack );
+	for(; n>=1; --n) {
+		GameMenuProc_HideTopMenu();
+	}
 }
 
 void GameMenu_Register(void)
