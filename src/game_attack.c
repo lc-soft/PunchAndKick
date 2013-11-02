@@ -107,7 +107,7 @@ void Game_RecordAttack( GamePlayer *attacker,
 	data.attack_type_name[NAME_MAX_LEN-1] = 0;
 	data.victim = victim;
 	data.victim_state = victim_state;
-	p_atk_record = GameBattle_GetAttackRecord( attacker->battle_id );
+	p_atk_record = GameBattle_GetAttackRecord( victim->battle_id );
 	Queue_Lock( p_atk_record );
 	Queue_Add( p_atk_record, &data );
 	Queue_Unlock( p_atk_record );
