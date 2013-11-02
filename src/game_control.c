@@ -365,6 +365,34 @@ void GamePlayer_SetReady( GamePlayer *player )
 	GamePlayer_SetActionTimeOut( player, 1000, GamePlayer_AtReadyTimeOut );
 }
 
+/** 暂停游戏角色的所有活动 */
+void GamePlayer_SetPause( GamePlayer *player, LCUI_BOOL need_pause )
+{
+	if( need_pause ) {
+		GameObject_PauseAction( player->object );
+		if( player->t_action_timeout != -1 ) {
+			LCUITimer_Pause( player->t_action_timeout );
+		}
+		if( player->t_death_timer != -1 ) {
+			LCUITimer_Pause( player->t_death_timer );
+		}
+		if( player->t_rest_timeout != -1 ) {
+			LCUITimer_Pause( player->t_rest_timeout );
+		}
+	} else {
+		GameObject_PlayAction( player->object );
+		if( player->t_action_timeout != -1 ) {
+			LCUITimer_Continue( player->t_action_timeout );
+		}
+		if( player->t_death_timer != -1 ) {
+			LCUITimer_Continue( player->t_death_timer );
+		}
+		if( player->t_rest_timeout != -1 ) {
+			LCUITimer_Continue( player->t_rest_timeout );
+		}
+	}
+}
+
 /** 响应定时器，让玩家逐渐消失 */
 static void GamePlayer_GraduallyDisappear( void *arg )
 {

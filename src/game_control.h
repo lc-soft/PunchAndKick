@@ -171,6 +171,9 @@ extern void GamePlayer_ResetAttackControl( GamePlayer *player );
 
 extern void GamePlayer_SetReady( GamePlayer *player );
 
+/** 暂停游戏角色的所有活动 */
+extern void GamePlayer_SetPause( GamePlayer *player, LCUI_BOOL need_pause );
+
 extern void GamePlayer_Init( GamePlayer *player );
 
 /** 初始化按键响应 */
