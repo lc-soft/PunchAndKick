@@ -8,8 +8,14 @@
 #include "skills/game_skill.h"
 #include "game_value_tip.h"
 
+enum BattleState {
+	BATTLE_STATE_RUN,
+	BATTLE_STATE_PAUSE,
+	BATTLE_STATE_QUIT
+};
+
 typedef struct BattleFrameStatus_ {
-	LCUI_BOOL is_run;
+	enum BattleState state;
 	LCUI_Sleeper wait_pause;
 	LCUI_Sleeper wait_continue;
 	int one_frame_remain_time;
@@ -32,6 +38,7 @@ typedef struct BattleData_ {
 	BattleFrameStatus animation_frame;
 	BattleFrameStatus data_proc_frame;
 	ValueTipData value_tip_proc;
+	LCUI_Thread th_animation_update;
 } BattleData;
 
 typedef struct FrameControlData_ {
@@ -46,7 +53,7 @@ static LCUI_Queue battle_list;
 static void GameBattleFrame_Init(	BattleFrameStatus *p_status,
 					int ms_per_frame )
 {
-	p_status->is_run = TRUE;
+	p_status->state = BATTLE_STATE_RUN;
 	p_status->one_frame_remain_time = ms_per_frame;
 	p_status->prev_frame_start_time = LCUI_GetTickCount();
 	LCUISleeper_Create( &p_status->wait_continue );
@@ -57,13 +64,14 @@ static void GameBattleFrame_Init(	BattleFrameStatus *p_status,
 static void GameBattleFrame_Pause(	BattleFrameStatus *p_status, 
 					LCUI_BOOL need_pause )
 {
-	if( p_status->is_run && need_pause ) {
+	if( p_status->state == BATTLE_STATE_RUN && need_pause ) {
 		LCUISleeper_BreakSleep( &p_status->wait_pause );
+		p_status->state = BATTLE_STATE_PAUSE;
 	}
-	else if( !p_status->is_run && !need_pause ){
+	else if( p_status->state == BATTLE_STATE_PAUSE && !need_pause ){
 		LCUISleeper_BreakSleep( &p_status->wait_continue );
+		p_status->state = BATTLE_STATE_RUN;
 	}
-	p_status->is_run = !need_pause;
 }
 
 /** 让当前帧停留一定时间 */
@@ -82,7 +90,8 @@ static void GameBattleFrame_Remain( BattleFrameStatus *p_status )
 		goto normal_exit;
 	}
 	LCUISleeper_StartSleep( &p_status->wait_pause, n_ms );
-	if( p_status->is_run ) {
+	if( p_status->state == BATTLE_STATE_RUN
+	 || p_status->state == BATTLE_STATE_QUIT ) {
 		goto normal_exit;
 	}
 
@@ -96,12 +105,27 @@ normal_exit:
 
 static void GamePlayerList_Delete( void* arg )
 {
-
+	GamePlayer *p_player;
+	p_player = (GamePlayer*)arg;
+	LCUITimer_Free( p_player->t_action_timeout );
+	LCUITimer_Free( p_player->t_death_timer );
+	LCUITimer_Free( p_player->t_rest_timeout );
+	Queue_Destroy( &p_player->skills );
+	Widget_Destroy( p_player->statusbar );
 }
 
 static void GameBattleList_Delete( void* arg )
 {
-
+	BattleData *p_battle;
+	p_battle = (BattleData*)arg;
+	Widget_Hide( p_battle->scene );
+	LCUIThread_Join( p_battle->th_animation_update, NULL );
+	GameValueTip_Quit( &p_battle->value_tip_proc );
+	Queue_Destroy( &p_battle->attack_record );
+	Queue_Destroy( &p_battle->player_list );
+	GameObjectLibrary_Destroy( &p_battle->gameobject_library );
+	GameSapce_Destroy( p_battle->space );
+	Widget_Destroy( p_battle->scene );
 }
 
 /** 获取指定ID的对战数据 */
@@ -157,6 +181,14 @@ int GameBattle_New(void)
 /** 退出对战 */
 int GameBattle_Quit( int battle_id )
 {
+	BattleData *p_battle;
+	
+	p_battle = GameBattle_GetBattle( battle_id );
+	if( !p_battle ) {
+		return -1;
+	}
+	p_battle->animation_frame.state = BATTLE_STATE_QUIT;
+	p_battle->data_proc_frame.state = BATTLE_STATE_QUIT;
 	return 0;
 }
 
@@ -624,12 +656,13 @@ static void GameBattle_ProcGameObject( void *arg )
 	p_battle = (BattleData*)arg;
 	/* 初始化游戏动画帧处理 */
 	GameBattleFrame_Init( &p_battle->animation_frame, 20 );
-	while(1) {
+	while( p_battle->animation_frame.state != BATTLE_STATE_QUIT ) {
 		GameSpace_Step( p_battle->space );
 		GameObjectLibrary_UpdateAction( &p_battle->gameobject_library );
 		GameObjectLibrary_DispatchEvent( &p_battle->gameobject_library );
 		GameBattleFrame_Remain( &p_battle->animation_frame );
 	}
+	LCUIThread_Exit(NULL);
 }
 
 /** 设置是否暂停对战 */
@@ -675,7 +708,7 @@ int GameBattle_Loop( int battle_id )
 	/* 初始化游戏数据帧处理 */
 	GameBattleFrame_Init( &p_battle->data_proc_frame, 20 );
 	/* 循环更新游戏数据 */
-	while(1) {
+	while( p_battle->data_proc_frame.state != BATTLE_STATE_QUIT ) {
 		n = Queue_GetTotal( &p_battle->player_list );
 		for(n_found=0,i=0; i<n; ++i) {
 			p_player = (GamePlayer*)Queue_Get( &p_battle->player_list, i );
@@ -711,5 +744,16 @@ int GameBattle_Loop( int battle_id )
 		/* 本帧数据处理完后，停留一段时间 */
 		GameBattleFrame_Remain( &p_battle->data_proc_frame );
 	}
+
+	Queue_Lock( &battle_list );
+	n = Queue_GetTotal( &battle_list );
+	for(i=0; i<n; ++i) {
+		p_battle = (BattleData*)Queue_Get( &battle_list, i );
+		if( p_battle && p_battle->id == battle_id ) {
+			Queue_Delete( &battle_list, i );
+			break;
+		}
+	}
+	Queue_Unlock( &battle_list );
 	return 0;
 }
