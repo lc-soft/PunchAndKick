@@ -19,6 +19,9 @@ int GameMenu_SetChildMenu(	LCUI_Widget *menu,
 				LCUI_Widget *menu_button, 
 				LCUI_Widget *child_menu );
 
+/** 仅显示主菜单 */
+void GameMenu_OnlyShowMainMenu(void);
+
 void GameMenu_Register(void);
 
 #endif
