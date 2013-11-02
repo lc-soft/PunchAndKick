@@ -994,17 +994,12 @@ static void GameKeyboardProcKeyDown( int key_code )
 	}
 }
 
-static void GameKeyboardProc( LCUI_KeyboardEvent *event, void *arg )
+/** 处理键盘事件 */
+void GameControl_KeyboardProc( LCUI_Event *event, void *arg )
 {
 	if( event->type == LCUI_KEYDOWN ) {
-		GameKeyboardProcKeyDown( event->key_code );
+		GameKeyboardProcKeyDown( event->key.key_code );
 	}
-}
-
-/** 初始化按键响应 */
-void GameBattle_InitKeyboardControl(void)
-{
-	LCUI_KeyboardEvent_Connect( GameKeyboardProc, NULL );
 }
 
 /** 同步游戏玩家的按键控制 */
