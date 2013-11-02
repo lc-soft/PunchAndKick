@@ -37,12 +37,13 @@ static int Game_RecvMsg( void )
 /* 向消息队列中投递消息 */
 int Game_PostMsg( GameMsg *msg )
 {
-	int ret;
 	Queue_Lock( &game_msg_queue );
-	ret = Queue_Add( &game_msg_queue, msg );
+	if( !Queue_Add( &game_msg_queue, msg ) ) {
+		Queue_Unlock( &game_msg_queue );
+		return -1;
+	}
 	Queue_Unlock( &game_msg_queue );
-	LCUISleeper_BreakSleep( &msg_sleeper );
-	return ret>=0?0:-1;
+	return LCUISleeper_BreakSleep( &msg_sleeper );
 }
 
 /* 从消息队列中取出一个消息 */

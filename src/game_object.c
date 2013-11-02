@@ -87,7 +87,6 @@ static void ActionData_Destroy( void *arg )
  */
 LCUI_API ActionData* Action_Create( void )
 {
-	int pos;
 	ActionData *p, action;
 
 	Queue_Init( &action.frame, sizeof(ActionFrameData), NULL );
@@ -101,8 +100,7 @@ LCUI_API ActionData* Action_Create( void )
 	}
 	Queue_Lock( &action_database );
 	/* 记录该动画至库中 */
-	pos = Queue_Add( &action_database, &action );
-	p = (ActionData*)Queue_Get( &action_database, pos );
+	p = (ActionData*)Queue_Add( &action_database, &action );
 	Queue_Unlock( &action_database );
 	return p;
 }
@@ -969,7 +967,10 @@ LCUI_API int Action_AddFrame(	ActionData* action,
 	frame.atkbox.y_width = frame.hitbox.y_width = 0;
 	frame.atkbox.z_width = frame.hitbox.z_width = 0;
 	frame.new_attack = FALSE;
-	return Queue_Add( &action->frame, &frame );
+	if( Queue_Add( &action->frame, &frame ) ) {
+		return 0;
+	}
+	return -1;
 }
 
 LCUI_API int Action_SetNewAttack(	ActionData* action,
@@ -1163,7 +1164,7 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 					ActionData *action,
 					int id )
 {
-	int ret, i, n;
+	int i, n;
 	ActionRec rec, *p_rec;
 	GameObject *obj;
 
@@ -1194,12 +1195,12 @@ LCUI_API int GameObject_AddAction(	LCUI_Widget *widget,
 	rec.done = NULL;
 	rec.update = NULL;
 	/* 添加至动作列表中 */
-	ret = Queue_Add( &obj->action_list, &rec );
-	Queue_Unlock( &obj->action_list );
-	if( ret < 0 ) {
-		return -2;
+	if( Queue_Add( &obj->action_list, &rec ) ) {
+		Queue_Unlock( &obj->action_list );
+		return 0;
 	}
-	return 0;
+	Queue_Unlock( &obj->action_list );
+	return -2;
 }
 
 static void GameObject_ExecUpdate( LCUI_Widget *widget )

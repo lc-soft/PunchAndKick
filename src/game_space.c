@@ -135,7 +135,6 @@ void GameSapce_Destroy( GameSpaceData *space )
 */
 SpaceObject* SpaceObject_New( GameSpaceData *space, int x, int y, int z, int x_width, int y_width, int z_width )
 {
-	int pos;
 	SpaceObject *p, obj;
 
 	obj.x = x;
@@ -152,8 +151,7 @@ SpaceObject* SpaceObject_New( GameSpaceData *space, int x, int y, int z, int x_w
 	obj.z_acc = 0;
 	obj.space = space;
 	Queue_Lock( &space->space_object_list );
-	pos = Queue_Add( &space->space_object_list, &obj );
-	p = (SpaceObject*)Queue_Get( &space->space_object_list, pos );
+	p = (SpaceObject*)Queue_Add( &space->space_object_list, &obj );
 	Queue_Unlock( &space->space_object_list );
 	return p;
 }
