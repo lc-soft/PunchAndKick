@@ -395,13 +395,13 @@ static void Game_ShowQuitTipBox( void *arg1, void *arg2 )
 }
 
 /** 在游戏的对战场景中对键盘进行响应 */
-static void Game_ProcKeyboardInBattle( LCUI_KeyboardEvent *event, void *arg )
+static void Game_ProcKeyboardInBattle( LCUI_Event *event, void *arg )
 {
 	LCUI_Task task;
 	if( event->type != LCUI_KEYDOWN ) {
 		return;
 	}
-	if( event->key_code != LCUIKEY_ESC ) {
+	if( event->key.key_code != LCUIKEY_ESC ) {
 		return;
 	}
 	/** 准备程序任务 */
@@ -417,6 +417,7 @@ static void Game_ProcKeyboardInBattle( LCUI_KeyboardEvent *event, void *arg )
 
 static void Game_StartFight( int battle_id )
 {
+	int connect_id[2];
 	GamePlayer *p_player[4];
 	LCUI_Widget *game_scene;
 
@@ -434,10 +435,12 @@ static void Game_StartFight( int battle_id )
 	game_scene = GameBattle_GetScene(battle_id);
 	Widget_Show( game_scene );
 	Game_ShowPlayerStatusArea();
-	GameBattle_InitKeyboardControl();
 	GameBattle_Start( battle_id );
-	LCUI_KeyboardEvent_Connect( Game_ProcKeyboardInBattle, NULL );
+	connect_id[0] = LCUISysEvent_Connect( LCUI_KEYUP, Game_ProcKeyboardInBattle, NULL );
+	connect_id[1] = LCUISysEvent_Connect( LCUI_KEYDOWN, Game_ProcKeyboardInBattle, NULL );
 	GameBattle_Loop( battle_id );
+	LCUISysEvent_Disconnect( LCUI_KEYUP, connect_id[0] );
+	LCUISysEvent_Disconnect( LCUI_KEYDOWN, connect_id[1] );
 	Game_DestroySceneText();
 	Game_DestroyPlayerStatusArea();
 }
@@ -479,6 +482,7 @@ static void Game_MainThread( void *arg )
 		}
 		/* 暂停演示对战 */
 		GameBattle_Pause( demo_battle, TRUE );
+		GameMenu_OnlyShowMainMenu();
 		Game_HideMainUI();
 		main_battle_id = Game_InitFight( role_id );
 		Game_StartFight( main_battle_id );
