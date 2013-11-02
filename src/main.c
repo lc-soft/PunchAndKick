@@ -242,7 +242,14 @@ static void UpdateViewFPS( void *arg )
 	Label_Text( label, str );
 }
 
-static void InitSceneText( LCUI_Widget *scene )
+static int timer_update_scene_text = -1;
+
+static void Game_DestroySceneText(void)
+{
+	LCUITimer_Free( timer_update_scene_text );
+}
+
+static void Game_InitSceneText( LCUI_Widget *scene )
 {
 	LCUI_Widget *text, *fps_text;
 	LCUI_TextStyle style;
@@ -261,7 +268,7 @@ static void InitSceneText( LCUI_Widget *scene )
 	Widget_SetZIndex( text, -5000 );
 	Widget_Show( fps_text );
 	Widget_Show( text );
-	LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
+	timer_update_scene_text = LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
 }
 
 static void Game_ShowPlayerStatusArea(void)
@@ -269,9 +276,9 @@ static void Game_ShowPlayerStatusArea(void)
 	Widget_Show( player_status_area );
 }
 
-static int Game_DestroyPlayerStatusArea( int battle_id )
+static void Game_DestroyPlayerStatusArea(void)
 {
-
+	Widget_Destroy( player_status_area );
 }
 
 static int Game_InitPlayerStatusArea( int battle_id )
@@ -352,7 +359,7 @@ static int Game_InitFight( int role_id[4] )
 	Widget_SetAlign( GameBattle_GetScene(battle_id), 
 	ALIGN_BOTTOM_CENTER, Pos(0,-STATUS_BAR_HEIGHT) );
 	/* 初始化在场景上显示的文本 */
-	InitSceneText( GameBattle_GetScene(battle_id) );
+	Game_InitSceneText( GameBattle_GetScene(battle_id) );
 	
 	ctrlkey.a_attack = LCUIKEY_J;
 	ctrlkey.b_attack = LCUIKEY_K;
@@ -431,6 +438,8 @@ static void Game_StartFight( int battle_id )
 	GameBattle_Start( battle_id );
 	LCUI_KeyboardEvent_Connect( Game_ProcKeyboardInBattle, NULL );
 	GameBattle_Loop( battle_id );
+	Game_DestroySceneText();
+	Game_DestroyPlayerStatusArea();
 }
 
 /** 游戏线程 */
@@ -476,7 +485,6 @@ static void Game_MainThread( void *arg )
 		/* 继续演示对战 */
 		GameBattle_Pause( demo_battle, FALSE );
 		Game_ShowMainUI();
-		break;
 	}
 }
 
@@ -538,7 +546,7 @@ int main( int argc, char **argv )
 	int ret;
 	int mode;
 	LCUI_Thread t;
-//#define DEBUG
+#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
