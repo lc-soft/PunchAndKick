@@ -18,6 +18,13 @@ typedef struct ValueTipTaskData_ {
 	LCUI_Widget *wdg_tip;
 } ValueTipTaskData;
 
+static void ValueTipTask_Destroy( void *arg )
+{
+	ValueTipTaskData *p_task_data;
+	p_task_data = (ValueTipTaskData*)arg;
+	Widget_Destroy( p_task_data->wdg_tip );
+}
+
 /** 动态更新显示的数值 */
 static void GameValueTip_Proc( void *arg )
 {
@@ -62,14 +69,15 @@ static void GameValueTip_Proc( void *arg )
 void GameValueTip_Init( ValueTipData *p_data, LCUI_Widget *container )
 {
 	p_data->widget_container = container;
-	Queue_Init( &p_data->tip_data_list, sizeof(ValueTipTaskData), NULL );
+	Queue_Init( &p_data->tip_data_list, sizeof(ValueTipTaskData), ValueTipTask_Destroy );
 	p_data->timer_id = LCUITimer_Set( 10, GameValueTip_Proc, p_data, TRUE );
 }
 
 /** 退出数值提示功能 */
 void GameValueTip_Quit( ValueTipData *p_data )
 {
-
+	Queue_Destroy( &p_data->tip_data_list );
+	LCUITimer_Free( p_data->timer_id );
 }
 
 /** 设置显示的值 */

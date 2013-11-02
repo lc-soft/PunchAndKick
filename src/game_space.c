@@ -109,6 +109,13 @@ GameSpaceData *GameSpace_New(void)
 	return space;
 }
 
+/** 销毁一个游戏空间 */
+void GameSapce_Destroy( GameSpaceData *space )
+{
+	Queue_Destroy( &space->space_object_list );
+	free( space );
+}
+
 /**
 创建一个新的对象
 @param x
@@ -143,6 +150,7 @@ SpaceObject* SpaceObject_New( GameSpaceData *space, int x, int y, int z, int x_w
 	obj.x_acc = 0;
 	obj.y_acc = 0;
 	obj.z_acc = 0;
+	obj.space = space;
 	Queue_Lock( &space->space_object_list );
 	pos = Queue_Add( &space->space_object_list, &obj );
 	p = (SpaceObject*)Queue_Get( &space->space_object_list, pos );
@@ -154,7 +162,7 @@ void SpaceObject_Destroy( SpaceObject* object )
 {
 	int i, n;
 	SpaceObject* p;
-
+	
 	Queue_Lock( &object->space->space_object_list );
 	n = Queue_GetTotal( &object->space->space_object_list );
 	for(i=0; i<n; ++i) {

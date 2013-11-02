@@ -338,6 +338,15 @@ static void LifeBar_ExecInit( LCUI_Widget *widget )
 	data->timer_lifebar_shadow = LCUITimer_Set( 20, LifeBar_UpdateShadow, (void*)widget, TRUE );
 }
 
+static void LifeBar_ExecDestroy( LCUI_Widget *widget )
+{
+	LifeBarData *p_data;
+
+	p_data = (LifeBarData*)Widget_GetPrivData(widget);
+	LCUITimer_Free( p_data->timer_flashbar );
+	LCUITimer_Free( p_data->timer_lifebar_shadow );
+}
+
 static void LifeBar_ExecUpdate( LCUI_Widget *widget )
 {
 	double scale;
@@ -473,5 +482,6 @@ void LifeBar_Regiser(void)
 {
 	WidgetType_Add( TYPE_NAME );
 	WidgetFunc_Add( TYPE_NAME, LifeBar_ExecInit, FUNC_TYPE_INIT );
+	WidgetFunc_Add( TYPE_NAME, LifeBar_ExecDestroy, FUNC_TYPE_DESTROY );
 	WidgetFunc_Add( TYPE_NAME, LifeBar_ExecUpdate, FUNC_TYPE_UPDATE );
 }

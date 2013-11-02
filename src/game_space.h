@@ -55,6 +55,9 @@ void GameSpace_Step( GameSpaceData *space );
 /** 创建一个游戏空间 */
 GameSpaceData *GameSpace_New(void);
 
+/** 销毁一个游戏空间 */
+void GameSapce_Destroy( GameSpaceData *space );
+
 /**
 创建一个新的对象
 @param x

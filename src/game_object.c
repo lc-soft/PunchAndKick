@@ -595,6 +595,24 @@ LCUI_API int GameObjectLibrary_Create( LCUI_Queue *library )
 	return 0;
 }
 
+/** 销毁游戏对象库 */
+LCUI_API int GameObjectLibrary_Destroy( LCUI_Queue *library )
+{
+	int i, n;
+	LCUI_Widget *object;
+
+	Queue_Lock( library );
+	n = Queue_GetTotal( library );
+	for(i=0; i<n; ++i) {
+		object = (LCUI_Widget*)Queue_Get( library, i );
+		if( object ) {
+			Widget_Destroy( object );
+		}
+	}
+	Queue_Unlock( library );
+	return 0;
+}
+
 LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library )
 {
 	int i, n;
@@ -1062,7 +1080,7 @@ static void GameObject_ExecDestroy( LCUI_Widget *widget )
 	LCUI_Widget *tmp_widget;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	SpaceObject_Destroy( obj->space_obj );
+	//SpaceObject_Destroy( obj->space_obj );
 	Widget_Destroy( obj->shadow );
 	Queue_Destroy( &obj->action_list );
 	Queue_Destroy( &obj->victim );

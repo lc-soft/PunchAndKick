@@ -136,6 +136,9 @@ LCUI_API int GameObject_AddVictim( LCUI_Widget *attacker, LCUI_Widget *victim );
 /** 创建游戏对象库 */
 LCUI_API int GameObjectLibrary_Create( LCUI_Queue *library );
 
+/** 销毁游戏对象库 */
+LCUI_API int GameObjectLibrary_Destroy( LCUI_Queue *library );
+
 LCUI_API void GameObjectLibrary_DispatchEvent( LCUI_Queue *library );
 
 LCUI_API void GameObjectLibrary_UpdateAction( LCUI_Queue *library );
