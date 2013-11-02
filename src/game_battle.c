@@ -635,7 +635,9 @@ static void GameBattle_ProcGameObject( void *arg )
 /** 设置是否暂停对战 */
 int GameBattle_Pause( int battle_id, LCUI_BOOL need_pause )
 {
+	int i, n;
 	BattleData* p_battle;
+	GamePlayer* p_player;
 
 	p_battle = GameBattle_GetBattle( battle_id );
 	if( !p_battle ) {
@@ -643,6 +645,14 @@ int GameBattle_Pause( int battle_id, LCUI_BOOL need_pause )
 	}
 	GameBattleFrame_Pause( &p_battle->data_proc_frame, need_pause );
 	GameBattleFrame_Pause( &p_battle->animation_frame, need_pause );
+	n = Queue_GetTotal( &p_battle->player_list );
+	for(i=0; i<n; ++i) {
+		p_player = (GamePlayer*)Queue_Get( &p_battle->player_list, i );
+		if( !p_player ) {
+			continue;
+		}
+		GamePlayer_SetPause( p_player, need_pause );
+	}
 	return 0;
 }
 
