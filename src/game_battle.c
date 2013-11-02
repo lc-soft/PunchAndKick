@@ -39,6 +39,7 @@ typedef struct BattleData_ {
 	BattleFrameStatus data_proc_frame;
 	ValueTipData value_tip_proc;
 	LCUI_Thread th_animation_update;
+	int keyboard_connect_id[2];
 } BattleData;
 
 typedef struct FrameControlData_ {
@@ -189,6 +190,8 @@ int GameBattle_Quit( int battle_id )
 	}
 	p_battle->animation_frame.state = BATTLE_STATE_QUIT;
 	p_battle->data_proc_frame.state = BATTLE_STATE_QUIT;
+	LCUISysEvent_Disconnect( LCUI_KEYUP, p_battle->keyboard_connect_id[0] );
+	LCUISysEvent_Disconnect( LCUI_KEYDOWN, p_battle->keyboard_connect_id[1] );
 	return 0;
 }
 
@@ -237,6 +240,10 @@ int GameBattle_Start( int battle_id )
 		/* 显示游戏角色 */
 		Widget_Show( p_player->object );
 	}
+	p_battle->keyboard_connect_id[0] = 
+	LCUISysEvent_Connect( LCUI_KEYDOWN, GameControl_KeyboardProc, NULL );
+	p_battle->keyboard_connect_id[1] = 
+	LCUISysEvent_Connect( LCUI_KEYUP, GameControl_KeyboardProc, NULL );
 	return 0;
 }
 
