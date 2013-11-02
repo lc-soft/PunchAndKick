@@ -176,8 +176,8 @@ extern void GamePlayer_SetPause( GamePlayer *player, LCUI_BOOL need_pause );
 
 extern void GamePlayer_Init( GamePlayer *player );
 
-/** 初始化按键响应 */
-extern void GameBattle_InitKeyboardControl(void);
+/** 处理键盘事件 */
+extern void GameControl_KeyboardProc( LCUI_Event *event, void *arg );
 
 /** 同步游戏玩家的按键控制 */
 extern void GamePlayer_SyncKeyControl( GamePlayer *player );
