@@ -1,4 +1,5 @@
-﻿#include <LCUI_Build.h>
+﻿// 游戏角色状态栏
+#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
 #include LC_LABEL_H

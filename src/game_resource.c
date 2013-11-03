@@ -1,4 +1,5 @@
-﻿#include <LCUI_Build.h>
+﻿// 游戏资源管理模块
+#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_GRAPH_H
 

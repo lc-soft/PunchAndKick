@@ -1,4 +1,5 @@
-﻿#include <LCUI_Build.h>
+﻿// 游戏对象，用于播放角色动作动画
+#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
 

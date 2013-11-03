@@ -1,4 +1,5 @@
-﻿#include <LCUI_Build.h>
+﻿// 游戏角色控制模块
+#include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
 #include LC_INPUT_H
@@ -1107,7 +1108,7 @@ void GamePlayer_SetStart( GamePlayer *player )
 }
 
 static RoleInfo role_library[TOTAL_ROLE_NUM] = {
-	{ ROLE_KUNI, L"国夫", PLAYER_TYPE_FIGHTER, {
+	{ ROLE_KUNIO, L"国夫", PLAYER_TYPE_FIGHTER, {
 		1800, 1800, 60, 200, 150, 100, 100}, {
 			SKILLNAME_MACH_B_ATTACK,
 			SKILLNAME_SPINHIT,

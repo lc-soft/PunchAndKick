@@ -1,4 +1,5 @@
-﻿#include <LCUI_Build.h>
+﻿// 游戏空间
+#include <LCUI_Build.h>
 #include LC_LCUI_H
 
 #include "game_space.h"

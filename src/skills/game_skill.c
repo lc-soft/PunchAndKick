@@ -1,4 +1,5 @@
-﻿//#define DEBUG
+﻿// 游戏角色技能
+//#define DEBUG
 #include <LCUI_Build.h>
 #include LC_LCUI_H
 #include "../game_control.h"
