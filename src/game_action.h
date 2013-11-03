@@ -76,7 +76,7 @@ enum ActionType {
 };
 
 enum RoleID {
-	ROLE_KUNI,
+	ROLE_KUNIO,
 	ROLE_RIKI,
 	ROLE_MIKE,
 	ROLE_BEN,
@@ -100,8 +100,8 @@ typedef struct ActionInfo_ {
 	ActionFrameInfo frame[MAX_FRAME_NUM];
 } ActionInfo;
 
-int ActionRes_Kuni_GetActionTotalNum(void);
-const ActionInfo *ActionRes_Kuni_GetActionSet(void);
+int ActionRes_Kunio_GetActionTotalNum(void);
+const ActionInfo *ActionRes_Kunio_GetActionSet(void);
 
 int ActionRes_Riki_GetActionTotalNum(void);
 const ActionInfo *ActionRes_Riki_GetActionSet(void);
