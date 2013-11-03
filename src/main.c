@@ -366,14 +366,7 @@ static int Game_InitFight( int role_id[4] )
 	/* 初始化在场景上显示的文本 */
 	Game_InitSceneText( GameBattle_GetScene(battle_id) );
 	
-	ctrlkey.a_attack = LCUIKEY_J;
-	ctrlkey.b_attack = LCUIKEY_K;
-	ctrlkey.jump = LCUIKEY_SPACE;
-	ctrlkey.defense = LCUIKEY_L;
-	ctrlkey.left = LCUIKEY_A;
-	ctrlkey.right = LCUIKEY_D;
-	ctrlkey.up = LCUIKEY_W;
-	ctrlkey.down = LCUIKEY_S;
+	GameConfig_GetKeyControl( &ctrlkey );
 	/* 设置1号玩家的控制键 */
 	GameBattle_SetPlayerControlKey( battle_id, 1, &ctrlkey );
 
@@ -559,6 +552,7 @@ int main( int argc, char **argv )
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
+	GameConfig_Init();
 	GameConfig_Load();
 	if( GameConfig_IsWindowed() ) {
 		mode = LCUI_INIT_MODE_WINDOW;
