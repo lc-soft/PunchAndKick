@@ -25,17 +25,16 @@ void GameConfig_InitKeyControl(void)
 	game_config.control_key.down = LCUIKEY_S;
 }
 
-/** 获取键位设置 */
+/** 获取键位配置 */
 void GameConfig_GetKeyControl( ControlKey *buff )
 {
-	buff->a_attack = game_config.control_key.a_attack;
-	buff->b_attack = game_config.control_key.b_attack;
-	buff->defense = game_config.control_key.defense;
-	buff->jump = game_config.control_key.jump;
-	buff->left = game_config.control_key.left;
-	buff->right = game_config.control_key.right;
-	buff->up = game_config.control_key.up;
-	buff->down = game_config.control_key.down;
+	*buff = game_config.control_key;
+}
+
+/** 设置键位配置 */
+void GameConfig_SetKeyControl( ControlKey *buff )
+{
+	game_config.control_key = *buff;
 }
 
 /** 初始化游戏配置 */

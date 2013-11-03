@@ -6,8 +6,11 @@
 /** 初始化游戏键位设置 */
 void GameConfig_InitKeyControl(void);
 
-/** 获取键位设置 */
+/** 获取键位配置 */
 void GameConfig_GetKeyControl( ControlKey *buff );
+
+/** 设置键位配置 */
+void GameConfig_SetKeyControl( ControlKey *buff );
 
 /** 初始化游戏配置 */
 void GameConfig_Init(void);
