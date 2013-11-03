@@ -12,6 +12,7 @@
 #include "game_menu.h"
 #include "game_config.h"
 #include "gamewnd_usage.h"
+#include "gamewnd_setkeyboard.h"
 #include "gamewnd_about.h"
 #include "gamewnd_joinus.h"
 #include "gamewnd_license.h"
@@ -223,6 +224,12 @@ static void scuffle_game_btn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unu
 	Game_ShowRoleSelectBox();
 }
 
+static void btn_setkey_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	GameWindow_InitSetKeyboardWindow();
+	GameWindow_ShowSetKeyboardWindow();
+}
+
 static void btn_switch_video_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
 	int mode;
@@ -260,6 +267,7 @@ static void Game_InitMainMenu(void)
 			*btn_quit,
 			*btn_2v2_mode, 
 			*btn_scuffle_mode,
+			*btn_setkey,
 			*btn_switch_video_mode, 
 			*btn_usage, 
 			*btn_about, 
@@ -299,7 +307,7 @@ static void Game_InitMainMenu(void)
 	btn_license = GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
 	btn_joinus = GameMenu_NewButtonW( help_menu_box, TEXT_JOINUS );
 
-	GameMenu_NewButtonW( options_menu_box, TEXT_SET_KEYBOARD );
+	btn_setkey = GameMenu_NewButtonW( options_menu_box, TEXT_SET_KEYBOARD );
 	/* 根据游戏的配置数据，判断是否启用窗口模式，并让按钮上显示相应文字 */
 	if( GameConfig_IsWindowed() ) {
 		wcscpy( str_buff, TEXT_WINDOWED L": " TEXT_ON );
@@ -311,6 +319,7 @@ static void Game_InitMainMenu(void)
 	Widget_Event_Connect( btn_2v2_mode, EVENT_CLICKED, btn_2v2_mode_clicked );
 	Widget_Event_Connect( btn_scuffle_mode, EVENT_CLICKED, scuffle_game_btn_clicked );
 	Widget_Event_Connect( btn_network_battle, EVENT_CLICKED, btn_network_battle_clicked );
+	Widget_Event_Connect( btn_setkey, EVENT_CLICKED, btn_setkey_clicked );
 	Widget_Event_Connect( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
 	Widget_Event_Connect( btn_quit, EVENT_CLICKED, btn_quit_clicked );
 	Widget_Event_Connect( btn_usage, EVENT_CLICKED, btn_usage_clicked );
