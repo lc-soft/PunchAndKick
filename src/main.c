@@ -1,4 +1,4 @@
-﻿#define SKIP_BOOT_SCREEN
+﻿//#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -30,7 +30,7 @@ static LCUI_Widget *player_status_area;
 static void Game_ShowBootScreen(void)
 {
 	uchar_t alpha;
-	LCUI_Graph img_game_logo;
+	LCUI_Graph img_game_logo, bg;
 	LCUI_Widget *wdg_img_logo;
 	LCUI_Widget *wdg_copyright_cn_text, *wdg_copyright_en_text;
 
@@ -39,7 +39,9 @@ static void Game_ShowBootScreen(void)
 	wdg_copyright_en_text = Widget_New("label");
 	
 	Graph_Init( &img_game_logo );
+	Graph_Init( &bg );
 	GameGraphRes_GetGraph(MAIN_RES, "main-logo", &img_game_logo );
+	GameGraphRes_GetGraph(MAIN_RES, "background-image", &bg );
 	
 	Label_TextW( wdg_copyright_en_text, TEXT_COPYRIGHT_EN );
 	Label_TextW( wdg_copyright_cn_text, TEXT_COPYRIGHT_CN );
@@ -52,7 +54,10 @@ static void Game_ShowBootScreen(void)
 	
 	Widget_SetBackgroundImage( wdg_img_logo, &img_game_logo );
 	Widget_SetBackgroundLayout( wdg_img_logo, LAYOUT_CENTER );
-	
+	Widget_SetBackgroundImage( RootWidget_GetSelf(), &bg );
+	Widget_SetBackgroundLayout( RootWidget_GetSelf(), LAYOUT_TILE );
+	Widget_SetBackgroundTransparent( RootWidget_GetSelf(), FALSE );
+
 	Widget_SetAlpha( wdg_img_logo, 0 );
 	Widget_SetAlpha( wdg_copyright_cn_text, 0 );
 	Widget_SetAlpha( wdg_copyright_en_text, 0 );
@@ -154,7 +159,7 @@ static void Game_DemoThread( void *arg )
 	Widget_SetZIndex( demo_scene, -10 );
 	Widget_SetClickableAlpha( demo_scene, 0, 0 );
 	Widget_Container_Add( Game_GetMainMenuBox(), demo_scene );
-	GameBattle_SetPlayer( battle_id, 1, ROLE_KUNI, FALSE );
+	GameBattle_SetPlayer( battle_id, 1, ROLE_KUNIO, FALSE );
 	GameBattle_SetPlayer( battle_id, 2, ROLE_RIKI, FALSE );
 	GameBattle_EnablePlayer( battle_id, 1, TRUE );
 	GameBattle_EnablePlayer( battle_id, 2, TRUE );
@@ -550,7 +555,7 @@ int main( int argc, char **argv )
 	int ret;
 	int mode;
 	LCUI_Thread t;
-#define DEBUG
+//#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
