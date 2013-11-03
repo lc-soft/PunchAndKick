@@ -3,6 +3,15 @@
 
 #define CONFIG_FILE	"config.bin"
 
+/** 初始化游戏键位设置 */
+void GameConfig_InitKeyControl(void);
+
+/** 获取键位设置 */
+void GameConfig_GetKeyControl( ControlKey *buff );
+
+/** 初始化游戏配置 */
+void GameConfig_Init(void);
+
 /** 载入游戏配置 */
 void GameConfig_Load(void);
 

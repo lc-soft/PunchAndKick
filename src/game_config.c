@@ -1,13 +1,49 @@
 ﻿#include <LCUI_Build.h>
 #include LC_LCUI_H
+#include LC_INPUT_H
 
+#include "game_control.h"
 #include "game_config.h"
 
 #define CONFIG_FILE	"config.bin"
 
 struct GameConfigData {
 	LCUI_BOOL windowed;
-} game_config = { TRUE };
+	ControlKey control_key;
+} game_config;
+
+/** 初始化游戏键位设置 */
+void GameConfig_InitKeyControl(void)
+{
+	game_config.control_key.a_attack = LCUIKEY_J;
+	game_config.control_key.b_attack = LCUIKEY_K;
+	game_config.control_key.defense = LCUIKEY_L;
+	game_config.control_key.jump = LCUIKEY_SPACE;
+	game_config.control_key.left = LCUIKEY_A;
+	game_config.control_key.right = LCUIKEY_D;
+	game_config.control_key.up = LCUIKEY_W;
+	game_config.control_key.down = LCUIKEY_S;
+}
+
+/** 获取键位设置 */
+void GameConfig_GetKeyControl( ControlKey *buff )
+{
+	buff->a_attack = game_config.control_key.a_attack;
+	buff->b_attack = game_config.control_key.b_attack;
+	buff->defense = game_config.control_key.defense;
+	buff->jump = game_config.control_key.jump;
+	buff->left = game_config.control_key.left;
+	buff->right = game_config.control_key.right;
+	buff->up = game_config.control_key.up;
+	buff->down = game_config.control_key.down;
+}
+
+/** 初始化游戏配置 */
+void GameConfig_Init(void)
+{
+	game_config.windowed = TRUE;
+	GameConfig_InitKeyControl();
+}
 
 /** 载入游戏配置 */
 void GameConfig_Load(void)
