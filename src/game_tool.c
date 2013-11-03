@@ -7,7 +7,7 @@
 #include "game_object.h"
 #include "game_resource.h"
 
-#define MAIN_RES_NUM 5
+#define MAIN_RES_NUM 7
 
 #define KUNI_ACTION_FILE_NUM	70
 #define RIKI_ACTION_FILE_NUM	75
@@ -102,6 +102,8 @@ const struct fileinfo main_file_info[MAIN_RES_NUM]={
 	{"wave2.png","back-wave-img"},
 	{"LC-GAMES-175x128.png","main-logo"},
 	{"game-icon-64x64.png", "game-logo"},
+	{"qrcode.png","qrcode"},
+	{"bg.png", "background-image"},
 	{"shadow.png", "shadow"}
 };
 
@@ -620,7 +622,7 @@ int main(int argc, char** argv)
 	//FontGraphRes_WirteToFile();
 	//ScenesGraphRes_WirteToFile();
 	//MainGraphRes_WirteToFile();
-#define need_font
+#define need_main_res
 #ifdef need_font
 	GraphRes_WirteToFile(	FONT_RES,
 				font_file_info,
