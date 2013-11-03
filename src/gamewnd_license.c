@@ -14,7 +14,7 @@
 #define TEXT_OK		L"确定"
 #define TEXT_LICENSE	L" 许可协议 "
 
-const wchar_t license_text[]={
+static const wchar_t license_text[]={
 L"<size=13px>"
 L"本游戏是自由软件，并且只可以根据 GNU通用公共许可协议 来使用、更改和发布，该许可协议要求本游戏及游戏衍生软件无论以何种形式发布，都必须确保收受者能收到或得到源代码。\n\n"
 L"本游戏是基于技术交流目的而加以散布的，但不负任何担保责任，例如：稳定性、可玩性、趣味性等的担保，甚至没有适销性或特定用途的隐含担保。\n\n"
