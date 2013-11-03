@@ -14,6 +14,7 @@
 #define WINDOW_SIZE		Size(345,245)
 #define BTN_SIZE		Size(80,30)
 #define KEYBTN_SIZE		Size(50,50)
+#define TIPBOX_SIZE		Size(240,120)
 
 #define TEXT_OK			L"确定"
 #define TEXT_RESET		L"恢复默认"
@@ -26,13 +27,18 @@
 #define TEXT_DEFENSE		L"<size=15px>防御</size>"
 #define TEXT_A_ATK		L"<size=15px>拳击</size>"
 #define TEXT_B_ATK		L"<size=15px>脚踢</size>"
+#define TEXT_PLEASE_PRESS_KEY	L"<size=18px>请按下要使用的键</size>"
+#define TEXT_KEY_IS_NOT_VALID	L"<size=18px>该键不可用，请按下另外的键</size>"
 
 LCUI_Widget *window, *box, *label, *btn_ok, *btn_reset;
-LCUI_Widget *tip_box;
+LCUI_Widget *tip_box, *tip_label;
+
 LCUI_Widget	*btn_left, *btn_right, *btn_up, *btn_down, 
 		*btn_a_atk, *btn_b_atk, *btn_defense, *btn_jump;
 LCUI_Widget	*label_left, *label_right, *label_up, *label_down, 
 		*label_a_atk, *label_b_atk, *label_defense, *label_jump;
+
+static int keyboard_connect_id = -1;
 
 static LCUI_BOOL KeyIsValid( int key_code )
 {
@@ -135,12 +141,6 @@ static LCUI_BOOL GetKeyText( int key_code, wchar_t *text )
 	return TRUE;
 }
 
-static void btn_ok_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
-{
-	GameWindow_HideSetKeyboardWindow();
-	GameWindow_DestroySetKeyboardWindow();
-}
-
 /** 更新按钮上显示的按键文字 */
 static void UpdateKeyBtn(void)
 {
@@ -182,11 +182,84 @@ static void UpdateKeyBtn(void)
 	Button_TextW( btn_jump, btn_text );
 }
 
+static void ProcKeyDown( LCUI_Event *event, void *arg )
+{
+	ControlKey ctrlkey;
+	LCUI_Widget *target_btn;
+	/** 如果按键不可用 */
+	if( !KeyIsValid(event->key.key_code) ) {
+		Label_TextW( tip_label, TEXT_KEY_IS_NOT_VALID );
+		return;
+	}
+	GameConfig_GetKeyControl( &ctrlkey );
+	target_btn = (LCUI_Widget*)arg;
+	if( target_btn == btn_left ) {
+		ctrlkey.left = event->key.key_code;
+	}
+	else if( target_btn == btn_right ) {
+		ctrlkey.right = event->key.key_code;
+	}
+	else if( target_btn == btn_up ) {
+		ctrlkey.up = event->key.key_code;
+	}
+	else if( target_btn == btn_down ) {
+		ctrlkey.down = event->key.key_code;
+	}
+	else if( target_btn == btn_a_atk ) {
+		ctrlkey.a_attack = event->key.key_code;
+	}
+	else if( target_btn == btn_b_atk ) {
+		ctrlkey.b_attack = event->key.key_code;
+	}
+	else if( target_btn == btn_jump ) {
+		ctrlkey.jump = event->key.key_code;
+	}
+	else if( target_btn == btn_defense ) {
+		ctrlkey.defense = event->key.key_code;
+	}
+	GameConfig_SetKeyControl( &ctrlkey );
+	GameConfig_Save();
+	UpdateKeyBtn();
+	Widget_Destroy( tip_box );
+	LCUISysEvent_Disconnect( LCUI_KEYDOWN, keyboard_connect_id );
+}
+
+static void StartCatchKey( LCUI_Widget *btn )
+{
+	tip_box = Widget_New(NULL);
+	tip_label = Widget_New("label");
+
+	Widget_Container_Add( tip_box, tip_label );
+	Label_TextW( tip_label, TEXT_PLEASE_PRESS_KEY );
+	Widget_SetAlign( tip_label, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	Widget_SetAlign( tip_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
+	Widget_Resize( tip_box, TIPBOX_SIZE );
+	Widget_SetBackgroundTransparent( tip_box, FALSE );
+	Widget_SetBorder( tip_box, Border(1,BORDER_STYLE_SOLID,RGB(200,200,200)) );
+
+	keyboard_connect_id = LCUISysEvent_Connect( LCUI_KEYDOWN, ProcKeyDown, btn );
+
+	Widget_Show( tip_label );
+	Widget_SetModal( tip_box, TRUE );
+	Widget_Show( tip_box );
+}
+
+static void btn_ok_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
+{
+	GameWindow_HideSetKeyboardWindow();
+	GameWindow_DestroySetKeyboardWindow();
+}
+
 static void btn_reset_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 {
 	GameConfig_InitKeyControl();
 	GameConfig_Save();
 	UpdateKeyBtn();
+}
+
+static void btn_key_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
+{
+	StartCatchKey( widget );
 }
 
 void GameWindow_InitSetKeyboardWindow(void)
@@ -306,6 +379,14 @@ void GameWindow_InitSetKeyboardWindow(void)
 	
 	Widget_Event_Connect( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
 	Widget_Event_Connect( btn_reset, EVENT_CLICKED, btn_reset_on_clicked );
+	Widget_Event_Connect( btn_left, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_Event_Connect( btn_right, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_Event_Connect( btn_up, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_Event_Connect( btn_down, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_Event_Connect( btn_b_atk, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_Event_Connect( btn_a_atk, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_Event_Connect( btn_jump, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_Event_Connect( btn_defense, EVENT_CLICKED, btn_key_on_clicked );
 	
 	Widget_Show( btn_left );
 	Widget_Show( btn_right );
