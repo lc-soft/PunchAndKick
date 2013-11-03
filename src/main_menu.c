@@ -13,6 +13,7 @@
 #include "game_config.h"
 #include "gamewnd_usage.h"
 #include "gamewnd_about.h"
+#include "gamewnd_joinus.h"
 #include "gamewnd_license.h"
 
 #define ITEM_BOX_HEIGHT	50
@@ -197,6 +198,25 @@ static void btn_license_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 	GameWindow_ShowLicenseWindow();
 }
 
+static void btn_joinus_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	GameWindow_InitJoinUsWindow();
+	GameWindow_ShowJoinUsWindow();
+}
+
+static void btn_2v2_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	LCUI_MessageBoxW( MB_ICON_WARNING, L"此对战模式未加入。", L"提示", MB_BTN_OK );
+}
+
+static void btn_network_battle_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
+{
+	LCUI_MessageBoxW( MB_ICON_WARNING, 
+	L"此功能暂未开发，若你有一定的windows和GNU/Linux环境下的网络编\n"
+	L"程经验，并且有时间有兴趣，可以协助我们为本游戏开发此功能。"
+	, L"提示", MB_BTN_OK );
+}
+
 static void scuffle_game_btn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
 	Game_InitRoleSelectBox();
@@ -233,8 +253,18 @@ static void btn_switch_video_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent
 static void Game_InitMainMenu(void)
 {
 	wchar_t str_buff[32];
-	LCUI_Widget *menu_game_btn, *menu_help_btn, *menu_options_btn, *menu_quit_btn;
-	LCUI_Widget *scuffle_game_btn, *btn_switch_video_mode, *btn_usage, *btn_about, *btn_license;
+	LCUI_Widget	*btn_single_game,
+			*btn_help,
+			*btn_network_battle, 
+			*btn_options, 
+			*btn_quit,
+			*btn_2v2_mode, 
+			*btn_scuffle_mode,
+			*btn_switch_video_mode, 
+			*btn_usage, 
+			*btn_about, 
+			*btn_license, 
+			*btn_joinus;
 
 	/* 创建几个游戏菜单 */
 	main_menu_box = GameMenu_New();
@@ -254,20 +284,20 @@ static void Game_InitMainMenu(void)
 	GameMenu_SetColorScheme( help_menu_box, color_set, TOTAL_COLOR_NUM );
 	GameMenu_SetColorScheme( options_menu_box, color_set, TOTAL_COLOR_NUM );
 	/* 为菜单创建按钮 */
-	menu_game_btn = GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
-	GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
+	btn_single_game = GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
+	btn_network_battle = GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
 
-	GameMenu_NewButtonW( game_menu_box, TEXT_2V2_GAME );
-	scuffle_game_btn = GameMenu_NewButtonW( game_menu_box, TEXT_SCUFFLE_GAME );
+	btn_2v2_mode = GameMenu_NewButtonW( game_menu_box, TEXT_2V2_GAME );
+	btn_scuffle_mode = GameMenu_NewButtonW( game_menu_box, TEXT_SCUFFLE_GAME );
 
-	menu_options_btn = GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
-	menu_help_btn = GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
-	menu_quit_btn = GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
+	btn_options = GameMenu_NewButtonW( main_menu_box, TEXT_OPTIONS );
+	btn_help = GameMenu_NewButtonW( main_menu_box, TEXT_HELP );
+	btn_quit = GameMenu_NewButtonW( main_menu_box, TEXT_QUIT );
 
 	btn_usage = GameMenu_NewButtonW( help_menu_box, TEXT_USAGE );
 	btn_about = GameMenu_NewButtonW( help_menu_box, TEXT_ABOUT );
 	btn_license = GameMenu_NewButtonW( help_menu_box, TEXT_LICENSE );
-	GameMenu_NewButtonW( help_menu_box, TEXT_JOINUS );
+	btn_joinus = GameMenu_NewButtonW( help_menu_box, TEXT_JOINUS );
 
 	GameMenu_NewButtonW( options_menu_box, TEXT_SET_KEYBOARD );
 	/* 根据游戏的配置数据，判断是否启用窗口模式，并让按钮上显示相应文字 */
@@ -278,16 +308,19 @@ static void Game_InitMainMenu(void)
 	}
 	btn_switch_video_mode = GameMenu_NewButtonW( options_menu_box, str_buff );
 	/* 为菜单按钮关联CLICKED事件，以在按钮被点击时进行相应 */
-	Widget_Event_Connect( scuffle_game_btn, EVENT_CLICKED, scuffle_game_btn_clicked );
+	Widget_Event_Connect( btn_2v2_mode, EVENT_CLICKED, btn_2v2_mode_clicked );
+	Widget_Event_Connect( btn_scuffle_mode, EVENT_CLICKED, scuffle_game_btn_clicked );
+	Widget_Event_Connect( btn_network_battle, EVENT_CLICKED, btn_network_battle_clicked );
 	Widget_Event_Connect( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
-	Widget_Event_Connect( menu_quit_btn, EVENT_CLICKED, btn_quit_clicked );
+	Widget_Event_Connect( btn_quit, EVENT_CLICKED, btn_quit_clicked );
 	Widget_Event_Connect( btn_usage, EVENT_CLICKED, btn_usage_clicked );
 	Widget_Event_Connect( btn_about, EVENT_CLICKED, btn_about_clicked );
 	Widget_Event_Connect( btn_license, EVENT_CLICKED, btn_license_clicked );
+	Widget_Event_Connect( btn_joinus, EVENT_CLICKED, btn_joinus_clicked );
 	/* 设置一些子菜单 */
-	GameMenu_SetChildMenu( main_menu_box, menu_game_btn, game_menu_box );
-	GameMenu_SetChildMenu( main_menu_box, menu_help_btn, help_menu_box );
-	GameMenu_SetChildMenu( main_menu_box, menu_options_btn, options_menu_box );
+	GameMenu_SetChildMenu( main_menu_box, btn_single_game, game_menu_box );
+	GameMenu_SetChildMenu( main_menu_box, btn_help, help_menu_box );
+	GameMenu_SetChildMenu( main_menu_box, btn_options, options_menu_box );
 	/* 调整各个菜单的尺寸 */
 	Widget_Resize( main_menu_box, SIZE_MAIN_MENU_BOX );
 	Widget_Resize( game_menu_box, SIZE_GAME_MENU_BOX );
@@ -317,8 +350,6 @@ void Game_InitMainUI(void)
 	Widget_SetSize( main_ui_box, "100%", "100%" );
 	Widget_SetAlign( main_ui_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
 	Widget_SetAlpha( main_ui_box, 0 );
-	Widget_SetBackgroundColor( main_ui_box, RGB(240,240,240) );
-	Widget_SetBackgroundTransparent( main_ui_box, FALSE );
 	
 	/* 主界面显示在普通部件的底层 */
 	Widget_SetZIndex( main_ui_box, -1 );
@@ -365,6 +396,7 @@ void Game_InitMainUI(void)
 	Widget_Show( footer_box );
 	Widget_Show( copyright_text );
 	Widget_Show( main_ui_box );
+
 	/* 设置两个定时器，用于定时改变波浪的位置，以实现波浪的移动效果 */
 	LCUITimer_Set( 20, UIEffect_MoveWave1, NULL, TRUE );
 	LCUITimer_Set( 60, UIEffect_MoveWave2, NULL, TRUE );
