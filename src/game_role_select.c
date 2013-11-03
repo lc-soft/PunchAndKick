@@ -226,7 +226,7 @@ void Game_InitRoleSelectBox(void)
 		p_action = ActionRes_Load( i, ACTION_START );
 		GameObject_AddAction( role_image, p_action, i );
 	}
-	current_select_role = ROLE_KUNI;
+	current_select_role = ROLE_KUNIO;
 	/* 播放角色的动作动画 */
 	GameObject_PlayAction( role_image );
 	/* 将部件加入至角色形象框内 */
@@ -335,7 +335,7 @@ void Game_InitRoleSelectBox(void)
 	Widget_Show( info_area );
 	Widget_Show( skill_area );
 
-	RoleSelectBox_SetRole( ROLE_KUNI );
+	RoleSelectBox_SetRole( ROLE_KUNIO );
 	LCUISleeper_Create( &sleeper );
 	window_is_inited = TRUE;
 	LCUIThread_Create( &th_role_action_update, GameRoleSelectBox_UpdateRoleAction, NULL );
