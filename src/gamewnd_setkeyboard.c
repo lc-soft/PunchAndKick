@@ -222,10 +222,15 @@ static void ProcKeyDown( LCUI_Event *event, void *arg )
 	UpdateKeyBtn();
 	Widget_Destroy( tip_box );
 	LCUISysEvent_Disconnect( LCUI_KEYDOWN, keyboard_connect_id );
+	tip_box = NULL;
+	keyboard_connect_id = -1;
 }
 
 static void StartCatchKey( LCUI_Widget *btn )
 {
+	if( tip_box ) {
+		return;
+	}
 	tip_box = Widget_New(NULL);
 	tip_label = Widget_New("label");
 
@@ -236,7 +241,7 @@ static void StartCatchKey( LCUI_Widget *btn )
 	Widget_Resize( tip_box, TIPBOX_SIZE );
 	Widget_SetBackgroundTransparent( tip_box, FALSE );
 	Widget_SetBorder( tip_box, Border(1,BORDER_STYLE_SOLID,RGB(200,200,200)) );
-
+	
 	keyboard_connect_id = LCUISysEvent_Connect( LCUI_KEYDOWN, ProcKeyDown, btn );
 
 	Widget_Show( tip_label );
