@@ -118,6 +118,7 @@ static void Game_AddCPUPlayerRole( int battle_id, int role_id[4] )
 	}
 }
 
+/** 在演示对战场景中放置玩家（设置玩家位置） */
 static void GameDemoScene_PutPlayer( int battle_id )
 {
 	int x, y;
@@ -144,6 +145,7 @@ static void GameDemoScene_PutPlayer( int battle_id )
 	GamePlayer_SetStart( player[1] );
 }
 
+/** 演示对战的线程 */
 static void Game_DemoThread( void *arg )
 {
 	int battle_id;
@@ -153,21 +155,34 @@ static void Game_DemoThread( void *arg )
 	scene_size.w = 800;
 	scene_size.h = 600;
 	battle_id = (int)arg;
+	/* 设置对战场景的地面参数 */
 	GameBattle_SetSceneLand( battle_id, Pos(50,400), Size(700,10) );
+	/* 设置对战场景的大小 */
 	GameBattle_SetSceneSize( battle_id, scene_size );
+	/* 获取对战场景 */
 	demo_scene = GameBattle_GetScene( battle_id );
+	/* 设置对战场景的z-index值 */
 	Widget_SetZIndex( demo_scene, -10 );
+	/* 设置对战场景不可被点击 */
 	Widget_SetClickableAlpha( demo_scene, 0, 0 );
-	Widget_Container_Add( Game_GetMainMenuBox(), demo_scene );
+	/* 将演示对战的对战场景加入至主界面 */
+	Widget_Container_Add( Game_GetMainUI(), demo_scene );
+	/* 设置两个对战角色，由AI控制 */
 	GameBattle_SetPlayer( battle_id, 1, ROLE_KUNIO, FALSE );
 	GameBattle_SetPlayer( battle_id, 2, ROLE_RIKI, FALSE );
+	/* 启用这两个对战角色 */
 	GameBattle_EnablePlayer( battle_id, 1, TRUE );
 	GameBattle_EnablePlayer( battle_id, 2, TRUE );
+	/* 设置这两个对战角色为无敌 */
 	GameBattlePlayer_SetInvincible( battle_id, 1, TRUE );
 	GameBattlePlayer_SetInvincible( battle_id, 2, TRUE );
+	/* 放置这两个对战角色 */
 	GameDemoScene_PutPlayer( battle_id );
+	/* 开始游戏对战 */
 	GameBattle_Start( battle_id );
+	/* 显示对战场景 */
 	Widget_Show( demo_scene );
+	/* 进入游戏对战处理循环 */
 	GameBattle_Loop( battle_id );
 }
 
@@ -178,12 +193,12 @@ static void Game_InitPlayerPos( int battle_id )
 	GamePlayer *p_player[4];
 	LCUI_Pos land_pos;
 	LCUI_Size land_size;
-
+	/* 获取4个游戏角色 */
 	p_player[0] = GameBattle_GetPlayer( battle_id, 1 );
 	p_player[1] = GameBattle_GetPlayer( battle_id, 2 );
 	p_player[2] = GameBattle_GetPlayer( battle_id, 3 );
 	p_player[3] = GameBattle_GetPlayer( battle_id, 4 );
-
+	/* 获取对战场景的地面参数 */
 	GameBattle_GetSceneLand( battle_id, &land_pos, &land_size );
 	/* 计算并设置游戏角色的位置 */
 	x = land_size.w/2 - 150;
@@ -204,6 +219,7 @@ static void Game_InitPlayerPos( int battle_id )
 	GamePlayer_SetLeftOriented( p_player[3] );
 }
 
+/** 更新游戏角色的状态栏 */
 static void Game_UpdatePlayerStatusBar( int battle_id )
 {
 	int i;
@@ -215,7 +231,7 @@ static void Game_UpdatePlayerStatusBar( int battle_id )
 	p_player[1] = GameBattle_GetPlayer( battle_id, 2 );
 	p_player[2] = GameBattle_GetPlayer( battle_id, 3 );
 	p_player[3] = GameBattle_GetPlayer( battle_id, 4 );
-
+	/* 根据这4个游戏角色的属性，设置状态栏上显示的内容 */
 	for(i=0; i<4; ++i) {
 		if( p_player[i]->human_control ) {
 			player_type_name[0] = L'1'+i;
@@ -228,6 +244,7 @@ static void Game_UpdatePlayerStatusBar( int battle_id )
 			player_type_name[3] = 0;
 		}
 		p_role_info = Game_GetRoleInfo( p_player[i]->role_id );
+		/* 设置显示的角色名 */
 		StatusBar_SetPlayerNameW( p_player[i]->statusbar, p_role_info->name );
 		/* 设置角色类型名 */
 		StatusBar_SetPlayerTypeNameW( p_player[i]->statusbar, player_type_name );
@@ -239,6 +256,7 @@ static void Game_UpdatePlayerStatusBar( int battle_id )
 	}
 }
 
+/** 定时更新显示FPS */
 static void UpdateViewFPS( void *arg )
 {
 	char str[10];
@@ -254,6 +272,7 @@ static void Game_DestroySceneText(void)
 	LCUITimer_Free( timer_update_scene_text );
 }
 
+/** 初始化对战场景中显示的文本 */
 static void Game_InitSceneText( LCUI_Widget *scene )
 {
 	LCUI_Widget *text, *fps_text;
@@ -273,19 +292,23 @@ static void Game_InitSceneText( LCUI_Widget *scene )
 	Widget_SetZIndex( text, -5000 );
 	Widget_Show( fps_text );
 	Widget_Show( text );
+	/* 创建定时器，每隔0.5秒更新显示的FPS */
 	timer_update_scene_text = LCUITimer_Set( 500, UpdateViewFPS, fps_text, TRUE );
 }
 
+/** 显示游戏角色状态区域 */
 static void Game_ShowPlayerStatusArea(void)
 {
 	Widget_Show( player_status_area );
 }
 
+/** 销毁游戏角色状态区域 */
 static void Game_DestroyPlayerStatusArea(void)
 {
 	Widget_Destroy( player_status_area );
 }
 
+/** 初始化游戏角色状态区域 */
 static int Game_InitPlayerStatusArea( int battle_id )
 {
 	GamePlayer *p_player[4];
@@ -296,21 +319,26 @@ static int Game_InitPlayerStatusArea( int battle_id )
 	p_player[3] = GameBattle_GetPlayer( battle_id, 4 );
 
 	player_status_area = Widget_New(NULL);
+	/* 设置状态区的背景 */
 	Widget_SetBackgroundColor( player_status_area, RGB(240,240,240) );
 	Widget_SetBackgroundTransparent( player_status_area, FALSE );
+	/* 设置状态区的边框 */
 	Widget_SetBorder( player_status_area, Border(1,BORDER_STYLE_SOLID,RGB(150,150,150)));
+	/* 设置状态区的尺寸 */
 	Widget_Resize( player_status_area, Size(800,STATUS_BAR_HEIGHT) );
+	/* 设置状态区的位置 */
 	Widget_SetAlign( player_status_area, ALIGN_BOTTOM_CENTER, Pos(0,0) );
-	/* 创建状态栏 */
+	/* 为每个游戏角色创建对应的状态栏 */
 	p_player[0]->statusbar = StatusBar_New();
 	p_player[1]->statusbar = StatusBar_New();
 	p_player[2]->statusbar = StatusBar_New();
 	p_player[3]->statusbar = StatusBar_New();
-
+	/* 并将这些状态栏添加至状态区里 */
 	Widget_Container_Add( player_status_area, p_player[0]->statusbar );
 	Widget_Container_Add( player_status_area, p_player[1]->statusbar );
 	Widget_Container_Add( player_status_area, p_player[2]->statusbar );
 	Widget_Container_Add( player_status_area, p_player[3]->statusbar );
+	/* 设置这些状态栏的位置 */
 	Widget_SetAlign( p_player[0]->statusbar, ALIGN_TOP_LEFT, Pos(5,5) );
 	Widget_SetAlign( p_player[1]->statusbar, ALIGN_TOP_LEFT, Pos(5+200,5) );
 	Widget_SetAlign( p_player[2]->statusbar, ALIGN_TOP_LEFT, Pos(5+400,5) );
@@ -373,7 +401,9 @@ static int Game_InitFight( int role_id[4] )
 	Game_InitPlayerStatusArea( battle_id );
 	Game_InitPlayerPos( battle_id );
 	Game_UpdatePlayerStatusBar( battle_id );
+	/* 启用自动同步移动镜头 */
 	GameBattle_SetAutoSyncCamera( battle_id, TRUE );
+	/* 启用显示数值提示 */
 	GameBattle_SetEnableValueTip( battle_id, TRUE );
 	return battle_id;
 }
@@ -434,9 +464,11 @@ static void Game_StartFight( int battle_id )
 	Widget_Show( game_scene );
 	Game_ShowPlayerStatusArea();
 	GameBattle_Start( battle_id );
+	/* 连接LCUI的按键事件，并保存事件连接的ID */
 	connect_id[0] = LCUISysEvent_Connect( LCUI_KEYUP, Game_ProcKeyboardInBattle, NULL );
 	connect_id[1] = LCUISysEvent_Connect( LCUI_KEYDOWN, Game_ProcKeyboardInBattle, NULL );
 	GameBattle_Loop( battle_id );
+	/* 根据事件连接的ID，解除事件连接 */
 	LCUISysEvent_Disconnect( LCUI_KEYUP, connect_id[0] );
 	LCUISysEvent_Disconnect( LCUI_KEYDOWN, connect_id[1] );
 	Game_DestroySceneText();
