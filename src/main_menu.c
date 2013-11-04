@@ -425,7 +425,7 @@ void Game_ShowMainUI(void)
 	Widget_SetAlpha( main_ui_box, 255 );
 }
 
-LCUI_Widget* Game_GetMainMenuBox(void)
+LCUI_Widget* Game_GetMainUI(void)
 {
 	return main_ui_box;
 }
