@@ -411,6 +411,7 @@ static void GamePlayer_GraduallyDisappear( void *arg )
 		player->enable = FALSE;
 		player->state = STATE_DIED;
 		LCUITimer_Free( player->t_death_timer );
+		player->t_death_timer = -1;
 	}
 }
 
@@ -500,7 +501,7 @@ static void GamePlayer_SetDeath( GamePlayer *player )
 		default:break;
 		}
 	}
-	LCUITimer_Set( 50, GamePlayer_GraduallyDisappear, (void*)player, TRUE );
+	player->t_death_timer = LCUITimer_Set( 50, GamePlayer_GraduallyDisappear, (void*)player, TRUE );
 }
 
 int GamePlayer_SetLying( GamePlayer *player )
