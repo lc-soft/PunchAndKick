@@ -118,8 +118,10 @@ void GameValueTip_Init( ValueTipData *p_data, LCUI_Widget *container )
 /** 退出数值提示功能 */
 void GameValueTip_Quit( ValueTipData *p_data )
 {
-	Queue_Destroy( &p_data->tip_data_list );
+	/* 先关掉定时器 */
 	LCUITimer_Free( p_data->timer_id );
+	/* 再释放占用的资源 */
+	Queue_Destroy( &p_data->tip_data_list );
 }
 
 /** 设置显示的值 */
