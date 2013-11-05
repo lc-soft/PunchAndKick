@@ -48,7 +48,7 @@ static int current_select_role = 0;
 static void closebtn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
 	Game_HideRoleSelectBox();
-	//Game_DestroyRoleSelectBox();
+	Game_DestroyRoleSelectBox();
 	/* 赋值为-1，表示当前并未选中角色 */
 	current_select_role = -1;
 	LCUISleeper_BreakSleep( &sleeper );
@@ -152,7 +152,7 @@ static void btn_select_role_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unus
 {
 	Game_HideRoleSelectBox();
 	LCUISleeper_BreakSleep( &sleeper );
-	//Game_DestroyRoleSelectBox();
+	Game_DestroyRoleSelectBox();
 }
 
 /** 更新角色的动作动画 */
@@ -347,8 +347,9 @@ void Game_ShowRoleSelectBox(void)
 	if( !window_is_inited ) {
 		return;
 	}
-	Widget_Show( window );
+	current_select_role = ROLE_KUNIO;
 	Widget_SetModal( window, TRUE );
+	Widget_Show( window );
 }
 
 /** 隐藏角色选择框 */
