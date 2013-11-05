@@ -102,6 +102,10 @@ void Game_RecordAttack( GamePlayer *attacker,
 {
 	AttackRecord data;
 	LCUI_Queue *p_atk_record;
+	/* 若受害者都没有，则直接退出 */
+	if( !victim ) {
+		return;
+	}
 	data.attacker = attacker;
 	strncpy( data.attack_type_name, attack_type_name, NAME_MAX_LEN );
 	data.attack_type_name[NAME_MAX_LEN-1] = 0;
