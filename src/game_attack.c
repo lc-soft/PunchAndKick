@@ -154,8 +154,14 @@ void Game_ProcAttack( LCUI_Queue *p_attakc_record, ValueTipData *value_tip )
 		}
 		/** 如果已经初始化数值提示功能 */
 		if( value_tip->is_inited ) {
+			/* 获取受害者脚底的坐标（相对于战斗场景的二维坐标） */
 			GameObject_GetFootPos( p_data->victim->object, &start_pos );
-			GameValueTip_AddTip( value_tip, start_pos, true_damage );
+			/* 减去当前帧的高度 */
+			start_pos.y -= GameObject_GetCurrentFrameTop( p_data->victim->object );
+			/* 再减去一点，确保该数值提示显示在受害者头上 */
+			start_pos.y -= 20;
+			/* 添加数值提示 */
+			GameValueTip_AddTip( value_tip, p_data->victim->id, start_pos, true_damage );
 		}
 		/* 计算现在的血量 */
 		p_data->victim->property.cur_hp -= true_damage;
