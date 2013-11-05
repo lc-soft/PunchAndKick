@@ -9,10 +9,14 @@
 #define LAST_STEP_NUM	60
 #define Y_DISTANCE	80
 
+#define MAX_REMAIN_COUNT	30
+
 #define FONT_COLOR_RED		0
 #define FONT_COLOR_GREEN	1
 
 typedef struct ValueTipTaskData_ {
+	int id;
+	int value;
 	int step_num;
 	LCUI_Pos start_pos;
 	LCUI_Widget *wdg_tip;
@@ -29,9 +33,11 @@ static void ValueTipTask_Destroy( void *arg )
 static void GameValueTip_Proc( void *arg )
 {
 	int i, n;
+	double tmp_val;
 	ValueTipData *p_data;
 	ValueTipTaskData *p_task_data;
 	LCUI_Pos pos;
+	LCUI_Size size, new_size;
 	uchar_t alpha;
 
 	p_data = (ValueTipData*)arg;
@@ -46,19 +52,55 @@ static void GameValueTip_Proc( void *arg )
 		if( p_task_data->step_num >= LAST_STEP_NUM ) {
 			Widget_SetAlpha( p_task_data->wdg_tip, 0 );
 			Widget_Hide( p_task_data->wdg_tip );
+			p_task_data->value = 0;
 			continue;
 		}
 		++p_task_data->step_num;
+		/* 记录数值提示的显示位置 */
 		pos.x = p_task_data->start_pos.x;
-		pos.x -= _Widget_GetWidth(p_task_data->wdg_tip)/2;
 		pos.y = p_task_data->start_pos.y;
-		if( p_task_data->step_num < LAST_STEP_NUM-20 ) {
-			alpha = 255*p_task_data->step_num/(LAST_STEP_NUM-20);
-			pos.y -= Y_DISTANCE*p_task_data->step_num/(LAST_STEP_NUM-20);
+		/* 记录背景图的尺寸，作为部件的原始尺寸 */
+		size.w = p_task_data->wdg_tip->background.image.w;
+		size.h = p_task_data->wdg_tip->background.image.h;
+		/* 前5次更新用于实现膨胀效果 */
+		if( p_task_data->step_num < 5 ) {
+			/* 尺寸随p_task_data->step_num的增长而增长 */
+			new_size.w = size.w + p_task_data->step_num*(size.w/2)/5;
+			new_size.h = size.h + p_task_data->step_num*(size.h/2)/5;
+			/* 根据尺寸，调整位置，以使部件中心在p_task_data->start_pos处 */
+			pos.x -= new_size.w/2;
+			pos.y -= new_size.h/2;
+			Widget_Resize( p_task_data->wdg_tip, new_size );
+		}
+		/* 后5次更新用于实现缩小效果 */
+		else if( p_task_data->step_num < 10 ) {
+			/* 尺寸随p_task_data->step_num的增长而缩小 */
+			new_size.w = size.w + (10-p_task_data->step_num)*(size.w/2)/5;
+			new_size.h = size.h + (10-p_task_data->step_num)*(size.h/2)/5;
+			pos.x -= new_size.w/2;
+			pos.y -= new_size.h/2;
+			Widget_Resize( p_task_data->wdg_tip, new_size );
+		}
+		/* 当达到第10次更新时，还原部件应有的尺寸 */
+		else if( p_task_data->step_num == 10 ) {
+			pos.x -= size.w/2;
+			pos.y -= size.h/2;
+			Widget_Resize( p_task_data->wdg_tip, size );
+		} else {
+			pos.x -= size.w/2;
+			pos.y -= size.h/2;
+		}
+		/* 当更新次数大于或等于MAX_REMAIN_COUNT时 */
+		if( p_task_data->step_num >= MAX_REMAIN_COUNT ) {
+			tmp_val = 1.0*p_task_data->step_num - MAX_REMAIN_COUNT;
+			tmp_val = tmp_val/(LAST_STEP_NUM - MAX_REMAIN_COUNT);
+			/* 按比例计算部件透明度，以及的Y轴坐标 */
+			alpha = (uchar_t)(255 - tmp_val*255);
+			pos.y -= (int)(Y_DISTANCE*tmp_val);
 		} else {
 			alpha = 255;
-			pos.y -= Y_DISTANCE;
 		}
+
 		Widget_Move( p_task_data->wdg_tip, pos );
 		Widget_SetAlpha( p_task_data->wdg_tip, alpha );
 	}
@@ -123,16 +165,17 @@ static void GameValueTipWidget_SetValue( LCUI_Widget *widget, int color_type, in
 	/* 设置背景 */
 	Widget_SetBackgroundImage( widget, &bg );
 	Widget_SetBackgroundTransparent( widget, TRUE );
-	Widget_SetBackgroundLayout( widget, LAYOUT_NONE );
+	/* 设置背景布局类型为拉伸，背景图随部件的尺寸变化而变化 */
+	Widget_SetBackgroundLayout( widget, LAYOUT_STRETCH );
 	/* 调整尺寸 */
 	Widget_Resize( widget, Graph_GetSize(&bg) );
 }
 
-/** 添加一条提示 */
-void GameValueTip_AddTip( ValueTipData *p_data, LCUI_Pos pos, int value )
+/** 获取可用的数据 */
+static ValueTipTaskData* GameValueTip_GetValidData( ValueTipData *p_data, int id )
 {
 	int i, n;
-	ValueTipTaskData new_task_data, *p_task_data = NULL;
+	ValueTipTaskData *p_task_data;
 
 	Queue_Lock( &p_data->tip_data_list );
 	n = Queue_GetTotal( &p_data->tip_data_list );
@@ -142,21 +185,39 @@ void GameValueTip_AddTip( ValueTipData *p_data, LCUI_Pos pos, int value )
 		if( !p_task_data ) {
 			continue;
 		}
-		if( p_task_data->step_num >= LAST_STEP_NUM ) {
-			break;
+		if( (p_task_data->id == id
+		 && p_task_data->step_num < MAX_REMAIN_COUNT)
+		 || p_task_data->step_num >= LAST_STEP_NUM ) {
+			Queue_Unlock( &p_data->tip_data_list );
+			return p_task_data;
 		}
 	}
 	Queue_Unlock( &p_data->tip_data_list );
-	if( i < n && p_data ) {
+	return NULL;
+}
+
+/** 添加一条数值提示 */
+void GameValueTip_AddTip( ValueTipData *p_data, int id, LCUI_Pos pos, int value )
+{
+	ValueTipTaskData new_task_data, *p_task_data;
+
+	p_task_data = GameValueTip_GetValidData( p_data, id );
+	if( p_task_data ) {
+		p_task_data->id = id;
 		p_task_data->start_pos = pos;
 		p_task_data->step_num = 0;
-		GameValueTipWidget_SetValue( p_task_data->wdg_tip, FONT_COLOR_RED, value );
+		/* 与上次的值进行累加 */
+		p_task_data->value += value;
+		/* 更新数据 */
+		GameValueTipWidget_SetValue( p_task_data->wdg_tip, FONT_COLOR_RED, p_task_data->value );
 		Widget_Show( p_task_data->wdg_tip );
 		return;
 	}
 
+	new_task_data.id = id;
 	new_task_data.start_pos = pos;
 	new_task_data.step_num = 0;
+	new_task_data.value = value;
 	new_task_data.wdg_tip = Widget_New(NULL);
 	
 	Widget_Container_Add( p_data->widget_container, new_task_data.wdg_tip );
