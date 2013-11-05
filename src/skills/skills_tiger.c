@@ -53,8 +53,8 @@ static LCUI_BOOL CanUseSpinDrill( GamePlayer *player )
 static void AtLandingDone( LCUI_Widget *widget )
 {
 	GamePlayer *player;
-
 	player = GameBattle_GetPlayerByWidget( widget );
+	GamePlayer_UnlockMotion( player );
 	GameObject_SetXSpeed( widget, 0 );
 	GamePlayer_StartStand( player );
 }
@@ -69,12 +69,12 @@ static void StartLeftBounce( LCUI_Widget *widget )
 	GamePlayer_LockAction( player );
 	Game_RecordAttack( player, ATK_SPIN_DRILL, player->other, STATE_HALF_LYING );
 	player->other = NULL;
+	GamePlayer_SetRightOriented( player );
+	GameObject_SetXSpeed( player->object, -XSPEED_BOUNCE );
 	GameObject_AtLanding(
 		player->object, ZSPEED_BOUNCE,
 		-ZACC_BOUNCE, AtLandingDone
 	);
-	GamePlayer_SetRightOriented( player );
-	GameObject_SetXSpeed( player->object, -XSPEED_BOUNCE );
 }
 
 static void StartRightBounce( LCUI_Widget *widget )
@@ -87,12 +87,12 @@ static void StartRightBounce( LCUI_Widget *widget )
 	GamePlayer_LockAction( player );
 	Game_RecordAttack( player, ATK_SPIN_DRILL, player->other, STATE_HALF_LYING );
 	player->other = NULL;
+	GamePlayer_SetLeftOriented( player );
+	GameObject_SetXSpeed( player->object, XSPEED_BOUNCE );
 	GameObject_AtLanding(
 		player->object, ZSPEED_BOUNCE,
 		-ZACC_BOUNCE, AtLandingDone
 	);
-	GamePlayer_SetLeftOriented( player );
-	GameObject_SetXSpeed( player->object, XSPEED_BOUNCE );
 }
 
 static void AtTargetLandingDone( LCUI_Widget *widget )
@@ -104,6 +104,7 @@ static void AtTargetLandingDone( LCUI_Widget *widget )
 	GamePlayer_UnlockAction( player );
 	ret = GamePlayer_SetLying( player );
 	GamePlayer_LockAction( player );
+	GamePlayer_UnlockMotion( player );
 	GamePlayer_StopXMotion( player );
 	if( ret == 0 ) {
 		GamePlayer_SetRestTimeOut( player, BE_THROW_REST_TIMEOUT, GamePlayer_StartStand );
@@ -164,6 +165,8 @@ static void StartSpinDrill( GamePlayer *player )
 	GamePlayer_ChangeState( player, STATE_CATCH_SKILL_FA );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockAction( player->other );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockMotion( player->other );
 
 	GameObject_SetX( player->other->object, GameObject_GetX(player->object) );
 	GameObject_SetY( player->other->object, GameObject_GetY(player->object) );
