@@ -1486,9 +1486,8 @@ LCUI_API int GameObject_GetFootPos( LCUI_Widget *widget, LCUI_Pos *pos )
 	LCUI_Pos object_pos;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	object_pos.x = obj->x;
-	object_pos.y = obj->y - obj->global_bottom_line_y;
-	*pos = object_pos;
+	pos->x = obj->x;
+	pos->y = obj->y;
 	return 0;
 }
 
