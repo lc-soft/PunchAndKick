@@ -276,8 +276,8 @@ LCUI_API void GameObject_AtLanding(	LCUI_Widget *widget,
 {
 	GameObject *obj;
 	obj = (GameObject*)Widget_GetPrivData( widget );
-	GameObject_SetZSpeed( widget, z_speed );
-	GameObject_SetZAcc( widget, z_acc );
+	obj->space_obj->z_speed = z_speed;
+	obj->space_obj->z_acc = z_acc;
 	obj->at_landing = func;
 }
 
@@ -1483,7 +1483,6 @@ LCUI_API void GameObject_AddToContainer( LCUI_Widget *widget, LCUI_Widget *ctnr 
 LCUI_API int GameObject_GetFootPos( LCUI_Widget *widget, LCUI_Pos *pos )
 {
 	GameObject *obj;
-	LCUI_Pos object_pos;
 
 	obj = (GameObject*)Widget_GetPrivData( widget );
 	pos->x = obj->x;
