@@ -1,4 +1,4 @@
-﻿//#define SKIP_BOOT_SCREEN
+﻿#define SKIP_BOOT_SCREEN
 #define I_NEED_WINMAIN
 #include <LCUI_Build.h>
 #include LC_LCUI_H
@@ -346,6 +346,26 @@ static int Game_InitPlayerStatusArea( int battle_id )
 	return 0;
 }
 
+/** 向对战中添加更多的CPU玩家 */
+static void Game_AddMoreCPUPlayer( int battle_id )
+{
+	int i, x, y;
+	LCUI_Pos land_pos;
+	LCUI_Size land_size;
+	GamePlayer *p_player;
+	/* 获取对战场景的地面参数 */
+	GameBattle_GetSceneLand( battle_id, &land_pos, &land_size );
+	for(i=5; i<30; ++i) {
+		GameBattle_SetPlayer( battle_id, i, rand()%5, FALSE );
+		GameBattle_EnablePlayer( battle_id, i, TRUE );
+		p_player = GameBattle_GetPlayer( battle_id, i );
+		x = land_pos.x + rand()%land_size.w;
+		y = land_pos.y + rand()%land_size.h;
+		GameObject_SetX( p_player->object, x );
+		GameObject_SetY( p_player->object, y );
+	}
+}
+
 static int Game_InitFight( int role_id[4] )
 {
 	int ret, battle_id;
@@ -387,7 +407,9 @@ static int Game_InitFight( int role_id[4] )
 	GameBattle_EnablePlayer( battle_id, 2, TRUE );
 	GameBattle_EnablePlayer( battle_id, 3, TRUE );
 	GameBattle_EnablePlayer( battle_id, 4, TRUE );
-
+	
+	//Game_AddMoreCPUPlayer( battle_id );
+	
 	/* 设置战斗场景显示的位置 */
 	Widget_SetAlign( GameBattle_GetScene(battle_id), 
 	ALIGN_BOTTOM_CENTER, Pos(0,-STATUS_BAR_HEIGHT) );
@@ -428,6 +450,10 @@ static void Game_ProcKeyboardInBattle( LCUI_Event *event, void *arg )
 	LCUI_Task task;
 	if( event->type != LCUI_KEYDOWN ) {
 		return;
+	}
+	if( event->key.key_code == LCUIKEY_R ) {
+		// 开始录制屏幕指定区域
+		//LCUIScreen_StartRecord( Rect(0,260,320,240) );
 	}
 	if( event->key.key_code != LCUIKEY_ESC ) {
 		return;
