@@ -6,7 +6,7 @@
 #include "game.h"
 
 #define RANGE_MAX		-1
-#define MAX_STRATEGY_NUM	33
+#define MAX_STRATEGY_NUM	36
 #define MAX_ACTION_NUM		5
 
 enum AIActionType {
@@ -119,6 +119,16 @@ static LCUI_BOOL IAmSJump( int state )
 	return FALSE;
 }
 
+static LCUI_BOOL PlayerWillSprintJumpAttack( int state )
+{
+	if( state == STATE_SJUMP
+	 || state == STATE_ASJ_ATTACK
+	 || state == STATE_BSJ_ATTACK ) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 static LCUI_BOOL ICanCloseTarget( int state )
 {
 	switch( state ) {
@@ -179,14 +189,14 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	{ 
 		0,
 		/* 距离在10-55的范围内，对目标进行A攻击 */
-		ICanAction, TargetCanAction, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		ICanAction, TargetCanAction, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_a_attack},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
 		0,
-		/* 距离在20-30的范围内，目标躺地，对目标进行A攻击 */
+		/* 距离在25-40的范围内，目标躺地，对目标进行A攻击 */
 		ICanAction, TargetIsLying, {25,40,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_a_attack},
@@ -195,7 +205,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	},{ 
 		0,
 		/* 距离在10-55的范围内，对目标进行B攻击 */
-		ICanAction, NULL, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		ICanAction, NULL, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_b_attack},
 			{FALSE, 0, ai_action_type_none}
@@ -203,7 +213,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	}, { 
 		0,
 		/* 距离在10-55的范围内，目标处于喘气状态，跳跃+攻击目标 */
-		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_jump},
 			{TRUE, 0, ai_action_type_b_attack},
@@ -212,7 +222,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	}, { 
 		0,
 		/* 距离在10-55的范围内，目标处于喘气状态，攻击目标 */
-		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_a_attack},
 			{FALSE, 0, ai_action_type_none}
@@ -220,7 +230,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	}, { 
 		0,
 		/* 距离在10-55的范围内，目标处于喘气状态，站着观察 */
-		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 500, ai_action_type_observe},
 			{FALSE, 0, ai_action_type_none}
@@ -228,7 +238,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	}, { 
 		0,
 		/* 距离在10-55的范围内，目标处于喘气状态，靠近他 */
-		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH}, 
+		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH}, 
 		{
 			{TRUE, 50, ai_action_type_walk_close},
 			{FALSE, 0, ai_action_type_none}
@@ -270,10 +280,18 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		}
 	}, { 
 		0,
-		/* 距离在0-10的范围内，步行远离目标 */
+		/* 距离在0-20的范围内，步行远离目标 */
 		ICanAction, TargetCanAction, {0,20,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 500, ai_action_type_walk_away},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在0-40的范围内，跑步远离目标 */
+		ICanAction, TargetCanAction, {0,40,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 500, ai_action_type_run_away},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
@@ -348,6 +366,14 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 			{TRUE, 300, ai_action_type_observe},
 			{FALSE, 0, ai_action_type_none}
 		}
+	}, { 
+		0,
+		/* 距离500以上，观察目标 */
+		ICanAction, TargetCanAction, {0,RANGE_MAX,0,RANGE_MAX}, 
+		{
+			{TRUE, 300, ai_action_type_observe},
+			{FALSE, 0, ai_action_type_none}
+		}
 	}, {
 		0,
 		/* 距离在0-150的范围内，步行靠近目标 */
@@ -396,6 +422,14 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		IAmSJump, NULL, {20,150,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 50, ai_action_type_b_attack},
+			{FALSE, 0, ai_action_type_none}
+		}
+	},{ 
+		0,
+		/* 距离在20-300的范围内，对方若要进行跳跃攻击，跑步远离 */
+		ICanAction, PlayerWillSprintJumpAttack, {20,300,0,GLOBAL_Y_WIDTH/2-2}, 
+		{
+			{TRUE, 200, ai_action_type_run_away},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
@@ -702,7 +736,7 @@ void ExecuteStrategy( GamePlayer *player )
 	int action_type;
 	GamePlayer *target;
 	AIStrategy *p_strategy;
-	int x_width, y_width;
+	int x_width, y_width, n;
 
 	target = GamePlayer_GetTarget( player );
 	if( target == NULL ) {
@@ -768,13 +802,30 @@ void ExecuteStrategy( GamePlayer *player )
 		DEBUG_MSG("ai_action_type_walk_close\n");
 		break;
 	case ai_action_type_run_away:
-		player->control.run = TRUE;
-		if( x_width < 0 ) {
+	case ai_action_type_walk_away:
+		if( action_type == ai_action_type_walk_away ) {
+			player->control.run = FALSE;
+			DEBUG_MSG("ai_action_type_walk_away\n");
+		} else {
+			player->control.run = TRUE;
+			DEBUG_MSG("ai_action_type_run_away\n");
+		}
+		if( x_width < 20 ) {
 			player->control.left_motion = TRUE;
 			player->control.right_motion = FALSE;
-		} else {
+		} 
+		else if( x_width > 20 ) {
 			player->control.left_motion = FALSE;
 			player->control.right_motion = TRUE;
+		} else {
+			n = rand()%2;
+			if( n == 0 ) {
+				player->control.left_motion = TRUE;
+				player->control.right_motion = FALSE;
+			} else {
+				player->control.left_motion = FALSE;
+				player->control.right_motion = TRUE;
+			}
 		}
 		if( y_width < GLOBAL_Y_WIDTH ) {
 			player->control.up_motion = FALSE;
@@ -787,29 +838,6 @@ void ExecuteStrategy( GamePlayer *player )
 			player->control.up_motion = FALSE;
 			player->control.down_motion = FALSE;
 		}
-		DEBUG_MSG("ai_action_type_run_away\n");
-		break;
-	case ai_action_type_walk_away:
-		player->control.run = FALSE;
-		if( x_width > 0 ) {
-			player->control.left_motion = FALSE;
-			player->control.right_motion = TRUE;
-		} else {
-			player->control.left_motion = TRUE;
-			player->control.right_motion = FALSE;
-		}
-		if( y_width > GLOBAL_Y_WIDTH/2-2 ) {
-			player->control.up_motion = FALSE;
-			player->control.down_motion = TRUE;
-		}
-		else if( y_width < -(GLOBAL_Y_WIDTH/2-2) ) {
-			player->control.up_motion = TRUE;
-			player->control.down_motion = FALSE;
-		} else {
-			player->control.up_motion = FALSE;
-			player->control.down_motion = FALSE;
-		}
-		DEBUG_MSG("ai_action_type_walk_away\n");
 		break;
 	case ai_action_type_observe:
 		player->control.left_motion = FALSE;
@@ -832,6 +860,7 @@ void ExecuteStrategy( GamePlayer *player )
 		break;
 	case ai_action_type_stop_run:
 		DEBUG_MSG("ai_action_type_stop_run\n");
+		GamePlayer_StopRun( player );
 		break;
 	case ai_action_type_a_attack:
 		if( x_width < 0 ) {
