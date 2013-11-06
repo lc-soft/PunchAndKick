@@ -27,7 +27,6 @@ static int AttackDamage_SpinDrill( GamePlayer *attacker, GamePlayer *victim, int
 static LCUI_BOOL CanUseSpinDrill( GamePlayer *player )
 {
 	GamePlayer *attacker;
-	/* 该技能不能给非拳击家的角色使用 */
 	if( player->type != PLAYER_TYPE_TIGER ) {
 		return FALSE;
 	}
