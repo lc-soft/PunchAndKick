@@ -45,7 +45,7 @@ static LCUI_BOOL CanUseHugFrontPut( GamePlayer *player )
 	if( !player->control.a_attack ) {
 		return FALSE;
 	}
-	attacker = GetSpirntAttackerInCatchRange( player );
+	attacker = GetTargetInCatchRange( player );
 	if( attacker ) {
 		player->other = attacker;
 		return TRUE;

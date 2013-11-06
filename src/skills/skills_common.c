@@ -436,6 +436,12 @@ static void GamePlayer_CancelStateAtBeLift( GamePlayer *player )
 	case STATE_BE_LIFT_TUMMY_HIT:
 	case STATE_BE_LIFT_SQUAT:
 	case STATE_BE_LIFT_STANCE:
+	case STATE_BE_LIFT_A_ATTACK:
+	case STATE_BE_LIFT_B_ATTACK:
+	case STATE_BE_LIFT_MACH_A_ATTACK:
+	case STATE_BE_LIFT_MACH_B_ATTACK:
+	case STATE_BE_LIFT_DEFENSE:
+	case STATE_BE_LIFT_SOLID_DEFENSE:
 		break;
 	default:return;
 	}
@@ -1145,9 +1151,7 @@ static void CommonSkill_StartFinalBlow( GamePlayer *player )
 static void _StartNormalAttack( GamePlayer *player, int state, int action, const char *attack_type_name )
 {
 	void (*func)(LCUI_Widget*);
-
-	if( player->state == STATE_BE_LIFT_STANCE
-	|| player->state == STATE_BE_LIFT_SQUAT ) {
+	if( player->other && GamePlayer_IsInLiftState(player->other) ) {
 		func = GamePlayer_AtBeLiftAttackDone;
 	} else {
 		func = GamePlayer_AtAttackDone;
@@ -1212,29 +1216,77 @@ static LCUI_BOOL CommonSkill_CanUseJumpBAttack( GamePlayer *player )
 /** 开始发动A普通攻击 */
 static void CommonSkill_StartAAttack( GamePlayer *player )
 {
-	_StartNormalAttack(	player, STATE_A_ATTACK, 
-				ACTION_A_ATTACK, ATK_A_ATTACK );
+	if( player->other && GamePlayer_IsInLiftState(player->other) ) {
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_A_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_A_ATTACK,
+					GamePlayer_AtBeLiftAttackDone );
+	} else {
+		GamePlayer_ChangeState( player, STATE_A_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_A_ATTACK,
+					GamePlayer_AtAttackDone );
+	}
+	GamePlayer_SetAttackTypeName( player, ATK_A_ATTACK );
+	GamePlayer_StopXWalk( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player );
 }
 
 /** 开始发动B普通攻击 */
 static void CommonSkill_StartBAttack( GamePlayer *player )
 {
-	_StartNormalAttack(	player, STATE_B_ATTACK, 
-				ACTION_B_ATTACK, ATK_B_ATTACK );
+	if( player->other && GamePlayer_IsInLiftState(player->other) ) {
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_B_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_B_ATTACK,
+					GamePlayer_AtBeLiftAttackDone );
+	} else {
+		GamePlayer_ChangeState( player, STATE_B_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_B_ATTACK,
+					GamePlayer_AtAttackDone );
+	}
+	GamePlayer_SetAttackTypeName( player, ATK_B_ATTACK );
+	GamePlayer_StopXWalk( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player );
 }
 
 /** 开始发动高速A攻击 */
 static void CommonSkill_StartMachAAttack( GamePlayer *player )
 {
-	_StartNormalAttack(	player, STATE_MACH_A_ATTACK,
-			ACTION_MACH_A_ATTACK, ATK_MACH_A_ATTACK );
+	if( player->other && GamePlayer_IsInLiftState(player->other) ) {
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_MACH_A_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_MACH_A_ATTACK,
+					GamePlayer_AtBeLiftAttackDone );
+	} else {
+		GamePlayer_ChangeState( player, STATE_MACH_A_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_MACH_A_ATTACK,
+					GamePlayer_AtAttackDone );
+	}
+	GamePlayer_SetAttackTypeName( player, ATK_MACH_A_ATTACK );
+	GamePlayer_StopXWalk( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player );
 }
 
 /** 开始发动高速B攻击 */
 static void CommonSkill_StartMachBAttack( GamePlayer *player )
 {
-	_StartNormalAttack(	player, STATE_MACH_B_ATTACK, 
-			ACTION_MACH_B_ATTACK, ATK_MACH_B_ATTACK );
+	if( player->other && GamePlayer_IsInLiftState(player->other) ) {
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_MACH_B_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_MACH_B_ATTACK,
+					GamePlayer_AtBeLiftAttackDone );
+	} else {
+		GamePlayer_ChangeState( player, STATE_MACH_B_ATTACK );
+		GameObject_AtActionDone( player->object, ACTION_MACH_B_ATTACK,
+					GamePlayer_AtAttackDone );
+	}
+	GamePlayer_SetAttackTypeName( player, ATK_MACH_B_ATTACK );
+	GamePlayer_StopXWalk( player );
+	GamePlayer_StopYMotion( player );
+	GamePlayer_LockMotion( player );
+	GamePlayer_LockAction( player );
 }
 
 /** 检测游戏角色在当前状态下是否能够进行冲撞攻击 */
@@ -1556,14 +1608,14 @@ static void GamePlayer_AtLandingDone( LCUI_Widget *widget )
 void GamePlayer_SetFall( GamePlayer *player )
 {
 	double z_speed;
-	GamePlayer_UnlockAction( player );
-	GamePlayer_UnlockMotion( player );
-	GamePlayer_ChangeState( player, STATE_FALL );
-	GamePlayer_BreakRest( player );
-	z_speed = GameObject_GetZ( player->object );
-	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtLandingDone );
-	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
+	GamePlayer_UnlockAction( player );
+	GamePlayer_ChangeState( player, STATE_FALL );
+	GamePlayer_LockAction( player );
+	GamePlayer_BreakRest( player );
+	GamePlayer_ResetControl( player );
+	z_speed = GameObject_GetZSpeed( player->object );
+	GameObject_AtLanding( player->object, z_speed, -ZACC_JUMP, GamePlayer_AtLandingDone );
 }
 
 /** 在被举起的状态下，更新自身的位置 */
@@ -3080,10 +3132,18 @@ static void CommonSkill_StartDefense( GamePlayer *player )
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
 	GamePlayer_LockMotion( player );
-	if( GamePlayer_HaveSkill( player, SKILLNAME_SOLID_DEFENSE ) ) {
-		GamePlayer_ChangeState( player, STATE_SOLID_DEFENSE );
+	if( !GamePlayer_HaveSkill( player, SKILLNAME_SOLID_DEFENSE ) ) {
+		if( player->other && GamePlayer_IsInLiftState(player->other) ) {
+			GamePlayer_ChangeState( player, STATE_BE_LIFT_DEFENSE );
+		} else {
+			GamePlayer_ChangeState( player, STATE_DEFENSE );
+		}
+		return;
+	}
+	if( player->other && GamePlayer_IsInLiftState(player->other) ) {
+		GamePlayer_ChangeState( player, STATE_BE_LIFT_SOLID_DEFENSE );
 	} else {
-		GamePlayer_ChangeState( player, STATE_DEFENSE );
+		GamePlayer_ChangeState( player, STATE_SOLID_DEFENSE );
 	}
 }
 
@@ -3483,12 +3543,16 @@ void CommonSkill_Register(void)
 	CommonSkill_RegisterJumpSpinKick();
 }
 
-/** 在擒获范围内，获取处于冲撞攻击状态的玩家 */
-GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
+/** 在擒获范围内，获取可被直接擒获的目标 */
+GamePlayer *GetTargetInCatchRange( GamePlayer *self )
 {
 	RangeBox catch_range;
 	GamePlayer *other_player;
-	LCUI_Widget *a_attacker, *b_attacker;
+	LCUI_Widget *target_object[3];
+	int i, j, action[3] = {
+		ACTION_AS_ATTACK, ACTION_BS_ATTACK, ACTION_WEAK_RUN
+	};
+
 	/* 自己必须处于READY、STANCE或WALK状态 */
 	if( self->state != STATE_READY
 	 && self->state != STATE_STANCE
@@ -3501,52 +3565,38 @@ GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
 	catch_range.x_width = CATCH_RANGE_X_WIDTH;
 	catch_range.y_width = GLOBAL_Y_WIDTH;
 	catch_range.z_width = 40;
-	/* 获取正使用冲撞A/B攻击的游戏对象 */
-	a_attacker = GameObject_GetObjectInRange( 
-				self->object, catch_range,
-				TRUE, ACTION_AS_ATTACK );
-	b_attacker = GameObject_GetObjectInRange( 
-				self->object, catch_range, 
-				TRUE, ACTION_BS_ATTACK );
-	if( b_attacker ) {
-		other_player = GameBattle_GetPlayerByWidget( b_attacker );
-		/* 如果双方不是面对面的 */
+	/* 先找到分别处于3种动作的目标对象 */
+	for(i=0,j=0; i<3; ++i) {
+		target_object[j] = GameObject_GetObjectInRange( 
+					self->object, catch_range, 
+					TRUE, action[i] );
+		if( !target_object[j] ) {
+			continue;
+		}
+		other_player = GameBattle_GetPlayerByWidget( target_object[j] );
+		/* 如果对方不是与自己面对面 */
 		if( GamePlayer_IsLeftOriented(self) 
 		 == GamePlayer_IsLeftOriented(other_player) ) {
-			b_attacker = NULL;
+			continue;
 		}
+		++j;
 	}
-	if( a_attacker ) {
-		other_player = GameBattle_GetPlayerByWidget( a_attacker );
-		/* 如果双方不是面对面的 */
-		if( GamePlayer_IsLeftOriented(self) 
-		 == GamePlayer_IsLeftOriented(other_player) ) {
-			 a_attacker = NULL;
-		}
-	}
-	if( !a_attacker && !b_attacker ) {
-		return NULL;
-	}
-	/* 若有两个 */
-	if( a_attacker && b_attacker ) {
-		 /* 根据自己的朝向，确保a_attacker记录的是离自己最近的攻击者 */
+	/* 找到离自己最近的一个目标对象 */
+	for(i=0; i<j; ++i) {
 		if( GamePlayer_IsLeftOriented(self) ) {
-			if(GameObject_GetX(a_attacker)
-			 < GameObject_GetX(b_attacker) ) {
-				 a_attacker = b_attacker;
-			 }
-		} else {
-			if(GameObject_GetX(b_attacker)
-			 < GameObject_GetX(a_attacker) ) {
-				 a_attacker = b_attacker;
-			 }
+			if(GameObject_GetX(target_object[0])
+			< GameObject_GetX(target_object[i]) ) {
+				target_object[0] = target_object[i];
+			}
+			continue;
+		}
+		if( GameObject_GetX(target_object[0])
+		 > GameObject_GetX(target_object[i]) ) {
+			target_object[0] = target_object[i];
 		}
 	}
-	else if( b_attacker ) {
-		a_attacker = b_attacker;
-	}
-	if( !a_attacker ) {
+	if( !target_object[0] ) {
 		return NULL;
 	}
-	return GameBattle_GetPlayerByWidget( a_attacker );
+	return GameBattle_GetPlayerByWidget( target_object[0] );
 }
