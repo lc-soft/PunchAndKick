@@ -1082,9 +1082,7 @@ static void GamePlayer_AtBeLiftAttackDone( LCUI_Widget *widget )
 /** 在攻击结束时  */
 static void GamePlayer_AtAttackDone( LCUI_Widget *widget )
 {
-	int64_t lost_ms;
 	GamePlayer *player;
-	lost_ms = LCUI_GetTickCount();
 	player = GameBattle_GetPlayerByWidget( widget );
 	GameObject_AtXSpeedToZero( widget, 0, NULL );
 	GamePlayer_SetAttackTypeName( player, ATK_NONE );
@@ -1347,7 +1345,6 @@ static GamePlayer* GamePlayer_GetGroundPlayer( GamePlayer *player )
 	range.z = 0;
 	range.z_width = 20;
 
-	/* 检测当前角色是否站在躺地角色的头和脚的位置上 */
 	widget = GameObject_GetObjectInRange(	player->object, range,
 						TRUE, ACTION_LYING );
 	if( widget ) {
@@ -3490,8 +3487,9 @@ void CommonSkill_Register(void)
 GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
 {
 	RangeBox catch_range;
+	GamePlayer *other_player;
 	LCUI_Widget *a_attacker, *b_attacker;
-	/* 自己必须处于READY或STANCE状态 */
+	/* 自己必须处于READY、STANCE或WALK状态 */
 	if( self->state != STATE_READY
 	 && self->state != STATE_STANCE
 	 && self->state != STATE_WALK ) {
@@ -3510,8 +3508,27 @@ GamePlayer *GetSpirntAttackerInCatchRange( GamePlayer *self )
 	b_attacker = GameObject_GetObjectInRange( 
 				self->object, catch_range, 
 				TRUE, ACTION_BS_ATTACK );
+	if( b_attacker ) {
+		other_player = GameBattle_GetPlayerByWidget( b_attacker );
+		/* 如果双方不是面对面的 */
+		if( GamePlayer_IsLeftOriented(self) 
+		 == GamePlayer_IsLeftOriented(other_player) ) {
+			b_attacker = NULL;
+		}
+	}
+	if( a_attacker ) {
+		other_player = GameBattle_GetPlayerByWidget( a_attacker );
+		/* 如果双方不是面对面的 */
+		if( GamePlayer_IsLeftOriented(self) 
+		 == GamePlayer_IsLeftOriented(other_player) ) {
+			 a_attacker = NULL;
+		}
+	}
+	if( !a_attacker && !b_attacker ) {
+		return NULL;
+	}
 	/* 若有两个 */
-	 if( a_attacker && b_attacker ) {
+	if( a_attacker && b_attacker ) {
 		 /* 根据自己的朝向，确保a_attacker记录的是离自己最近的攻击者 */
 		if( GamePlayer_IsLeftOriented(self) ) {
 			if(GameObject_GetX(a_attacker)
