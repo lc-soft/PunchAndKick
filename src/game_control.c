@@ -31,6 +31,20 @@ void GamePlayer_ResetAttackControl( GamePlayer *player )
 	player->control.b_attack = FALSE;
 }
 
+/** 重置控制数据 */
+void GamePlayer_ResetControl( GamePlayer *player )
+{
+	player->control.down_motion = FALSE;
+	player->control.up_motion = FALSE;
+	player->control.left_motion = FALSE;
+	player->control.right_motion = FALSE;
+	player->control.a_attack = FALSE;
+	player->control.b_attack = FALSE;
+	player->control.run = FALSE;
+	player->control.jump = FALSE;
+	player->control.defense = FALSE;
+}
+
 /** 设置角色面向右方 */
 void GamePlayer_SetRightOriented( GamePlayer *player )
 {
@@ -93,14 +107,20 @@ void Game_InitStateActionMap(void)
 	state_action_map[STATE_WALK] = ACTION_WALK;
 	state_action_map[STATE_LEFTRUN] = 
 	state_action_map[STATE_RIGHTRUN] = ACTION_RUN;
-	state_action_map[STATE_DEFENSE] = ACTION_DEFENSE;
-	state_action_map[STATE_SOLID_DEFENSE] = ACTION_SOLID_DEFENSE;
-	state_action_map[STATE_A_ATTACK] = ACTION_A_ATTACK;
-	state_action_map[STATE_B_ATTACK] = ACTION_B_ATTACK;
+	state_action_map[STATE_DEFENSE] =
+	state_action_map[STATE_BE_LIFT_DEFENSE] = ACTION_DEFENSE;
+	state_action_map[STATE_SOLID_DEFENSE] = 
+	state_action_map[STATE_BE_LIFT_SOLID_DEFENSE] = ACTION_SOLID_DEFENSE;
+	state_action_map[STATE_A_ATTACK] = 
+	state_action_map[STATE_BE_LIFT_A_ATTACK] = ACTION_A_ATTACK;
+	state_action_map[STATE_B_ATTACK] = 
+	state_action_map[STATE_BE_LIFT_B_ATTACK] = ACTION_B_ATTACK;
 	state_action_map[STATE_MAJ_ATTACK] = ACTION_JUMP_MACH_A_ATTACK;
-	state_action_map[STATE_MACH_A_ATTACK] = ACTION_MACH_A_ATTACK;
+	state_action_map[STATE_MACH_A_ATTACK] = 
+	state_action_map[STATE_BE_LIFT_MACH_A_ATTACK] = ACTION_MACH_A_ATTACK;
 	state_action_map[STATE_MBJ_ATTACK] = ACTION_JUMP_MACH_B_ATTACK;
-	state_action_map[STATE_MACH_B_ATTACK] = ACTION_MACH_B_ATTACK;
+	state_action_map[STATE_MACH_B_ATTACK] = 
+	state_action_map[STATE_BE_LIFT_MACH_B_ATTACK] = ACTION_MACH_B_ATTACK;
 	state_action_map[STATE_AS_ATTACK] = ACTION_AS_ATTACK;
 	state_action_map[STATE_BS_ATTACK] = ACTION_BS_ATTACK;
 	state_action_map[STATE_ASJ_ATTACK] = ACTION_ASJ_ATTACK;
@@ -205,6 +225,7 @@ void GamePlayer_BreakRest( GamePlayer *player )
 {
 	if( player->t_rest_timeout != -1 ) {
 		LCUITimer_Free( player->t_rest_timeout );
+		player->t_rest_timeout = -1;
 	}
 }
 
@@ -1056,7 +1077,9 @@ void GamePlayer_SyncData( GamePlayer *player )
 	 && !player->control.right_motion && !player->control.up_motion
 	 && !player->control.down_motion && !player->control.defense
 	 && player->state != STATE_DEFENSE
-	 && player->state != STATE_SOLID_DEFENSE ) {
+	 && player->state != STATE_SOLID_DEFENSE
+	 && player->state != STATE_BE_LIFT_DEFENSE
+	 && player->state != STATE_BE_LIFT_SOLID_DEFENSE ) {
 		return;
 	}
 	skill_id = SkillLibrary_GetSkill( player );
@@ -1069,7 +1092,9 @@ void GamePlayer_SyncData( GamePlayer *player )
 	player->control.a_attack = FALSE;
 	player->control.b_attack = FALSE;
 	if( player->state != STATE_DEFENSE
-	 && player->state != STATE_SOLID_DEFENSE ) {
+	 && player->state != STATE_SOLID_DEFENSE
+	 && player->state != STATE_BE_LIFT_DEFENSE
+	 && player->state != STATE_BE_LIFT_SOLID_DEFENSE ) {
 		return;
 	}
 	if( player->lock_action || player->control.defense ) {
@@ -1081,7 +1106,14 @@ void GamePlayer_SyncData( GamePlayer *player )
 		GamePlayer_ChangeState( player, STATE_BE_LIFT_STANCE );
 		return;
 	}
-	GamePlayer_SetReady( player );
+	if( player->state == STATE_DEFENSE
+	 || player->state == STATE_SOLID_DEFENSE ) {
+		GamePlayer_SetReady( player );
+	}
+	else if( player->state == STATE_BE_LIFT_SOLID_DEFENSE
+	 && player->state == STATE_BE_LIFT_DEFENSE ) {
+		 GamePlayer_ChangeState( player, STATE_BE_LIFT_STANCE );
+	}
 }
 
 static void GamePlayer_SetToReady( LCUI_Widget* widget )
