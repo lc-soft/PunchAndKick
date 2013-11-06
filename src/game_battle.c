@@ -108,9 +108,15 @@ static void GamePlayerList_Delete( void* arg )
 {
 	GamePlayer *p_player;
 	p_player = (GamePlayer*)arg;
-	LCUITimer_Free( p_player->t_action_timeout );
-	LCUITimer_Free( p_player->t_death_timer );
-	LCUITimer_Free( p_player->t_rest_timeout );
+	if( p_player->t_action_timeout != -1 ) {
+		LCUITimer_Free( p_player->t_action_timeout );
+	}
+	if( p_player->t_death_timer != -1 ) {
+		LCUITimer_Free( p_player->t_death_timer );
+	}
+	if( p_player->t_rest_timeout != -1 ) {
+		LCUITimer_Free( p_player->t_rest_timeout );
+	}
 	Queue_Destroy( &p_player->skills );
 	Widget_Destroy( p_player->statusbar );
 }
