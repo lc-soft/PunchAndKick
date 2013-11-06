@@ -93,6 +93,12 @@ enum GamePlayerState {
 	STATE_BE_LIFT_TUMMY,		/**< 被举起，趴着 */
 	STATE_BE_LIFT_LYING_HIT,	/**< 被举起，躺着挨打 */
 	STATE_BE_LIFT_TUMMY_HIT,	/**< 被举起，趴着挨打 */
+	STATE_BE_LIFT_A_ATTACK,
+	STATE_BE_LIFT_B_ATTACK,
+	STATE_BE_LIFT_MACH_A_ATTACK,
+	STATE_BE_LIFT_MACH_B_ATTACK,
+	STATE_BE_LIFT_DEFENSE,
+	STATE_BE_LIFT_SOLID_DEFENSE,
 	STATE_THROW,
 	STATE_RIDE,
 	STATE_RIDE_ATTACK,
@@ -168,6 +174,9 @@ void GamePlayer_SetStart( GamePlayer *player );
 
 /** 重置攻击控制 */
 extern void GamePlayer_ResetAttackControl( GamePlayer *player );
+
+/** 重置控制数据 */
+extern void GamePlayer_ResetControl( GamePlayer *player );
 
 extern void GamePlayer_SetReady( GamePlayer *player );
 
