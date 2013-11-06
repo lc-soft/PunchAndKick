@@ -6,7 +6,7 @@
 #include "game.h"
 
 #define RANGE_MAX		-1
-#define MAX_STRATEGY_NUM	36
+#define MAX_STRATEGY_NUM	35
 #define MAX_ACTION_NUM		5
 
 enum AIActionType {
@@ -51,7 +51,40 @@ typedef struct RandIdea_ {
 	int probability;	/**< 该想法出现的概率，取值范围为0(0.0%)至10000(100%) */
 } RandIdea;
 
+static LCUI_BOOL PlayerCanChangeOriented( int state )
+{
+	switch( state ) {
+	case STATE_READY:
+	case STATE_STANCE:
+	case STATE_WALK:
+	case STATE_JUMP:
+	case STATE_FALL:
+	case STATE_SQUAT:
+	case STATE_SSQUAT:
+	case STATE_JUMP_DONE:
+	case STATE_BE_LIFT_STANCE:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
 static LCUI_BOOL ICanAction( int state )
+{
+	switch( state ) {
+	case STATE_READY:
+	case STATE_STANCE:
+	case STATE_WALK:
+	case STATE_JUMP:
+	case STATE_FALL:
+	case STATE_BE_LIFT_STANCE:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL PlayerCanReady( int state )
 {
 	switch( state ) {
 	case STATE_READY:
@@ -188,8 +221,8 @@ static LCUI_BOOL IAmRide( int state )
 static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 	{ 
 		0,
-		/* 距离在10-55的范围内，对目标进行A攻击 */
-		ICanAction, TargetCanAction, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在0-55的范围内，对目标进行A攻击 */
+		ICanAction, TargetCanAction, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_a_attack},
 			{FALSE, 0, ai_action_type_none}
@@ -204,16 +237,16 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		}
 	},{ 
 		0,
-		/* 距离在10-55的范围内，对目标进行B攻击 */
-		ICanAction, NULL, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在0-55的范围内，对目标进行B攻击 */
+		ICanAction, NULL, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_b_attack},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
 		0,
-		/* 距离在10-55的范围内，目标处于喘气状态，跳跃+攻击目标 */
-		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在0-55的范围内，目标处于喘气状态，跳跃+攻击目标 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_jump},
 			{TRUE, 0, ai_action_type_b_attack},
@@ -221,24 +254,24 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		}
 	}, { 
 		0,
-		/* 距离在10-55的范围内，目标处于喘气状态，攻击目标 */
-		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在0-55的范围内，目标处于喘气状态，攻击目标 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_a_attack},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
 		0,
-		/* 距离在10-55的范围内，目标处于喘气状态，站着观察 */
-		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在0-55的范围内，目标处于喘气状态，站着观察 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
-			{TRUE, 500, ai_action_type_observe},
+			{TRUE, 300, ai_action_type_observe},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
 		0,
-		/* 距离在10-55的范围内，目标处于喘气状态，靠近他 */
-		ICanAction, TargetIsRest, {10,55,0,GLOBAL_Y_WIDTH}, 
+		/* 距离在0-55的范围内，目标处于喘气状态，靠近他 */
+		ICanAction, TargetIsRest, {0,55,0,GLOBAL_Y_WIDTH}, 
 		{
 			{TRUE, 50, ai_action_type_walk_close},
 			{FALSE, 0, ai_action_type_none}
@@ -291,7 +324,8 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		/* 距离在0-40的范围内，跑步远离目标 */
 		ICanAction, TargetCanAction, {0,40,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
-			{TRUE, 500, ai_action_type_run_away},
+			{TRUE, 300, ai_action_type_run_away},
+			{TRUE, 50, ai_action_type_stop_run},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
@@ -323,7 +357,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		/* 跳跃落地后，观察目标 */
 		IAmJumpDone, NULL, {20,400,0,RANGE_MAX}, 
 		{
-			{TRUE, 500, ai_action_type_observe},
+			{TRUE, 200, ai_action_type_observe},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
@@ -363,15 +397,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		/* 距离500以上，观察目标 */
 		ICanAction, TargetCanAction, {500,RANGE_MAX,0,RANGE_MAX}, 
 		{
-			{TRUE, 300, ai_action_type_observe},
-			{FALSE, 0, ai_action_type_none}
-		}
-	}, { 
-		0,
-		/* 距离500以上，观察目标 */
-		ICanAction, TargetCanAction, {0,RANGE_MAX,0,RANGE_MAX}, 
-		{
-			{TRUE, 300, ai_action_type_observe},
+			{TRUE, 200, ai_action_type_observe},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, {
@@ -430,6 +456,7 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		ICanAction, PlayerWillSprintJumpAttack, {20,300,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 200, ai_action_type_run_away},
+			{TRUE, 50, ai_action_type_stop_run},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
@@ -810,7 +837,7 @@ void ExecuteStrategy( GamePlayer *player )
 			player->control.run = TRUE;
 			DEBUG_MSG("ai_action_type_run_away\n");
 		}
-		if( x_width < 20 ) {
+		if( x_width < -20 ) {
 			player->control.left_motion = TRUE;
 			player->control.right_motion = FALSE;
 		} 
@@ -818,6 +845,7 @@ void ExecuteStrategy( GamePlayer *player )
 			player->control.left_motion = FALSE;
 			player->control.right_motion = TRUE;
 		} else {
+			/* 随机确定X轴移动方向 */
 			n = rand()%2;
 			if( n == 0 ) {
 				player->control.left_motion = TRUE;
@@ -827,15 +855,17 @@ void ExecuteStrategy( GamePlayer *player )
 				player->control.right_motion = TRUE;
 			}
 		}
-		if( y_width < GLOBAL_Y_WIDTH ) {
+		/* 随机确定Y轴移动方向 */
+		n = rand()%3;
+		if( n == 0 ) {
+			player->control.up_motion = FALSE;
+			player->control.down_motion = FALSE;
+		}
+		else if( n == 1 ) {
 			player->control.up_motion = FALSE;
 			player->control.down_motion = TRUE;
-		}
-		else if( y_width > -GLOBAL_Y_WIDTH ) {
-			player->control.up_motion = TRUE;
-			player->control.down_motion = FALSE;
 		} else {
-			player->control.up_motion = FALSE;
+			player->control.up_motion = TRUE;
 			player->control.down_motion = FALSE;
 		}
 		break;
@@ -844,7 +874,8 @@ void ExecuteStrategy( GamePlayer *player )
 		player->control.right_motion = FALSE;
 		player->control.up_motion = FALSE;
 		player->control.down_motion = FALSE;
-		if( !player->lock_action ) {
+		if( !player->lock_action
+		 && PlayerCanChangeOriented(player->state) ) {
 			if( x_width < 0 ) {
 				GamePlayer_SetRightOriented( player );
 			} 
@@ -853,7 +884,7 @@ void ExecuteStrategy( GamePlayer *player )
 			}
 		}
 		/* 如果能够自主活动 */
-		if( ICanAction(player->state) ) {
+		if( PlayerCanReady(player->state) ) {
 			GamePlayer_SetReady( player );
 		}
 		DEBUG_MSG("ai_action_type_observe\n");
@@ -863,19 +894,25 @@ void ExecuteStrategy( GamePlayer *player )
 		GamePlayer_StopRun( player );
 		break;
 	case ai_action_type_a_attack:
-		if( x_width < 0 ) {
-			GamePlayer_SetRightOriented( player );
-		} else if( x_width > 0 ) {
-			GamePlayer_SetLeftOriented( player );
+		if( !player->lock_action
+		 && PlayerCanChangeOriented(player->state) ) {
+			if( x_width < 0 ) {
+				GamePlayer_SetRightOriented( player );
+			} else if( x_width > 0 ) {
+				GamePlayer_SetLeftOriented( player );
+			}
 		}
 		player->control.a_attack = TRUE;
 		DEBUG_MSG("ai_action_type_a_attack\n");
 		break;
 	case ai_action_type_b_attack:
-		if( x_width < 0 ) {
-			GamePlayer_SetRightOriented( player );
-		} else if( x_width > 0 ) {
-			GamePlayer_SetLeftOriented( player );
+		if( !player->lock_action
+		 && PlayerCanChangeOriented(player->state) ) {
+			if( x_width < 0 ) {
+				GamePlayer_SetRightOriented( player );
+			} else if( x_width > 0 ) {
+				GamePlayer_SetLeftOriented( player );
+			}
 		}
 		player->control.b_attack = TRUE;
 		DEBUG_MSG("ai_action_type_b_attack\n");
