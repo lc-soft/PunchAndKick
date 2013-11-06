@@ -451,13 +451,13 @@ static void  GamePlayer_AtStandDone( LCUI_Widget *widget )
 void GamePlayer_StartStand( GamePlayer *player )
 {
 	GamePlayer *other_player;
-	DEBUG_MSG("player %d start stand\n", player->id);
+	DEBUG_MSG("tip, player %d start stand\n", player->id);
 	/* 如果已经死了，就不站起来了 */
 	if( player->state == STATE_DIED
 	 || player->state == STATE_LYING_DYING
 	 || player->state == STATE_TUMMY_DYING ) {
-		 DEBUG_MSG("tip1\n");
-		 return;
+		DEBUG_MSG("tip1, player->id: %d\n", player->id);
+		return;
 	}
 	/* 如果有其他玩家记录 */
 	if( player->other ) {
@@ -466,7 +466,7 @@ void GamePlayer_StartStand( GamePlayer *player )
 		switch( other_player->state ) {
 		/* 如果对方正处于举起状态，那么现在就不站起了 */
 		case STATE_LIFT_SQUAT: 
-			 DEBUG_MSG("tip2\n");
+			DEBUG_MSG("tip2, player->id: %d\n", player->id);
 			return;
 		case STATE_RIDE_JUMP:
 			break;
@@ -482,7 +482,7 @@ void GamePlayer_StartStand( GamePlayer *player )
 		default:break;
 		}
 	}
-	 DEBUG_MSG("tip3\n");
+	DEBUG_MSG("tip3, player->id: %d\n", player->id);
 	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_SQUAT );
 	GamePlayer_LockAction( player );
