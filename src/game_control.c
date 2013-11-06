@@ -1,4 +1,4 @@
-﻿// 游戏角色控制模块
+﻿// 游戏角色控制模块，夹杂了些其它乱七八糟的代码
 #include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
@@ -910,11 +910,9 @@ static void GamePlayer_ResponseAttack( LCUI_Widget *widget )
 	}
 }
 
+/** 初始化游戏玩家数据 */
 void GamePlayer_Init( GamePlayer *player )
 {
-	LCUI_Graph img_shadow;
-	
-	Graph_Init( &img_shadow );
 	player->id = 0;
 	player->role_id = 0;
 	player->type = 0;
@@ -957,13 +955,7 @@ void GamePlayer_Init( GamePlayer *player )
 	player->ai_data.action_num = 0;
 
 	ControlKey_Init( &player->ctrlkey );
-	/* 创建GameObject部件 */
 	player->object = NULL;
-	/* 设置响应游戏角色的受攻击信号 */
-	//GameObject_AtUnderAttack( player->object, GamePlayer_ResponseAttack );
-	GameGraphRes_GetGraph( MAIN_RES, "shadow", &img_shadow );
-	/* 设置阴影 */
-	//GameObject_SetShadow( player->object, img_shadow );
 }
 
 /** 响应按键的按下 */
