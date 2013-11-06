@@ -389,7 +389,12 @@ void GamePlayer_SetHit( GamePlayer *player )
 	GamePlayer_CancelStateAtCatch( player );
 	GamePlayer_CancelStateAtBeCatch( player );
 	GamePlayer_BreakSkillEffect( player );
-	GamePlayer_UnlockAction( player );
+	/* 改变被举起者的状态 */
+	if( GamePlayer_IsInLiftState( player ) && player->other ) {
+		if( player->state != STATE_THROW ) {
+			GamePlayer_SetFall( player->other );
+		}
+	}
 	/* 如果Z轴坐标大于0，说明在空中 */
 	if( GameObject_GetZ(player->object) > 0 ) {
 		double z_speed;
@@ -399,6 +404,7 @@ void GamePlayer_SetHit( GamePlayer *player )
 	} else {
 		GameObject_AtActionDone( player->object, ACTION_HIT, GamePlayer_AtHitDone );
 	}
+	GamePlayer_UnlockAction( player );
 	GamePlayer_ChangeState( player, STATE_HIT );
 	GamePlayer_LockAction( player );
 	GamePlayer_SetRestTimeOut( player, 2000, GamePlayer_ResetCountAttack );
@@ -904,6 +910,7 @@ static void AttackEffect_BumpToFly( GamePlayer *attacker, GamePlayer *victim )
 	 && victim->other == attacker ) {
 		 return;
 	}
+
 	attacker_speed = GameObject_GetXSpeed( attacker->object );
 	if( (attacker_speed > 0 && !GamePlayer_IsLeftOriented(attacker))
 	 || (attacker_speed < 0 && GamePlayer_IsLeftOriented(attacker))) {
@@ -3595,6 +3602,7 @@ GamePlayer *GetTargetInCatchRange( GamePlayer *self )
 			target_object[0] = target_object[i];
 		}
 	}
+	/* 若没有一个有效目标 */
 	if( !target_object[0] ) {
 		return NULL;
 	}
