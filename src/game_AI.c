@@ -6,7 +6,7 @@
 #include "game.h"
 
 #define RANGE_MAX		-1
-#define MAX_STRATEGY_NUM	35
+#define MAX_STRATEGY_NUM	39
 #define MAX_ACTION_NUM		5
 
 enum AIActionType {
@@ -21,6 +21,8 @@ enum AIActionType {
 	ai_action_type_a_attack,	/**< A攻击 */
 	ai_action_type_b_attack,	/**< B攻击 */
 	ai_action_type_jump,		/**< 跳跃 */
+	ai_action_type_defense,		/**< 防御 */
+	ai_action_type_stop_defense,	/**< 停止防御 */
 	ai_action_type_down
 };
 
@@ -162,6 +164,50 @@ static LCUI_BOOL PlayerWillSprintJumpAttack( int state )
 	return FALSE;
 }
 
+static LCUI_BOOL PlayerWillSpecialAttack( int state )
+{
+	switch( state ) {
+	case STATE_BOMBKICK:
+	case STATE_SPINHIT:
+	case STATE_BIG_ELBOW:
+	case STATE_GUILLOTINE:
+	case STATE_KICK:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL PlayerWillNormalAttack( int state )
+{
+	switch( state ) {
+	case STATE_AJ_ATTACK:
+	case STATE_BJ_ATTACK:
+	case STATE_A_ATTACK:
+	case STATE_B_ATTACK:
+	case STATE_MACH_A_ATTACK:
+	case STATE_MACH_B_ATTACK:
+	case STATE_FINAL_BLOW:
+	case STATE_JUMP_ELBOW:
+	case STATE_JUMP_STOMP:
+	case STATE_MACH_STOMP:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
+static LCUI_BOOL PlayerWillSprintAttack( int state )
+{
+	switch( state ) {
+	case STATE_AS_ATTACK:
+	case STATE_BS_ATTACK:
+		return TRUE;
+	default:break;
+	}
+	return FALSE;
+}
+
 static LCUI_BOOL ICanCloseTarget( int state )
 {
 	switch( state ) {
@@ -218,8 +264,44 @@ static LCUI_BOOL IAmRide( int state )
 	return FALSE;
 }
 
-static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
+static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = { 
 	{ 
+		0,
+		/* 距离在0-50的范围内，目标将要进行普通攻击，则进行防御 */
+		ICanAction, PlayerWillNormalAttack, {0,50,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_defense},
+			{TRUE, 0, ai_action_type_stop_defense},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在0-80的范围内，目标将要进行冲撞攻击，则进行防御 */
+		ICanAction, PlayerWillSprintAttack, {0,80,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_defense},
+			{TRUE, 0, ai_action_type_stop_defense},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在0-100的范围内，目标将要进行冲刺跳跃攻击，则进行防御 */
+		ICanAction, PlayerWillSprintJumpAttack, {0,100,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_defense},
+			{TRUE, 0, ai_action_type_stop_defense},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
+		0,
+		/* 距离在0-50的范围内，目标将要进行特殊攻击，则进行防御 */
+		ICanAction, PlayerWillSpecialAttack, {0,50,0,GLOBAL_Y_WIDTH}, 
+		{
+			{TRUE, 500, ai_action_type_defense},
+			{TRUE, 0, ai_action_type_stop_defense},
+			{FALSE, 0, ai_action_type_none}
+		}
+	}, { 
 		0,
 		/* 距离在0-55的范围内，对目标进行A攻击 */
 		ICanAction, TargetCanAction, {0,55,0,GLOBAL_Y_WIDTH/2-2}, 
@@ -410,16 +492,16 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		}
 	}, { 
 		0,
-		/* 距离在280-300的范围内，进行跳跃 */
-		IAmRunning, NULL, {250,300,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在200-300的范围内，进行跳跃 */
+		IAmRunning, NULL, {200,300,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 0, ai_action_type_jump},
 			{FALSE, 0, ai_action_type_none}
 		}
 	}, { 
 		0,
-		/* 距离在250-300的范围内，进行跳跃+A攻击 */
-		IAmRunning, TargetCanAction, {250,300,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在200-300的范围内，进行跳跃+A攻击 */
+		IAmRunning, TargetCanAction, {200,300,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 50, ai_action_type_jump},
 			{TRUE, 50, ai_action_type_a_attack},
@@ -427,8 +509,8 @@ static AIStrategy global_strategy_set[MAX_STRATEGY_NUM] = {
 		}
 	}, { 
 		0,
-		/* 距离在250-300的范围内，进行跳跃+B攻击 */
-		IAmRunning, NULL, {250,300,0,GLOBAL_Y_WIDTH/2-2}, 
+		/* 距离在200-300的范围内，进行跳跃+B攻击 */
+		IAmRunning, NULL, {200,300,0,GLOBAL_Y_WIDTH/2-2}, 
 		{
 			{TRUE, 50, ai_action_type_jump},
 			{TRUE, 50, ai_action_type_b_attack},
@@ -894,8 +976,7 @@ void ExecuteStrategy( GamePlayer *player )
 		GamePlayer_StopRun( player );
 		break;
 	case ai_action_type_a_attack:
-		if( !player->lock_action
-		 && PlayerCanChangeOriented(player->state) ) {
+		if( PlayerCanChangeOriented(player->state) ) {
 			if( x_width < 0 ) {
 				GamePlayer_SetRightOriented( player );
 			} else if( x_width > 0 ) {
@@ -906,8 +987,7 @@ void ExecuteStrategy( GamePlayer *player )
 		DEBUG_MSG("ai_action_type_a_attack\n");
 		break;
 	case ai_action_type_b_attack:
-		if( !player->lock_action
-		 && PlayerCanChangeOriented(player->state) ) {
+		if( PlayerCanChangeOriented(player->state) ) {
 			if( x_width < 0 ) {
 				GamePlayer_SetRightOriented( player );
 			} else if( x_width > 0 ) {
@@ -924,8 +1004,14 @@ void ExecuteStrategy( GamePlayer *player )
 	case ai_action_type_down:
 		player->control.down_motion = TRUE;
 		DEBUG_MSG("ai_action_type_down\n");
-	default:
 		break;
+	case ai_action_type_defense:
+		player->control.defense = TRUE;
+		break;
+	case ai_action_type_stop_defense:
+		player->control.defense = FALSE;
+		break;
+	default: break;
 	}
 }
 
