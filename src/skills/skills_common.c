@@ -1707,6 +1707,13 @@ static void CommonSkill_StartLift( GamePlayer *player )
 	/* 被举起的角色，需要记录举起他的角色 */
 	other_player->other = player;
 	GamePlayer_BreakRest( other_player );
+	GamePlayer_SetRestTimeOut(
+		other_player, 
+		BE_LIFT_REST_TIMEOUT, 
+		GamePlayer_BeLiftStartStand 
+	);
+	GamePlayer_ResetControl( player );
+	GamePlayer_ResetControl( other_player );
 	z_index = Widget_GetZIndex( player->object );
 	Widget_SetZIndex( other_player->object, z_index+1);
 	
@@ -1718,23 +1725,16 @@ static void CommonSkill_StartLift( GamePlayer *player )
 		GamePlayer_ChangeState( other_player, STATE_BE_LIFT_TUMMY );
 	}
 	GamePlayer_LockAction( other_player );
+	GamePlayer_LockMotion( other_player );
 	/* 举起前，先停止移动 */
 	GamePlayer_StopXMotion( player );
 	GamePlayer_StopYMotion( player );
-	player->control.left_motion = FALSE;
-	player->control.right_motion = FALSE;
-	GamePlayer_ResetAttackControl( player );
 	GamePlayer_UnlockAction( player );
 	/* 改为下蹲状态 */
 	GamePlayer_ChangeState( player, STATE_LIFT_SQUAT );
 	GamePlayer_LockAction( player );
 	GamePlayer_LockMotion( player );
 	GameObject_AtActionDone( player->object, ACTION_SQUAT, GamePlayer_AtLiftDone );
-	GamePlayer_SetRestTimeOut(
-		other_player, 
-		BE_LIFT_REST_TIMEOUT, 
-		GamePlayer_BeLiftStartStand 
-	);
 	/* 改变躺地角色的坐标 */
 	x = GameObject_GetX( player->object );
 	y = GameObject_GetY( player->object );
@@ -3584,6 +3584,7 @@ GamePlayer *GetTargetInCatchRange( GamePlayer *self )
 		/* 如果对方不是与自己面对面 */
 		if( GamePlayer_IsLeftOriented(self) 
 		 == GamePlayer_IsLeftOriented(other_player) ) {
+			target_object[j] = NULL;
 			continue;
 		}
 		++j;
