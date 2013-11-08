@@ -214,7 +214,14 @@ void StatusBar_SetHealth( LCUI_Widget *widget, int value )
 /** 设置头像 */
 void StatusBar_SetAvatar( LCUI_Widget *widget, LCUI_Graph *img )
 {
-
+	StatusBarData *data;
+	data = (StatusBarData*)Widget_GetPrivData( widget );
+	if( !data ) {
+		return;
+	}
+	Widget_SetBackgroundImage( data->img_box, img );
+	Widget_SetBackgroundLayout( data->img_box, LAYOUT_CENTER );
+	Widget_SetBackgroundTransparent( data->img_box, FALSE );
 }
 
 /** 注册状态栏部件 */
