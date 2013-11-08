@@ -7,7 +7,7 @@
 #include "game_object.h"
 #include "game_resource.h"
 
-#define MAIN_RES_NUM 7
+#define MAIN_RES_NUM 8
 
 #define KUNI_ACTION_FILE_NUM	70
 #define RIKI_ACTION_FILE_NUM	75
@@ -104,6 +104,7 @@ const struct fileinfo main_file_info[MAIN_RES_NUM]={
 	{"game-icon-64x64.png", "game-logo"},
 	{"qrcode.png","qrcode"},
 	{"bg.png", "background-image"},
+	{"avatar-unknown.png","avatar-unknown"},
 	{"shadow.png", "shadow"}
 };
 
