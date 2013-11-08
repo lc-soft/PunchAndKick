@@ -2202,6 +2202,12 @@ static void CommonSkill_StartAThrow( GamePlayer *player )
 	case STATE_SQUAT:
 	case STATE_BE_LIFT_SQUAT:
 	case STATE_BE_LIFT_STANCE:
+	case STATE_BE_LIFT_DEFENSE:
+	case STATE_BE_LIFT_SOLID_DEFENSE:
+	case STATE_BE_LIFT_A_ATTACK:
+	case STATE_BE_LIFT_B_ATTACK:
+	case STATE_BE_LIFT_MACH_A_ATTACK:
+	case STATE_BE_LIFT_MACH_B_ATTACK:
 		if( GamePlayer_IsLeftOriented(player) ) {
 			x_speed = -XSPEED_RUN/2;
 		} else {
@@ -2210,6 +2216,7 @@ static void CommonSkill_StartAThrow( GamePlayer *player )
 		x_speed += GameObject_GetXSpeed( player->object )/2;
 		GamePlayer_LockMotion( player->other );
 		GameObject_SetXSpeed( player->other->object, x_speed );
+		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
 		GameObject_AtLanding( 
 			player->other->object, 
@@ -2319,6 +2326,12 @@ static void CommonSkill_StartBThrow( GamePlayer *player )
 	case STATE_SQUAT:
 	case STATE_BE_LIFT_SQUAT:
 	case STATE_BE_LIFT_STANCE:
+	case STATE_BE_LIFT_DEFENSE:
+	case STATE_BE_LIFT_SOLID_DEFENSE:
+	case STATE_BE_LIFT_A_ATTACK:
+	case STATE_BE_LIFT_B_ATTACK:
+	case STATE_BE_LIFT_MACH_A_ATTACK:
+	case STATE_BE_LIFT_MACH_B_ATTACK:
 		if( GamePlayer_IsLeftOriented(player) ) {
 			x_speed = -XSPEED_RUN/2;
 		} else {
@@ -2327,6 +2340,7 @@ static void CommonSkill_StartBThrow( GamePlayer *player )
 		x_speed += GameObject_GetXSpeed( player->object )/2;
 		GamePlayer_LockMotion( player->other );
 		GameObject_SetXSpeed( player->other->object, x_speed );
+		GamePlayer_UnlockAction( player->other );
 		GamePlayer_ChangeState( player->other, STATE_BE_LIFT_SQUAT );
 		GameObject_AtLanding( 
 			player->other->object, 
