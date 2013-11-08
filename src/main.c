@@ -226,7 +226,11 @@ static void Game_UpdatePlayerStatusBar( int battle_id )
 	RoleInfo *p_role_info;
 	wchar_t player_type_name[5];
 	GamePlayer *p_player[4];
+	LCUI_Graph img_avatar;
 
+	Graph_Init( &img_avatar );
+	/* 从主资源中获取头像 */
+	GameGraphRes_GetGraph( MAIN_RES, "avatar-unknown", &img_avatar );
 	p_player[0] = GameBattle_GetPlayer( battle_id, 1 );
 	p_player[1] = GameBattle_GetPlayer( battle_id, 2 );
 	p_player[2] = GameBattle_GetPlayer( battle_id, 3 );
@@ -244,6 +248,8 @@ static void Game_UpdatePlayerStatusBar( int battle_id )
 			player_type_name[3] = 0;
 		}
 		p_role_info = Game_GetRoleInfo( p_player[i]->role_id );
+		/* 设置头像 */
+		StatusBar_SetAvatar( p_player[i]->statusbar, &img_avatar );
 		/* 设置显示的角色名 */
 		StatusBar_SetPlayerNameW( p_player[i]->statusbar, p_role_info->name );
 		/* 设置角色类型名 */
