@@ -47,7 +47,7 @@ const wchar_t about_text[]={
 
 const wchar_t about_support_text[]={
 	L"本游戏由 LCUI 驱动，主要为游戏提供图形界面、图形处理、键盘驱动等的支持，文本渲染功能由 FreeType 字体引擎提供支持。\n"
-	L"游戏中应用的人物素材资源来自FC格斗游戏《热血格斗》，素材著作权属于TECHNōS JAPAN公司（虽然该公司已经破产很久了）。"
+	L"游戏中应用的人物素材资源来自FC格斗游戏《热血格斗》，素材著作权属于TECHNōS JAPAN公司。"
 };
 
 enum RES_ID {
