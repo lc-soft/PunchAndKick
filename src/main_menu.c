@@ -212,10 +212,7 @@ static void btn_2v2_mode_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused 
 
 static void btn_network_battle_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
 {
-	LCUI_MessageBoxW( MB_ICON_WARNING, 
-	L"此功能暂未开发，若你有一定的windows和GNU/Linux环境下的网络编\n"
-	L"程经验，并且有时间有兴趣，可以协助我们为本游戏开发此功能。"
-	, L"提示", MB_BTN_OK );
+	LCUI_MessageBoxW( MB_ICON_WARNING, L"此功能暂未开发。", L"提示", MB_BTN_OK );
 }
 
 static void scuffle_game_btn_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *unused )
