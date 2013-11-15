@@ -26,7 +26,9 @@ static const wchar_t contact_us_text[]={
 
 static const wchar_t directions_text[]={
 L"<size=13px>"
-L"    本游戏是一个开源项目，项目源代码由GitHub托管，地址为：<color=#00f>https://github.com/lc-soft/LCUI-2DFightGame</color>，有兴趣的可以关注本项目的开发动态。\n"
+L"    本游戏是一个开源项目，项目源代码由GitHub托管，地址为：<color=#00f>https://github.com/lc-soft/LCUI-2DFightGame</color>，如果你有兴趣，可以关注本项目的开发动态。\n"
+L"\n"
+L"    本游戏是应用LCUI这一GUI引擎开发的，游戏源代码可在GNU/Linux环境下进行编译并运行，但由于LCUI的部分功能模块对GNU/Linux环境的支持不够好，会使本游戏无法正常实现应有的功能，如果你有一定的Windows和GNU/Linux环境下的编程经验，可帮助我们改进LCUI。\n"
 L"\n"
 L"    本游戏和FC游戏《热血格斗》类似，现在的想法是先模仿《热血格斗》，实现应有的功能、特性及效果，以后再在此基础上对游戏进行改进、扩展，添加些新特性、功能，例如：\n"
 L"\n"
