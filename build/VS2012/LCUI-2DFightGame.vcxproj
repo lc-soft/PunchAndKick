@@ -131,13 +131,13 @@
     <ClCompile Include="..\..\src\main_menu.c" />
     <ClCompile Include="..\..\src\game_msg.c" />
     <ClCompile Include="..\..\src\game_space.c" />
-    <ClCompile Include="..\..\src\skills\game_skill.c" />
-    <ClCompile Include="..\..\src\skills\skills_common.c" />
-    <ClCompile Include="..\..\src\skills\skills_fighter.c" />
-    <ClCompile Include="..\..\src\skills\skills_judo_master.c" />
-    <ClCompile Include="..\..\src\skills\skills_kung_fu.c" />
-    <ClCompile Include="..\..\src\skills\skills_martial_artist.c" />
-    <ClCompile Include="..\..\src\skills\skills_tiger.c" />
+    <ClCompile Include="..\..\src\game_skill.c" />
+    <ClCompile Include="..\..\src\skills_common.c" />
+    <ClCompile Include="..\..\src\skills_fighter.c" />
+    <ClCompile Include="..\..\src\skills_judo_master.c" />
+    <ClCompile Include="..\..\src\skills_kung_fu.c" />
+    <ClCompile Include="..\..\src\skills_martial_artist.c" />
+    <ClCompile Include="..\..\src\skills_tiger.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -164,13 +164,13 @@
     <ClInclude Include="..\..\src\game_lifebar.h" />
     <ClInclude Include="..\..\src\game_value_tip.h" />
     <ClInclude Include="..\..\src\main_menu.h" />
-    <ClInclude Include="..\..\src\skills\game_skill.h" />
-    <ClInclude Include="..\..\src\skills\skills_common.h" />
-    <ClInclude Include="..\..\src\skills\skills_fighter.h" />
-    <ClInclude Include="..\..\src\skills\skills_judo_master.h" />
-    <ClInclude Include="..\..\src\skills\skills_kung_fu.h" />
-    <ClInclude Include="..\..\src\skills\skills_martial_artist.h" />
-    <ClInclude Include="..\..\src\skills\skills_tiger.h" />
+    <ClInclude Include="..\..\src\game_skill.h" />
+    <ClInclude Include="..\..\src\skills_common.h" />
+    <ClInclude Include="..\..\src\skills_fighter.h" />
+    <ClInclude Include="..\..\src\skills_judo_master.h" />
+    <ClInclude Include="..\..\src\skills_kung_fu.h" />
+    <ClInclude Include="..\..\src\skills_martial_artist.h" />
+    <ClInclude Include="..\..\src\skills_tiger.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LCUI-2DFightGame.rc" />

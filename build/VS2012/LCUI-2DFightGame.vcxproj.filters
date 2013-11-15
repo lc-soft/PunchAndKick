@@ -54,13 +54,13 @@
     <ClCompile Include="..\..\src\game_AI.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\skills\game_skill.c">
+    <ClCompile Include="..\..\src\game_skill.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\skills\skills_common.c">
+    <ClCompile Include="..\..\src\skills_common.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\skills\skills_martial_artist.c">
+    <ClCompile Include="..\..\src\skills_martial_artist.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gameres_toraji.c">
@@ -69,16 +69,16 @@
     <ClCompile Include="..\..\src\game_action.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\skills\skills_tiger.c">
+    <ClCompile Include="..\..\src\skills_tiger.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gameres_mike.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\skills\skills_kung_fu.c">
+    <ClCompile Include="..\..\src\skills_kung_fu.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\skills\skills_fighter.c">
+    <ClCompile Include="..\..\src\skills_fighter.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gameres_ben.c">
@@ -87,7 +87,7 @@
     <ClCompile Include="..\..\src\game_role_select.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\skills\skills_judo_master.c">
+    <ClCompile Include="..\..\src\skills_judo_master.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\game_battle.c">
@@ -158,31 +158,31 @@
     <ClInclude Include="..\..\src\game_AI.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\skills\game_skill.h">
+    <ClInclude Include="..\..\src\game_skill.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\skills\skills_common.h">
+    <ClInclude Include="..\..\src\skills_common.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\skills\skills_martial_artist.h">
+    <ClInclude Include="..\..\src\skills_martial_artist.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\skills\skills_tiger.h">
+    <ClInclude Include="..\..\src\skills_tiger.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\skills\skills_kung_fu.h">
+    <ClInclude Include="..\..\src\skills_kung_fu.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\skills\skills_fighter.h">
+    <ClInclude Include="..\..\src\skills_fighter.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\game_role_select.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\skills\skills_judo_master.h">
+    <ClInclude Include="..\..\src\skills_judo_master.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\game_battle.h">
