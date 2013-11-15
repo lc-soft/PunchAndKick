@@ -89,6 +89,7 @@ typedef union {
 
 typedef struct {
 	int id;			/**< 事件ID */
+	int temp_connect_id;	/**< 临时记录新建的事件连接的ID */
 	LCUI_Queue func_data;	/**< 记录被关联的回调函数数据 */
 } LCUI_EventSlot;
 
@@ -106,11 +107,6 @@ LCUI_API LCUI_BOOL LCUI_PushEvent( LCUI_Event *event );
 
 /** 初始化事件槽记录 */
 LCUI_API void EventSlots_Init( LCUI_Queue *slots );
-
-/** 将函数指针以及两个参数，转换成LCUI_Func类型，保存至p_buff指向的缓冲区中 */
-LCUI_API LCUI_BOOL Get_FuncData(	LCUI_Func *p_buff,
-					void (*func) (void*,void*),
-					void *arg1, void *arg2 );
 
 /** 根据事件的ID，获取与该事件关联的事件槽 */
 LCUI_API LCUI_EventSlot* EventSlots_Find( LCUI_Queue *slots, int event_id );
