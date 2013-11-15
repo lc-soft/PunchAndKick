@@ -313,16 +313,16 @@ static void Game_InitMainMenu(void)
 	}
 	btn_switch_video_mode = GameMenu_NewButtonW( options_menu_box, str_buff );
 	/* 为菜单按钮关联CLICKED事件，以在按钮被点击时进行相应 */
-	Widget_Event_Connect( btn_2v2_mode, EVENT_CLICKED, btn_2v2_mode_clicked );
-	Widget_Event_Connect( btn_scuffle_mode, EVENT_CLICKED, scuffle_game_btn_clicked );
-	Widget_Event_Connect( btn_network_battle, EVENT_CLICKED, btn_network_battle_clicked );
-	Widget_Event_Connect( btn_setkey, EVENT_CLICKED, btn_setkey_clicked );
-	Widget_Event_Connect( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
-	Widget_Event_Connect( btn_quit, EVENT_CLICKED, btn_quit_clicked );
-	Widget_Event_Connect( btn_usage, EVENT_CLICKED, btn_usage_clicked );
-	Widget_Event_Connect( btn_about, EVENT_CLICKED, btn_about_clicked );
-	Widget_Event_Connect( btn_license, EVENT_CLICKED, btn_license_clicked );
-	Widget_Event_Connect( btn_joinus, EVENT_CLICKED, btn_joinus_clicked );
+	Widget_ConnectEvent( btn_2v2_mode, EVENT_CLICKED, btn_2v2_mode_clicked );
+	Widget_ConnectEvent( btn_scuffle_mode, EVENT_CLICKED, scuffle_game_btn_clicked );
+	Widget_ConnectEvent( btn_network_battle, EVENT_CLICKED, btn_network_battle_clicked );
+	Widget_ConnectEvent( btn_setkey, EVENT_CLICKED, btn_setkey_clicked );
+	Widget_ConnectEvent( btn_switch_video_mode, EVENT_CLICKED, btn_switch_video_mode_clicked );
+	Widget_ConnectEvent( btn_quit, EVENT_CLICKED, btn_quit_clicked );
+	Widget_ConnectEvent( btn_usage, EVENT_CLICKED, btn_usage_clicked );
+	Widget_ConnectEvent( btn_about, EVENT_CLICKED, btn_about_clicked );
+	Widget_ConnectEvent( btn_license, EVENT_CLICKED, btn_license_clicked );
+	Widget_ConnectEvent( btn_joinus, EVENT_CLICKED, btn_joinus_clicked );
 	/* 设置一些子菜单 */
 	GameMenu_SetChildMenu( main_menu_box, btn_single_game, game_menu_box );
 	GameMenu_SetChildMenu( main_menu_box, btn_help, help_menu_box );

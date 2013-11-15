@@ -130,7 +130,7 @@ void GameWindow_InitAboutWindow(void)
 	Widget_Resize( window, WINDOW_SIZE );
 	Widget_Resize( btn_ok, BTN_SIZE );
 	Widget_Resize( wdg_img_logo, LOGO_SIZE );
-	Widget_Event_Connect( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
+	Widget_ConnectEvent( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
 
 	Widget_Show( wdg_img_logo );
 	Widget_Show( label_about_text );

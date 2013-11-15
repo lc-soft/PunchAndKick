@@ -382,16 +382,16 @@ void GameWindow_InitSetKeyboardWindow(void)
 	Widget_SetAlign( btn_ok, ALIGN_BOTTOM_CENTER, Pos(-50,-5) );
 	Widget_SetAlign( btn_reset, ALIGN_BOTTOM_CENTER, Pos(50,-5) );
 	
-	Widget_Event_Connect( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
-	Widget_Event_Connect( btn_reset, EVENT_CLICKED, btn_reset_on_clicked );
-	Widget_Event_Connect( btn_left, EVENT_CLICKED, btn_key_on_clicked );
-	Widget_Event_Connect( btn_right, EVENT_CLICKED, btn_key_on_clicked );
-	Widget_Event_Connect( btn_up, EVENT_CLICKED, btn_key_on_clicked );
-	Widget_Event_Connect( btn_down, EVENT_CLICKED, btn_key_on_clicked );
-	Widget_Event_Connect( btn_b_atk, EVENT_CLICKED, btn_key_on_clicked );
-	Widget_Event_Connect( btn_a_atk, EVENT_CLICKED, btn_key_on_clicked );
-	Widget_Event_Connect( btn_jump, EVENT_CLICKED, btn_key_on_clicked );
-	Widget_Event_Connect( btn_defense, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
+	Widget_ConnectEvent( btn_reset, EVENT_CLICKED, btn_reset_on_clicked );
+	Widget_ConnectEvent( btn_left, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_right, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_up, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_down, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_b_atk, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_a_atk, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_jump, EVENT_CLICKED, btn_key_on_clicked );
+	Widget_ConnectEvent( btn_defense, EVENT_CLICKED, btn_key_on_clicked );
 	
 	Widget_Show( btn_left );
 	Widget_Show( btn_right );

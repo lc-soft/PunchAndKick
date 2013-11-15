@@ -211,7 +211,7 @@ void Game_InitRoleSelectBox(void)
 	Widget_Resize( window, WINDOWS_SIZE );
 	Window_SetTitleTextW( window, L"选择游戏角色" );
 
-	Widget_Event_Connect(	Window_GetCloseButton(window), 
+	Widget_ConnectEvent(	Window_GetCloseButton(window), 
 				EVENT_CLICKED, closebtn_clicked );
 	
 	/* 配置角色形象框部件的样式 */
@@ -258,9 +258,9 @@ void Game_InitRoleSelectBox(void)
 	Widget_SetAlign( btn_select_role, ALIGN_BOTTOM_CENTER, Pos(0,-10) );
 	Widget_SetAlign( btn_next_role, ALIGN_BOTTOM_RIGHT, Pos(-10,-10) );
 	/* 关联按钮点击事件 */
-	Widget_Event_Connect( btn_prev_role, EVENT_CLICKED, btn_prev_role_clicked );
-	Widget_Event_Connect( btn_next_role, EVENT_CLICKED, btn_next_role_clicked );
-	Widget_Event_Connect( btn_select_role, EVENT_CLICKED, btn_select_role_clicked );
+	Widget_ConnectEvent( btn_prev_role, EVENT_CLICKED, btn_prev_role_clicked );
+	Widget_ConnectEvent( btn_next_role, EVENT_CLICKED, btn_next_role_clicked );
+	Widget_ConnectEvent( btn_select_role, EVENT_CLICKED, btn_select_role_clicked );
 	
 	Widget_Container_Add( info_area, label_hp );
 	Widget_Container_Add( info_area, label_hp_value );

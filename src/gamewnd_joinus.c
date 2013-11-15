@@ -147,7 +147,7 @@ void GameWindow_InitJoinUsWindow(void)
 	Widget_Resize( btn_ok, BTN_SIZE );
 	Widget_Resize( wdg_qrcode, RQCODE_SIZE );
 
-	Widget_Event_Connect( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
+	Widget_ConnectEvent( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
 
 	Widget_Show( textbox );
 	Widget_Show( box );

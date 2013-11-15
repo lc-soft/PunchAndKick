@@ -129,8 +129,8 @@ static void GameMenuBtn_ExecInit( LCUI_Widget *widget )
 	Widget_SetBorder( widget, Border(1,BORDER_STYLE_SOLID,RGB(220,220,220)) );
 	Widget_SetPadding( widget, Padding(1,1,1,1) );
 
-	Widget_Event_Connect( widget, EVENT_FOCUSIN, GameMenuBtn_OnFocusEvent );
-	Widget_Event_Connect( widget, EVENT_FOCUSOUT, GameMenuBtn_OnFocusEvent );
+	Widget_ConnectEvent( widget, EVENT_FOCUSIN, GameMenuBtn_OnFocusEvent );
+	Widget_ConnectEvent( widget, EVENT_FOCUSOUT, GameMenuBtn_OnFocusEvent );
 	/* 设置定时器，用于动态更新前景部件的宽度 */
 	p_data->timer_id = LCUITimer_Set( 20, GameMenuBtn_UpdateForeWidgetWidth, widget, TRUE );
 }

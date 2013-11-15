@@ -83,7 +83,7 @@ void GameWindow_InitLicenseWindow(void)
 	Widget_Resize( window, WINDOW_SIZE );
 	Widget_Resize( btn_ok, BTN_SIZE );
 
-	Widget_Event_Connect( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
+	Widget_ConnectEvent( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
 
 	Widget_Show( textbox_license );
 	Widget_Show( box );
