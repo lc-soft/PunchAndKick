@@ -8,10 +8,12 @@
 #include LC_LABEL_H
 #include LC_PROGBAR_H
 
+#include <limits.h>
+
 #include "game_control.h"
 #include "game_action.h"
 #include "game_object.h"
-#include "skills/game_skill.h"
+#include "game_skill.h"
 #include "game_role_select.h"
 
 #define WINDOWS_SIZE		Size(320,300)
@@ -96,7 +98,7 @@ int Game_GetSelectedRole(void)
 	if( !window_is_inited ) {
 		return -1;
 	}
-	LCUISleeper_StartSleep( &sleeper, MAXINT32 );
+	LCUISleeper_StartSleep( &sleeper, INT_MAX );
 	return current_select_role;
 }
 

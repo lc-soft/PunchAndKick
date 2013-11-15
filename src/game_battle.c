@@ -4,8 +4,10 @@
 #include LC_WIDGET_H
 #include LC_DISPLAY_H
 
+#include <limits.h>
+
 #include "game.h"
-#include "skills/game_skill.h"
+#include "game_skill.h"
 #include "game_value_tip.h"
 
 enum BattleState {
@@ -96,7 +98,7 @@ static void GameBattleFrame_Remain( BattleFrameStatus *p_status )
 		goto normal_exit;
 	}
 
-	lost_ms = LCUISleeper_StartSleep( &p_status->wait_continue, MAXINT32 );
+	lost_ms = LCUISleeper_StartSleep( &p_status->wait_continue, INT_MAX );
 	p_status->prev_frame_start_time += lost_ms;
 	return;
 

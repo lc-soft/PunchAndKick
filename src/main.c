@@ -13,7 +13,7 @@
 
 #include "game.h"
 #include "main_menu.h"
-#include "skills/game_skill.h"
+#include "game_skill.h"
 #include "game_role_select.h"
 #include "game_menubtn.h"
 #include "game_menu.h"

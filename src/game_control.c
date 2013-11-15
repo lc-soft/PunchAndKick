@@ -8,7 +8,7 @@
 #include LC_LABEL_H
 
 #include "game.h"
-#include "skills/game_skill.h"
+#include "game_skill.h"
 
 static int state_action_map[TOTAL_STATE_NUM];
 
