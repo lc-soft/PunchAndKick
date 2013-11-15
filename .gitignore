@@ -5,3 +5,11 @@
 *.exe
 *.out
 *.app
+
+# other
+*.*~
+*.log
+autom4te.cache
+bin/game
+src/game
+.deps
