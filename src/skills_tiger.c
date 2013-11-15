@@ -2,7 +2,7 @@
 #include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
-#include "../game.h"
+#include "game.h"
 #include "game_skill.h"
 
 #define ZSPEED_SPIN_DRILL	1400

@@ -2,7 +2,7 @@
 //#define DEBUG
 #include <LCUI_Build.h>
 #include LC_LCUI_H
-#include "../game_control.h"
+#include "game_control.h"
 #include "game_skill.h"
 
 typedef struct SkillData_ {

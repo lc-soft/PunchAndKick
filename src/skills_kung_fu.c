@@ -2,7 +2,7 @@
 #include <LCUI_Build.h>
 #include LC_LCUI_H
 #include LC_WIDGET_H
-#include "../game.h"
+#include "game.h"
 #include "game_skill.h"
 
 #define ATK_HUG_JUMP			"hug jump attack"
