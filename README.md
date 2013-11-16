@@ -14,7 +14,8 @@ LCUI-2DFightGame
 	make
 ```
 
-生成的游戏主程序会在src里，名为game，请将它移动至bin目录下，然后运行。
+生成的游戏主程序会在src目录里，名为game，请将它移动至bin目录下，若要运行游戏，请
+先进入字符控制台模式，以确保能够正常显示图形。
 
 在 windows 平台上，你需要准备VisualStudio，2010或2012版都行，进入build目录中的相应
 目录，打开sln文件，然后用VisualStudio生成即可，生成的可执行文件在bin目录下。
