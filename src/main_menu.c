@@ -21,7 +21,7 @@
 #define LOGOBTN_SIZE Size(116,116)
 
 #define TEXT_SINGLE_GAME	L"单人游戏"
-#define TEXT_NETWORK_BATTLE	L"网络对战"
+#define TEXT_NETWORK_BATTLE	L"联机对战"
 #define TEXT_OPTIONS		L"选项"
 #define TEXT_HELP		L"帮助"
 #define TEXT_QUIT		L"退出"
