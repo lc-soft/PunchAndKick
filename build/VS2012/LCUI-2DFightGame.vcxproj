@@ -14,6 +14,7 @@
     <ProjectGuid>{7347FF8E-A200-474E-9125-75B59EF0DF94}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LCUI2DFightGame</RootNamespace>
+    <ProjectName>PunchAndKick</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -45,12 +46,14 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\bin\</OutDir>
     <IntDir>$(SolutionDir)..\..\bin\$(Configuration)\</IntDir>
+    <TargetName>Punch&amp;Kick</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\bin\</OutDir>
     <IntDir>$(SolutionDir)..\..\bin\$(Configuration)\</IntDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <TargetName>Punch&amp;Kick</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,7 +128,6 @@
     <ClCompile Include="..\..\src\game_role_select.c" />
     <ClCompile Include="..\..\src\game_statusbar.c" />
     <ClCompile Include="..\..\src\game_value_tip.c" />
-    <ClCompile Include="..\..\src\lan_battle.c" />
     <ClCompile Include="..\..\src\game_lifebar.c" />
     <ClCompile Include="..\..\src\main.c" />
     <ClCompile Include="..\..\src\main_menu.c" />

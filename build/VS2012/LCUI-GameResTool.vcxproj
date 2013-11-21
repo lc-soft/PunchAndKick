@@ -14,6 +14,7 @@
     <ProjectGuid>{06AF81B5-F303-45EF-883A-B2E241F50081}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>GameResTool</RootNamespace>
+    <ProjectName>ResourceTool</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
