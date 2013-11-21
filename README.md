@@ -20,6 +20,15 @@ LCUI-2DFightGame
 在 windows 平台上，你需要准备VisualStudio，2010或2012版都行，进入build目录中的相应
 目录，打开sln文件，然后用VisualStudio生成即可，生成的可执行文件在bin目录下。
 
+## 代码阅读
+
+头文件及源文件所使用的字符编码主要是UTF-8，并且带BOM签名，请确保你的代码编辑器支持显示UTF-8编码的文本内容。
+
+源代码的缩进宽度为8，请确保你已经将你的代码编辑器的缩进宽度设置为8，这样，代码才能够以应有的格式显示，方便阅读。
+
+本项目的源代码中的注释不是很多，建议使用自带代码提示功能（例如：提示函数原型及对应的注释）的代码编辑器查看,帮助理解部分代码。
+
+
 ## 效果图
 ![screenshort 1](http://lcui.org/files/images/game/2013-11-15-21-54-36.png)
 ![screenshort 2](http://lcui.org/files/images/game/2013-11-15-22-02-07.png)
