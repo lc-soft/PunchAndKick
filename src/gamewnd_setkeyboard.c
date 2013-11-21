@@ -182,17 +182,22 @@ static void UpdateKeyBtn(void)
 	Button_TextW( btn_jump, btn_text );
 }
 
+/** 响应LCUI_KEYDOWN事件 */
 static void ProcKeyDown( LCUI_Event *event, void *arg )
 {
 	ControlKey ctrlkey;
 	LCUI_Widget *target_btn;
 	/** 如果按键不可用 */
 	if( !KeyIsValid(event->key.key_code) ) {
+		/* 更改提示框显示的文本框 */
 		Label_TextW( tip_label, TEXT_KEY_IS_NOT_VALID );
 		return;
 	}
+	/* 获取当前的键位配置数据 */
 	GameConfig_GetKeyControl( &ctrlkey );
+	/* 获取被点击的按钮 */
 	target_btn = (LCUI_Widget*)arg;
+	/* 判断被点击的按钮是哪个，并保存相应键位设置 */
 	if( target_btn == btn_left ) {
 		ctrlkey.left = event->key.key_code;
 	}
@@ -217,31 +222,39 @@ static void ProcKeyDown( LCUI_Event *event, void *arg )
 	else if( target_btn == btn_defense ) {
 		ctrlkey.defense = event->key.key_code;
 	}
+	/* 更新键位配置数据 */
 	GameConfig_SetKeyControl( &ctrlkey );
 	GameConfig_Save();
 	UpdateKeyBtn();
+	/* 销毁提示框 */
 	Widget_Destroy( tip_box );
+	/* 解除LCUI_KEYDOWN事件连接 */
 	LCUISysEvent_Disconnect( LCUI_KEYDOWN, keyboard_connect_id );
+	/* 重置这两个变量 */
 	tip_box = NULL;
 	keyboard_connect_id = -1;
 }
 
+/** 捕捉键盘按键输入 */
 static void StartCatchKey( LCUI_Widget *btn )
 {
 	if( tip_box ) {
 		return;
 	}
+	/* 创建提示框 */
 	tip_box = Widget_New(NULL);
 	tip_label = Widget_New("label");
-
+	/* 将label部件添加至提示框中 */
 	Widget_Container_Add( tip_box, tip_label );
+	/* 设置提示框中显示的文本 */
 	Label_TextW( tip_label, TEXT_PLEASE_PRESS_KEY );
+	/* 设置提示框位置、尺寸及样式 */
 	Widget_SetAlign( tip_label, ALIGN_MIDDLE_CENTER, Pos(0,0) );
 	Widget_SetAlign( tip_box, ALIGN_MIDDLE_CENTER, Pos(0,0) );
 	Widget_Resize( tip_box, TIPBOX_SIZE );
 	Widget_SetBackgroundTransparent( tip_box, FALSE );
 	Widget_SetBorder( tip_box, Border(1,BORDER_STYLE_SOLID,RGB(200,200,200)) );
-	
+	/* 连接LCUI_KEYDOWN事件，以在键盘按键被按下时进行响应 */
 	keyboard_connect_id = LCUISysEvent_Connect( LCUI_KEYDOWN, ProcKeyDown, btn );
 
 	Widget_Show( tip_label );
@@ -249,12 +262,14 @@ static void StartCatchKey( LCUI_Widget *btn )
 	Widget_Show( tip_box );
 }
 
+/** 在“确定”按钮被点击时 */
 static void btn_ok_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 {
 	GameWindow_HideSetKeyboardWindow();
 	GameWindow_DestroySetKeyboardWindow();
 }
 
+/** 在“恢复默认”按钮被点击时 */
 static void btn_reset_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 {
 	GameConfig_InitKeyControl();
@@ -262,13 +277,16 @@ static void btn_reset_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 	UpdateKeyBtn();
 }
 
+/** 在键位按钮被点击时 */
 static void btn_key_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 {
 	StartCatchKey( widget );
 }
 
+/** 初始化键位设置窗口 */
 void GameWindow_InitSetKeyboardWindow(void)
 {
+	/* 创建所需的GUI部件 */
 	window = Widget_New("window");
 	box = Widget_New(NULL);
 	label = Widget_New("label");
@@ -352,7 +370,7 @@ void GameWindow_InitSetKeyboardWindow(void)
 	Widget_Move( label_defense, Pos(260,125) );
 
 	UpdateKeyBtn();
-
+	/* 设置各种文本 */
 	Label_TextW( label_left, TEXT_LEFT );
 	Label_TextW( label_right, TEXT_RIGHT );
 	Label_TextW( label_up, TEXT_UP );
@@ -361,7 +379,7 @@ void GameWindow_InitSetKeyboardWindow(void)
 	Label_TextW( label_defense, TEXT_DEFENSE );
 	Label_TextW( label_a_atk, TEXT_A_ATK );
 	Label_TextW( label_b_atk, TEXT_B_ATK );
-
+	/* 设置窗口 */
 	Widget_SetStyleID( window, WINDOW_STYLE_LINE );
 	Widget_Resize( window, WINDOW_SIZE );
 	Widget_SetPadding( Window_GetClientArea(window), Padding(10,10,10,10) );
@@ -381,7 +399,7 @@ void GameWindow_InitSetKeyboardWindow(void)
 	Widget_SetAlign( label, ALIGN_TOP_CENTER, Pos(0,0) );
 	Widget_SetAlign( btn_ok, ALIGN_BOTTOM_CENTER, Pos(-50,-5) );
 	Widget_SetAlign( btn_reset, ALIGN_BOTTOM_CENTER, Pos(50,-5) );
-	
+	/* 为键位按钮连接事件 */
 	Widget_ConnectEvent( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
 	Widget_ConnectEvent( btn_reset, EVENT_CLICKED, btn_reset_on_clicked );
 	Widget_ConnectEvent( btn_left, EVENT_CLICKED, btn_key_on_clicked );
@@ -415,17 +433,20 @@ void GameWindow_InitSetKeyboardWindow(void)
 	Widget_Show(label );
 }
 
+/** 显示键位设置窗口 */
 void GameWindow_ShowSetKeyboardWindow(void)
 {
 	Widget_SetModal( window, TRUE );
 	Widget_Show( window );
 }
 
+/** 隐藏键位设置窗口 */
 void GameWindow_HideSetKeyboardWindow(void)
 {
 	Widget_Hide( window );
 }
 
+/** 销毁键位设置窗口 */
 void GameWindow_DestroySetKeyboardWindow(void)
 {
 	Widget_Destroy( window );
