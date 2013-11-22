@@ -19,9 +19,12 @@
 #define TEXT_TITLE	L" <size=14px>加入我们</size> "
 
 static const wchar_t contact_us_text[]={
-	L"有什么问题可以通过官网留言、电子邮件与我们进行交流，如果你实在是需要进QQ群里交流，请扫描上面的二维码。"
+	L"如果你在编译、调试本游戏时或在阅读本游戏的源代码时遇到了些问题，可以通过官网留言、电子邮件、QQ群等途径与我们进行交流。\n"
+	L"在此谢绝“上帝”用户和“技术”帝对本游戏给予的各种评价、建议、要求或拍砖。\n"
+	L"\n"
 	L"官网：<color=#00f>lcui.org</color>\n"
-	L"邮箱：<color=#00f>lc-soft@live.cn</color>"
+	L"邮箱：<color=#00f>lc-soft@live.cn</color>\n"
+	L"QQ群：153022788"
 };
 
 static const wchar_t directions_text[]={
@@ -81,7 +84,7 @@ static LCUI_Widget *window;
 static LCUI_Widget *label_title;
 static LCUI_Widget *textbox;
 static LCUI_Widget *box;
-static LCUI_Widget *btn_ok, *wdg_qrcode, *label_contact_us;
+static LCUI_Widget *btn_ok, *label_contact_us;
 
 static void btn_ok_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 {
@@ -91,34 +94,24 @@ static void btn_ok_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 
 void GameWindow_InitJoinUsWindow(void)
 {
-	LCUI_Graph img_qrcode;
-
 	window = Widget_New("window");
 	label_title = Widget_New("label");
 	label_contact_us = Widget_New("label");
 	textbox = Widget_New("text_box");
 	box = Widget_New(NULL);
 	btn_ok = Widget_New("button");
-	wdg_qrcode = Widget_New(NULL);
-
-	Graph_Init( &img_qrcode );
-	GameGraphRes_GetGraph( MAIN_RES, "qrcode", &img_qrcode );
-
+	
 	Window_ClientArea_Add( window, label_title );
 	Window_ClientArea_Add( window, label_contact_us );
 	Window_ClientArea_Add( window, box );
 	Window_ClientArea_Add( window, btn_ok );
-	Window_ClientArea_Add( window, wdg_qrcode );
 	Widget_Container_Add( box, textbox );
 	
 	Widget_SetBackgroundColor( label_title, RGB(255,255,255) );
 	Widget_SetBackgroundTransparent( label_title, FALSE );
-	Widget_SetBackgroundImage( wdg_qrcode, &img_qrcode );
-	Widget_SetBackgroundTransparent( wdg_qrcode, FALSE );
 	
 	Widget_SetAlign( label_title, ALIGN_TOP_LEFT, Pos(170,0) );
-	Widget_SetAlign( wdg_qrcode, ALIGN_TOP_RIGHT, Pos(-5,10) );
-	Widget_SetAlign( label_contact_us, ALIGN_TOP_RIGHT, Pos(-5,185) );
+	Widget_SetAlign( label_contact_us, ALIGN_MIDDLE_RIGHT, Pos(-5,0) );
 	Widget_SetAlign( box, ALIGN_TOP_LEFT, Pos(0,10) );
 	Widget_SetAlign( btn_ok, ALIGN_BOTTOM_CENTER, Pos(0,-5) );
 
@@ -134,7 +127,7 @@ void GameWindow_InitJoinUsWindow(void)
 	
 	Label_AutoSize( label_contact_us, FALSE, 0 );
 	Label_SetAutoWrap( label_contact_us, TRUE );
-	Widget_Resize( label_contact_us, Size(162,100) );
+	Widget_Resize( label_contact_us, Size(162,200) );
 
 	Widget_SetStyleID( window, WINDOW_STYLE_LINE );
 	Widget_SetPadding( Window_GetClientArea(window), Padding(10,10,10,10) );
@@ -147,7 +140,6 @@ void GameWindow_InitJoinUsWindow(void)
 
 	Widget_Resize( window, WINDOW_SIZE );
 	Widget_Resize( btn_ok, BTN_SIZE );
-	Widget_Resize( wdg_qrcode, RQCODE_SIZE );
 
 	Widget_ConnectEvent( btn_ok, EVENT_CLICKED, btn_ok_on_clicked );
 
@@ -155,7 +147,6 @@ void GameWindow_InitJoinUsWindow(void)
 	Widget_Show( box );
 	Widget_Show( label_title );
 	Widget_Show( label_contact_us );
-	Widget_Show( wdg_qrcode );
 	Widget_Show( btn_ok );
 }
 
