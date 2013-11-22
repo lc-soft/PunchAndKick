@@ -29,7 +29,7 @@ static const wchar_t contact_us_text[]={
 
 static const wchar_t directions_text[]={
 L"<size=13px>"
-L"    本游戏是一个自由软件项目，遵循GNU通用公共许可协议第二版（简称：GPL v2），项目源代码托管在GitHub上，地址为：<color=#00f>https://github.com/lc-soft/LCUI-2DFightGame</color>，如果你有兴趣，可以关注本项目的开发动态。\n"
+L"    本游戏是一个自由软件项目，遵循GNU通用公共许可协议第二版（简称：GPL v2），项目源代码托管在GitHub上，地址为：<color=#00f>https://github.com/lc-soft/PunchAndKick</color>，如果你有兴趣，可以关注本项目的开发动态。\n"
 L"\n"
 L"    本游戏是应用LCUI开发的，LCUI是作者开发的GUI引擎，支持Windows和GNU/Linux平台，因此，本游戏的源代码也可以在GNU/Linux平台上进行编译并运行，但LCUI的部分功能模块对GNU/Linux平台的支持不够好，会使本游戏无法正常实现应有的功能。如果你有一定的Windows和GNU/Linux环境下的编程经验，可帮助我们改进LCUI。\n"
 L"\n"
