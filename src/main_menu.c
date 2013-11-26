@@ -55,10 +55,19 @@
 
 #define TOTAL_COLOR_NUM	5
 
-static LCUI_RGB color_set[TOTAL_COLOR_NUM]={ 
-	COLOR_RED, COLOR_ORANGE, 
-	COLOR_GREEN, COLOR_BLUE, 
-	COLOR_PURPLE
+/** 菜单配色方案 1 */
+static LCUI_RGB menu_cs1[TOTAL_COLOR_NUM]={ 
+	COLOR_RED, COLOR_ORANGE, COLOR_GREEN, COLOR_BLUE, COLOR_PURPLE
+};
+
+/** 菜单配色方案 2 */
+static LCUI_RGB menu_cs2[TOTAL_COLOR_NUM]={
+	COLOR_GREEN, COLOR_BLUE, COLOR_PURPLE, COLOR_RED, COLOR_ORANGE, 
+};
+
+/** 菜单配色方案 3 */
+static LCUI_RGB menu_cs3[TOTAL_COLOR_NUM]={
+	COLOR_PURPLE, COLOR_RED, COLOR_ORANGE, COLOR_GREEN, COLOR_BLUE,
 };
 
 enum RES_ID {
@@ -284,10 +293,10 @@ static void Game_InitMainMenu(void)
 	/* 设置主菜单的位置 */
 	Widget_SetAlign( main_menu_box, ALIGN_MIDDLE_LEFT, Pos(50,0) );
 	/* 为这些菜单设置配色方案 */
-	GameMenu_SetColorScheme( main_menu_box, color_set, TOTAL_COLOR_NUM );
-	GameMenu_SetColorScheme( game_menu_box, color_set, TOTAL_COLOR_NUM );
-	GameMenu_SetColorScheme( help_menu_box, color_set, TOTAL_COLOR_NUM );
-	GameMenu_SetColorScheme( options_menu_box, color_set, TOTAL_COLOR_NUM );
+	GameMenu_SetColorScheme( main_menu_box, menu_cs1, TOTAL_COLOR_NUM );
+	GameMenu_SetColorScheme( game_menu_box, menu_cs2, TOTAL_COLOR_NUM );
+	GameMenu_SetColorScheme( help_menu_box, menu_cs1, TOTAL_COLOR_NUM );
+	GameMenu_SetColorScheme( options_menu_box, menu_cs3, TOTAL_COLOR_NUM );
 	/* 为菜单创建按钮 */
 	btn_single_game = GameMenu_NewButtonW( main_menu_box, TEXT_SINGLE_GAME );
 	btn_network_battle = GameMenu_NewButtonW( main_menu_box, TEXT_NETWORK_BATTLE );
