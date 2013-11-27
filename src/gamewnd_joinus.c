@@ -10,28 +10,24 @@
 #include "game_resource.h"
 #include "gamewnd_joinus.h"
 
-#define WINDOW_SIZE	Size(600,350)
+#define WINDOW_SIZE	Size(422,400)
 #define BTN_SIZE	Size(80,30)
-#define BOX_SIZE	Size(400,270)
-#define RQCODE_SIZE	Size(162,162)
+#define BOX_SIZE	Size(400,320)
 
 #define TEXT_OK		L"确定"
 #define TEXT_TITLE	L" <size=14px>加入我们</size> "
-
-static const wchar_t contact_us_text[]={
-	L"如果你在编译、调试本游戏时或在阅读本游戏的源代码时遇到了些问题，可以通过官网留言、电子邮件、QQ群等途径与我们进行交流。\n"
-	L"在此谢绝“上帝”用户和“技术”帝对本游戏给予的各种评价、建议、要求或拍砖。\n"
-	L"\n"
-	L"官网：<color=#00f>lcui.org</color>\n"
-	L"邮箱：<color=#00f>lc-soft@live.cn</color>\n"
-	L"QQ群：153022788"
-};
 
 static const wchar_t directions_text[]={
 L"<size=13px>"
 L"    本游戏是一个自由软件项目，遵循GNU通用公共许可协议第二版（简称：GPL v2），项目源代码托管在GitHub上，地址为：<color=#00f>https://github.com/lc-soft/PunchAndKick</color>，如果你有兴趣，可以关注本项目的开发动态。\n"
 L"\n"
-L"    本游戏是应用LCUI开发的，LCUI是作者开发的GUI引擎，支持Windows和GNU/Linux平台，因此，本游戏的源代码也可以在GNU/Linux平台上进行编译并运行，但LCUI的部分功能模块对GNU/Linux平台的支持不够好，会使本游戏无法正常实现应有的功能。如果你有一定的Windows和GNU/Linux环境下的编程经验，可帮助我们改进LCUI。\n"
+L"    本游戏是应用LCUI开发的，LCUI是作者开发的GUI引擎，由于它支持Windows和GNU/Linux平台，因此本游戏的源代码也可以在GNU/Linux平台上进行编译并运行，但LCUI的部分功能模块对GNU/Linux平台的支持不够好，会使本游戏无法正常实现应有的功能。如果你有一定的Windows和GNU/Linux环境下的编程经验，可帮助我们改进LCUI。\n"
+L"\n"
+L"    如果你在编译、调试本游戏时，或者在阅读本游戏的源代码时，遇到了些问题，可以通过官网留言、电子邮件、Q群等途径与我们进行交流。\n"
+L"\n"
+L"    官网：<color=#00f>lcui.org</color>\n"
+L"    邮箱：<color=#00f>lc-soft@live.cn</color>\n"
+L"    Q群：153022788\n"
 L"\n"
 L"    本游戏和FC游戏《热血格斗》类似，现在的想法是先模仿《热血格斗》，实现应有的功能、特性及效果，以后再在此基础上对游戏进行改进、扩展，添加些新特性、功能，例如：\n"
 L"\n"
@@ -84,7 +80,7 @@ static LCUI_Widget *window;
 static LCUI_Widget *label_title;
 static LCUI_Widget *textbox;
 static LCUI_Widget *box;
-static LCUI_Widget *btn_ok, *label_contact_us;
+static LCUI_Widget *btn_ok;
 
 static void btn_ok_on_clicked( LCUI_Widget *widget, LCUI_WidgetEvent *event )
 {
@@ -96,13 +92,11 @@ void GameWindow_InitJoinUsWindow(void)
 {
 	window = Widget_New("window");
 	label_title = Widget_New("label");
-	label_contact_us = Widget_New("label");
 	textbox = Widget_New("text_box");
 	box = Widget_New(NULL);
 	btn_ok = Widget_New("button");
 	
 	Window_ClientArea_Add( window, label_title );
-	Window_ClientArea_Add( window, label_contact_us );
 	Window_ClientArea_Add( window, box );
 	Window_ClientArea_Add( window, btn_ok );
 	Widget_Container_Add( box, textbox );
@@ -111,12 +105,10 @@ void GameWindow_InitJoinUsWindow(void)
 	Widget_SetBackgroundTransparent( label_title, FALSE );
 	
 	Widget_SetAlign( label_title, ALIGN_TOP_LEFT, Pos(170,0) );
-	Widget_SetAlign( label_contact_us, ALIGN_MIDDLE_RIGHT, Pos(-5,0) );
 	Widget_SetAlign( box, ALIGN_TOP_LEFT, Pos(0,10) );
 	Widget_SetAlign( btn_ok, ALIGN_BOTTOM_CENTER, Pos(0,-5) );
 
 	Label_TextW( label_title, TEXT_TITLE );
-	Label_TextW( label_contact_us, contact_us_text );
 	Button_TextW( btn_ok, TEXT_OK );
 	TextBox_SetAutoWrap( textbox, TRUE );
 	TextBox_SetMultiline( textbox, TRUE );
@@ -125,10 +117,6 @@ void GameWindow_InitJoinUsWindow(void)
 	TextBox_TextW( textbox, directions_text );
 	TextBox_ShowCursor( textbox, FALSE );
 	
-	Label_AutoSize( label_contact_us, FALSE, 0 );
-	Label_SetAutoWrap( label_contact_us, TRUE );
-	Widget_Resize( label_contact_us, Size(162,200) );
-
 	Widget_SetStyleID( window, WINDOW_STYLE_LINE );
 	Widget_SetPadding( Window_GetClientArea(window), Padding(10,10,10,10) );
 	Widget_SetAutoSize( btn_ok, FALSE, 0 );
@@ -146,7 +134,6 @@ void GameWindow_InitJoinUsWindow(void)
 	Widget_Show( textbox );
 	Widget_Show( box );
 	Widget_Show( label_title );
-	Widget_Show( label_contact_us );
 	Widget_Show( btn_ok );
 }
 
