@@ -609,29 +609,27 @@ static int Game_LoadResource(void)
 
 int main( int argc, char **argv )
 {
-	int ret;
-	int mode;
+	int ret, mode;
 	LCUI_Thread t;
 //#define DEBUG
 #if defined (LCUI_BUILD_IN_WIN32) && defined (DEBUG)
 	InitConsoleWindow();
 #endif
-	GameConfig_Init();
-	GameConfig_Load();
-	if( GameConfig_IsWindowed() ) {
+	GameConfig_Init();			/* 初始化游戏配置数据 */
+	GameConfig_Load();			/* 载入游戏配置数据 */
+	if( GameConfig_IsWindowed() ) {		/* 如果是要窗口化运行 */
 		mode = LCUI_INIT_MODE_WINDOW;
 	} else {
 		mode = LCUI_INIT_MODE_FULLSCREEN;
 	}
 	/* 初始化LCUI */
 	LCUI_Init( GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT, mode );
-	GameGraphRes_Init();		/* 初始化游戏资源 */
-	ret = Game_LoadResource();	/* 载入游戏资源 */
+	GameGraphRes_Init();				/* 初始化游戏资源 */
+	ret = Game_LoadResource();			/* 载入游戏资源 */
 	if( ret != 0 ) {
 		return -1;
 	}
-	/* 保存主线程ID */
-	main_thread_id = LCUIThread_SelfID();
-	LCUIThread_Create( &t, Game_MainThread, NULL );
+	main_thread_id = LCUIThread_SelfID();		/* 保存主线程ID */
+	LCUIThread_Create( &t, Game_MainThread, NULL );	/* 创建游戏线程 */
 	return LCUI_Main();
 }
