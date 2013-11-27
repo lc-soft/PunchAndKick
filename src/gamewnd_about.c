@@ -40,7 +40,7 @@ const wchar_t member_list_text[]={
 
 const wchar_t about_text[]={
 	L"Punch & Kick\n"
-	L"版本 1.1.0\n"
+	L"版本 1.1.1\n"
 	L"版权所有 (C) 2013 LC-Games 开发组。\n"
 	L"保留所有权利。"
 };
