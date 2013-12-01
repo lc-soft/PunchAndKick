@@ -11,6 +11,10 @@ Punch & Kick
 
 由于作者以后工作的原因，此游戏的开发可能会暂停，因此，请不要对此游戏抱有过多的期待。
 
+## 效果图
+![screenshort 1](http://lcui.org/files/images/game/2013-11-15-21-54-36.png)
+![screenshort 2](http://lcui.org/files/images/game/2013-11-15-22-02-07.png)
+
 ## 构建
 
 在 GNU/Linux 平台上，请先确认你已经安装了 LCUI 库，然后在游戏源码根目录中使用命令：
@@ -39,7 +43,3 @@ Punch & Kick
 本项目的源代码中的注释不是很多，建议使用自带代码提示功能（例如：提示函数原型及对应的注释）的代码编辑器查看，帮助理解部分代码。
 
 ![vs2012 code hints feature](http://lcui.org/files/images/vs2012-code-hints-feature.png)
-
-## 效果图
-![screenshort 1](http://lcui.org/files/images/game/2013-11-15-21-54-36.png)
-![screenshort 2](http://lcui.org/files/images/game/2013-11-15-22-02-07.png)
