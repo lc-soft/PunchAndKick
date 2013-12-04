@@ -21,6 +21,9 @@
     <ClCompile Include="..\..\src\main_menu.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\lan_battle.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\game_object.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -217,13 +220,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="LCUI-2DFightGame.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="game-icon.ico">
       <Filter>资源文件</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PunchAndKick.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

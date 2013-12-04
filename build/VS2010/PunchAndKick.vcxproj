@@ -11,23 +11,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{7347FF8E-A200-474E-9125-75B59EF0DF94}</ProjectGuid>
+    <ProjectGuid>{9E810E7A-0469-42A2-BCBA-864819F4F11F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>LCUI2DFightGame</RootNamespace>
-    <ProjectName>PunchAndKick</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v100</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v110_xp</PlatformToolset>
+    <PlatformToolset>v100</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>NotSet</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -128,6 +127,7 @@
     <ClCompile Include="..\..\src\game_role_select.c" />
     <ClCompile Include="..\..\src\game_statusbar.c" />
     <ClCompile Include="..\..\src\game_value_tip.c" />
+    <ClCompile Include="..\..\src\lan_battle.c" />
     <ClCompile Include="..\..\src\game_lifebar.c" />
     <ClCompile Include="..\..\src\main.c" />
     <ClCompile Include="..\..\src\main_menu.c" />
@@ -175,10 +175,10 @@
     <ClInclude Include="..\..\src\skills_tiger.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="LCUI-2DFightGame.rc" />
+    <Image Include="game-icon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="game-icon.ico" />
+    <ResourceCompile Include="PunchAndKick.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
