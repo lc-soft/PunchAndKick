@@ -25,7 +25,6 @@ build/VS2010/resource.h \
 build/VS2012/game-icon.ico \
 build/VS2012/PunchAndKick.rc \
 build/VS2012/PunchAndKick.sln \
-build/VS2012/PunchAndKick.v11.suo \
 build/VS2012/PunchAndKick.vcxproj \
 build/VS2012/PunchAndKick.vcxproj.filters \
 build/VS2012/ResourceTool.vcxproj \

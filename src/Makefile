@@ -61,10 +61,10 @@ am__make_running_with_option = \
   test $$has_opt = yes
 am__make_dryrun = (target_option=n; $(am__make_running_with_option))
 am__make_keepgoing = (target_option=k; $(am__make_running_with_option))
-pkgdatadir = $(datadir)/lcuifightgame
-pkgincludedir = $(includedir)/lcuifightgame
-pkglibdir = $(libdir)/lcuifightgame
-pkglibexecdir = $(libexecdir)/lcuifightgame
+pkgdatadir = $(datadir)/punchandkick
+pkgincludedir = $(includedir)/punchandkick
+pkglibdir = $(libdir)/punchandkick
+pkglibexecdir = $(libexecdir)/punchandkick
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
@@ -208,7 +208,7 @@ CFLAGS = -g -O2
 CPP = gcc -E
 CPPFLAGS = 
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"LCUIFightGame\" -DPACKAGE_TARNAME=\"lcuifightgame\" -DPACKAGE_VERSION=\"1.1.0\" -DPACKAGE_STRING=\"LCUIFightGame\ 1.1.0\" -DPACKAGE_BUGREPORT=\"lc-soft@live.cn\" -DPACKAGE_URL=\"\" -DPACKAGE=\"lcuifightgame\" -DVERSION=\"1.1.0\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_STDINT_H=1 -DHAVE_STDIO_H=1 -DHAVE_MALLOC_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_LIBLCUI=1
+DEFS = -DPACKAGE_NAME=\"PunchAndKick\" -DPACKAGE_TARNAME=\"punchandkick\" -DPACKAGE_VERSION=\"1.1.1\" -DPACKAGE_STRING=\"PunchAndKick\ 1.1.1\" -DPACKAGE_BUGREPORT=\"lc-soft@live.cn\" -DPACKAGE_URL=\"\" -DPACKAGE=\"punchandkick\" -DVERSION=\"1.1.1\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_STDINT_H=1 -DHAVE_STDIO_H=1 -DHAVE_MALLOC_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_LIBLCUI=1
 DEPDIR = .deps
 ECHO_C = 
 ECHO_N = -n
@@ -228,18 +228,18 @@ LTLIBOBJS =
 MAKEINFO = ${SHELL} /home/liuchao/project/LCUI-2DFightGame/missing makeinfo
 MKDIR_P = /usr/bin/mkdir -p
 OBJEXT = o
-PACKAGE = lcuifightgame
+PACKAGE = punchandkick
 PACKAGE_BUGREPORT = lc-soft@live.cn
-PACKAGE_NAME = LCUIFightGame
-PACKAGE_STRING = LCUIFightGame 1.1.0
-PACKAGE_TARNAME = lcuifightgame
+PACKAGE_NAME = PunchAndKick
+PACKAGE_STRING = PunchAndKick 1.1.1
+PACKAGE_TARNAME = punchandkick
 PACKAGE_URL = 
-PACKAGE_VERSION = 1.1.0
+PACKAGE_VERSION = 1.1.1
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = 
-VERSION = 1.1.0
+VERSION = 1.1.1
 abs_builddir = /home/liuchao/project/LCUI-2DFightGame/src
 abs_srcdir = /home/liuchao/project/LCUI-2DFightGame/src
 abs_top_builddir = /home/liuchao/project/LCUI-2DFightGame
