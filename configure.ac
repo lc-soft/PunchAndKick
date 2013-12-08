@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT(LCUIFightGame, 1.1.0, lc-soft@live.cn)
+AC_INIT(PunchAndKick, 1.1.1, lc-soft@live.cn)
 
 # Check system type
 AC_CANONICAL_TARGET
