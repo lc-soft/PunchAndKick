@@ -80,7 +80,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-noinst_PROGRAMS = game$(EXEEXT)
+noinst_PROGRAMS = game$(EXEEXT) res-tool$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(game_HEADERS)
@@ -111,6 +111,9 @@ am_game_OBJECTS = main.$(OBJEXT) main_menu.$(OBJEXT) \
 	skills_tiger.$(OBJEXT)
 game_OBJECTS = $(am_game_OBJECTS)
 game_LDADD = $(LDADD)
+am_res_tool_OBJECTS = game_tool.$(OBJEXT) game_resource.$(OBJEXT)
+res_tool_OBJECTS = $(am_res_tool_OBJECTS)
+res_tool_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -139,8 +142,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(game_SOURCES)
-DIST_SOURCES = $(game_SOURCES)
+SOURCES = $(game_SOURCES) $(res_tool_SOURCES)
+DIST_SOURCES = $(game_SOURCES) $(res_tool_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -295,6 +298,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
+res_tooldir = $(top_builddir)/src
+res_tool_SOURCES = game_tool.c game_resource.c
 gamedir = $(top_builddir)/src
 game_HEADERS = \
 main_menu.h			\
@@ -407,6 +412,10 @@ game$(EXEEXT): $(game_OBJECTS) $(game_DEPENDENCIES) $(EXTRA_game_DEPENDENCIES)
 	@rm -f game$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(game_OBJECTS) $(game_LDADD) $(LIBS)
 
+res-tool$(EXEEXT): $(res_tool_OBJECTS) $(res_tool_DEPENDENCIES) $(EXTRA_res_tool_DEPENDENCIES) 
+	@rm -f res-tool$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(res_tool_OBJECTS) $(res_tool_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -429,6 +438,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_skill.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_space.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_statusbar.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_tool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/game_value_tip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gameres_ben.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gameres_kunio.Po@am__quote@

@@ -1,5 +1,8 @@
 AUTOMAKE_OPTIONS=foreign
-noinst_PROGRAMS = game
+noinst_PROGRAMS = game res-tool
+res_tooldir = $(top_builddir)/src
+res_tool_SOURCES = game_tool.c game_resource.c
+
 gamedir = $(top_builddir)/src
 game_HEADERS =		\
 main_menu.h			\
