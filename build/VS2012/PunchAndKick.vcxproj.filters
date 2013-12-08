@@ -21,9 +21,6 @@
     <ClCompile Include="..\..\src\main_menu.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\lan_battle.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\game_object.c">
       <Filter>源文件</Filter>
     </ClCompile>

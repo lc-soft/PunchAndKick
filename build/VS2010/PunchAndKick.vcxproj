@@ -127,7 +127,6 @@
     <ClCompile Include="..\..\src\game_role_select.c" />
     <ClCompile Include="..\..\src\game_statusbar.c" />
     <ClCompile Include="..\..\src\game_value_tip.c" />
-    <ClCompile Include="..\..\src\lan_battle.c" />
     <ClCompile Include="..\..\src\game_lifebar.c" />
     <ClCompile Include="..\..\src\main.c" />
     <ClCompile Include="..\..\src\main_menu.c" />
