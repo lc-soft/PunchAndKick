@@ -1,46 +1,46 @@
 ﻿/* ****************************************************************************
- * Punch And Kick -- a simple 2D Fighting Game.
- *
- * Copyright (C) 2013 by
- * Liu Chao
- *
- * This file is part of the Punch And Kick project, and may only be used,
- * modified, and distributed under the terms of the GPLv2.
- *
- * (GPLv2 is abbreviation of GNU General Public License Version 2)
- *
- * By continuing to use, modify, or distribute this file you indicate that you
- * have read the license and understand and accept it fully.
- *
- * The Punch And Kick project is distributed in the hope that it will be
- * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GPL v2 for
- * more details.
- *
- * You should have received a copy of the GPLv2 along with this file. It is
- * usually in the LICENSE.TXT file, If not, see <http://www.gnu.org/licenses/>.
- * ***************************************************************************/
+* Punch And Kick -- a simple 2D Fighting Game.
+*
+* Copyright (C) 2013 by
+* Liu Chao
+*
+* This file is part of the Punch And Kick project, and may only be used,
+* modified, and distributed under the terms of the GPLv2.
+*
+* (GPLv2 is abbreviation of GNU General Public License Version 2)
+*
+* By continuing to use, modify, or distribute this file you indicate that you
+* have read the license and understand and accept it fully.
+*
+* The Punch And Kick project is distributed in the hope that it will be
+* useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GPL v2 for
+* more details.
+*
+* You should have received a copy of the GPLv2 along with this file. It is
+* usually in the LICENSE.TXT file, If not, see <http://www.gnu.org/licenses/>.
+* ***************************************************************************/
 
 /* ****************************************************************************
- * Punch And Kick -- 一个普通的2D格斗游戏
- *
- * 版权所有 (C) 2013 归属于
- * 刘超
- *
- * 这个文件是 Punch And Kick 项目的一部分，并且只可以根据GPLv2许可协议来使用、
- * 更改和发布。
- *
- * (GPLv2 是 GNU通用公共许可证第二版 的英文缩写)
- *
- * 继续使用、修改或发布本文件，表明您已经阅读并完全理解和接受这个许可协议。
- *
- * Punch And Kick 项目是基于技术交流目的而加以散布的，但不负任何担保责任，例
- * 如：稳定性、可玩性、趣味性等的担保，甚至没有适销性或特定用途的隐含担保，详
- * 情请参照GPLv2许可协议。
- *
- * 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在LICENSE.TXT文件中，如果
- * 没有，请查看：<http://www.gnu.org/licenses/>.
- * ***************************************************************************/
+* Punch And Kick -- 一个普通的2D格斗游戏
+*
+* 版权所有 (C) 2013 归属于
+* 刘超
+*
+* 这个文件是 Punch And Kick 项目的一部分，并且只可以根据GPLv2许可协议来使用、
+* 更改和发布。
+*
+* (GPLv2 是 GNU通用公共许可证第二版 的英文缩写)
+*
+* 继续使用、修改或发布本文件，表明您已经阅读并完全理解和接受这个许可协议。
+*
+* Punch And Kick 项目是基于技术交流目的而加以散布的，但不负任何担保责任，例
+* 如：稳定性、可玩性、趣味性等的担保，甚至没有适销性或特定用途的隐含担保，详
+* 情请参照GPLv2许可协议。
+*
+* 您应已收到附随于本文件的GPLv2许可协议的副本，它通常在LICENSE.TXT文件中，如果
+* 没有，请查看：<http://www.gnu.org/licenses/>.
+* ***************************************************************************/
 
 // 资源打包/解包工具
 
@@ -75,7 +75,7 @@ static void test_write(void)
 	LCUI_Graph graph[5];
 	
 	GameGraphRes_Init();
-	srand( time(NULL) );
+	srand( (unsigned int)time(NULL) );
 	for(i=0; i<5; ++i) {
 		Graph_Init( &graph[i] );
 		Graph_Create( &graph[i], 320, 240 );
@@ -541,10 +541,8 @@ const struct fileinfo ben_action_file_info[BEN_ACTION_FILE_NUM]={
 	{"judo-04.png","judo-04"}
 };
 
-static void GraphRes_WirteToFile(	const char *class_name,
-					const struct fileinfo *filelist,
-					int n_file,
-					const char *outputfile )
+static void GraphRes_WirteToFile( const char *class_name, 
+	const struct fileinfo *filelist, int n_file, const char *outputfile )
 {
 	int i, class_id;
 	LCUI_Graph graph_buff;
@@ -570,31 +568,12 @@ static void ActionRes_Toraji_ReadFromFile(void)
 	for(i=0; i<TORAJI_ACTION_FILE_NUM; ++i) {
 		Graph_Init( &graph_buff );
 		GameGraphRes_GetGraph( 
-			ACTION_RES_CLASS_TORAJI, 
-			toraji_action_file_info[i].name,
-			&graph_buff 
+		ACTION_RES_CLASS_TORAJI, 
+		toraji_action_file_info[i].name,
+		&graph_buff 
 		);
 		Graph_WritePNG( toraji_action_file_info[i].filepath, &graph_buff );
 		_DEBUG_MSG("[%d/%d]: %s\n", i, TORAJI_ACTION_FILE_NUM, toraji_action_file_info[i].filepath);
-	}
-	GameGraphRes_FreeAll();
-}
-
-static void MainGraphRes_ReadFromFile(void)
-{
-	int i;
-	LCUI_Graph graph_buff;
-
-	GameGraphRes_Init();
-	GameGraphRes_LoadFromFile( "main.data" );
-	for(i=0; i<5; ++i) {
-		Graph_Init( &graph_buff );
-		GameGraphRes_GetGraph( 
-			MAIN_RES, 
-			main_file_info[i].name,
-			&graph_buff 
-		);
-		Graph_WritePNG( main_file_info[i].filepath, &graph_buff );
 	}
 	GameGraphRes_FreeAll();
 }
@@ -614,40 +593,36 @@ static void ScenesGraphRes_WirteToFile( void )
 	GameGraphRes_FreeAll();
 }
 
-/** 将字体的图形资源写入至文件 */
-static void FontGraphRes_WirteToFile( void )
+static void ResourceTool_UnPackDataFile( const char *data_file, 
+	const char *class_name, const struct fileinfo *list, int n_files )
 {
-	int class_id, i;
+	int i, dir_code;
 	LCUI_Graph graph_buff;
+	char filepath[512], cmd[256];
 
 	GameGraphRes_Init();
-	class_id = GameGraphRes_AddClass( FONT_RES );
-	for( i=0; i<FONT_FILE_NUM; ++i ) {
+	GameGraphRes_LoadFromFile( data_file );
+	/* 
+		* 类名中会包含一些非法字符，如： : / \ * " ' ? 等符号，目录/文件名不能有这些
+		* 符号，为了能够正常创建目录，将类名字符串内容转换为数字字符
+		*/
+	dir_code = BKDRHash( class_name );
+	/* 生成所需命令行，以创建文件目录 */
+	sprintf(cmd, "mkdir %d", dir_code);
+	/* 执行命令行 */
+	system(cmd);
+	/* 遍历每个图像资源 */
+	for(i=0; i<n_files; ++i) {
 		Graph_Init( &graph_buff );
-		Graph_LoadImage( font_file_info[i].filepath, &graph_buff );
-		GameGraphRes_AddGraph( class_id, font_file_info[i].name, &graph_buff );
+		/* 获取相应名称的图像资源 */
+		GameGraphRes_GetGraph( class_name, list[i].name, &graph_buff );
+		/* 生成图像输出文件路径 */
+		sprintf( filepath, "%d/%s", dir_code, list[i].filepath );
+		/* 写入至输出文件 */
+		Graph_WritePNG( filepath, &graph_buff );
+		_DEBUG_MSG("[%d/%d]: %s\n", i, n_files, filepath);
 	}
-	GameGraphRes_WriteToFile( "font.data", FONT_RES );
-	GameGraphRes_FreeAll();
-}
 
-static void ActionRes_Riki_ReadFromFile(void)
-{
-	int i;
-	LCUI_Graph graph_buff;
-
-	GameGraphRes_Init();
-	GameGraphRes_LoadFromFile( "action-riki.data" );
-	for(i=0; i<RIKI_ACTION_FILE_NUM; ++i) {
-		Graph_Init( &graph_buff );
-		GameGraphRes_GetGraph( 
-			ACTION_RES_CLASS_RIKI, 
-			riki_action_file_info[i].name,
-			&graph_buff 
-		);
-		Graph_WritePNG( riki_action_file_info[i].filepath, &graph_buff );
-		_DEBUG_MSG("[%d/%d]: %s\n", i, RIKI_ACTION_FILE_NUM, riki_action_file_info[i].filepath);
-	}
 	GameGraphRes_FreeAll();
 }
 
@@ -660,52 +635,78 @@ int main(int argc, char** argv)
 		test_write();
 	}
 #endif
-	if( argc == 2 ) {
-		//ActionRes_Kuni_ReadFromFile();
-		//ActionRes_Riki_ReadFromFile();
-		//ActionRes_Toraji_ReadFromFile();
+	/* 当有两个参数时，解包所有.data文件 */
+	if( argc >= 2 ) {
+		ResourceTool_UnPackDataFile(	"font.data",
+		FONT_RES, 
+		font_file_info, 
+		FONT_FILE_NUM );
+		ResourceTool_UnPackDataFile(	"scenes.data", 
+		SCENES_RES, 
+		&scenes_file_info,
+		1 );
+		ResourceTool_UnPackDataFile(	"main.data", 
+		MAIN_RES, 
+		main_file_info, 
+		MAIN_FILE_NUM );
+		ResourceTool_UnPackDataFile(	"action-riki.data", 
+		ACTION_RES_CLASS_RIKI, 
+		riki_action_file_info, 
+		RIKI_ACTION_FILE_NUM );
+		ResourceTool_UnPackDataFile(	"action-ben.data", 
+		ACTION_RES_CLASS_BEN, 
+		ben_action_file_info, 
+		BEN_ACTION_FILE_NUM );
+		ResourceTool_UnPackDataFile(	"action-toraji.data", 
+		ACTION_RES_CLASS_TORAJI,
+		toraji_action_file_info,
+		TORAJI_ACTION_FILE_NUM );
+		ResourceTool_UnPackDataFile(	"action-kuni.data",
+		ACTION_RES_CLASS_KUNI, 
+		kuni_action_file_info, 
+		KUNI_ACTION_FILE_NUM );
+		ResourceTool_UnPackDataFile(	"action-mike.data",
+		ACTION_RES_CLASS_MIKE,
+		mike_action_file_info,
+		MIKE_ACTION_FILE_NUM );
 		return 0;
 	}
-	//FontGraphRes_WirteToFile();
-	//ScenesGraphRes_WirteToFile();
-	//MainGraphRes_WirteToFile();
-#define need_main_res
+	/* 不带参数运行本程序时，重新将当前目录下的相应文件打包成.data文件 */
 #ifdef need_font
 	GraphRes_WirteToFile(	FONT_RES,
-				font_file_info,
-				FONT_FILE_NUM, 
-				"font.data" );
+	font_file_info,
+	FONT_FILE_NUM, 
+	"font.data" );
 #elif defined(need_main_res)
-	//MainGraphRes_ReadFromFile();
 	GraphRes_WirteToFile(	MAIN_RES,
-				main_file_info,
-				MAIN_RES_NUM, 
-				"main.data" );
+	main_file_info,
+	MAIN_RES_NUM, 
+	"main.data" );
 #elif defined(need_kuni)
 	GraphRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
-				kuni_action_file_info,
-				KUNI_ACTION_FILE_NUM, 
-				"action-kuni.data" );
+	kuni_action_file_info,
+	KUNI_ACTION_FILE_NUM, 
+	"action-kuni.data" );
 #elif defined(need_riki)
 	GraphRes_WirteToFile(	ACTION_RES_CLASS_RIKI,
-				riki_action_file_info,
-				RIKI_ACTION_FILE_NUM, 
-				"action-riki.data" );
+	riki_action_file_info,
+	RIKI_ACTION_FILE_NUM, 
+	"action-riki.data" );
 #elif defined(need_toraji)
 	GraphRes_WirteToFile(	ACTION_RES_CLASS_TORAJI,
-				toraji_action_file_info,
-				TORAJI_ACTION_FILE_NUM, 
-				"action-toraji.data" );
+	toraji_action_file_info,
+	TORAJI_ACTION_FILE_NUM, 
+	"action-toraji.data" );
 #elif defined(need_mike)
 	GraphRes_WirteToFile(	ACTION_RES_CLASS_MIKE,
-				mike_action_file_info,
-				MIKE_ACTION_FILE_NUM, 
-				"action-mike.data" );
+	mike_action_file_info,
+	MIKE_ACTION_FILE_NUM, 
+	"action-mike.data" );
 #elif defined(need_ben)
 	GraphRes_WirteToFile(	ACTION_RES_CLASS_BEN,
-				ben_action_file_info,
-				BEN_ACTION_FILE_NUM, 
-				"action-ben.data" );
+	ben_action_file_info,
+	BEN_ACTION_FILE_NUM, 
+	"action-ben.data" );
 #endif
 	return 0;
 }
