@@ -17,6 +17,7 @@ bin/Debug/
 bin/Release/
 build/*/*.sdf
 build/*/*.suo
+build/*/*.opensdf
 bin/*.obj
 bin/*.sbr
 bin/*.pdb
