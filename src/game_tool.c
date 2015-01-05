@@ -603,9 +603,9 @@ static void ResourceTool_UnPackDataFile( const char *data_file,
 	GameGraphRes_Init();
 	GameGraphRes_LoadFromFile( data_file );
 	/* 
-		* 类名中会包含一些非法字符，如： : / \ * " ' ? 等符号，目录/文件名不能有这些
-		* 符号，为了能够正常创建目录，将类名字符串内容转换为数字字符
-		*/
+	 * 类名中会包含一些非法字符，如： : / \ * " ' ? 等符号，目录/文件名不能有这些
+	 * 符号，为了能够正常创建目录，将类名字符串内容转换为数字字符
+	 */
 	dir_code = BKDRHash( class_name );
 	/* 生成所需命令行，以创建文件目录 */
 	sprintf(cmd, "mkdir %d", dir_code);
@@ -637,76 +637,71 @@ int main(int argc, char** argv)
 #endif
 	/* 当有两个参数时，解包所有.data文件 */
 	if( argc >= 2 ) {
-		ResourceTool_UnPackDataFile(	"font.data",
-		FONT_RES, 
-		font_file_info, 
-		FONT_FILE_NUM );
-		ResourceTool_UnPackDataFile(	"scenes.data", 
-		SCENES_RES, 
-		&scenes_file_info,
-		1 );
-		ResourceTool_UnPackDataFile(	"main.data", 
-		MAIN_RES, 
-		main_file_info, 
-		MAIN_FILE_NUM );
-		ResourceTool_UnPackDataFile(	"action-riki.data", 
-		ACTION_RES_CLASS_RIKI, 
-		riki_action_file_info, 
-		RIKI_ACTION_FILE_NUM );
-		ResourceTool_UnPackDataFile(	"action-ben.data", 
-		ACTION_RES_CLASS_BEN, 
-		ben_action_file_info, 
-		BEN_ACTION_FILE_NUM );
-		ResourceTool_UnPackDataFile(	"action-toraji.data", 
-		ACTION_RES_CLASS_TORAJI,
-		toraji_action_file_info,
-		TORAJI_ACTION_FILE_NUM );
-		ResourceTool_UnPackDataFile(	"action-kuni.data",
-		ACTION_RES_CLASS_KUNI, 
-		kuni_action_file_info, 
-		KUNI_ACTION_FILE_NUM );
-		ResourceTool_UnPackDataFile(	"action-mike.data",
-		ACTION_RES_CLASS_MIKE,
-		mike_action_file_info,
-		MIKE_ACTION_FILE_NUM );
+		ResourceTool_UnPackDataFile(
+			"font.data", FONT_RES, font_file_info, FONT_FILE_NUM
+		);
+		ResourceTool_UnPackDataFile(
+			"scenes.data", SCENES_RES, &scenes_file_info, 1 
+		);
+		ResourceTool_UnPackDataFile(
+			"main.data", MAIN_RES, main_file_info, MAIN_FILE_NUM
+		);
+		ResourceTool_UnPackDataFile(
+			"action-riki.data", ACTION_RES_CLASS_RIKI, 
+			riki_action_file_info, RIKI_ACTION_FILE_NUM
+		);
+		ResourceTool_UnPackDataFile(
+			"action-ben.data", ACTION_RES_CLASS_BEN, 
+			ben_action_file_info, BEN_ACTION_FILE_NUM
+		);
+		ResourceTool_UnPackDataFile(
+			"action-toraji.data", ACTION_RES_CLASS_TORAJI,
+			toraji_action_file_info, TORAJI_ACTION_FILE_NUM 
+		);
+		ResourceTool_UnPackDataFile(
+			"action-kuni.data", ACTION_RES_CLASS_KUNI, 
+			kuni_action_file_info, KUNI_ACTION_FILE_NUM 
+		);
+		ResourceTool_UnPackDataFile(
+			"action-mike.data", ACTION_RES_CLASS_MIKE,
+			mike_action_file_info, MIKE_ACTION_FILE_NUM
+		);
 		return 0;
 	}
 	/* 不带参数运行本程序时，重新将当前目录下的相应文件打包成.data文件 */
 #ifdef need_font
-	GraphRes_WirteToFile(	FONT_RES,
-	font_file_info,
-	FONT_FILE_NUM, 
-	"font.data" );
+	GraphRes_WirteToFile( 
+		FONT_RES,font_file_info,FONT_FILE_NUM, "font.data" 
+	);
 #elif defined(need_main_res)
-	GraphRes_WirteToFile(	MAIN_RES,
-	main_file_info,
-	MAIN_RES_NUM, 
-	"main.data" );
+	GraphRes_WirteToFile(
+		MAIN_RES, main_file_info, MAIN_RES_NUM, "main.data"
+	);
 #elif defined(need_kuni)
-	GraphRes_WirteToFile(	ACTION_RES_CLASS_KUNI,
-	kuni_action_file_info,
-	KUNI_ACTION_FILE_NUM, 
-	"action-kuni.data" );
+	GraphRes_WirteToFile(
+		ACTION_RES_CLASS_KUNI, kuni_action_file_info,
+		KUNI_ACTION_FILE_NUM, "action-kuni.data"
+	);
 #elif defined(need_riki)
-	GraphRes_WirteToFile(	ACTION_RES_CLASS_RIKI,
-	riki_action_file_info,
-	RIKI_ACTION_FILE_NUM, 
-	"action-riki.data" );
+	GraphRes_WirteToFile(
+		ACTION_RES_CLASS_RIKI, riki_action_file_info,
+		RIKI_ACTION_FILE_NUM, "action-riki.data"
+	);
 #elif defined(need_toraji)
-	GraphRes_WirteToFile(	ACTION_RES_CLASS_TORAJI,
-	toraji_action_file_info,
-	TORAJI_ACTION_FILE_NUM, 
-	"action-toraji.data" );
+	GraphRes_WirteToFile(
+		ACTION_RES_CLASS_TORAJI, toraji_action_file_info,
+		TORAJI_ACTION_FILE_NUM, "action-toraji.data" 
+	);
 #elif defined(need_mike)
-	GraphRes_WirteToFile(	ACTION_RES_CLASS_MIKE,
-	mike_action_file_info,
-	MIKE_ACTION_FILE_NUM, 
-	"action-mike.data" );
+	GraphRes_WirteToFile(
+		ACTION_RES_CLASS_MIKE, mike_action_file_info,
+		MIKE_ACTION_FILE_NUM, "action-mike.data"
+	);
 #elif defined(need_ben)
-	GraphRes_WirteToFile(	ACTION_RES_CLASS_BEN,
-	ben_action_file_info,
-	BEN_ACTION_FILE_NUM, 
-	"action-ben.data" );
+	GraphRes_WirteToFile(
+		ACTION_RES_CLASS_BEN, ben_action_file_info,
+		BEN_ACTION_FILE_NUM, "action-ben.data"
+	);
 #endif
 	return 0;
 }
