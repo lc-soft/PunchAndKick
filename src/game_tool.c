@@ -69,6 +69,7 @@ struct fileinfo {
 	char *name;
 };
 
+/** 测试写入 .data 文件 */
 static void test_write(void)
 {
 	int i,class_id;
@@ -91,6 +92,7 @@ static void test_write(void)
 	GameGraphRes_FreeAll();
 }
 
+/** 测试读取 .data 文件 */
 static void test_read(void)
 {
 	int i;
@@ -110,6 +112,7 @@ static void test_read(void)
 	}
 }
 
+/** 一堆资源文件信息，格式为：文件名  资源名 */
 const struct fileinfo font_file_info[FONT_FILE_NUM]={
 	{"font-0.png","0"},
 	{"font-1.png","1"},
@@ -541,8 +544,11 @@ const struct fileinfo ben_action_file_info[BEN_ACTION_FILE_NUM]={
 	{"judo-04.png","judo-04"}
 };
 
-static void GraphRes_WirteToFile( const char *class_name, 
-	const struct fileinfo *filelist, int n_file, const char *outputfile )
+/** 打包资源至 .data 文件 */
+static void GraphRes_WirteToFile(	const char *class_name,
+					const struct fileinfo *filelist,
+					int n_file,
+					const char *outputfile )
 {
 	int i, class_id;
 	LCUI_Graph graph_buff;
@@ -558,43 +564,11 @@ static void GraphRes_WirteToFile( const char *class_name,
 	GameGraphRes_FreeAll();
 }
 
-static void ActionRes_Toraji_ReadFromFile(void)
-{
-	int i;
-	LCUI_Graph graph_buff;
-
-	GameGraphRes_Init();
-	GameGraphRes_LoadFromFile( "action-toraji.data" );
-	for(i=0; i<TORAJI_ACTION_FILE_NUM; ++i) {
-		Graph_Init( &graph_buff );
-		GameGraphRes_GetGraph( 
-		ACTION_RES_CLASS_TORAJI, 
-		toraji_action_file_info[i].name,
-		&graph_buff 
-		);
-		Graph_WritePNG( toraji_action_file_info[i].filepath, &graph_buff );
-		_DEBUG_MSG("[%d/%d]: %s\n", i, TORAJI_ACTION_FILE_NUM, toraji_action_file_info[i].filepath);
-	}
-	GameGraphRes_FreeAll();
-}
-
-/** 将战斗场景的图形资源写入至文件 */
-static void ScenesGraphRes_WirteToFile( void )
-{
-	int class_id;
-	LCUI_Graph graph_buff;
-
-	GameGraphRes_Init();
-	class_id = GameGraphRes_AddClass( SCENES_RES );
-	Graph_Init( &graph_buff );
-	Graph_LoadImage( scenes_file_info.filepath, &graph_buff );
-	GameGraphRes_AddGraph( class_id, scenes_file_info.name, &graph_buff );
-	GameGraphRes_WriteToFile( "scenes.data", SCENES_RES );
-	GameGraphRes_FreeAll();
-}
-
-static void ResourceTool_UnPackDataFile( const char *data_file, 
-	const char *class_name, const struct fileinfo *list, int n_files )
+/** 解包 .data 文件中的资源 */
+static void ResourceTool_UnPackDataFile(	const char *data_file, 
+						const char *class_name,
+						const struct fileinfo *list,
+						int n_files )
 {
 	int i, dir_code;
 	LCUI_Graph graph_buff;

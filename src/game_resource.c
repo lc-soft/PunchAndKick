@@ -50,9 +50,11 @@
 
 #include "game.h"
 
+/**文件头部的标记文本 */
 #define HEADER_MARK_TEXT	"LC-GAMES Graphics Resource File"
+/** 每个资源数据块的标记文本 */
 #define BLOCK_MARK_TEXT		"LC-GAMES Graphics Data Block"
-#define MARK_SIZE		sizeof(MARK_TEXT)
+
 #define MAX_MARK_TEXT_LEN	64
 #define MAX_TEXT_LEN		256
 
@@ -109,6 +111,7 @@ LCUI_API void GameGraphRes_FreeAll( void )
 	Queue_Destroy( &resource_library );
 }
 
+/** 查找资源 */
 static GraphResItem *GameGraphRes_FindItem( GraphResClass *res_class, int item_id )
 {
 	int i, n;
@@ -130,6 +133,7 @@ static GraphResItem *GameGraphRes_FindItem( GraphResClass *res_class, int item_i
 	return NULL;
 }
 
+/** 查找资源类 */
 static GraphResClass *GameGraphRes_FindClass( int class_id )
 {
 	int i, n;
@@ -183,9 +187,9 @@ LCUI_API int GameGraphRes_AddClass( const char *class_name )
 	if( p_class_data == NULL ) {
 		class_data.id = class_id;
 		strncpy( class_data.class_name, class_name, MAX_TEXT_LEN );
-		Queue_Init(	&class_data.graph_res,
-				sizeof(GraphResItem),
-				GraphResItem_Destroy 
+		Queue_Init(
+			&class_data.graph_res,
+			sizeof(GraphResItem), GraphResItem_Destroy
 		);
 		Queue_Lock( &resource_library );
 		Queue_Add( &resource_library, &class_data );
@@ -316,6 +320,7 @@ LCUI_API int GameGraphRes_WriteToFile( const char *filepath, const char *class_n
 
 	strncpy( header_data.mark, HEADER_MARK_TEXT, MAX_MARK_TEXT_LEN );
 	strncpy( header_data.class_name, class_name, MAX_TEXT_LEN );
+	/* 保存资源总数 */
 	header_data.total_number = Queue_GetTotal( &p_class_data->graph_res );
 	/* 先将文件头数据写进去 */
 	count = fwrite( &header_data, sizeof(ResFileHeaderData), 1, fp );
@@ -355,9 +360,10 @@ LCUI_API int GameGraphRes_WriteToFile( const char *filepath, const char *class_n
 		DEBUG_MSG("write graph pixel data, total pixel: %d\n", n_pixel );
 		/* 写入像素数据 */
 		for(j=0; j<k; ++j) {
-			count = fwrite(	p_item->graph.rgba[j],
-						sizeof(unsigned char),
-						n_pixel, fp );
+			count = fwrite(
+				p_item->graph.rgba[j],
+				sizeof(unsigned char), n_pixel, fp
+			);
 			if( count < n_pixel ) {
 				goto error_exit;
 			}
