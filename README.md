@@ -12,8 +12,8 @@ Punch & Kick
 由于作者以后工作的原因，此游戏的开发可能会暂停，因此，请不要对此游戏抱有过多的期待。
 
 ## 效果图
-![screenshort 1](http://lcui.org/files/images/game/2013-11-15-21-54-36.png)
-![screenshort 2](http://lcui.org/files/images/game/2013-11-15-22-02-07.png)
+![screenshort 1](http://blog.lc-soft.io/static/images/game/2013-11-15-21-54-36.png)
+![screenshort 2](http://blog.lc-soft.io/static/images/game/2013-11-15-22-02-07.png)
 
 ## 构建
 
